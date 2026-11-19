@@ -1,6 +1,6 @@
 # Prepround: підготовка до співбесід
 
-Тести для підготовки до співбесід. Людина вибирає напрям і стек, рівні, кількість питань і їх розподіл по темах. Потім проходить тест із таймером і бачить, які теми в неї провисають. Сайт буде на **prepround.app**: домен ще не куплено, деплою поки немає.
+Тести для підготовки до співбесід. Людина вибирає напрям і стек, рівні, кількість питань і їх розподіл по темах. Потім проходить тест із таймером і бачить, які теми в неї провисають. MVP задеплоєно 2026-11-19: **https://prepround.pages.dev** (див. «Деплой»). Домен prepround.app ще не куплено.
 
 - Специфікація продукту: `backend/.claude/pm/spec.md`. Це джерело правди для поведінки.
 - Рішення (ADR): `backend/.claude/pm/decisions/`. 001 — стек і архітектура, 002 — формат контенту, 003 — фронт в окремому репо `PreproundWeb`, 004 — джерела контенту і рубрика складності.
@@ -157,6 +157,24 @@ Clean Architecture, CQRS-хендлери без MediatR, стандартний
 | Angular dev server | `http://localhost:4300` |
 
 Фронт ходить лише на `https://localhost:7120`: `http://localhost:5120` під профілем `https` відповідає 307, а CORS-preflight через редирект не проходить.
+
+## Деплой (ADR 005, PRP-024; з 2026-11-19)
+
+| Що | Де |
+|---|---|
+| Фронт | **https://prepround.pages.dev**, Cloudflare Pages, проєкт `prepround`, репо `dmitryspain/PreproundUI`. Гілка `master`, команда збірки `npm run build`, тека `dist/web/browser`, Node з `.node-version` |
+| API | **https://prepround-api.onrender.com**, Render Free, сервіс `prepround-api`, репо `dmitryspain/Prepround`. Docker, Root Directory `backend`, Frankfurt, health check `/api/health` |
+| БД | Neon Free, Frankfurt, Postgres 18. БД `preprounddb`. Роль `preprounddb_owner` — для міграцій та імпорту; роль `prepround_reader` (лише `SELECT`) — для API |
+
+- **Деплой.** Push у `master` автоматично перезбирає обидва сервіси.
+- **Секрет лише один** — змінна Render `ConnectionStrings__Prepround` (роль читача). Не-секрети прод-конфігурації лежать у git: `backend/src/Prepround.Api/appsettings.Production.json` (CORS, заголовок IP клієнта `CF-Connecting-IP`) і `PreproundWeb/src/environments/environment.production.ts` (адреса API).
+- **Міграції.** Нову EF-міграцію власник застосовує в Neon **до** push коду, який від неї залежить.
+- **Імпорт у прод.** Запускає власник або головна сесія, якщо власник сам дав рядок підключення. Порядок такий:
+  - перед імпортом `git pull`;
+  - імпорт без `--include-drafts`, один раз, на зупинках хвиль і етапів;
+  - після імпорту smoke каталогу.
+- **Агенти до Neon не ходять.** Smoke проду — лише `curl` до публічних адрес.
+- **Холодний старт.** Render Free засинає після 15 хв без запитів і прокидається близько хвилини. Фронт через 5 с показує підказку (PRP-022).
 
 ## Команди (цільові: їх створюють картки каркаса; після закриття картки звіряй)
 
