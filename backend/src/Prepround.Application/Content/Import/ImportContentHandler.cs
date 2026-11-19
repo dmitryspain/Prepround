@@ -7,6 +7,7 @@ namespace Prepround.Application.Content.Import;
 /// <summary>
 /// Puts the content files into the database (ADR 002): the same read-and-check step as validate, then an upsert by id.
 /// Nothing is deleted: rows missing from the files are deactivated, and reactivated when they return.
+/// Questions of draft topics count as missing unless <see cref="ImportContentCommand.IncludeDrafts"/> is set.
 /// </summary>
 public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand, ImportSummary>
 {
@@ -43,7 +44,7 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
         }
 
         var rows = await _repository.LoadAsync(cancellationToken);
-        var files = FromFiles(content.Fields, _timeProvider.GetUtcNow());
+        var files = FromFiles(content.Fields, command.IncludeDrafts, _timeProvider.GetUtcNow());
         var newRows = new NewRows();
 
         // Stack topics go first: a change in a stack's topic list or order counts as an update of the stack itself.
@@ -121,7 +122,8 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
     }
 
     /// <summary>The catalog as the files describe it. Rank and orders are 1-based positions in the files.</summary>
-    private static CatalogRows FromFiles(IReadOnlyList<FieldDefinition> definitions, DateTimeOffset now)
+    /// <param name="includeDrafts">When false, the questions of draft topics are left out as if absent from the files.</param>
+    private static CatalogRows FromFiles(IReadOnlyList<FieldDefinition> definitions, bool includeDrafts, DateTimeOffset now)
     {
         var fields = new List<Field>();
         var levels = new List<Level>();
@@ -159,8 +161,13 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
 
             foreach (var topic in field.Topics)
             {
+                // A draft topic itself stays in the catalog; only its questions count as absent (ADR 002), so the sync
+                // below adds none of them and deactivates those imported before: also the emergency switch-off.
                 topics.Add(new Topic(field.Id, topic.Id, topic.Title, topic.Description));
-                questions.AddRange(topic.Questions.Select(question => ToQuestion(field.Id, topic.Id, question, now)));
+                if (includeDrafts || !topic.IsDraft)
+                {
+                    questions.AddRange(topic.Questions.Select(question => ToQuestion(field.Id, topic.Id, question, now)));
+                }
             }
         }
 

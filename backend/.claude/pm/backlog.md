@@ -5,17 +5,37 @@
 > Статус `deferred` означає, що власник відклав картку. Такі картки в «Готовність карток» не потрапляють.
 > **Два репозиторії (рішення 003):** «Область» `backend` і `content` — це `Prepround` (`/Users/dmitryspain/RiderProjects/Prepround`), `frontend` — це `PreproundWeb` (`/Users/dmitryspain/RiderProjects/PreproundWeb`). Шляхи в картці відносно кореня свого репо. Якщо картка зачіпає обидва, шляхи мають префікс `Prepround/` або `PreproundWeb/`.
 
-## Готовність карток (2026-11-14, закриття етапу 2; ідея власника «красота»)
+## Готовність карток (2026-11-19, етап 4a «Деплой MVP», ADR 005)
 
-- **У роботі:** хвиля 2 відновлена 2026-11-17 (3 автори Sonnet). Перед цим: `.claude/` перенесено в `backend/` (прохання власника), `validate` → 252 питання, `import` → додано 36, оновлено 98, `dotnet test` → total 309 / failed 0 (виправлення хвилі 1 тепер у dev-БД).
-- **Готово зараз:** хвилі 2–5 (розділ «Хвилі контенту»). PRP-012 (історія) — після наповнення Backend і Frontend, якщо власник не вирішить інакше.
-- **Середовище для агентів:** головна сесія тримає запущеними API (`https://localhost:7120`) і dev server (`http://localhost:4300`) для власника. Агенти не запускають другий екземпляр і не зупиняють ці сервери, а користуються ними (dev server перезбирається сам). Якщо серверів немає, агент запускає свої й наприкінці зупиняє.
-- **Власник може робити зараз:** прочитати `backend/.claude/pm/decisions/004-content-sources-and-difficulty.md` і відповісти на 4 питання в кінці (~10 хв; розблоковує етап 3). PRP-013, п. 2б постійно (`additionalDirectories`, ~1 хв; файла `Prepround/backend/.claude/settings.local.json` досі немає), п. 3 (.NET SDK 10.0.404, досі 10.0.100) і п. 4 — за бажанням.
+- **Пріоритет зараз — деплой MVP** (рішення власника 2026-11-19, `backend/.claude/pm/decisions/005-mvp-hosting.md`). Цільові адреси: фронт `https://prepround.pages.dev` (Cloudflare Pages), API `https://prepround-api.onrender.com` (Render Free, Frankfurt), БД — Neon Free (Frankfurt).
+- **У роботі:** PRP-023.
+- **Готово для coder зараз (по черзі, послідовно):**
+  1. ~~PRP-021~~ — done 2026-11-19 (PASS з 1 кола, 316 тестів / 0).
+  2. **PRP-023** — чернетки тем: `draft: true` і `import` без чернеток за замовчуванням (backend + content). Перед передачею звір перелік із 7 тем у п. 4 картки з «Хвилями контенту»: агенти могли дописати після зупинки 2026-11-18.
+  3. **PRP-022** — продакшн-збірка фронту і підказка про холодний старт (frontend). Перед нею перевір запис у `PreproundWeb` пробним файлом (PRP-013, п. 2б).
+- **Власник може робити зараз:** PRP-020, решта кроків (~10 хв), паралельно з coder:
+  - закомітити видалення `backend/g.sh` і `backend/p.txt`, а також `backend/.claude/pm/content-brief.md` і `backend/.claude/tools/`;
+  - перевірити регіон і версію Postgres у Neon, створити БД `prepround`;
+  - дати Render GitHub App доступ до `Prepround`;
+  - перевірити вкладку Pages у Cloudflare.
+
+  За бажанням: PRP-013, п. 2б (постійний доступ до `PreproundWeb`), п. 3 (.NET SDK 10.0.404, досі 10.0.100), п. 4.
+- **Заблоковано:** PRP-024 (деплой і smoke на живому сайті) чекає PRP-020, PRP-021, PRP-022 і PRP-023, закомічених і запушених у `master`.
+- **Пауза: хвилі контенту Frontend (з 2026-11-18).**
+  - **Чому:** зупинка на `critical` у `pinia-003`; 5 агентів перервав ліміт API; власник ще не відповів, чи змінювати правило зупинки на `critical`.
+  - **Стан тем** — розділ «Хвилі контенту», пункт «Frontend, прогрес».
+  - **Відновлення:** після PRP-024 або за словом власника.
+  - **Деплой пауза не блокує.** Після PRP-023 неперевірені теми мають `draft: true`, тож у прод підуть лише 564 питання з PASS (42 теми Backend і 5 Frontend). Після відновлення dev-імпорт хвиль іде з `--include-drafts`, а головна сесія знімає `draft` з теми після PASS (пропозиція PM до CLAUDE.md, 2026-11-19).
+- **Середовище для агентів:** головна сесія тримає запущеними API (`https://localhost:7120`) і dev server (`http://localhost:4300`) для власника. Агенти не запускають другий екземпляр і не зупиняють ці сервери, а користуються ними (dev server перезбирається сам). Якщо серверів немає, агент запускає свої й наприкінці зупиняє. Docker-контейнери й образи карток деплою мають префікс `prepround-api` і прибираються після перевірки.
 - **Зупинки для власника:**
-  - після PRP-016 (кінець етапу 2a «Оформлення»): **зараз** — власник дивиться теми й екрани;
-  - після PRP-012 (кінець етапу 2b).
+  - **після PRP-024** (кінець етапу 4a): власник відкриває сайт з телефона й десктопа, проходить тест і вирішує, коли відновлювати хвилі Frontend;
+  - після PRP-012 (кінець етапу 2b; PRP-012 — після наповнення Frontend, якщо власник не вирішить інакше). Чекліст етапу 2a («Дорожня карта») лишається, якщо власник його ще не пройшов.
 - **Відкладено, не брати:** PRP-008 (iOS), див. розділ «Відкладено: iOS».
-- **Закрито:** PRP-001, PRP-002, PRP-003, PRP-014, PRP-004, PRP-005, PRP-006 (етап 1); PRP-007, PRP-009, PRP-010, PRP-011 (етап 2, усі з 1 кола, `PreproundWeb` 137 тестів / failed 0). PRP-015, PRP-016 (етап 2a, 193 тести); PRP-017, PRP-018 (етап 3; 72 питання, бекенд 307 тестів). **Етапи 1 і 2 виконано (2026-11-14).**
+- **Закрито:**
+  - етап 1: PRP-001, PRP-002, PRP-003, PRP-014, PRP-004, PRP-005, PRP-006;
+  - етап 2: PRP-007, PRP-009, PRP-010, PRP-011 (усі з 1 кола, `PreproundWeb` 137 тестів / failed 0). **Етапи 1 і 2 виконано (2026-11-14);**
+  - етап 2a: PRP-015, PRP-016 (193 тести);
+  - етап 3: PRP-017, PRP-018 (72 питання, бекенд 307 тестів), потім хвилі 1–3: **Backend завершено 2026-11-18** — 42 теми, 504 питання, усі PASS, `dotnet test` 309 / 0.
   - Хвости етапу 2 розкладено (PM, 2026-11-14): дублі `.primary` / `.secondary` і форматування часу, підказка на порожньому `/`, підтвердження в межах екрана → PRP-016; третій параметр `breakdownByTopic` і `set(key, undefined)` → примітки PRP-012; перерозподіл при зміні рівнів і дрібний борг фронту → «Ідеї»; решта — «прийнято» з причиною (рядок «Розкладено» під кожною карткою). Нових карток через хвости не знадобилось.
 
 ## Хвилі контенту (рішення власника 2026-11-15; CLAUDE.md «Погнали», ADR 004 розділ 8)
@@ -132,7 +152,18 @@
     4. PRP-019 — `architecture`, `messaging`, `docker-k8s` по 12.
     5. Далі (картки ставить PM після PRP-019): `azure` 12; потім глибина до 30 на тему (10/10/10) для всіх 10 тем — ~6 карток по 2 теми × 18 питань.
   - Наприкінці — зупинка: власник проходить тест .NET на 30–50 питань з усіма рівнями. Потім — інші стеки (кожен починається рядком бази версій в ADR 004, розділ 5).
-- **Етап 4 · Деплой на prepround.app** (почати з ADR): хостинг, CI/CD для двох репо, Docker, сканування образів, бекапи. Для власника це DevOps-кейс у портфоліо, тож фіксувати метрики «до/після».
+- **Етап 4a · Деплой MVP на безкоштовний хостинг** (рішення власника 2026-11-19, **ADR 005 accepted**). Порядок: PRP-020 (власник, паралельно з coder) → PRP-021 → PRP-023 → PRP-022 → PRP-024.
+  - **Результат:** людина з будь-якого пристрою відкриває `https://prepround.pages.dev`, налаштовує й проходить тест. API на Render Free (Frankfurt) читає лише перевірені питання з Neon (Frankfurt) через роль лише для читання. Деплой — push у `master`.
+  - **Зупинка:** власник проходить тест з телефона й десктопа, метрики «до/після» записано в ADR 005.
+  - **Розкладено вхідні дані етапу 4 (PM, 2026-11-19):**
+    - `ForwardedHeaders` → PRP-021: `CF-Connecting-IP`, а не найправіший `X-Forwarded-For`, бо за Render стоїть Cloudflare (ADR 005, розділ 4);
+    - `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT` → PRP-021: образ `aspnet:10.0` на Ubuntu з ICU, критерій «порядок тем у контейнері дорівнює локальному»;
+    - `import` один за раз → PRP-024 і зміна процесу: імпорт у прод запускає лише власник;
+    - `ASPNETCORE_ENVIRONMENT=Production` → PRP-021 (у Dockerfile, критерій `404` на `/openapi/v1.json`);
+    - `Request.Invalid` лишається в «Ідеях» (P2): типізований фронт такого тіла не шле;
+    - CI/CD, сканування образів, домен → «Ідеї»;
+    - бекапи не потрібні: БД відтворюється з git (міграції + `import`, ADR 005, розділ 5).
+- **Етап 4 · Деплой на prepround.app** (почати з ADR): хостинг, CI/CD для двох репо, Docker, сканування образів, бекапи. Для власника це DevOps-кейс у портфоліо, тож фіксувати метрики «до/після». *(2026-11-19: хостинг і Docker — етап 4a вище; решта — «Ідеї».)*
   - **Вхідні дані для ADR деплою (хвости етапу 1):**
     - **`ForwardedHeaders`** (PRP-006, coder і tester): rate limiter `tests` ділить клієнтів за `RemoteIpAddress`. За проксі всі клієнти потраплять в один розділ і разом отримають `429` після 30 запитів на хвилину;
     - **`DOTNET_SYSTEM_GLOBALIZATION_INVARIANT`** (PRP-005, tester): теми сортуються `StringComparer.InvariantCulture`. В офіційних alpine-образах .NET invariant-режим увімкнено за замовчуванням, і тоді порівняння стає ordinal: `AWS` перед `Async…`, кирилиця й нижній регістр після великої латиниці. Або образ з ICU і `false`, або явне рішення про компаратор. Тест tester на такому середовищі впаде, і це правильно;
@@ -142,6 +173,19 @@
 
 ## Ідеї (ще не картки)
 
+- **Після деплою (ADR 005, 2026-11-19):**
+  - **Домен prepround.app.** На 2026-11-13 вільний, не куплений; він платний, тож лише за рішенням власника. Потрібні custom domain на Pages і Render, а origin домену — в `appsettings.Production.json`.
+  - **Keep-alive пінг** `/api/health` раз на ≤ 14 хв (рішення власника). 750 год покривають один сервіс 24/7. Health БД не чіпає, тож Neon однаково засинає. Без пінгу людина чекає до ~1 хв на першому запиті (PRP-022 це пояснює).
+  - **CI (GitHub Actions):** `dotnet test` і `npx ng test --watch=false` на кожен push; у Render — «Auto-Deploy: After CI checks pass». Сюди ж:
+    - тижнева перевірка живості `sources` (див. нижче);
+    - сканування образу (Trivy);
+    - pin базових образів за digest плюс Renovate або Dependabot: Render кешує плаваючі теги.
+  - **Автоімпорт контенту** після PASS через GitHub Action із секретом ролі-власника. Компроміс: секрет живе в GitHub, а не лише в терміналі власника.
+  - **CSP і заголовки безпеки** (P2): `public/_headers` на Pages з `script-src 'self'`. `theme-init.js` уже окремий файл, але Angular `inlineCritical` додає inline `onload`, тож потрібен `security.autoCsp` або вимкнення `inlineCritical`. На API — `X-Content-Type-Options: nosniff`.
+  - **Стиснення відповідей API** (Brotli/gzip), якщо трафік Render дійде до 50 % від 5 ГБ на місяць. Зараз: каталог 13,7 КБ, 20 питань — 23,4 КБ без стиснення.
+  - **`EnableRetryOnFailure` в Npgsql**, якщо на проді з'являться поодинокі `500` після сну Neon. Зараз від цього береже `Connection Idle Lifetime=60` у рядку Render.
+  - **Rate limit для IPv6** — ділити за `/64`, а не за адресою. Інакше клієнт з IPv6 обходить ліміт зміною адреси в межах своєї мережі.
+  - **Workers Static Assets** замість Pages, якщо Cloudflare почне обмежувати Pages (ADR 005, «Ризики»).
 - Акаунти й синхронізація історії між пристроями (ADR).
 - Адмінка для питань, коли з'являться автори без git (рішення 002).
 - Нові напрями IT: DevOps, QA, Mobile, Data. Потім інші галузі.
@@ -1230,6 +1274,337 @@
 - **Для tester:** як у PRP-018. Додатково: у `architecture` немає питань, де правильність залежить від смаку («кращий», «правильніший» без критерію з джерела); у `docker-k8s` прикладів, запущених локально, вистачає для перевірки шарів і кешу збірки.
 - **Контракт API:** без змін.
 - **Поза скоупом:** `azure`, `api-design`, `nosql`; правки наявних питань; код.
+
+### PRP-020 · Акаунти й доступи для деплою: GitHub, Neon, Render, Cloudflare
+- **Статус:** in-progress (власник; частину виконано 2026-11-19)
+- **Виконавець:** власник
+- **Пріоритет:** P1
+- **Область:** backend + frontend
+- **Платформа:** web
+- **Залежить від:** рішення 005
+- **Навіщо:** без доступу платформ до репо Render і Pages не зберуть код, а без БД у Neon API не має чого віддавати. Усе це вимагає акаунтів власника, агент цього не зробить.
+- **Що зробити:**
+  1. ~~GitHub: репо `dmitryspain/Prepround` і `dmitryspain/PreproundUI` (фронт; локальна тека лишається `PreproundWeb`), перші коміти й push, гілка `master`.~~ Виконано.
+  2. **Хвости першого коміту `Prepround`.** У нього потрапили сміттєві `backend/g.sh` і `backend/p.txt` (скрипт агента і ~650 КБ скопійованої сторінки документації). Секретів, `bin/` і `obj/` там немає, перевірено. Головна сесія вже видалила ці файли з диска. Лишилось закомітити й запушити:
+     - їх видалення;
+     - нові файли, яких досі немає в git: `backend/.claude/pm/content-brief.md` (бриф хвиль) і `backend/.claude/tools/` (`content-lint.py`);
+     - ADR 005, оновлені беклог і knowledge.
+  3. **Neon.** ~~Проєкт створено.~~ Перевірити в налаштуваннях проєкту:
+     - регіон **AWS Europe Central 1 (Frankfurt)**. Регіон після створення не змінюється: якщо він інший, створити проєкт заново (дані не втрачаються, БД відтворюється з git);
+     - версію Postgres: очікується 18. Версія 17 теж підходить: міграція `InitialCatalog` має лише `text`, `integer`, `boolean`, `jsonb`, `timestamptz` і жодного сирого SQL (перевірено PM 2026-11-19).
+
+     Головній сесії написати регіон і версію, без рядків підключення.
+  4. **Neon: створити БД `prepround`** (Databases → New database, власник — роль за замовчуванням `neondb_owner`). Більше нічого. Міграції, імпорт і роль для API — у PRP-024.
+  5. **Render: дати GitHub App «Render» доступ до репо `dmitryspain/Prepround`**: GitHub → Settings → Applications → Installed GitHub Apps → Render → Configure → Repository access → додати `Prepround`. Сервіс поки **не створювати**: без Dockerfile (PRP-021) збірка впаде. Його створює PRP-024. Якщо Render попросить банківську картку, зупинитись і написати головній сесії: умова ADR 005 — без картки.
+  6. **Cloudflare:** ~~акаунт (вхід через GitHub)~~. Перевірити, що в Workers & Pages → Create є вкладка **Pages** з «Import an existing Git repository» і що Cloudflare бачить репо `dmitryspain/PreproundUI`. Проєкт поки **не створювати**: до PRP-022 сайт ходив би на `localhost`. Якщо вкладки Pages немає, а є лише Workers, написати головній сесії (ADR 005, «Ризики»).
+  7. **За бажанням: `docker builder prune`.** Звільняє ~21 ГБ кешу збірки (на `/System/Volumes/Data` вільно 16 ГБ, зайнято 97 %, 2026-11-19). Збірки PRP-021 потребують ~2–3 ГБ. Ціна: інші проєкти перезбиратимуться довше один раз.
+  8. **Рядки підключення Neon у чат не вставляти й агентам не передавати.** Сценарій Neon для агентів (`npm i -g neon`, `neon init`/`neon deploy`, файли `neon.ts` і `.env.local`) не використовуємо (ADR 005, «Відкинуто»).
+- **Дозволені пакети:** нових немає.
+- **Критерії приймання:**
+  - [x] `git -C /Users/dmitryspain/RiderProjects/Prepround remote -v` → `https://github.com/dmitryspain/Prepround.git`; `git -C /Users/dmitryspain/RiderProjects/PreproundWeb remote -v` → `https://github.com/dmitryspain/PreproundUI.git`; гілка `master` в обох (PM, 2026-11-19)
+  - [ ] `git -C /Users/dmitryspain/RiderProjects/Prepround status --short backend/g.sh backend/p.txt backend/.claude` → порожньо, а `git -C /Users/dmitryspain/RiderProjects/Prepround status -sb` не показує `ahead`
+  - [ ] власник написав регіон (Frankfurt) і версію Postgres у Neon; БД `prepround` існує
+  - [ ] у формі створення сервісу Render у списку репо є `dmitryspain/Prepround`
+  - [ ] у Cloudflare є вкладка Pages, а в списку репо — `dmitryspain/PreproundUI`
+- **Виконано (2026-11-19):** п. 1 — репо, перші коміти й push в обох, гілка `master`; п. 3 — проєкт Neon створено, власник підтвердив: **Frankfurt, Postgres 18**; п. 6 — акаунт Cloudflare; акаунт Render. П. 2 частково: коміт `7746f5d` видалив `g.sh` і `p.txt` (запушено).
+- **Лишилось:**
+  - п. 2 — нові файли (`content-brief.md`, `tools/`, ADR 005, беклог, knowledge) ще не в git. Головна сесія запропонує їх разом із комітами PRP-021 і PRP-023, після PASS PRP-023: зараз coder змінює ті самі файли;
+  - п. 4 — БД `prepround`;
+  - п. 5 — доступ Render до репо (підкаже головна сесія);
+  - п. 6 — перевірити Pages;
+  - п. 7 — за бажанням.
+- **Для tester:** не стосується (картка власника).
+- **Контракт API:** без змін.
+- **Поза скоупом:** створення сервісу Render і проєкту Pages, міграції, імпорт і роль читача (PRP-024); Neon CLI; домен prepround.app («Ідеї»).
+
+### PRP-021 · Docker-образ API і робота за проксі Render
+- **Статус:** done
+- **Виконавець:** coder
+- **Пріоритет:** P1
+- **Область:** backend
+- **Залежить від:** рішення 005 (розділи 2–4)
+- **Навіщо:** Render Free запускає API лише з Docker-образу. За проксі Render і Cloudflare всі запити приходять з внутрішньої IP проксі, тож без справжньої IP клієнта rate limit `tests` (30 на хвилину з однієї IP, spec 5.2) став би одним на всіх: 31-й тест за хвилину від будь-кого отримав би `429`. А в образі без ICU змінився б порядок тем у каталозі (хвіст PRP-005).
+- **Що зробити** (шляхи від `Prepround/`):
+  1. **`backend/Dockerfile`, multi-stage.** Це вимога, а не дослівний текст: якщо щось нижче не працює, поясни у звіті, що змінив і чому.
+     - **Збірка** на `mcr.microsoft.com/dotnet/sdk:10.0`:
+       - спершу копіюються лише `global.json`, `nuget.config`, `Directory.Build.props`, `Directory.Packages.props` і `*.csproj` з `src/`, потім `dotnet restore src/Prepround.Api/Prepround.Api.csproj`. Окремий шар кешується між збірками;
+       - потім решта `src/` і `dotnet publish src/Prepround.Api/Prepround.Api.csproj -c Release -o /app --no-restore`.
+
+       Framework-dependent, без RID і без `--platform`: Render збирає на своїй архітектурі, а tester — на arm64.
+     - **Запуск** на `mcr.microsoft.com/dotnet/aspnet:10.0`. Це Ubuntu 24.04 з ICU. Не `-alpine` і не `-chiseled`: там немає ICU, і `StringComparer.InvariantCulture` поміняв би порядок тем.
+     - `ENV ASPNETCORE_ENVIRONMENT=Production`, `USER $APP_UID` (в образі це 1654, тобто не root), `EXPOSE 8080`.
+     - **Порт:** застосунок слухає `${PORT:-8080}`, наприклад `ENTRYPOINT ["/bin/sh", "-c", "ASPNETCORE_HTTP_PORTS=${PORT:-8080} exec dotnet Prepround.Api.dll"]`. Render передає `PORT` (за замовчуванням 10000), локально без `PORT` — 8080. Інших способів не додавати: ні коду в `Program.cs`, ні `ASPNETCORE_URLS`.
+  2. **`backend/.dockerignore`**, щонайменше: `**/bin/`, `**/obj/`, `.claude/`, `.idea/`, `.config/`, `tests/`, `**/*.user`, `docker-compose.yml`, `**/appsettings.Development.json`. У прод-образі не має бути навіть локального dev-рядка підключення.
+  3. **Forwarded headers** у `backend/src/Prepround.Api/Program.cs`:
+     - `ForwardedHeadersOptions`:
+       - `ForwardedHeaders = XForwardedFor | XForwardedProto`;
+       - `KnownProxies.Clear()` і `KnownIPNetworks.Clear()`, а не `KnownNetworks`: у .NET 10 він obsolete (ASPDEPR005), і `TreatWarningsAsErrors` зламає збірку. Коментар англійською пояснює чому: Render не публікує IP своїх проксі, а дістатися до контейнера можна лише через них;
+     - `ForwardedForHeaderName` і `ForwardLimit` читаються з секції конфігурації `ForwardedHeaders`. Без неї діють стандартні значення: `X-Forwarded-For` і `1`. Так їх можна змінити змінною Render без нової збірки, наприклад `ForwardedHeaders__ForwardLimit=2`;
+     - `app.UseForwardedHeaders()` стоїть першим у конвеєрі, до `UseHttpsRedirection`, `UseCors` і `UseRateLimiter`;
+     - `RateLimitPolicies` не змінювати: він, як і раніше, ділить за `RemoteIpAddress`, а тепер цю адресу виставляє middleware.
+  4. **`backend/src/Prepround.Api/appsettings.Production.json`** (новий):
+     - `Cors:Origins` = `["https://prepround.pages.dev"]`;
+     - `ForwardedHeaders:ForwardedForHeaderName` = `CF-Connecting-IP`. У `X-Forwarded-For` на Render найправіший запис — IP вузла Cloudflare, а ліворуч стоїть будь-що, що надіслав клієнт. `CF-Connecting-IP` містить одну IP клієнта (ADR 005, розділ 4);
+     - `Logging:LogLevel:Microsoft.EntityFrameworkCore` = `Warning`, інакше кожен SQL-запит іде в лог Render.
+  5. **`http://localhost:4300`** перенести з `Cors:Origins` у `appsettings.json` до `appsettings.Development.json`. Масиви конфігурації зливаються за індексом, тож origin з базового файлу не має потрапити в Production. В `appsettings.json` лишається порожній масив `Cors:Origins` або секції немає зовсім.
+  6. **`Prepround/README.md`**, розділ «Docker-образ API»: збірка й локальний запуск з `backend/` (команди з критеріїв нижче) і що Render передає `PORT`.
+- **Дозволені пакети:** нових немає (`ForwardedHeaders` входить у shared framework `Microsoft.AspNetCore.App`).
+  - **Docker-образи — виняток з allowlist хвиль у CLAUDE.md лише для цієї картки:** coder і tester можуть робити `docker pull` образів `mcr.microsoft.com/dotnet/sdk:10.0` і `mcr.microsoft.com/dotnet/aspnet:10.0`. Обидва вже є локально, але amd64 і застарілі (runtime 10.0.11), тож pull оновить їх до arm64-варіанта з актуальним патчем.
+  - Свої образи називати `prepround-api:prp021`, а контейнери — `prepround-api-prp021*`.
+- **Критерії приймання** (команди з `Prepround/backend`):
+  - [ ] `docker build -t prepround-api:prp021 .; echo $?` → `0`
+  - [ ] `docker run --rm --entrypoint sh prepround-api:prp021 -c 'id -u; ls /app | grep -c appsettings.Development.json'` → `1654` і `0`
+  - [ ] **запуск проти dev-БД.** Команда: `docker run -d --name prepround-api-prp021 -p 18080:8080 -e "ConnectionStrings__Prepround=Host=host.docker.internal;Port=5433;Database=prepround;Username=prepround;Password=prepround" prepround-api:prp021`. Очікувано:
+    - `curl -s http://localhost:18080/api/health` → `{"status":"ok"}`;
+    - `curl -s -o /dev/null -w '%{http_code}' http://localhost:18080/api/catalog` → `200`;
+    - `curl -s -o /dev/null -w '%{http_code}' http://localhost:18080/openapi/v1.json` → `404` (Production).
+  - [ ] **порт.** Той самий образ з `-e PORT=10000 -p 18081:10000` → `curl -s http://localhost:18081/api/health` → `{"status":"ok"}`
+  - [ ] **порядок тем.** `curl -s http://localhost:18080/api/catalog | jq -c '[.fields[0].topics[].id]'` дорівнює виводу тієї самої команди для `https://localhost:7120/api/catalog` (з `-k`). Якщо локального API немає, tester запускає його сам і зупиняє наприкінці
+  - [ ] **CORS у контейнері (Production).**
+    - `curl -si -X OPTIONS http://localhost:18080/api/tests -H 'Origin: https://prepround.pages.dev' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type'` → `Access-Control-Allow-Origin: https://prepround.pages.dev`;
+    - те саме з `Origin: http://localhost:4300` → заголовка немає.
+  - [ ] **rate limit у контейнері.**
+    - 30 × `curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:18080/api/tests -H 'Content-Type: application/json' -d '{}' -H 'CF-Connecting-IP: 203.0.113.1' -H "X-Forwarded-For: 198.51.100.$i"` → жодного `429`;
+    - 31-й з тією самою `CF-Connecting-IP` → `429`;
+    - одразу після цього запит з `CF-Connecting-IP: 203.0.113.2` → не `429`.
+  - [ ] **перевизначення змінними (запасний варіант ADR 005).** Контейнер з `-e ForwardedHeaders__ForwardedForHeaderName=X-Forwarded-For -e ForwardedHeaders__ForwardLimit=2` ділить ліміт за другим записом справа:
+    - 30 запитів з `X-Forwarded-For: <випадкова>, 203.0.113.7, 104.16.0.1` → 31-й → `429`;
+    - запит з `X-Forwarded-For: <випадкова>, 203.0.113.8, 104.16.0.1` → не `429`.
+  - [ ] `dotnet build` → 0 попереджень; `dotnet test; echo $?` → `0`, `failed: 0`. Охоронні тести зелені: `CorsTests`, `StartupWithoutDatabaseTests`, `TestsEndpointTests` (rate limit з `RemoteIpAddress`), `HandlerCompositionTests`, `LayerDependencyTests`
+  - [ ] **нові автотести tester** через `ApiFactory`:
+    - Development без заголовків поводиться як досі;
+    - `ApiFactory.Create("Production")`: CORS пропускає лише `https://prepround.pages.dev`, ліміт ділиться за `CF-Connecting-IP`, різні `X-Forwarded-For` з однаковим `CF-Connecting-IP` нових розділів не створюють.
+  - [ ] **прибирання:** `docker ps -a --filter name=prepround-api-prp021 -q` і `docker images prepround-api -q` → порожньо
+- **Для tester:**
+  - Перед збіркою `df -h /System/Volumes/Data`: якщо вільно < 5 ГБ, поверни BLOCKED. Урок 2026-11-15: заповнений диск ламав образи.
+  - `{}` у тілі дає `400`, але дозвіл ліміту однаково витрачає: limiter стоїть перед ендпоінтом.
+  - `http://` у контейнері не дає `307`: у Production без HTTPS-порту `UseHttpsRedirection` лише раз пише попередження.
+  - **Для звіту, не критерій** (портфоліо, ADR 005, «Метрики»): розмір образу (`docker images`), час холодної й повторної збірки. Повторна збірка після зміни одного `.cs` має взяти restore з кешу.
+  - **За бажанням:** `docker build --platform linux/amd64` (архітектура Render). Якщо емуляція падає, це примітка, а не FAIL.
+  - Не видаляти образів, які були до картки: `sdk:10.0`, `sdk:10.0-alpine`, `aspnet:10.0`, `aspnet:10.0-noble` та інших проєктів власника. `docker builder prune` не запускати: це кеш інших проєктів.
+- **Контракт API:** без змін. «Одна IP-адреса» зі spec 5.2 за проксі тепер означає IP клієнта з `CF-Connecting-IP`.
+- **Поза скоупом:**
+  - створення сервісу Render (PRP-024);
+  - міграції на старті;
+  - `/api/health` з перевіркою БД і `MapHealthChecks`: health лишається liveness без БД (spec 5.3), на ньому health check Render;
+  - зміни `RateLimitPolicies` і ліміту;
+  - стиснення, CI, сканування, pin за digest («Ідеї»);
+  - `capacitor://localhost` (PRP-008).
+
+**Результат (2026-11-19):** PASS з 1 кола; тести: total 316 / failed 0 (308 наявних + 8 нових у `tests/Prepround.Tests/Api/ForwardedHeadersTests.cs`). Образ 297 МБ (`/app` — 8,4 МБ). Холодна збірка 13–19 с, після зміни одного `.cs` — 6 с, restore з кешу.
+**Хвости:**
+- **coder, «Помічено поза скоупом»:**
+  - У лозі контейнера при новому з'єднанні з Postgres з'являється `Cannot load library libgssapi_krb5.so.2 ... No such file or directory`. Це, найімовірніше, спроба шифрування GSS, яку Npgsql за замовчуванням вмикає в режимі `Prefer`. Запит після цього проходить, каталог віддає 200. Виправити можна двома способами: додати `GSS Encryption Mode=Disable` у рядок підключення для Render (ADR 005, розділ 5) або поставити `libgssapi-krb5-2` в образ. Я не робив ні того, ні іншого.
+  - Після `docker pull` старий amd64 `mcr.microsoft.com/dotnet/sdk:10.0` (id `cf3e50b742c6`, 887 МБ) лишився без тегу (`<none>`). Старий aspnet (`9bdfb7d1291d`) і далі має тег `10.0-noble`. Картка забороняє видаляти образи, що були до неї, тож я їх не видаляв. Видалити `<none>` чи ні, вирішує головна сесія або власник.
+- **tester, «Зауваження»:**
+  - `docker build --platform linux/amd64` (за бажанням) я не робив. Для нього довелося б тягнути amd64-варіанти базових образів. У класичному сховищі образів це перевісило б теги `sdk:10.0` і `aspnet:10.0` назад на amd64 і скасувало б щойно зроблений arm64 pull. Архітектура Render перевіриться збіркою в PRP-024.
+  - `Program.cs`, `forwardedHeaders.GetValue("ForwardLimit", options.ForwardLimit)`, тип `int?`. Це я вивів із коду `ConfigurationBinder` і запуском не перевіряв: порожнє значення змінної (`ForwardedHeaders__ForwardLimit=`), найімовірніше, дасть `ForwardLimit = null`, тобто без ліміту. З `CF-Connecting-IP` це нешкідливо, бо там один запис. У запасному режимі з `X-Forwarded-For` переміг би найлівіший запис, який задає клієнт. Досить пам'ятати в PRP-024, що змінну задають лише непорожнім числом.
+  - У Development тепер теж діє `X-Forwarded-For` з лімітом 1 (довірених проксі немає), тож у dev IP можна підробити заголовком. Coder про це писав. Для локальної розробки це прийнятно, на Production не впливає: тест `Production_ignores_x_forwarded_for…`.
+  - Restore-шар Dockerfile перелічує 4 csproj явно (припущення coder). Нове посилання API на інший проєкт зламає restore в образі помітно, а не мовчки. Це прийнятно.
+  - Цифру «309 тестів» у беклозі краще виправити на 308: у HEAD 156 `[Fact]` + 152 `[InlineData]` = 308, пропущених немає, а тести з першого коміту не змінювались. Звідки була 309, з git уже не з'ясувати.
+- **Примітка головної сесії:** `GSS Encryption Mode=Disable` і «`ForwardLimit` лише непорожнім числом» → примітки до PRP-024 (рядки підключення й змінні Render). Видалення образу `<none>` (887 МБ) — на розсуд власника.
+
+### PRP-022 · Продакшн-збірка фронту для Cloudflare Pages і підказка про холодний старт API
+- **Статус:** todo
+- **Виконавець:** coder
+- **Пріоритет:** P1
+- **Область:** frontend
+- **Платформа:** web
+- **Залежить від:** рішення 005 (розділи 1–2). Від PRP-021 не залежить: контракт той самий
+- **Навіщо:**
+  - Зараз будь-яка збірка ходить на `https://localhost:7120/api`, тож сайт на Pages не зміг би отримати каталог.
+  - API на Render Free після 15 хв простою прокидається близько хвилини, а цей час людина бачить лише «Завантаження…». У MVP так зустрічатиме майже кожного першого відвідувача, і він вирішить, що сайт зламаний.
+- **Що зробити** (репо `PreproundWeb`, шляхи від його кореня):
+  1. **`src/environments/environment.production.ts`:** `apiBaseUrl: 'https://prepround-api.onrender.com/api'`, коментар про `fileReplacements` поруч. Якщо назва сервісу на Render інша, головна сесія змінить цей рядок у PRP-024. `src/environments/environment.ts` не змінювати: dev і тести лишаються на `https://localhost:7120/api`.
+  2. **`angular.json`:** у `build.configurations.production` додати `fileReplacements`: `src/environments/environment.ts` → `src/environments/environment.production.ts`. Нових конфігурацій не додавати.
+  3. **SPA-фолбек: нічого не додавати.** Pages віддає `index.html` на будь-який шлях, якщо в корені виходу немає `404.html` (документація Pages, «Serving Pages»). `_redirects` і `404.html` не створювати.
+  4. **Node на Pages** береться з наявного `.node-version` (22.23.5): збірка Pages v3 читає цей файл, а за замовчуванням ставить 22.23.4. `NODE_VERSION` не потрібен, файл не змінювати.
+  5. **Підказка в `src/app/setup/`.** Якщо каталог вантажиться довше 5 с, під «Завантаження…» з'являється «Сервер прокидається після простою — це може тривати до хвилини.».
+     - Коли каталог прийшов або сталася помилка, підказка зникає разом із «Завантаження…».
+     - Поріг — іменована константа (`core/config.ts` або поруч із компонентом).
+     - Таймер через RxJS `timer` або `setTimeout`, прибирається при знищенні компонента.
+     - Колір лише через токени (`var(--…)`, клас `.muted`).
+  6. **`README.md`, розділ «Деплой»:**
+     - Cloudflare Pages: проєкт `prepround`, репо GitHub `dmitryspain/PreproundUI`, гілка `master`;
+     - збірка: команда `npm run build`, вихідна тека `dist/web/browser`, Node з `.node-version`;
+     - адреса API для проду лежить у `src/environments/environment.production.ts`.
+- **Дозволені пакети:** нових немає.
+- **Критерії приймання** (з `/Users/dmitryspain/RiderProjects/PreproundWeb`):
+  - [ ] `npm run build; echo $?` → `0`, у виводі 0 попереджень
+  - [ ] `grep -l 'https://prepround-api.onrender.com/api' dist/web/browser/*.js | wc -l` → ≥ `1`; `grep -rl 'localhost:7120' dist/web/browser | wc -l` → `0`
+  - [ ] `npx ng build --configuration development --output-path <scratchpad>/dev-build; echo $?` → `0`; у `<scratchpad>/dev-build/browser/*.js` є `localhost:7120` і немає `onrender.com`
+  - [ ] `test -f dist/web/browser/index.html && test -f dist/web/browser/theme-init.js && test ! -e dist/web/browser/404.html && test ! -e dist/web/browser/_redirects; echo $?` → `0`
+  - [ ] `grep -rln 'onrender' src --include='*.ts'` → лише `src/environments/environment.production.ts`
+  - [ ] **тести Setup з fake timers** (Vitest `vi.useFakeTimers()` або рівнозначно) і фейковим каталогом, що не відповідає:
+    - через 4,9 с підказки немає;
+    - через 5 с є;
+    - після відповіді каталогу підказки й «Завантаження…» немає;
+    - після помилки каталогу підказки немає.
+  - [ ] `npx ng test --watch=false; echo $?` → `0`, failed 0
+- **Для tester:**
+  - **Тести й API.** Перевір, чи `ng test` не підхоплює продакшн-адресу. Тести, що спираються на `API_BASE_URL`, мають задавати його самі, як `setup.spec.ts` і `api.service.spec.ts`.
+  - **Вигляд підказки.** На 390 px вона не дає горизонтальної прокрутки. Скриншот у трьох темах — у звіт, не критерій.
+  - **Бюджети.** `anyComponentStyle` не перевищено. Найбільший стиль — `test-run.scss`, а Setup теж близький до межі.
+- **Контракт API:** без змін.
+- **Поза скоупом:**
+  - CSP і `_headers` («Ідеї»);
+  - Workers Static Assets, keep-alive, домен;
+  - зміна `environment.ts`;
+  - `withViewTransitions()`;
+  - iOS (`environment.mobile.ts`, `dist/mobile`, PRP-008);
+  - підказка на інших екранах: на момент `POST /api/tests` сервер уже прокинувся.
+
+### PRP-023 · Чернетки тем: `draft: true` і `import` без чернеток за замовчуванням
+- **Статус:** todo
+- **Виконавець:** coder
+- **Пріоритет:** P1 (блокує перший імпорт у прод: без неї туди потрапить відома хибна відповідь)
+- **Область:** backend + content
+- **Залежить від:** рішення 005 (розділ 6), рішення 002 (розділ «Уточнення: чернетки тем»)
+- **Навіщо:** у `content/` зараз 84 питання з 7 тем без PASS фактчеку. У `pinia-003` фактчек уже знайшов хибну «правильну» відповідь (`critical`). `import` бере всю теку, тож перший імпорт у Neon показав би людям неперевірені питання, а одне з них свідомо хибне. Фактчек ловив `critical` приблизно в кожній шостій темі (`sql-010`, `laravel-010`, `php-lang-012`, `pinia-003`). Позначка у файлах надійніша за список у пам'яті головної сесії. Хвилі тривають, а імпорт у прод запускає власник.
+- **Що зробити** (шляхи від `Prepround/`):
+  1. **Формат.** Необов'язкове поле теми `draft` (`true` / `false`, за замовчуванням `false`) на верхньому рівні файлу теми, поруч з `id`, `title`, `description`.
+     - Читає `backend/src/Prepround.Infrastructure/Content/YamlContentReader.cs`. Небулеве значення — помилка читача з файлом і рядком, як для `correct`.
+     - `TopicDefinition` отримує `bool IsDraft` або рівнозначне поле.
+     - `validate` перевіряє чернетки, як і решту тем. У рядку підсумку додається кількість питань у чернетках, наприклад «… питань 648, з них у чернетках 84».
+  2. **`import <тека>` за замовчуванням не імпортує питань тем-чернеток.** Вони вважаються відсутніми у файлах (рішення 002, «Семантика імпорту»): нові не додаються, раніше імпортовані стають `IsActive = false`. Сама тема (назва, опис, місце в стеках) імпортується як завжди.
+     - `import <тека> --include-drafts` імпортує все, як зараз.
+     - Фільтр живе в одному місці в Application: прапорець у `ImportContentCommand` і його обробка в `ImportContentHandler` або рівнозначно. Не в ContentTool. Обидва режими йдуть через той самий `ContentLoader`.
+  3. **ContentTool.** Форма `import <тека> [--include-drafts]`, прапорець описано в Usage. Інший прапорець або інший порядок аргументів → код `2` і повідомлення.
+  4. **Контент: `draft: true` у 14 темах.** Перед передачею coder головна сесія звіряє перелік із «Хвилями контенту». Якщо якась із 7 тем з питаннями вже отримала PASS, `draft` їй не ставлять, а очікувані числа в критеріях зсуваються на 12.
+     - **7 тем з питаннями без PASS на 2026-11-18:** `pinia`, `angular-di`, `nextjs`, `react-state`, `angular-change-detection`, `vue-router`, `react-data-routing`;
+     - **7 порожніх тем:** `html-css`, `frontend-testing`, `web-performance`, `rxjs`, `ngrx`, `angular-routing-forms`, `nuxt`. Автор, який їх наповнить, з першого рядка працюватиме в чернетці.
+
+     Інших змін у контенті немає.
+  5. **`Prepround/README.md`:** у розділі ContentTool — рядок про `draft` і `--include-drafts`: dev-БД імпортує з прапорцем, прод без нього.
+- **Дозволені пакети:** нових немає.
+- **Критерії приймання** (з `Prepround/backend`). Числа — на контенті 2026-11-19: 648 питань, 84 з них у 7 чернетках. БД тимчасова, щоб не чіпати dev-БД власника:
+  - [ ] `dotnet run --project src/Prepround.ContentTool -- validate ../content; echo $?` → `0`, у підсумку є `648` і `84`
+  - [ ] `grep -l '^draft: true' ../content/it/topics/*.yaml | wc -l` → `14`, перелік збігається з п. 4; `git diff --stat -- ../content` → лише рядки `draft` у 14 файлах
+  - [ ] **зламана копія** в scratchpad: `draft: maybe` в одній темі → `validate` → `1` і рядок із файлом цієї теми
+  - [ ] **тимчасова БД:**
+    1. `docker exec prepround-postgres createdb -U prepround prepround_prp023` → `0`;
+    2. `dotnet ef database update --connection "Host=localhost;Port=5433;Database=prepround_prp023;Username=prepround;Password=prepround" --project src/Prepround.Infrastructure --startup-project src/Prepround.Api` → `0`;
+    3. `ConnectionStrings__Prepround=<той самий рядок> dotnet run --project src/Prepround.ContentTool -- import ../content` → `0`, `Питання: додано 564, оновлено 0, деактивовано 0`;
+    4. `docker exec prepround-postgres psql -U prepround -d prepround_prp023 -tAc 'SELECT count(*) FROM "Questions" WHERE "IsActive"'` → `564`, а `SELECT count(*) FROM "Topics" WHERE "IsActive"` → `61`.
+  - [ ] **на тій самій БД:**
+    - `import ../content --include-drafts` → `0`, `Питання: додано 84, оновлено 0, деактивовано 0`, активних `648`;
+    - знову `import ../content` → `Питання: додано 0, оновлено 0, деактивовано 84`, активних `564`. Це шлях аварійного вимкнення теми.
+  - [ ] `import ../content --bogus; echo $?` → `2`; `import --include-drafts ../content; echo $?` → `2`
+  - [ ] **прибирання:** `docker exec prepround-postgres dropdb -U prepround prepround_prp023` → `0`. Кількість активних питань у dev-БД `prepround` така сама, як до картки
+  - [ ] `PREPROUND_TEST_CONTENT_DIR=<знімок content> dotnet test; echo $?` → `0`, `failed: 0`.
+    - Охоронні тести зелені: `ImportCommandTests`, `ValidateCommandTests`, `ValidateUnreadYamlTests`, `UsageTests`, `ContentToolConfigurationTests`, `LayerDependencyTests`, `HandlerCompositionTests`.
+    - Тести, що порівнюють API з файлами, tester оновлює під новий режим і перевіряє той самий факт.
+- **Для tester:**
+  - **Чернетка в стеку.** Тема-чернетка, на яку посилаються стеки, не ламає `validate` і `import`. У `/api/catalog` її `questionCounts` за замовчуванням порожній або нульовий.
+  - **`draft: false`** поводиться так само, як відсутнє поле.
+  - **Ідемпотентність.** Повторний `import` у тому самому режимі дає `додано 0, оновлено 0, деактивовано 0`.
+  - **`UpdatedAt` реактивованих.** Питання, яке повернулося з чернетки, оновлює `UpdatedAt` лише якщо змінився вміст (як у PRP-004).
+  - **`content-lint.py`.** `python3 backend/.claude/tools/content-lint.py --all` не скаржиться на новий ключ. Якщо скаржиться, це зауваження для головної сесії: інструмент її.
+- **Контракт API:** без змін. API, як і раніше, віддає лише активні питання; БД і spec 5 про `draft` не знають.
+- **Поза скоупом:**
+  - `draft` на рівні питання; нова колонка в БД чи міграція; зміни в API і фронті;
+  - правки текстів питань;
+  - зняття `draft` після PASS (головна сесія);
+  - оновлення `content-brief.md`, `content-author.md` і CLAUDE.md (пропозиції PM, вносить головна сесія).
+
+### PRP-024 · Деплой MVP: Neon, Render, Cloudflare Pages і перевірка живого сайту
+- **Статус:** todo
+- **Виконавець:** власник (кроки 1–5), головна сесія (кроки 6–7)
+- **Пріоритет:** P1
+- **Область:** backend + frontend
+- **Платформа:** web
+- **Залежить від:** PRP-020, PRP-021, PRP-022, PRP-023 — закомічені й запушені в `master` обох репо
+- **Навіщо:** MVP стає доступним з будь-якого пристрою за посиланням. Власник може дати його людям, які готуються до співбесід, і отримати перший живий відгук.
+- **Що зробити:**
+  1. **Neon: схема і контент** (власник, термінал, з `Prepround/backend`).
+     - Рядок: Neon → Connect → роль `neondb_owner`, БД `prepround`, **pooling вимкнено** (direct). Формат key-value, бо Npgsql не розуміє URI `postgresql://…`:
+
+       `Host=<ep-…>.eu-central-1.aws.neon.tech;Database=prepround;Username=neondb_owner;Password=<…>;SSL Mode=VerifyFull;Channel Binding=Require`
+     - Команди:
+       ```bash
+       git pull                     # імпортуємо закомічений стан
+       read -rs NEON_OWNER          # вставити рядок, Enter: на екрані й в історії shell його не буде
+       dotnet tool restore
+       ConnectionStrings__Prepround="$NEON_OWNER" dotnet ef database update --project src/Prepround.Infrastructure --startup-project src/Prepround.Api
+       ConnectionStrings__Prepround="$NEON_OWNER" dotnet run --project src/Prepround.ContentTool -- import ../content
+       unset NEON_OWNER
+       ```
+     - Очікувано: обидві команди → `0`. `import` іде **без** `--include-drafts`, тож у підсумку буде `Питання: додано 564, …` або число, яке головна сесія назве після PRP-023.
+  2. **Роль лише для читання** (власник).
+     - Пароль генерується в терміналі: `openssl rand -hex 24`. Якщо Neon вважатиме його слабким: `openssl rand -base64 32 | tr -d '/+='`.
+     - Потім у Neon SQL Editor (БД `prepround`, роль `neondb_owner`) виконати SQL з ADR 005, розділ 5: `CREATE ROLE prepround_reader …`, `GRANT …` і `ALTER DEFAULT PRIVILEGES …`.
+     - API лише читає: `SaveChanges` є тільки в імпорті ContentTool. Тож зламаний API не змінить даних, а рядок власника на сервер не потрапить.
+  3. **Render: Web Service** (власник). New → Web Service → репо `dmitryspain/Prepround`, гілка `master`:
+
+     | Поле | Значення |
+     |---|---|
+     | Name | `prepround-api` |
+     | Region | Frankfurt (EU Central) |
+     | Language | Docker |
+     | Root Directory | `backend` |
+     | Dockerfile Path | `./Dockerfile` |
+     | Docker Build Context | `.` |
+     | Instance Type | Free |
+     | Health Check Path | `/api/health` |
+
+     - **Змінна середовища — одна:** `ConnectionStrings__Prepround` = `Host=<той самий direct host>;Database=prepround;Username=prepround_reader;Password=<…>;SSL Mode=VerifyFull;Channel Binding=Require;Connection Idle Lifetime=60`.
+     - **Не задавати** `PORT`, `ASPNETCORE_ENVIRONMENT` і `Cors__Origins__0`: їх дають Dockerfile і `appsettings.Production.json`.
+     - **Build Filters → Ignored Paths:** `backend/.claude/**`, `backend/tests/**`. Auto-Deploy — On Commit.
+  4. **Cloudflare Pages** (власник). Workers & Pages → Create → Pages → Import an existing Git repository → `dmitryspain/PreproundUI`:
+
+     | Поле | Значення |
+     |---|---|
+     | Project name | `prepround` (Pages запропонує `preproundui`: змінити) |
+     | Production branch | `master` |
+     | Framework preset | None |
+     | Build command | `npm run build` |
+     | Build output directory | `dist/web/browser` |
+     | Root directory | порожньо |
+
+     Змінних середовища не потрібно: Node береться з `.node-version`.
+  5. **Якщо `prepround-api` чи `prepround` зайняті,** написати головній сесії фактичні адреси до кроку 6. Вона змінить рівно два рядки: `PreproundWeb/src/environments/environment.production.ts` і `Prepround/backend/src/Prepround.Api/appsettings.Production.json` (`Cors:Origins`). Власник комітить і пушить, обидва сервіси перезберуться самі.
+  6. **Smoke** (головна сесія, `curl` з Мака; критерії нижче). Окремо:
+     - якщо T2 не пройшов, у Render задати `ForwardedHeaders__ForwardedForHeaderName=X-Forwarded-For` і `ForwardedHeaders__ForwardLimit=2` (запасний варіант ADR 005), дочекатися деплою і повторити T1 та T2;
+     - якщо не пройшов T1 (підробка обходить ліміт), зупинитись і покликати PM.
+  7. **Документи** (головна сесія):
+     - CLAUDE.md, розділ «Деплой» (текст запропонував PM 2026-11-19);
+     - spec, розділ 6: «деплой на prepround.app» → «власний домен prepround.app»;
+     - ADR 005: розділ «Факти після деплою» з фактичними адресами, версією Neon, розміром образу, часом збірки на Render і часом холодного старту (метрики для портфоліо).
+- **Дозволені пакети:** нових немає.
+- **Критерії приймання:**
+  - [ ] **Neon (власник, SQL Editor):**
+    - `SELECT count(*) FROM "Questions" WHERE "IsActive"` → число з кроку 1;
+    - `SELECT has_table_privilege('prepround_reader', '"Questions"', 'INSERT')` → `false`, `… 'SELECT')` → `true`.
+  - [ ] `curl -s --max-time 120 -w '\n%{time_total}\n' https://prepround-api.onrender.com/api/health` → `{"status":"ok"}`. Час першого запиту після простою записати
+  - [ ] **каталог.** `curl -s https://prepround-api.onrender.com/api/catalog | jq '[.fields[0].topics[].questionCounts[]] | add'` → число з кроку 1. Тем 61, порядок тем збігається з локальним API
+  - [ ] **CORS.** Preflight `OPTIONS /api/tests`:
+    - з `Origin: https://prepround.pages.dev` → `access-control-allow-origin: https://prepround.pages.dev`;
+    - з `Origin: http://localhost:4300` → заголовка немає.
+  - [ ] `curl -s -o /dev/null -w '%{http_code}' https://prepround-api.onrender.com/openapi/v1.json` → `404`
+  - [ ] **T1 (підробка не обходить ліміт):** 35 × `POST /api/tests` з тілом `{}` і щоразу іншими `X-Forwarded-For` та `CF-Connecting-IP` → серед перших 30 немає `429`, з 31-го — `429`
+  - [ ] **T2 (ліміт ділиться за людиною, а не за проксі):** головна сесія 2 хв тримає ліміт вичерпаним (запит раз на 2 с). У цей час власник із телефона в мобільній мережі (Wi-Fi вимкнено) починає тест на `https://prepround.pages.dev` → тест стартує, без «Забагато запитів»
+  - [ ] **сайт.**
+    - `curl -s https://prepround.pages.dev/ | grep -c '<app-root'` → ≥ `1`;
+    - `curl -s -o /dev/null -w '%{http_code}' https://prepround.pages.dev/result` → `200` з тим самим `index.html`;
+    - головний JS сайту містить `prepround-api.onrender.com`.
+  - [ ] **власник, телефон і десктоп:** налаштування → тест на 10 питань з «Перевірити» → результат. У DevTools → Network запити йдуть на `onrender.com`, помилок CORS немає. Після 15+ хв простою під «Завантаження…» видно підказку про пробудження сервера
+  - [ ] **секретів немає в git:** `git -C /Users/dmitryspain/RiderProjects/Prepround grep -n 'neon.tech'` і `git -C /Users/dmitryspain/RiderProjects/PreproundWeb grep -n 'neon.tech'` → порожньо
+  - [ ] **Render:** деплой зелений, health check проходить, у логах немає рядків із `Password=`
+- **Зміна процесу після деплою** (ADR 005, розділ 7; головна сесія вносить у CLAUDE.md):
+  - **Міграції.** Нову EF-міграцію власник застосовує в Neon **до** push коду, який від неї залежить.
+  - **Імпорт у прод** — крок власника, без `--include-drafts`, один за раз, на зупинках хвиль і етапів. Перед імпортом — `git pull`, після нього — smoke каталогу.
+  - **Агенти до Neon не ходять.** Smoke проду — лише `curl` до публічних адрес.
+- **Для tester:** не стосується. Smoke робить головна сесія; якщо T1 або T2 не пройшли, вона кличе PM.
+- **Контракт API:** без змін.
+- **Поза скоупом:**
+  - домен prepround.app, keep-alive, CI, автоімпорт, CSP («Ідеї»);
+  - preview-деплої Pages: CORS їх не пропускає, і це прийнятно;
+  - iOS (PRP-008).
+
+**Примітка головної сесії (хвости PRP-021, 2026-11-19):**
+- В обидва рядки підключення (власника й Render) додати `GSS Encryption Mode=Disable`. В образі немає `libgssapi_krb5.so.2`, і Npgsql у режимі `Prefer` на кожному новому з'єднанні пише в лог помилку завантаження бібліотеки. Neon GSS не використовує.
+- `ForwardedHeaders__ForwardLimit` у Render задавати лише непорожнім числом або не задавати зовсім. Порожнє значення, найімовірніше, дасть `null`, тобто без ліміту.
+- Архітектуру amd64 локально не перевіряли. Її перевіряє перша збірка на Render.
 
 ---
 

@@ -16,16 +16,22 @@ const int UsageErrorExitCode = 2;
 const int DatabaseErrorExitCode = 3;
 
 const string ConnectionStringName = Prepround.Infrastructure.DependencyInjection.ConnectionStringName;
+const string IncludeDraftsFlag = "--include-drafts";
 
-const string Usage = """
+const string Usage = $"""
     Prepround.ContentTool — перевірка та імпорт контенту з YAML.
 
     Використання:
-      Prepround.ContentTool <команда> <тека>
+      Prepround.ContentTool <команда> <тека> [прапорець]
 
     Команди:
-      validate <тека>   перевірити контент без бази даних
-      import <тека>     перевірити контент та імпортувати його в базу даних
+      validate <тека>                    перевірити контент без бази даних
+      import <тека> [{IncludeDraftsFlag}]   перевірити контент та імпортувати його в базу даних
+
+    Прапорець import (лише після теки):
+      {IncludeDraftsFlag}   імпортувати й питання тем-чернеток (draft: true). Без нього вони
+                         не імпортуються, а раніше імпортовані деактивуються.
+                         Dev-база імпортує з прапорцем, прод — без нього.
     """;
 
 // The command from README.md, without the password: the full one is there.
@@ -49,8 +55,14 @@ switch (args)
         return Validate(directory);
     case ["validate", ..]:
         return UsageError("Команді validate потрібна рівно одна тека з контентом.");
+    case ["import", IncludeDraftsFlag, ..]:
+        return UsageError($"Прапорець {IncludeDraftsFlag} пишеться після теки: import <тека> {IncludeDraftsFlag}.");
     case ["import", var directory]:
-        return await Import(directory);
+        return await Import(directory, includeDrafts: false);
+    case ["import", var directory, IncludeDraftsFlag]:
+        return await Import(directory, includeDrafts: true);
+    case ["import", _, var flag] when flag.StartsWith('-'):
+        return UsageError($"Невідомий прапорець команди import: {flag}. Допустимий лише {IncludeDraftsFlag}.");
     case ["import", ..]:
         return UsageError("Команді import потрібна рівно одна тека з контентом.");
     default:
@@ -78,15 +90,19 @@ static int Validate(string directory)
     {
         var stackCount = field.Directions.Sum(direction => direction.Stacks.Count);
         var questionCount = field.Topics.Sum(topic => topic.Questions.Count);
+        var draftQuestionCount = field.Topics.Where(topic => topic.IsDraft).Sum(topic => topic.Questions.Count);
+
+        // Shown only when there are drafts: that is how many questions a default import leaves out.
+        var drafts = draftQuestionCount > 0 ? $", з них у чернетках {draftQuestionCount}" : string.Empty;
         Console.WriteLine(
             $"{field.Id}: рівнів {field.Levels.Count}, напрямів {field.Directions.Count}, " +
-            $"стеків {stackCount}, тем {field.Topics.Count}, питань {questionCount}");
+            $"стеків {stackCount}, тем {field.Topics.Count}, питань {questionCount}{drafts}");
     }
 
     return SuccessExitCode;
 }
 
-static async Task<int> Import(string directory)
+static async Task<int> Import(string directory, bool includeDrafts)
 {
     if (!ContentDirectoryExists(directory))
     {
@@ -108,7 +124,7 @@ static async Task<int> Import(string directory)
     try
     {
         // Ctrl+C is left to its default: the process ends, and Postgres rolls back the uncommitted transaction.
-        result = await handler.Handle(new ImportContentCommand(directory), CancellationToken.None);
+        result = await handler.Handle(new ImportContentCommand(directory, includeDrafts), CancellationToken.None);
     }
     catch (Exception exception) when (IsDatabaseFailure(exception))
     {

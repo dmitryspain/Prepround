@@ -24,7 +24,7 @@ public sealed class YamlContentReader : IContentReader
     private static readonly string[] LevelKeys = ["id", "title"];
     private static readonly string[] DirectionKeys = ["id", "title", "stacks"];
     private static readonly string[] StackKeys = ["id", "title", "topics"];
-    private static readonly string[] TopicKeys = ["id", "title", "description", "questions"];
+    private static readonly string[] TopicKeys = ["id", "title", "description", "draft", "questions"];
     private static readonly string[] QuestionKeys =
         ["id", "level", "type", "text", "code", "options", "explanation", "sources"];
     private static readonly string[] CodeKeys = ["lang", "source"];
@@ -205,13 +205,16 @@ public sealed class YamlContentReader : IContentReader
         var map = yaml.Map(root, fileStem);
         map.RejectUnknownKeys(TopicKeys);
 
+        // Read before the questions, so a bad value is reported in file order, above any question errors.
+        var isDraft = map.Flag("draft");
+
         var questions = map.List("questions")
             .Select((node, index) => yaml.Item(node, "questions", map.Id, $"питання №{index + 1}"))
             .OfType<MappingReader>()
             .Select(question => ReadQuestion(question, yaml))
             .ToList();
 
-        return new TopicDefinition(file, map.Text("id"), map.Text("title"), map.Text("description"), questions);
+        return new TopicDefinition(file, map.Text("id"), map.Text("title"), map.Text("description"), questions, isDraft);
     }
 
     private static QuestionDefinition ReadQuestion(MappingReader map, YamlFile yaml)

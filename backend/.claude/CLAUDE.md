@@ -171,6 +171,12 @@ dotnet run --project src/Prepround.Api --launch-profile https  # https://localho
 dotnet ef migrations add <Name> --project src/Prepround.Infrastructure --startup-project src/Prepround.Api
 dotnet ef database update --project src/Prepround.Infrastructure --startup-project src/Prepround.Api
 
+# Docker-образ API (PRP-021, ADR 005; з backend/). Порт — зі змінної PORT (Render), без неї 8080; середовище Production
+docker build -t prepround-api .
+docker run --rm --name prepround-api -p 18080:8080 \
+  -e "ConnectionStrings__Prepround=Host=host.docker.internal;Port=5433;Database=prepround;Username=prepround;Password=prepround" \
+  prepround-api                                                # curl -s http://localhost:18080/api/health → {"status":"ok"}
+
 # контент (з backend/)
 dotnet run --project src/Prepround.ContentTool -- validate ../content   # exit 0 — валідний, 1 — помилки зі списком (stderr), 2 — немає теки або неправильні аргументи
 dotnet run --project src/Prepround.ContentTool -- import ../content     # ідемпотентний імпорт у БД; спершу `dotnet ef database update`. Exit 0 — ок, 1 — помилки контенту, 2 — аргументи, 3 — БД (немає рядка підключення, недоступна, незастосовані міграції)
