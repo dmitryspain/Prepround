@@ -1,0 +1,330 @@
+id: aspnet-core
+title: ASP.NET Core
+description: Middleware, DI і lifetimes, маршрутизація, Minimal API, автентифікація, конфігурація.
+questions:
+  - id: aspnet-core-001
+    level: junior
+    type: single
+    text: "Які літери й у якому порядку цей застосунок виведе в консоль на запит `GET /`?"
+    code:
+      lang: csharp
+      source: |
+        var builder = WebApplication.CreateBuilder(args);
+        var app = builder.Build();
+
+        app.Use(async (context, next) =>
+        {
+            Console.Write("A");
+            await next(context);
+            Console.Write("B");
+        });
+
+        app.Use(async (context, next) =>
+        {
+            Console.Write("C");
+            await next(context);
+            Console.Write("D");
+        });
+
+        app.MapGet("/", () =>
+        {
+            Console.Write("E");
+            return "ok";
+        });
+
+        app.Run();
+    options:
+      - text: "`ACEDB`"
+        correct: true
+      - text: "`ABCDE`"
+      - text: "`ACDBE`"
+      - text: "`ACEBD`"
+    explanation: >
+      Middleware виконуються в порядку реєстрації, і кожен може працювати до і після виклику `next`. Запит
+      проходить `A` і `C`, доходить до ендпоінта (`E`), а відповідь повертається у зворотному порядку: спершу
+      `D`, потім `B`. `WebApplication` сам обгортає конвеєр у `UseRouting` і `UseEndpoints`, тому ендпоінт
+      виконується в кінці, а не на місці виклику `MapGet`.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/#create-a-middleware-pipeline-with-webapplication
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/routing#routing-basics
+
+  - id: aspnet-core-002
+    level: junior
+    type: single
+    text: >
+      Сервіс зареєстровано як `builder.Services.AddTransient<IClock, Clock>();`. В одному HTTP-запиті
+      `IClock` отримують і ендпоінт, і scoped-сервіс, від якого цей ендпоінт залежить. Скільки екземплярів
+      `Clock` створить контейнер?
+    options:
+      - text: "Два: transient створюється на кожне звернення до контейнера"
+        correct: true
+      - text: "Один: transient-сервіс створюється один раз на HTTP-запит і спільний у його межах"
+      - text: "Один на весь застосунок, бо в `Clock` немає стану"
+      - text: "Жодного, доки код явно не викличе `GetService<IClock>()`"
+    explanation: >
+      Transient означає новий екземпляр на кожне звернення до контейнера, тож ендпоінт і сервіс отримають
+      різні об'єкти. Один екземпляр на запит дає scoped, а один на весь застосунок — singleton.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/service-lifetimes#transient
+
+  - id: aspnet-core-003
+    level: junior
+    type: multiple
+    text: >
+      Застосунок створено через `WebApplication.CreateBuilder(args)` без додаткових налаштувань конфігурації.
+      Які твердження правильні?
+    options:
+      - text: "Значення зі змінної середовища перекриває той самий ключ з `appsettings.json`"
+        correct: true
+      - text: "У середовищі `Production` значення з `appsettings.Production.json` перекривають `appsettings.json`"
+        correct: true
+      - text: "Вкладений ключ `ConnectionStrings:Default` у змінній середовища записують як `ConnectionStrings__Default`"
+        correct: true
+      - text: "`appsettings.json` має найвищий пріоритет і перекриває навіть аргументи командного рядка"
+      - text: "User secrets завантажуються в будь-якому середовищі, зокрема в `Production`"
+    explanation: >
+      Джерела читаються по черзі, і пізніше перекриває раніше: `appsettings.json`, потім
+      `appsettings.{Environment}.json`, user secrets (лише в `Development`), змінні середовища й, з найвищим
+      пріоритетом, аргументи командного рядка. Двокрапка в іменах змінних середовища працює не на всіх
+      платформах, тому ієрархію позначають `__`, а конфігурація сама перетворює його на `:`.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/#default-app-configuration-sources
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/#environment-variables-configuration-provider
+
+  - id: aspnet-core-004
+    level: junior
+    type: single
+    text: "Яку відповідь отримає запит `GET /users/abc`?"
+    code:
+      lang: csharp
+      source: |
+        var builder = WebApplication.CreateBuilder(args);
+        var app = builder.Build();
+
+        app.MapGet("/users/{id:int}", (int id) => $"user {id}");
+
+        app.Run();
+    options:
+      - text: "`404 Not Found`: обмеження `int` не виконалось, і маршрут не збігся"
+        correct: true
+      - text: "`400 Bad Request`: значення `abc` не вдалося перетворити на `int`"
+      - text: "`200 OK` з текстом `user 0`"
+      - text: "`500 Internal Server Error` через `FormatException`"
+    explanation: >
+      Обмеження маршруту беруть участь у виборі ендпоінта: `abc` не є цілим числом, тож шаблон не збігається,
+      а інших ендпоінтів немає, і відповідь — 404. Без обмеження (`{id}`) маршрут збігся б, і помилка
+      прив'язки `int id` дала б 400. Тому документація радить не валідувати ввід обмеженнями маршруту.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/routing#route-constraints
+
+  - id: aspnet-core-005
+    level: middle
+    type: single
+    text: >
+      Singleton-сервіс читає налаштування `RateLimits` з `appsettings.json` і має бачити зміни файлу без
+      перезапуску застосунку. Що інжектити в його конструктор?
+    options:
+      - text: "`IOptionsMonitor<RateLimits>`, читаючи `CurrentValue` щоразу"
+        correct: true
+      - text: "`IOptions<RateLimits>` і читати `Value` під час кожного використання"
+      - text: "`IOptionsSnapshot<RateLimits>`, бо він перераховує значення на кожен запит"
+      - text: "Сам `RateLimits`, зареєстрований через `AddSingleton` під час старту"
+    explanation: >
+      `IOptionsMonitor<T>` — singleton, який повертає актуальні значення й повідомляє про зміни, тож він
+      годиться для singleton-сервісів. `IOptions<T>` не перечитує конфігурацію після старту, а
+      `IOptionsSnapshot<T>` зареєстровано як scoped, тому в singleton його інжектити не можна.
+      `appsettings.json` за замовчуванням підключено з `reloadOnChange: true`, тож зміни файлу доходять до монітора.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options#options-interfaces
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/#app-settings-file-configuration-appsettingsjson-appsettingsenvironmentjson
+
+  - id: aspnet-core-006
+    level: middle
+    type: single
+    text: >
+      Клієнт отримує `hello`, але без заголовка `X-Served-By`, а в лозі з'являється помилка. Чому?
+    code:
+      lang: csharp
+      source: |
+        var builder = WebApplication.CreateBuilder(args);
+        var app = builder.Build();
+
+        app.Use(async (context, next) =>
+        {
+            await next(context);
+            context.Response.Headers["X-Served-By"] = "api-1";
+        });
+
+        app.MapGet("/", () => "hello");
+
+        app.Run();
+    options:
+      - text: "Тіло вже почало писатися, заголовки відправлено, і їх зміна кидає `InvalidOperationException`"
+        correct: true
+      - text: "Заголовки з префіксом `X-` Kestrel відкидає, якщо їх явно не дозволено в політиці CORS застосунку"
+      - text: "Код після `await next(context)` не виконується, бо ендпоінт завершує обробку запиту"
+      - text: "Заголовок треба додавати в `context.Request.Headers`, а не в `Response`"
+    explanation: >
+      Щойно ендпоінт почав писати тіло, відповідь стартувала, і заголовки вже відправлено разом із першою
+      порцією; зміна після `next` кидає `InvalidOperationException: Headers are read-only, response has already
+      started`. Код після `next` виконується, тому заголовок ставлять до виклику `next` або через
+      `context.Response.OnStarting`, а стан відповіді перевіряють через `Response.HasStarted`.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/best-practices#do-not-modify-the-status-code-or-headers-after-the-response-body-has-started
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/#create-a-middleware-pipeline-with-webapplication
+
+  - id: aspnet-core-007
+    level: middle
+    type: single
+    text: "Звідки Minimal API візьме значення параметрів для запиту `POST /customers/42/orders?page=3` з JSON-тілом?"
+    code:
+      lang: csharp
+      source: |
+        var builder = WebApplication.CreateBuilder(args);
+        builder.Services.AddSingleton<IOrderService, OrderService>();
+        var app = builder.Build();
+
+        app.MapPost("/customers/{customerId}/orders",
+            (int customerId, int page, OrderRequest order, IOrderService orders) =>
+                orders.Describe(customerId, page, order));
+
+        app.Run();
+
+        public record OrderRequest(string Product, int Quantity);
+
+        public interface IOrderService
+        {
+            string Describe(int customerId, int page, OrderRequest order);
+        }
+
+        public class OrderService : IOrderService
+        {
+            public string Describe(int customerId, int page, OrderRequest order) =>
+                $"customer={customerId} page={page} product={order.Product}";
+        }
+    options:
+      - text: "`customerId` — з маршруту, `page` — з рядка запиту, `order` — з JSON-тіла, `orders` — з DI-контейнера"
+        correct: true
+      - text: "`customerId` і `page` — з рядка запиту, `order` — з JSON-тіла, `orders` — з DI-контейнера"
+      - text: "`customerId` — з маршруту, `page` і `order` — з JSON-тіла, `orders` — з DI-контейнера"
+      - text: "Застосунок не стартує: складні параметри й сервіси треба явно позначати `[FromBody]` і `[FromServices]`"
+    explanation: >
+      Без атрибутів Minimal API визначає джерело сам: параметр з іменем із шаблону маршруту береться з маршруту,
+      простий тип поза маршрутом — з рядка запиту, зареєстрований у DI тип — із контейнера, а решта — з тіла
+      запиту. Атрибути `[FromBody]` чи `[FromServices]` потрібні лише тоді, коли це правило треба перевизначити.
+      Без `?page=3` обов'язковий `page` дав би відповідь 400.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/parameter-binding#binding-precedence
+
+  - id: aspnet-core-008
+    level: middle
+    type: multiple
+    text: >
+      API використовує JWT bearer (`AddJwtBearer`), а ендпоінт `/admin` вимагає роль `Admin` через
+      `RequireAuthorization`. Які твердження правильні?
+    options:
+      - text: "Запит без токена отримає `401` із заголовком `WWW-Authenticate: Bearer`"
+        correct: true
+      - text: "Запит із валідним токеном користувача без ролі `Admin` отримає `403`"
+        correct: true
+      - text: "Ендпоінт без вимог авторизації лишається доступним анонімно, хоча автентифікацію налаштовано"
+        correct: true
+      - text: "Запит із валідним токеном без ролі `Admin` отримає `401`, бо авторизація не пройшла"
+      - text: "Невалідний токен змушує middleware автентифікації одразу відповісти `401` на будь-який ендпоінт"
+    explanation: >
+      Автентифікація з'ясовує, хто користувач, а авторизація — що йому дозволено. Анонімному користувачу
+      авторизація робить challenge (для JWT bearer це `401` з `WWW-Authenticate: Bearer`), а автентифікованому
+      без потрібної ролі — forbid, тобто `403`. Саме налаштування автентифікації нічого не закриває і не обриває
+      конвеєр: ендпоінт без вимог відповідає навіть на запит із поганим токеном.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/security/authentication/#forbid
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/#middleware-order
+
+  - id: aspnet-core-009
+    level: senior
+    type: single
+    text: >
+      `PriceCache` зареєстровано як singleton, і він приймає в конструкторі scoped `IUnitOfWork`. У `Development`
+      застосунок падає на старті, а в `Production` запускається. Що відбувається в `Production`?
+    options:
+      - text: "Один `IUnitOfWork` з кореневого контейнера живе до зупинки застосунку, і його ділять усі запити"
+        correct: true
+      - text: "Для кожного запиту контейнер підставляє в `PriceCache` новий `IUnitOfWork`, тож проблеми немає"
+      - text: "`PriceCache` теж стає scoped і створюється заново в кожному запиті"
+      - text: "Контейнер кидає виняток на першому запиті до `PriceCache`, а не під час старту"
+    explanation: >
+      Singleton створюється один раз, тому scoped-залежність з його конструктора фактично стає singleton: її
+      створено в кореневому контейнері, і звільнить її лише зупинка застосунку. Перевірку областей (scope
+      validation) за замовчуванням вмикають лише в `Development`, тому там це помилка на старті, а в `Production`
+      «захоплений» сервіс тихо ділить стан між запитами. Виправлення — створювати область через
+      `IServiceScopeFactory` або зробити `PriceCache` scoped.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/overview#scope-validation
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/service-lifetimes#scoped
+
+  - id: aspnet-core-010
+    level: senior
+    type: single
+    text: >
+      Застосунок із cookie-автентифікацією масштабували з одного до трьох екземплярів за балансувальником без
+      sticky sessions. Користувачів почало час від часу «викидати» з облікового запису, а POST-форми іноді
+      падають на перевірці antiforgery. Яка причина найімовірніша?
+    options:
+      - text: "Кожен екземпляр має власні ключі Data Protection і не розшифровує cookie, видані іншими"
+        correct: true
+      - text: "Cookie-автентифікація зберігає сесії в пам'яті процесу, і інші екземпляри про них не знають"
+      - text: "Балансувальник відкидає cookie з відповідей, бо разом вони більші за 4 КБ"
+      - text: "Antiforgery-токени дійсні лише кілька секунд, а балансувальник додає затримку"
+    explanation: >
+      Cookie автентифікації та antiforgery-токени захищає Data Protection, а за замовчуванням кожен вузол тримає
+      власне кільце ключів. Запит, що потрапив на інший екземпляр, не розшифровується, тому симптоми з'являються
+      випадково. Виправлення — спільне сховище ключів для всіх екземплярів або завжди спрямовувати користувача
+      на той самий вузол.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/web-farm#data-protection
+      - https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/web-farm#data-protection-and-caching
+
+  - id: aspnet-core-011
+    level: senior
+    type: multiple
+    text: Сервіс часто звертається до зовнішнього HTTP API. Які твердження про керування `HttpClient` правильні?
+    options:
+      - text: "Створювати й звільняти новий `HttpClient` на кожен запит погано: під навантаженням вичерпуються порти"
+        correct: true
+      - text: "Довгоживучий `HttpClient` без `PooledConnectionLifetime` не побачить змін DNS, бо DNS розв'язується лише для нових з'єднань"
+        correct: true
+      - text: "`IHttpClientFactory` повторно використовує обробники `HttpMessageHandler`, тож клієнта з неї можна брати на кожну операцію"
+        correct: true
+      - text: "`HttpClient` реалізує `IDisposable`, тож правильно загортати його в `using` на кожен запит"
+      - text: "Клієнт з `IHttpClientFactory` можна назавжди зберегти в singleton-сервісі: фабрика сама періодично оновлюватиме його з'єднання"
+    explanation: >
+      Кожен клієнт зі своїм обробником має власний пул з'єднань, а закрите TCP-з'єднання звільняє порт не одразу,
+      тож клієнт «на запит» під навантаженням вичерпує порти. Один довгоживучий клієнт розв'язує це, але DNS
+      перечитує лише для нових з'єднань, тому йому потрібен `PooledConnectionLifetime`. Клієнти з
+      `IHttpClientFactory` задумані короткоживучими: створений клієнт фабрика вже не контролює, тож у singleton
+      він втрачає ротацію обробників.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines#recommended-use
+      - https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines#dns-behavior
+
+  - id: aspnet-core-012
+    level: senior
+    type: single
+    text: >
+      Команда хоче публікувати API як Native AOT, щоб контейнер стартував швидше й споживав менше пам'яті.
+      Зараз API побудовано на MVC-контролерах, а JSON серіалізує `System.Text.Json` через рефлексію.
+      Що доведеться змінити?
+    options:
+      - text: "Перейти на Minimal API й описати типи запитів і відповідей у згенерованому `JsonSerializerContext`"
+        correct: true
+      - text: "Нічого: Native AOT компілює ті самі MVC-контролери в машинний код, просто вже без JIT під час старту"
+      - text: "Залишити контролери, але вимкнути trimming, щоб рефлексія знову працювала"
+      - text: "Залишити контролери, але створювати застосунок через `WebApplication.CreateSlimBuilder`"
+    explanation: >
+      MVC з Native AOT не сумісний (ні з trimming, ні зі `CreateSlimBuilder`), а Minimal API підтримуються
+      частково, тому шаблон `webapiaot` побудовано лише на них. Рефлексія під час виконання недоступна, отже
+      типи з тіла запитів і відповідей мають бути описані в `JsonSerializerContext`, який створює source
+      generator, інакше серіалізація впаде.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/native-aot#review-aspnet-core-and-native-aot-compatibility
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/native-aot#work-with-minimal-apis-and-json-payloads

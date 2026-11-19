@@ -1,0 +1,262 @@
+id: laravel
+title: Laravel
+description: Маршрути, контролери, middleware, черги, service container.
+questions:
+  - id: laravel-001
+    level: junior
+    type: single
+    text: Що поверне Laravel 13 на запит `GET /users/abc` за такого маршруту?
+    code:
+      lang: php
+      source: |
+        Route::get('/users/{id}', function (string $id) {
+            return "user $id";
+        })->where('id', '[0-9]+');
+    options:
+      - text: Відповідь 404, бо `abc` не відповідає шаблону
+        correct: true
+      - text: Текст `user abc`, бо обмеження діє лише на числові значення
+      - text: Відповідь 422 із повідомленням про те, що `id` має бути числом
+      - text: Відповідь 400, бо запит має некоректний формат сегмента
+    explanation: >
+      Метод `where` задає регулярний вираз для параметра. Якщо сегмент URL його не задовольняє, маршрут вважається незбіжним і фреймворк повертає 404. Код 422 належить валідації форм, а не маршрутизації.
+    sources:
+      - https://laravel.com/docs/13.x/routing#parameters-regular-expression-constraints
+  - id: laravel-002
+    level: junior
+    type: single
+    text: Що виведе цей код із контейнером Laravel 13 (`Illuminate\Container\Container`)?
+    code:
+      lang: php
+      source: |
+        class Counter { public function __construct() { echo 'new '; } }
+
+        $c = new Container;
+        $c->bind('a', fn () => new Counter);
+        $c->singleton('b', fn () => new Counter);
+
+        $c->make('a'); $c->make('a');
+        $c->make('b'); $c->make('b');
+    options:
+      - text: '`new new new `: `bind` створює об''єкт щоразу, `singleton` один раз'
+        correct: true
+      - text: '`new new new new `: кожен виклик `make` створює новий екземпляр'
+      - text: '`new `: контейнер кешує перший створений об''єкт для всіх ключів'
+      - text: '`new new `: обидві реєстрації створюють лише по одному екземпляру'
+    explanation: >
+      Звичайна реєстрація через `bind` виконує замикання при кожному `make`, тож `a` дає два екземпляри. Для `singleton` замикання виконується один раз, а наступні виклики повертають збережений об'єкт.
+    sources:
+      - https://laravel.com/docs/13.x/container#binding-basics
+      - https://laravel.com/docs/13.x/container#binding-a-singleton
+  - id: laravel-003
+    level: junior
+    type: multiple
+    text: 'Які твердження про middleware у Laravel 13 правильні? (позначте всі)'
+    options:
+      - text: Middleware може повернути відповідь, не викликаючи `$next($request)`, і тоді запит не дійде до контролера
+        correct: true
+      - text: Код після виклику `$next($request)` виконується вже після того, як застосунок сформував відповідь
+        correct: true
+      - text: Middleware можна призначити конкретному маршруту методом `->middleware()`
+        correct: true
+      - text: Middleware отримує лише запит і не має доступу до відповіді, тож змінити її не може
+      - text: Middleware можна підключати лише глобально, для окремих маршрутів і груп це неможливо
+    explanation: >
+      Middleware схожий на шар, крізь який проходить запит: він може відхилити його або доповнити відповідь після `$next`. Призначення на рівні маршруту й групи теж підтримується, тому два останні твердження хибні.
+    sources:
+      - https://laravel.com/docs/13.x/middleware#introduction
+      - https://laravel.com/docs/13.x/middleware#assigning-middleware-to-routes
+  - id: laravel-004
+    level: junior
+    type: single
+    text: Як у Laravel 13 отримати в методі контролера і `Request`, і значення `{id}` з маршруту `PUT /users/{id}`?
+    code:
+      lang: php
+      source: |
+        class UserController
+        {
+            public function update(Request $request, string $id)
+            {
+                // ...
+            }
+        }
+    options:
+      - text: 'Нічого додаткового: контейнер підставить `Request`, а `$id` прийде з маршруту'
+        correct: true
+      - text: Потрібно створити запит вручну через `Request::capture()`, бо типізація в методах не працює
+      - text: Значення `$id` буде `null`, бо параметри маршруту доступні лише через `$request->route()`
+      - text: Залежності можна типізувати лише в конструкторі, а в методах контролера вони не підставляються
+    explanation: >
+      Контролери створює service container, тому він підставляє типізовані залежності й у методи. Параметри маршруту передаються за ім'ям, а за документацією їх перелічують після залежностей.
+    sources:
+      - https://laravel.com/docs/13.x/controllers#dependency-injection-and-controllers
+  - id: laravel-005
+    level: middle
+    type: single
+    text: Що поверне Laravel 13 на запит `GET /posts/create` за таких маршрутів?
+    code:
+      lang: php
+      source: |
+        Route::get('/posts/{id}', fn ($id) => "show $id");
+        Route::get('/posts/create', fn () => 'create form');
+    options:
+      - text: Текст `show create`, бо перший зареєстрований збіг перехоплює запит
+        correct: true
+      - text: Текст `create form`, бо статичний сегмент завжди має пріоритет над параметром
+      - text: Відповідь 404, бо два маршрути конфліктують і жоден не спрацьовує
+      - text: Виняток під час реєстрації, бо шаблони перекриваються
+    explanation: >
+      Маршрути перевіряються в порядку реєстрації, тому `{id}` збігається з рядком `create` першим. Запуск на `illuminate/routing` 13.x підтвердив результат `show create`. Саме тому додаткові маршрути ресурсного контролера описують до `Route::resource`.
+    sources:
+      - https://laravel.com/docs/13.x/controllers#restful-supplementing-resource-controllers
+  - id: laravel-006
+    level: middle
+    type: single
+    text: Що виведе цей конвеєр із трьох middleware в Laravel 13 (`Illuminate\Pipeline\Pipeline`)?
+    code:
+      lang: php
+      source: |
+        $mw = fn (string $n, bool $stop = false) => function ($req, $next) use ($n, $stop) {
+            echo "$n>";
+            $res = $stop ? 'stop' : $next($req);
+            echo "<$n";
+            return $res;
+        };
+
+        (new Pipeline(new Container))->send('req')
+            ->through([$mw('A'), $mw('B', true), $mw('C')])
+            ->then(function ($r) { echo 'H'; return 'ok'; });
+    options:
+      - text: '`A>B><B<A`: B не викликає `$next`, тож C і `H` пропускаються'
+        correct: true
+      - text: '`A>B>C>H<C<B<A`: усі шари виконуються, бо прапорець ні на що не впливає'
+      - text: '`A>B><A`: після зупинки B його власна "після"-частина теж пропускається'
+      - text: '`A>B>H<B<A`: обробник усе одно викликається, а пропускається лише C'
+    explanation: >
+      Кожен шар сам вирішує, чи передавати запит далі. B повертає результат без `$next`, тому C і `H` не виконуються, але код B після цього рядка й весь код A після `$next` працюють, як і в луковій моделі. Вивід підтверджено запуском на `illuminate/pipeline` 13.x.
+    sources:
+      - https://laravel.com/docs/13.x/middleware#introduction
+      - https://laravel.com/docs/13.x/routing#route-group-middleware
+  - id: laravel-007
+    level: middle
+    type: single
+    text: Які класи отримають `Mailer` і `Reports` у Laravel 13 після такої конфігурації контейнера?
+    code:
+      lang: php
+      source: |
+        interface Logger {}
+        class FileLogger implements Logger {}
+        class NullLogger implements Logger {}
+        class Mailer  { public function __construct(public Logger $l) {} }
+        class Reports { public function __construct(public Logger $l) {} }
+
+        $c->bind(Logger::class, FileLogger::class);
+        $c->when(Reports::class)->needs(Logger::class)->give(NullLogger::class);
+
+        echo get_class($c->make(Mailer::class)->l), ' ',
+             get_class($c->make(Reports::class)->l);
+    options:
+      - text: '`FileLogger NullLogger`: контекстна прив''язка діє лише для `Reports`, а решта бере загальну'
+        correct: true
+      - text: '`FileLogger FileLogger`: контекстна прив''язка ігнорується, якщо є загальна для того самого інтерфейсу'
+      - text: '`NullLogger NullLogger`: пізніша прив''язка замінює загальну для всіх класів'
+      - text: '`BindingResolutionException`: два способи розв''язання одного інтерфейсу не поєднуються'
+    explanation: >
+      Контекстна прив'язка `when()->needs()->give()` переозначає залежність тільки для вказаного класу. Для решти працює звичайний `bind`. Результат `FileLogger NullLogger` отримано запуском на `illuminate/container` 13.x.
+    sources:
+      - https://laravel.com/docs/13.x/container#contextual-binding
+  - id: laravel-008
+    level: middle
+    type: single
+    text: Після деплою нового коду постійно запущені `php artisan queue:work` процеси (під Supervisor) досі виконують старі версії класів завдань. Що правильно зробити в Laravel 13?
+    options:
+      - text: Під час деплою виконати `php artisan queue:restart`, і воркери перезапустяться
+        correct: true
+      - text: Нічого не робити, бо воркер перечитує файли класів перед кожним завданням
+      - text: Виконати `php artisan queue:flush`, щоб воркери перезавантажили код і почали заново
+      - text: Виконати `php artisan queue:retry all`, бо воркери оновлюють код під час повторної спроби
+    explanation: >
+      Воркер довгоживучий і тримає завантажений код у пам'яті. Команда `queue:restart` дає йому сигнал завершитись після поточного завдання, а менеджер процесів піднімає свіжий. `queue:flush` видаляє записи про невдалі завдання й коду не перезавантажує.
+    sources:
+      - https://laravel.com/docs/13.x/queues#queue-workers-and-deployment
+  - id: laravel-009
+    level: senior
+    type: multiple
+    text: 'Контролер Laravel 13 відкриває `DB::transaction`, оновлює запис і всередині диспетчеризує завдання, яке читає цей запис. Що з цього правильно? (позначте всі)'
+    options:
+      - text: Воркер може підхопити завдання раніше за коміт, і тоді воно побачить старі дані або не знайде запис
+        correct: true
+      - text: Для окремого виклику завдання відкладається до коміту через `->afterCommit()`
+        correct: true
+      - text: За `after_commit => true` у конфігурації з'єднання завдання з відкоченої транзакції відкидається
+        correct: true
+      - text: Laravel сам відстежує відкриту транзакцію й за замовчуванням тримає завдання до її завершення
+      - text: Достатньо збільшити `retry_after`, щоб воркер гарантовано дочекався коміту транзакції
+    explanation: >
+      За замовчуванням `after_commit` вимкнено, тож завдання потрапляє в чергу одразу, до коміту. Опція з'єднання або `afterCommit()` на диспетчеризації відкладають надсилання до успішного коміту, а відкат відкидає такі завдання.
+    sources:
+      - https://laravel.com/docs/13.x/queues#jobs-and-database-transactions
+  - id: laravel-010
+    level: senior
+    type: single
+    text: Для Redis-черги в Laravel 13 `retry_after` дорівнює 90 с, а воркер запущено з `--timeout=300 --tries=3`. Одне завдання зависло на 200 с. Що станеться?
+    options:
+      - text: Після 90 с завдання знову стане доступним, інший воркер візьме його, і воно виконається двічі
+        correct: true
+      - text: Воркер зупинить завдання на 90-й секунді, бо `retry_after` обмежує час виконання
+      - text: Завдання завершиться лише після 300 с, а в черзі лишиться єдиною копією
+      - text: Завдання одразу потрапить у `failed_jobs` на 90-й секунді без повторної спроби
+    explanation: >
+      `retry_after` лише визначає, коли зарезервоване завдання знову видимо для інших воркерів, а не примусово його вбиває. Коли `--timeout` перевищує `retry_after`, завдання може обробитись двічі, тож таймаут має бути кількома секундами меншим. За `--tries=1` повторне резервування завершилося б помилкою `MaxAttemptsExceededException`, а не другим виконанням.
+    sources:
+      - https://laravel.com/docs/13.x/queues#job-expirations-and-timeouts
+  - id: laravel-011
+    level: senior
+    type: single
+    text: У Laravel 13 middleware з методом `terminate` зберігає час початку в `handle`, а в `terminate` читає його. Що побачить `terminate`, якщо middleware не зареєстровано в контейнері як singleton?
+    code:
+      lang: php
+      source: |
+        class Timing
+        {
+            private ?float $start = null;
+
+            public function handle($request, Closure $next)
+            {
+                $this->start = microtime(true);
+                return $next($request);
+            }
+
+            public function terminate($request, $response): void
+            {
+                logger()->info('took', ['start' => $this->start]);
+            }
+        }
+    options:
+      - text: '`null`: `terminate` викликається на новому екземплярі, тож стан втрачено'
+        correct: true
+      - text: Збережений у `handle` час, бо екземпляр middleware живе до кінця запиту
+      - text: '`Error` про неініціалізовану властивість, бо `terminate` викликається статично'
+      - text: Час останнього запиту, бо стан middleware спільний між усіма запитами воркера
+    explanation: >
+      Документація каже, що перед викликом `terminate` Laravel дістає свіжий екземпляр middleware з контейнера. Щоб `handle` і `terminate` працювали з одним об'єктом, middleware реєструють через `singleton`, наприклад у `AppServiceProvider`. Різницю між двома екземплярами перевірено запуском на `illuminate/container`.
+    sources:
+      - https://laravel.com/docs/13.x/middleware#terminable-middleware
+  - id: laravel-012
+    level: senior
+    type: multiple
+    text: 'Застосунок Laravel 13 переводять на Octane. Які з цих ризиків реальні? (позначте всі)'
+    options:
+      - text: Методи `register` і `boot` провайдерів виконуються один раз на воркер, а не на кожен запит
+        correct: true
+      - text: Singleton, якому в конструктор передали `$app['request']`, на наступних запитах тримає старий запит
+        correct: true
+      - text: Статичний масив, у який контролер додає дані, зростає між запитами аж до перезапуску воркера
+        correct: true
+      - text: Octane автоматично скидає статичні властивості класів перед кожним запитом, тож витоків пам'яті не буває
+      - text: Кожен запит отримує повністю новий екземпляр застосунку, тому прив'язки singleton не переживають запит
+    explanation: >
+      Octane завантажує застосунок один раз і тримає його в пам'яті між запитами, тому стан singleton і статичних властивостей накопичується. Саме тому документація радить не вбудовувати контейнер чи запит у конструктори й нагадує про `--max-requests`, який перезапускає воркер.
+    sources:
+      - https://laravel.com/docs/13.x/octane#dependency-injection-and-octane
+      - https://laravel.com/docs/13.x/octane#managing-memory-leaks

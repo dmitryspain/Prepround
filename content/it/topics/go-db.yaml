@@ -1,0 +1,246 @@
+id: go-db
+title: Робота з БД у Go
+description: database/sql, sqlx, GORM, пул з'єднань, транзакції.
+questions:
+  - id: go-db-001
+    level: junior
+    type: single
+    text: Що виведе цей код, якщо хоста `no-such-host.invalid` не існує (Go 1.27, pgx v5.13)?
+    code:
+      lang: go
+      source: |
+        db, err := sql.Open("pgx", "postgres://u:p@no-such-host.invalid:5432/app")
+        fmt.Println(err == nil)
+        fmt.Println(db.Ping() == nil)
+    options:
+      - text: '`true`, потім `false`'
+        correct: true
+      - text: '`false`, потім `false`'
+      - text: '`true`, потім `true`'
+      - text: Програма завершиться панікою в `sql.Open`
+    explanation: >
+      `sql.Open` лише перевіряє аргументи й готує пул, а підключення відкладає до першого запиту. Тому помилки немає, а недоступність сервера виявить `Ping`.
+    sources:
+      - https://pkg.go.dev/database/sql#Open
+  - id: go-db-002
+    level: junior
+    type: single
+    text: Чи буде умова істинною в цьому коді для таблиці без рядка з `n = 1` (Go 1.27)?
+    code:
+      lang: go
+      source: |
+        var n int
+        err := db.QueryRow("select n from t where n = 1").Scan(&n)
+        if errors.Is(err, sql.ErrNoRows) {
+            fmt.Println("немає")
+        }
+    options:
+      - text: Умова істинна, бо `Scan` повертає `sql.ErrNoRows`, коли запит не дав жодного рядка
+        correct: true
+      - text: Умова хибна, бо `QueryRow` на порожній вибірці залишає `n` нулем і повертає `nil`
+      - text: Умова хибна, бо помилку `sql.ErrNoRows` повертає сам `QueryRow`, а не `Scan`
+      - text: Умова істинна лише тоді, коли в `QueryRow` передано контекст
+    explanation: >
+      `QueryRow` ніколи не повертає помилку напряму: вона відкладається до `Scan`, який на порожньому результаті віддає `sql.ErrNoRows`. Порівнювати її варто через `errors.Is`.
+    sources:
+      - https://pkg.go.dev/database/sql#DB.QueryRow
+      - https://pkg.go.dev/database/sql#ErrNoRows
+  - id: go-db-003
+    level: junior
+    type: multiple
+    text: 'Які твердження про `*sql.DB` правильні (Go 1.27)?'
+    options:
+      - text: Його можна безпечно використовувати з кількох горутин одночасно без додаткових м'ютексів
+        correct: true
+      - text: Він керує пулом з'єднань, а не одним з'єднанням
+        correct: true
+      - text: Зазвичай його створюють один раз на програму й передають далі, а `Close` викликають рідко
+        correct: true
+      - text: Для кожного запиту варто викликати `sql.Open` і `Close`, щоб з'єднання повернулось у пул
+      - text: Кожній горутині потрібен власний `*sql.DB`, бо спільний не захищений від гонок
+    explanation: >
+      `DB` задуманий як довгоживучий спільний об'єкт-пул, безпечний для конкурентного використання. Відкривати й закривати його на кожен запит означає щоразу будувати новий пул і втрачати переваги повторного використання з'єднань.
+    sources:
+      - https://pkg.go.dev/database/sql#DB
+      - https://go.dev/doc/database/manage-connections
+  - id: go-db-004
+    level: junior
+    type: single
+    text: Який метод sqlx 1.4 прочитає всі рядки запиту в слайс `users`?
+    code:
+      lang: go
+      source: |
+        type User struct {
+            ID   int    `db:"id"`
+            Name string `db:"user_name"`
+        }
+
+        var users []User
+        err := db.???(&users, "select id, user_name from users")
+    options:
+      - text: '`Select`'
+        correct: true
+      - text: '`Get`, бо він сам розпізнає слайс'
+      - text: '`NamedExec`, бо поля зіставляються за тегами `db`'
+      - text: '`MustExec`, бо він сканує результат у передану змінну'
+    explanation: >
+      `Select` виконує запит і сканує всі рядки в слайс структур, зіставляючи колонки з полями за тегами `db`. `Get` призначений для одного рядка і підставляє результат в одну структуру чи значення.
+    sources:
+      - https://pkg.go.dev/github.com/jmoiron/sqlx#Select
+      - https://jmoiron.github.io/sqlx/#getAndSelect
+  - id: go-db-005
+    level: middle
+    type: single
+    text: Що виведе цей код з Postgres через pgx (Go 1.27)?
+    code:
+      lang: go
+      source: |
+        db.SetMaxOpenConns(1)
+        rows, _ := db.Query("select n from t")
+        // rows не читаємо й не закриваємо
+
+        ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+        defer cancel()
+        var n int
+        err := db.QueryRowContext(ctx, "select 1").Scan(&n)
+        fmt.Println(err)
+    options:
+      - text: '`context deadline exceeded`'
+        correct: true
+      - text: '`nil`, бо пул відкриє друге з''єднання понад ліміт'
+      - text: '`sql: connection is already closed`'
+      - text: '`sql: no rows in result set`'
+    explanation: >
+      Поки `Rows` не закрито й не дочитано до кінця, з'єднання лишається зайнятим. Ліміт у одне з'єднання не дозволяє відкрити друге, тож наступний запит чекає на вільне і впирається в таймаут контексту. Без `rows.Close()` пул так вичерпується в продакшні.
+    sources:
+      - https://pkg.go.dev/database/sql#Rows.Close
+      - https://go.dev/doc/database/manage-connections
+  - id: go-db-006
+    level: middle
+    type: single
+    text: Що виведе цей код (Go 1.27, pgx v5.13), якщо таблиця `t` спершу порожня?
+    code:
+      lang: go
+      source: |
+        tx, _ := db.Begin()
+        tx.Exec("insert into t values (1)")
+
+        var cnt int
+        db.QueryRow("select count(*) from t").Scan(&cnt)
+        fmt.Println(cnt)
+
+        tx.Commit()
+    options:
+      - text: '`0`, бо `db` бере інше з''єднання, яке не бачить незафіксованого рядка'
+        correct: true
+      - text: '`1`, бо `db` і `tx` працюють в одній транзакції'
+      - text: '`1`, бо `db.QueryRow` автоматично приєднується до відкритої транзакції'
+      - text: Запит зависне, бо `tx` блокує всю таблицю до `Commit`
+    explanation: >
+      Транзакція прив'язана до одного з'єднання, а `db.QueryRow` бере з пулу інше, яке в стандартній ізоляції PostgreSQL не бачить незафіксованих змін. Щоб читати власні зміни, запит треба виконувати через `tx`. Це частий баг, коли в функцію передають `db` замість `tx`.
+    sources:
+      - https://pkg.go.dev/database/sql#Tx
+      - https://go.dev/doc/database/execute-transactions
+  - id: go-db-007
+    level: middle
+    type: multiple
+    text: 'Які твердження про `sql.Tx` правильні (Go 1.27)?'
+    options:
+      - text: Після успішного `Commit` виклик `Rollback` нічого не відкотить і поверне `sql.ErrTxDone`
+        correct: true
+      - text: "`defer tx.Rollback()` одразу після `Begin` гарантує, що при ранньому `return` з'єднання повернеться в пул"
+        correct: true
+      - text: Якщо скасувати контекст, переданий в `BeginTx`, пакет `sql` відкотить транзакцію
+        correct: true
+      - text: Усі запити через один `tx` виконуються на одному з'єднанні пулу
+        correct: true
+      - text: Після помилки в `tx.Exec` пакет `sql` сам відкочує транзакцію, тож `Rollback` зайвий
+    explanation: >
+      `Tx` тримає одне з'єднання, доки його не завершено `Commit` або `Rollback`, а повторний `Rollback` безпечний. Помилка окремого `Exec` транзакцію не відкочує: рішення залишається за кодом.
+    sources:
+      - https://pkg.go.dev/database/sql#Tx.Rollback
+      - https://pkg.go.dev/database/sql#DB.BeginTx
+  - id: go-db-008
+    level: middle
+    type: single
+    text: Що буде в рядку після цього коду (GORM 1.31, `User` має поля `Name string`, `Age int`, `Admin bool`)?
+    code:
+      lang: go
+      source: |
+        // у БД: {Name: "Ann", Age: 30, Admin: true}
+        db.Model(&user).Updates(User{Name: "Bob", Age: 0, Admin: false})
+    options:
+      - text: '`Name` стане `Bob`, а `Age` і `Admin` не зміняться'
+        correct: true
+      - text: '`Name` стане `Bob`, `Age` стане `0`, `Admin` стане `false`'
+      - text: Оновлення не виконається, бо в `Updates` не можна передавати структуру
+      - text: '`Name` стане `Bob`, а `Age` і `Admin` стануть `NULL`'
+    explanation: >
+      `Updates` зі структурою пропускає поля з нульовими значеннями, бо не відрізняє «не задано» від «задано нуль». Щоб записати `0` чи `false`, передають `map[string]any` або використовують `Select`.
+    sources:
+      - https://gorm.io/docs/update.html#Updates-multiple-columns
+  - id: go-db-009
+    level: senior
+    type: single
+    text: >
+      Сервіс на Go розгорнуто в 30 подах, `sql.DB` створено без налаштувань. Postgres має `max_connections = 100`. Під навантаженням з'являються помилки `too many clients already`. Що правильно зробити?
+    options:
+      - text: Обмежити `SetMaxOpenConns` так, щоб сума по подах була нижчою за ліміт сервера
+        correct: true
+      - text: Викликати `SetMaxIdleConns(0)`, щоб пул не тримав простоюючих з'єднань між запитами
+      - text: Створювати новий `sql.DB` на кожен запит і закривати його після відповіді клієнту
+      - text: Збільшити `SetConnMaxLifetime`, щоб пул рідше відкривав нові з'єднання
+    explanation: >
+      За замовчуванням кількість відкритих з'єднань `sql.DB` не обмежена, тож 30 подів швидко вичерпують сервер. Ліміт на под дає чергу запитів у пулі замість відмов на сервері. `SetMaxIdleConns(0)` навпаки збільшує частоту відкриття з'єднань.
+    sources:
+      - https://pkg.go.dev/database/sql#DB.SetMaxOpenConns
+      - https://go.dev/doc/database/manage-connections
+  - id: go-db-010
+    level: senior
+    type: multiple
+    text: 'Які твердження про налаштування пулу `*sql.DB` правильні (Go 1.27)?'
+    options:
+      - text: '`SetConnMaxIdleTime` закриває з''єднання, що надто довго простоюють, а нуль вимикає таке закриття'
+        correct: true
+      - text: Якщо `SetMaxIdleConns` більше за `SetMaxOpenConns`, ліміт простою зменшують до відкритих
+        correct: true
+      - text: '`SetConnMaxLifetime` замінює старі з''єднання й допомагає, коли балансувальник чи проксі їх обривають'
+        correct: true
+      - text: Коли досягнуто `SetMaxOpenConns`, нові запити одразу завершуються помилкою про брак з'єднань
+      - text: '`SetMaxIdleConns` обмежує загальну кількість з''єднань, зокрема зайнятих'
+    explanation: >
+      Запити понад `MaxOpenConns` не відхиляються, а чекають на звільнення з'єднання або на контекст. `MaxIdleConns` стосується лише тих, що простоюють, а не зайнятих.
+    sources:
+      - https://pkg.go.dev/database/sql#DB.SetMaxIdleConns
+      - https://pkg.go.dev/database/sql#DB.SetConnMaxLifetime
+  - id: go-db-011
+    level: senior
+    type: single
+    text: >
+      У моделі GORM 1.31 є `Email string` з унікальним індексом і `DeletedAt gorm.DeletedAt`. Користувача видалили через `db.Delete(&u)`, а потім хочуть створити нового з тією самою поштою. Що станеться?
+    options:
+      - text: '`Create` поверне помилку унікальності, бо «видалений» рядок лишився в таблиці'
+        correct: true
+      - text: '`Create` успішно додасть рядок, бо видалені рядки не враховуються в індексі'
+      - text: '`Create` оновить видалений рядок і скине `DeletedAt`'
+      - text: '`Delete` фізично видалить рядок, тому конфлікту немає'
+    explanation: >
+      Із полем `DeletedAt` `Delete` лише виставляє мітку часу, а `First` і `Find` такі рядки пропускають. Рядок лишається, тож унікальний індекс на ньому зберігається. Це лікують частковим індексом `WHERE deleted_at IS NULL` або фізичним видаленням через `Unscoped`.
+    sources:
+      - https://gorm.io/docs/delete.html#Soft-Delete
+  - id: go-db-012
+    level: senior
+    type: single
+    text: >
+      Транзакція виконується з `sql.LevelSerializable` у PostgreSQL 18, і при конфліктній паралельній роботі `Commit` повертає помилку з SQLSTATE `40001`. Як це правильно обробити?
+    options:
+      - text: Повторити всю транзакцію з `BeginTx`, перечитавши дані, і обмежити кількість спроб
+        correct: true
+      - text: Повторити лише `Commit` на тій самій транзакції
+      - text: Ігнорувати помилку, бо зміни все одно буде застосовано пізніше
+      - text: Збільшити `SetMaxOpenConns`, бо конфлікт виникає через нестачу з'єднань
+    explanation: >
+      Збій серіалізації означає, що PostgreSQL відкотив транзакцію, бо вона несумісна з паралельною. Повторювати `Commit` марно: треба виконати транзакцію з початку, а дані перечитати. Тому код транзакції має бути придатним для повтору.
+    sources:
+      - https://www.postgresql.org/docs/18/mvcc-serialization-failure-handling.html
+      - https://www.postgresql.org/docs/18/transaction-iso.html#XACT-SERIALIZABLE

@@ -1,0 +1,280 @@
+id: typescript
+title: TypeScript
+description: Типи й інтерфейси, generics, union/intersection, narrowing, utility types, strict.
+questions:
+  - id: typescript-001
+    level: junior
+    type: multiple
+    text: Які твердження про типи `any`, `unknown` і `never` правильні?
+    options:
+      - text: "Для значення типу `any` компілятор не перевіряє доступ до властивостей і виклики"
+        correct: true
+      - text: "Перед викликом методів значення типу `unknown` треба звузити, наприклад через `typeof`"
+        correct: true
+      - text: "Значення типу `never` можна присвоїти змінній будь-якого типу"
+        correct: true
+      - text: "`unknown` працює як `any`: методи можна викликати без попередньої перевірки типу"
+      - text: "`never` те саме, що `void`: тип функції, яка нічого корисного не повертає"
+    explanation: >
+      `any` вимикає перевірку, а `unknown` змушує спершу з'ясувати тип, тож він безпечніший. `never` — порожній тип, у нього немає значень,
+      і саме тому він сумісний із будь-яким типом. `void` означає «результат не використовують», а не «значення неможливе».
+    sources:
+      - https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown
+      - https://www.typescriptlang.org/docs/handbook/2/functions.html#never
+
+  - id: typescript-002
+    level: junior
+    type: single
+    text: Що скаже компілятор щодо цього коду (`strict` увімкнено)?
+    code:
+      lang: typescript
+      source: |
+        function format(x: string | number) {
+          return x.toFixed(2);
+        }
+    options:
+      - text: "Помилка: `toFixed` немає на типі `string | number`, доки `x` не звужено через `typeof`"
+        correct: true
+      - text: "Помилок немає: метод існує в одного з типів об'єднання, тому виклик дозволений компілятором"
+      - text: "Помилки під час компіляції немає, але під час виконання для рядка метод кине `TypeError`"
+      - text: "Помилка: тип параметра треба оголосити як `any`, інакше `union` не можна використати тут"
+    explanation: >
+      Для значення типу `A | B` дозволені лише ті операції, що є в обох варіантів. Тому перед `toFixed` потрібне звуження (`typeof`, `in`, `instanceof`).
+      Помилку видає перевірка типів ще до запуску, і саме для цього вона існує.
+    sources:
+      - https://www.typescriptlang.org/docs/handbook/2/narrowing.html#typeof-type-guards
+      - https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types
+
+  - id: typescript-003
+    level: junior
+    type: multiple
+    text: Які твердження про вбудовані utility types правильні?
+    options:
+      - text: "`Partial<T>` робить усі властивості `T` необов'язковими"
+        correct: true
+      - text: "`Pick<T, 'a' | 'b'>` залишає лише вказані властивості та прибирає решту"
+        correct: true
+      - text: "`Omit<T, 'a'>` створює тип без властивості `a`, а решту лишає без змін"
+        correct: true
+      - text: "`Readonly<T>` глибоко заморожує вкладені об'єкти під час виконання"
+      - text: "`Required<T>` додає значення за замовчуванням для полів"
+    explanation: >
+      Utility types існують лише на рівні типів і не додають жодного коду в результат. `Readonly<T>` забороняє присвоєння властивостям першого рівня
+      (і лише під час перевірки типів), а `Required<T>` лише прибирає `?` і значень не створює.
+    sources:
+      - https://www.typescriptlang.org/docs/handbook/utility-types.html
+
+  - id: typescript-004
+    level: junior
+    type: single
+    text: "Що скаже компілятор щодо цього коду зі `strict: true`?"
+    code:
+      lang: typescript
+      source: |
+        function len(s?: string) {
+          return s.length;
+        }
+    options:
+      - text: "Помилка: `s` може бути `undefined`, а `strictNullChecks` це відстежує"
+        correct: true
+      - text: "Помилки немає: `s.length` для `undefined` просто дає `0`"
+      - text: "Помилка: необов'язкові параметри не можна оголошувати в звичайних функціях"
+      - text: "Помилки не буде, поки `s` не отримає тип `null`: `undefined` перевірка не стосується"
+    explanation: >
+      Необов'язковий параметр має тип `string | undefined`. З `strictNullChecks` (входить у `strict`) звернення до властивості без перевірки заборонене:
+      помилка `'s' is possibly 'undefined'`. Без цього прапорця код би скомпілювався й упав би під час виконання.
+    sources:
+      - https://www.typescriptlang.org/tsconfig/#strictNullChecks
+
+  - id: typescript-005
+    level: middle
+    type: single
+    text: Який із цих двох рядків дасть помилку компіляції і чому?
+    code:
+      lang: typescript
+      source: |
+        interface P { name: string }
+
+        const a: P = { name: 'a', age: 1 };   // (1)
+        const o = { name: 'a', age: 1 };
+        const b: P = o;                        // (2)
+    options:
+      - text: "Лише (1): зайві властивості перевіряють у свіжому літералі, але не в змінній"
+        correct: true
+      - text: "Обидва: тип `P` не допускає властивості `age` ні в літералі, ні в змінній, бо вона не оголошена"
+      - text: "Лише (2): змінна `o` має ширший тип, а присвоєння ширшого типу до вужчого заборонене"
+      - text: "Жоден: структурна типізація дозволяє зайві властивості в обох випадках"
+    explanation: >
+      TypeScript структурний: об'єкт із додатковими полями сумісний із `P`. Виняток — «свіжий» літерал, записаний прямо в місці присвоєння, де зайве поле
+      найімовірніше є опечаткою. Через змінну це правило не спрацьовує.
+    sources:
+      - https://www.typescriptlang.org/docs/handbook/2/objects.html#excess-property-checks
+
+  - id: typescript-006
+    level: middle
+    type: multiple
+    text: Які відмінності між `interface` і `type` (type alias) правильні?
+    options:
+      - text: "Два оголошення `interface` з однаковим іменем зливаються в один тип"
+        correct: true
+      - text: "Через `type` можна назвати об'єднання на кшталт `string | number`, а через `interface` ні"
+        correct: true
+      - text: "Клас може виконувати `implements` і для інтерфейсу, і для псевдоніма об'єктного типу"
+        correct: true
+      - text: "Повторне оголошення `type` з тим самим іменем теж зливається з першим"
+      - text: "`interface` під час компіляції породжує JS-об'єкт, а `type` повністю стирається"
+    explanation: >
+      Злиття оголошень (declaration merging) — особливість `interface`; повторний `type` з тим самим іменем дає помилку дубліката. Обидва конструкти
+      повністю стираються після компіляції і не залишають жодного коду.
+    sources:
+      - https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#differences-between-type-aliases-and-interfaces
+
+  - id: typescript-007
+    level: middle
+    type: single
+    text: >
+      До об'єднання `Shape` додали третій варіант `{ kind: 'tri'; b: number }`, а в `switch` гілку не додали. Що станеться (`strict`)?
+    code:
+      lang: typescript
+      source: |
+        type Shape =
+          | { kind: 'circle'; r: number }
+          | { kind: 'sq'; s: number }
+          | { kind: 'tri'; b: number };
+
+        function area(s: Shape): number {
+          switch (s.kind) {
+            case 'circle': return s.r;
+            case 'sq': return s.s;
+            default: {
+              const _x: never = s;
+              return _x;
+            }
+          }
+        }
+    options:
+      - text: "Помилка в `default`: `s` там має тип `{ kind: 'tri'; ... }`, а він не присвоюється до `never`"
+        correct: true
+      - text: "Помилки немає: у `default` потрапить `s` із типом `Shape`, а `never` сумісний з усіма типами"
+      - text: "Помилка з'явиться лише під час виконання, коли прийде значення з `kind: 'tri'`"
+      - text: "Помилка компіляції біля `switch`: компілятор вимагає `case` для кожного варіанта"
+    explanation: >
+      Після звуження по дискримінанту в `default` лишаються тільки необроблені варіанти. Коли всі розібрано, там `never`, і присвоєння проходить;
+      якщо ні, воно ламається, тож компілятор вказує на місце, яке забули оновити. Це і є перевірка вичерпності.
+    sources:
+      - https://www.typescriptlang.org/docs/handbook/2/narrowing.html#exhaustiveness-checking
+
+  - id: typescript-008
+    level: middle
+    type: single
+    text: Який виклик не скомпілюється і який тип матиме результат успішного виклику?
+    code:
+      lang: typescript
+      source: |
+        function get<T, K extends keyof T>(obj: T, key: K): T[K] {
+          return obj[key];
+        }
+
+        const user = { name: 'Ann', age: 30 };
+        const ok = get(user, 'name');
+        const bad = get(user, 'nme');
+    options:
+      - text: "Не скомпілюється `get(user, 'nme')`: `'nme'` не входить у `keyof`, а `ok` має тип `string`"
+        correct: true
+      - text: "Обидва скомпілюються: `K` просто виводиться як `string`, а `ok` має тип `string | number`"
+      - text: "Не скомпілюється `get(user, 'name')`: літерал `'name'` не можна передати як `string`"
+      - text: "Не скомпілюється `get(user, 'nme')`, а `ok` отримає тип `string | number`, як значення будь-якого поля"
+    explanation: >
+      Обмеження `K extends keyof T` дозволяє лише ключі, що є в `T`. Тип результату `T[K]` залежить від конкретного ключа, тому для `'name'` це `string`,
+      а не об'єднання типів усіх полів.
+    sources:
+      - https://www.typescriptlang.org/docs/handbook/2/generics.html#using-type-parameters-in-generic-constraints
+
+  - id: typescript-009
+    level: senior
+    type: single
+    text: >
+      Із `strict: true` (тобто `strictFunctionTypes`) обробник `onDog: (d: Dog) => void` присвоюють двом полям. Яке присвоєння
+      пройде компіляцію, якщо `Dog extends Animal`?
+    code:
+      lang: typescript
+      source: |
+        type H1 = { handle: (a: Animal) => void };
+        type H2 = { handle(a: Animal): void };
+
+        const h1: H1 = { handle: onDog };
+        const h2: H2 = { handle: onDog };
+    options:
+      - text: "Лише `h2`: параметри властивостей-функцій контраваріантні, а методи залишено біваріантними"
+        correct: true
+      - text: "Лише `h1`: синтаксис властивості м'якший за синтаксис методу"
+      - text: "Обидва: `Dog` є підтипом `Animal`, тож обробник `Dog` годиться скрізь, де потрібен обробник `Animal`"
+      - text: "Жодне: `strict` вимагає точного збігу типів параметрів"
+    explanation: >
+      Обробник, що вимагає `Dog`, небезпечно віддавати туди, де йому передадуть довільного `Animal`, тому `h1` відхиляється. Для методів перевірка
+      біваріантна, щоб не ламати типові шаблони на кшталт `Array<T>`, тож `h2` проходить, хоча це теж небезпечно.
+    sources:
+      - https://www.typescriptlang.org/tsconfig/#strictFunctionTypes
+
+  - id: typescript-010
+    level: senior
+    type: multiple
+    text: Які твердження про `as`, `as const`, `satisfies` і `!` правильні?
+    options:
+      - text: "`expr satisfies T` перевіряє відповідність `T`, але не розширює вивідний тип виразу до `T`"
+        correct: true
+      - text: "`as const` робить літерали вузькими, а властивості об'єкта — `readonly`"
+        correct: true
+      - text: "Оператор `!` лише повідомляє компілятору, що значення не `null`, і перевірки під час виконання не додає"
+        correct: true
+      - text: "`as T` перевіряє значення під час виконання й кидає виняток, якщо воно не відповідає `T`"
+      - text: "Типи `as` дозволяють довільне приведення: `5 as string` компілюється без помилок"
+    explanation: >
+      Усі ці конструкції діють лише на рівні типів і перевірок не генерують. `satisfies` на відміну від `as` зберігає точніший вивідний тип
+      (наприклад, `number[]` замість об'єднання). `as` не пропускає типи без перетину: `5 as string` дає помилку, потрібен проміжний `unknown`.
+    sources:
+      - https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator
+      - https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions
+
+  - id: typescript-011
+    level: senior
+    type: single
+    text: Який тип матиме змінна `x` (TypeScript 7.0, `strict`)?
+    code:
+      lang: typescript
+      source: |
+        type ToArray<T> = T extends unknown ? T[] : never;
+        type Wrapped<T> = [T] extends [unknown] ? T[] : never;
+
+        declare const x: ToArray<string | number>;
+        declare const y: Wrapped<string | number>;
+    options:
+      - text: "`string[] | number[]`: умовний тип розподіляється по членах об'єднання, а `y` буде `(string | number)[]`"
+        correct: true
+      - text: "`(string | number)[]`: умовні типи завжди обробляють об'єднання як один тип, `y` матиме той самий тип"
+      - text: "`never`: об'єднання не задовольняє умову `T extends unknown` як ціле"
+      - text: "`string[] | number[]` і для `x`, і для `y`: дужки навколо `T` на розподіл не впливають"
+    explanation: >
+      Якщо перевіряється «голий» параметр типу, умовний тип розподіляється по кожному члену об'єднання. Загортання в кортеж `[T]` вимикає розподіл,
+      і об'єднання перевіряється цілком. Це типова причина дивного результату в самописних утилітах.
+    sources:
+      - https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
+
+  - id: typescript-012
+    level: senior
+    type: single
+    text: >
+      Команда запускає `.ts`-файли напряму через `node app.ts` у Node.js 24 (type stripping) і хоче, щоб `tsc` ловив синтаксис,
+      який Node так не виконає. Що це за синтаксис і який параметр tsconfig допоможе?
+    options:
+      - text: "`enum` і параметри-властивості конструктора потребують генерації JS; їх забороняє `erasableSyntaxOnly`"
+        correct: true
+      - text: "Анотації типів і `interface`: Node не вміє їх стирати, тому треба вмикати прапорець `strict`"
+      - text: "`async`-функції та generics: Node у режимі stripping їх не розуміє, їх ловить `isolatedModules`"
+      - text: "Будь-який код із помилками типів: Node перевіряє типи перед запуском, а `noEmit` цю перевірку вимикає"
+    explanation: >
+      Type stripping просто замінює анотації пробілами й типи не перевіряє, тому підтримується лише синтаксис, що стирається без наслідків.
+      `enum`, `namespace` з кодом і parameter properties потребують перетворення, і `erasableSyntaxOnly` (TypeScript 5.8+) дає помилку на них у `tsc`.
+    sources:
+      - https://nodejs.org/api/typescript.html
+      - https://www.typescriptlang.org/tsconfig/#erasableSyntaxOnly

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Prepround.Domain\Prepround.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Prepround.Application\Prepround.Application.csproj" />
+    <ProjectReference Include="..\..\src\Prepround.Infrastructure\Prepround.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Prepround.Api\Prepround.Api.csproj" />
+    <ProjectReference Include="..\..\src\Prepround.ContentTool\Prepround.ContentTool.csproj" />
+  </ItemGroup>
+
+</Project>

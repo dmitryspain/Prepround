@@ -1,0 +1,259 @@
+id: nestjs
+title: NestJS
+description: Модулі, провайдери, DI, guards, pipes, interceptors.
+questions:
+  - id: nestjs-001
+    level: junior
+    type: single
+    text: >
+      NestJS 12. `CatsService` позначений `@Injectable()` і ін'єктується в конструктор `CatsController`.
+      Модуль оголошує лише `controllers: [CatsController]`. Що станеться під час запуску застосунку?
+    code:
+      lang: typescript
+      source: |
+        @Injectable()
+        export class CatsService {}
+
+        @Controller('cats')
+        export class CatsController {
+          constructor(private readonly cats: CatsService) {}
+        }
+
+        @Module({ controllers: [CatsController] })
+        export class CatsModule {}
+    options:
+      - text: 'Nest не зможе розв''язати залежності `CatsController`, і запуск завершиться помилкою'
+        correct: true
+      - text: 'Nest сам створить `CatsService` у `CatsModule`, бо клас позначений `@Injectable()`'
+      - text: 'Контролер запуститься, а `cats` буде `undefined` до першого виклику методу сервісу'
+      - text: 'Nest створить новий `CatsService` для кожного запиту, бо провайдер ніде не зареєстрований'
+    explanation: >
+      `@Injectable()` лише додає метадані, а реєстрацію в контейнері DI дає масив `providers` модуля.
+      Без нього токен `CatsService` невідомий, тож Nest кидає помилку «can't resolve dependencies» ще на старті.
+    sources:
+      - https://docs.nestjs.com/providers#provider-registration
+  - id: nestjs-002
+    level: junior
+    type: single
+    text: >
+      `CatsModule` має `CatsService` у `providers`. Контролер із `OrdersModule`, який імпортує `CatsModule`,
+      має отримати той самий екземпляр `CatsService`. Що для цього потрібно?
+    options:
+      - text: 'Додати `CatsService` до `exports` у `CatsModule`'
+        correct: true
+      - text: 'Додати `CatsService` до `providers` у `OrdersModule`: екземпляр буде спільний'
+      - text: 'Позначити клас `CatsService` декоратором `@Global()`'
+      - text: 'Додати `CatsService` до `controllers` у `OrdersModule`'
+    explanation: >
+      Модуль інкапсулює провайдери: назовні видно лише ті, що вказані в `exports`. Повторна реєстрація
+      в `providers` іншого модуля створила б другий, окремий екземпляр. `@Global()` ставлять на модуль, а не на провайдер.
+    sources:
+      - https://docs.nestjs.com/modules#shared-modules
+  - id: nestjs-003
+    level: junior
+    type: single
+    text: >
+      NestJS 12. Що отримає клієнт у відповідь на `GET /cats/abc` і чи виконається тіло `findOne`?
+    code:
+      lang: typescript
+      source: |
+        @Get(':id')
+        findOne(@Param('id', ParseIntPipe) id: number) {
+          return this.cats.findOne(id);
+        }
+    options:
+      - text: 'Відповідь 400 Bad Request, тіло `findOne` не виконується'
+        correct: true
+      - text: 'Відповідь 200, а `id` усередині методу дорівнює `NaN`'
+      - text: 'Відповідь 404 Not Found, бо `abc` не знайдено серед котів'
+      - text: 'Відповідь 500, бо пайп кидає необроблену помилку `TypeError`'
+    explanation: >
+      `ParseIntPipe` виконується перед викликом методу й для нечислового рядка кидає `BadRequestException`
+      з повідомленням «Validation failed (numeric string is expected)». Метод не викликається взагалі. Це підтверджено запуском `ParseIntPipe.transform('abc', ...)`.
+    sources:
+      - https://docs.nestjs.com/pipes#transformation-use-case
+  - id: nestjs-004
+    level: junior
+    type: multiple
+    text: Які твердження про guards у NestJS правильні?
+    options:
+      - text: 'Якщо `canActivate` повертає `false`, Nest за замовчуванням відповідає 403 Forbidden'
+        correct: true
+      - text: 'Guard отримує `ExecutionContext`, тому знає, який обробник виконається далі'
+        correct: true
+      - text: 'Guards виконуються після всіх middleware, але до interceptors і pipes'
+        correct: true
+      - text: 'Guard виконується після pipes, коли параметри вже перетворено на типи DTO'
+      - text: 'Guard може змінити значення, яке повертає обробник, через `next.handle()`'
+    explanation: >
+      Guard вирішує лише, чи передавати запит далі, і має контекст виконання. Він стоїть у ланцюжку після middleware
+      і перед interceptors та pipes. Перетворювати результат обробника вміють interceptors, а не guards.
+    sources:
+      - https://docs.nestjs.com/guards
+  - id: nestjs-005
+    level: middle
+    type: single
+    text: 'У якому порядку NestJS обробляє запит, якщо в застосунку є middleware, guards, interceptors, pipes і обробник?'
+    options:
+      - text: 'middleware, guards, interceptors (до обробника), pipes, обробник, interceptors (після)'
+        correct: true
+      - text: 'middleware, pipes, guards, interceptors, обробник, interceptors (після)'
+      - text: 'guards, middleware, interceptors, pipes, обробник, interceptors (після)'
+      - text: 'middleware, guards, pipes, interceptors (до обробника), обробник, interceptors (після)'
+    explanation: >
+      Послідовність за документацією: middleware, guards, interceptors перед обробником, pipes, обробник і знову interceptors на шляху відповіді.
+      Тому interceptor бачить ще не провалідовані аргументи, а guard відсікає запит до будь-яких pipes.
+    sources:
+      - https://docs.nestjs.com/faq/request-lifecycle#summary
+  - id: nestjs-006
+    level: middle
+    type: single
+    text: >
+      NestJS 12, стандартні налаштування. Сервіс зберігає лічильник у полі. Двоє різних клієнтів по черзі
+      викликають `GET /counter`. Що вони отримають?
+    code:
+      lang: typescript
+      source: |
+        @Injectable()
+        export class CounterService {
+          private n = 0;
+          next() { return ++this.n; }
+        }
+
+        @Controller('counter')
+        export class CounterController {
+          constructor(private readonly counter: CounterService) {}
+          @Get() get() { return this.counter.next(); }
+        }
+    options:
+      - text: 'Першому клієнту `1`, другому `2`: екземпляр сервісу один на весь застосунок'
+        correct: true
+      - text: 'Обидва отримають `1`: Nest створює новий сервіс для кожного запиту'
+      - text: 'Обидва отримають `1`: стан скидається, бо контролер створюється заново на кожен виклик'
+      - text: 'Першому `1`, другому `2` лише в межах однієї сесії, а в іншої сесії лічильник почнеться з `1`'
+    explanation: >
+      Провайдери за замовчуванням singleton: контейнер створює один екземпляр і ділить його між усіма запитами й клієнтами.
+      Тому стан у полі спільний, і це треба враховувати. Запуск `Test.get(CounterService)` двічі дав той самий об'єкт і `1`, `2`.
+    sources:
+      - https://docs.nestjs.com/fundamentals/injection-scopes
+  - id: nestjs-007
+    level: middle
+    type: single
+    text: >
+      `RolesGuard` ін'єктує `AuthService` у конструкторі, і guard має діяти на всіх маршрутах застосунку.
+      Як його правильно зареєструвати?
+    options:
+      - text: 'Додати до `providers` будь-якого модуля `{ provide: APP_GUARD, useClass: RolesGuard }`'
+        correct: true
+      - text: 'Викликати `app.useGlobalGuards(new RolesGuard())` у `main.ts`'
+      - text: 'Позначити клас `RolesGuard` декоратором `@Global()` і додати його до `exports`'
+      - text: 'Передати `RolesGuard` у `@UseGuards()` на `AppController`: він поширюється на всі контролери'
+    explanation: >
+      Guard, зареєстрований через `useGlobalGuards()`, створюється поза контекстом будь-якого модуля, тому контейнер
+      не може ін'єктувати в нього залежності. Токен `APP_GUARD` реєструє його як звичайний провайдер модуля, і DI працює. Guard при цьому все одно глобальний.
+    sources:
+      - https://docs.nestjs.com/guards#binding-guards
+  - id: nestjs-008
+    level: middle
+    type: multiple
+    text: Що може зробити interceptor у NestJS?
+    options:
+      - text: 'Перетворити значення, яке повертає обробник, через оператор RxJS на `next.handle()`'
+        correct: true
+      - text: 'Перехопити виняток обробника через `catchError` і кинути замість нього інший'
+        correct: true
+      - text: 'Не викликати `next.handle()` й повернути готове значення, наприклад із кешу'
+        correct: true
+      - text: 'Виконати логіку лише після обробника: до нього interceptor не отримує керування'
+      - text: 'Прочитати аргументи запиту лише після того, як pipes їх перетворили'
+    explanation: >
+      Interceptor обгортає виклик обробника: код до `next.handle()` виконується перед ним, потім можна змінювати потік результату,
+      обробляти помилки або зовсім пропустити обробник. Перед обробником interceptor виконується раніше за pipes.
+    sources:
+      - https://docs.nestjs.com/interceptors
+  - id: nestjs-009
+    level: senior
+    type: single
+    text: >
+      Два провайдери в одному модулі залежать один від одного через конструктори (`A` потребує `B`, а `B` потребує `A`).
+      Запуск застосунку падає. Який підхід із документації NestJS дозволяє Nest створити обидва, не змінюючи структури залежностей?
+    options:
+      - text: 'Позначити обидві сторони зв''язку через `@Inject(forwardRef(() => ...))`'
+        correct: true
+      - text: 'Додати `forwardRef()` лише на тій стороні, клас якої оголошено в файлі пізніше'
+      - text: 'Позначити один із провайдерів `Scope.TRANSIENT`, щоб розірвати цикл створення'
+      - text: 'Додати обидва провайдери в `exports`, щоб контейнер сам визначив порядок створення'
+    explanation: >
+      Без `forwardRef()` метадані одного з класів ще не готові, тому Nest не створює жоден. Обгортка потрібна з обох боків.
+      Без `forwardRef` Nest не може розв'язати циклічну залежність і падає на старті (залежно від порядку оголошення з помилкою «circular dependency» або «can't resolve dependencies»). Область видимості й `exports` порядок створення не змінюють.
+    sources:
+      - https://docs.nestjs.com/fundamentals/circular-dependency#forward-reference
+  - id: nestjs-010
+    level: senior
+    type: single
+    text: >
+      Провайдер `DB` оголошено з асинхронною `useFactory`, що підключається до бази кілька секунд.
+      `UsersService` ін'єктує `DB`. Що отримає `UsersService` і коли його створить Nest?
+    code:
+      lang: typescript
+      source: |
+        {
+          provide: 'DB',
+          useFactory: async () => {
+            const conn = await connect(url);
+            return conn;
+          },
+        }
+    options:
+      - text: 'Вже розв''язаний об''єкт `conn`; Nest чекає завершення фабрики, перш ніж створювати залежні класи'
+        correct: true
+      - text: 'Об''єкт `Promise<conn>`, який сервіс має сам `await`-ити в кожному методі'
+      - text: '`undefined`, поки підключення не завершиться; Nest не чекає й створює сервіс одразу'
+      - text: 'Розв''язаний об''єкт, але Nest створює `UsersService` відразу, а передає `conn` пізніше'
+    explanation: >
+      Для асинхронних провайдерів Nest чекає на проміс і лише потім створює залежні класи, тож у конструктор потрапляє значення,
+      а не проміс. Це затримує старт застосунку, що зручно для підключення до БД. Запуск із фабрикою на 300 мс це підтвердив.
+    sources:
+      - https://docs.nestjs.com/fundamentals/async-providers
+  - id: nestjs-011
+    level: senior
+    type: multiple
+    text: >
+      Сервіс `RequestContext` має `Scope.REQUEST`. Що з цього правильно для застосунку NestJS, де інші провайдери мають стандартну область?
+    options:
+      - text: 'Контролер, що ін''єктує `RequestContext`, теж стає request-scoped і створюється на кожен запит'
+        correct: true
+      - text: 'Singleton-провайдер, який залежить від `RequestContext`, також стає request-scoped'
+        correct: true
+      - text: 'Залежність цього сервісу, яка сама від нього не залежить, лишається singleton'
+        correct: true
+      - text: 'Singleton-провайдер зберігає область, а `RequestContext` у нього береться з першого запиту'
+      - text: 'Request-scoped провайдер створюється раз на модуль, а запит лише отримує на нього посилання'
+    explanation: >
+      Request scope «підіймається» вгору ланцюжком залежностей: усі, хто залежить від такого провайдера, теж створюються на кожен запит,
+      що додає накладні витрати. Залежності, яким цей сервіс не потрібен, лишаються singleton.
+    sources:
+      - https://docs.nestjs.com/fundamentals/injection-scopes#scope-hierarchy
+  - id: nestjs-012
+    level: senior
+    type: single
+    text: >
+      Є три interceptors, кожен логує вхід і вихід (`tap`). Один зареєстровано глобально через `APP_INTERCEPTOR`,
+      один на контролері, один на маршруті. Що буде в логах для успішного запиту?
+    code:
+      lang: typescript
+      source: |
+        // кожен interceptor: console.log('in X'); next.handle().pipe(tap(() => console.log('out X')))
+        // G — APP_INTERCEPTOR, C — @UseInterceptors на контролері, R — на методі
+        @Get() hi() { console.log('handler'); return 'x'; }
+    options:
+      - text: 'in G, in C, in R, handler, out R, out C, out G'
+        correct: true
+      - text: 'in G, in C, in R, handler, out G, out C, out R'
+      - text: 'in R, in C, in G, handler, out G, out C, out R'
+      - text: 'in G, in C, in R, out R, out C, out G, handler'
+    explanation: >
+      Вхід іде в порядку глобальний, контролер, маршрут, а відповідь повертається у зворотному, бо Observable розв'язуються за принципом «перший увійшов, останній вийшов».
+      Порядок підтверджено запуском застосунку з трьома interceptors.
+    sources:
+      - https://docs.nestjs.com/faq/request-lifecycle#interceptors

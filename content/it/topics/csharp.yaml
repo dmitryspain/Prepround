@@ -1,0 +1,237 @@
+id: csharp
+title: C#
+description: Типи, generics, LINQ, records, pattern matching, nullable reference types, делегати й події.
+questions:
+  - id: csharp-001
+    level: junior
+    type: single
+    text: Що виведе цей код?
+    code:
+      lang: csharp
+      source: |
+        var a = new Point(1, 2);
+        var b = new Point(1, 2);
+        Console.WriteLine(a == b);
+
+        public record Point(int X, int Y);
+    options:
+      - text: "`True`"
+        correct: true
+      - text: "`False`"
+      - text: "Помилка компіляції: для `record` оператор `==` не визначено"
+      - text: Виняток під час виконання
+    explanation: >
+      Для `record` компілятор генерує рівність за значеннями: екземпляри одного типу рівні,
+      якщо рівні всі їхні властивості. Тому `a == b` дає `True`, хоча це два різні об'єкти.
+
+  - id: csharp-002
+    level: junior
+    type: multiple
+    text: Які з цих типів є типами-значеннями (value types)?
+    options:
+      - text: "`int`"
+        correct: true
+      - text: "`DateTime`"
+        correct: true
+      - text: "`string`"
+      - text: "`int[]`"
+      - text: "`object`"
+    explanation: >
+      `int` (`System.Int32`) і `DateTime` — структури, тобто типи-значення.
+      `string`, масиви й `object` — посилальні типи, хоча `string` незмінний і порівнюється за вмістом.
+
+  - id: csharp-003
+    level: junior
+    type: single
+    text: Що означає `var` в оголошенні `var count = 10;`?
+    options:
+      - text: Тип виводить компілятор з ініціалізатора, і далі він не змінюється
+        correct: true
+      - text: "Змінна стає `dynamic`, і її тип перевіряється лише під час виконання програми"
+      - text: "Змінна отримує тип `object`"
+      - text: Тип змінної можна змінити наступним присвоєнням значення іншого типу
+    explanation: >
+      `var` — неявна типізація: компілятор визначає тип з ініціалізатора, тут це `int`.
+      Змінна так само строго типізована, ніби тип написали явно.
+
+  - id: csharp-004
+    level: junior
+    type: single
+    text: Що означає тип `int?`?
+    options:
+      - text: "Це `Nullable<int>`: змінна містить значення `int` або `null`"
+        correct: true
+      - text: "Посилання на `int`, як параметр `ref int`"
+      - text: "`int`, який компілятор не дозволяє лишати неініціалізованим"
+      - text: "`int` без перевірки на переповнення"
+    explanation: >
+      Для типу-значення `T?` — це скорочення для структури `Nullable<T>`. Вона зберігає значення
+      і прапорець `HasValue`, тож може позначати відсутність значення.
+
+  - id: csharp-005
+    level: middle
+    type: single
+    text: Що виведе цей код?
+    code:
+      lang: csharp
+      source: |
+        var numbers = new List<int> { 1, 2, 3 };
+        var query = numbers.Where(n => n > 1);
+        numbers.Add(4);
+        Console.WriteLine(query.Count());
+    options:
+      - text: "`3`"
+        correct: true
+      - text: "`2`"
+      - text: "`4`"
+      - text: "Виняток `InvalidOperationException`: колекцію змінено"
+    explanation: >
+      `Where` виконується відкладено: запит лише описує фільтр, а колекцію проходить тоді, коли його перелічують.
+      `Count()` перелічує список уже з елементом `4`, тож умову справджують 2, 3 і 4.
+
+  - id: csharp-006
+    level: middle
+    type: multiple
+    text: Які з цих LINQ-методів виконують запит одразу, а не відкладено?
+    options:
+      - text: "`ToList()`"
+        correct: true
+      - text: "`Count()`"
+        correct: true
+      - text: "`First()`"
+        correct: true
+      - text: "`Where()`"
+      - text: "`Select()`"
+    explanation: >
+      Методи, що повертають одне значення (`Count`, `First`) або матеріалізують колекцію (`ToList`),
+      перелічують джерело одразу. `Where` і `Select` повертають новий запит, який виконається лише під час перелічення.
+
+  - id: csharp-007
+    level: middle
+    type: single
+    text: >
+      У проєкті ввімкнено `<Nullable>enable</Nullable>`, а `TreatWarningsAsErrors` вимкнено.
+      Що станеться з рядком `string name = null;`?
+    options:
+      - text: Компілятор видасть попередження, а поведінка під час виконання не зміниться
+        correct: true
+      - text: Помилка компіляції, і проєкт не збереться, доки рядок не виправлять
+      - text: "`NullReferenceException` одразу під час присвоєння значення `null`"
+      - text: "Під час виконання замість `null` автоматично буде підставлено `string.Empty`"
+    explanation: >
+      Nullable reference types — це статичний аналіз: компілятор лише попереджає про можливий `null`.
+      Поведінка програми під час виконання від цього не змінюється.
+
+  - id: csharp-008
+    level: middle
+    type: single
+    text: Чим подія (`event`) відрізняється від публічного поля-делегата?
+    options:
+      - text: Ззовні можна лише підписатися (`+=`) чи відписатися (`-=`), а викликає подію лише сам клас
+        correct: true
+      - text: Подія завжди викликає обробники асинхронно, кожен у окремому потоці з пулу
+      - text: На подію може підписатися лише один обробник, а наступна підписка замінює попередню
+      - text: Подія не може передавати аргументи обробникам, окрім порожнього `EventArgs`
+    explanation: >
+      `event` обмежує доступ до делегата: зовнішній код не може викликати подію чи присвоїти їй значення через `=`
+      і так стерти чужі підписки. Обробники викликаються синхронно, по черзі, у потоці, який викликав подію.
+
+  - id: csharp-009
+    level: senior
+    type: multiple
+    text: Які з присвоєнь у варіантах скомпілюються з такими змінними?
+    code:
+      lang: csharp
+      source: |
+        List<string> list = new List<string> { "a", "b" };
+        IEnumerable<string> strings = list;
+        Action<object> printObject = o => Console.WriteLine(o);
+        Func<object> makeObject = () => new object();
+    options:
+      - text: "`IEnumerable<object> objects = strings;`"
+        correct: true
+      - text: "`Action<string> printString = printObject;`"
+        correct: true
+      - text: "`List<object> objectList = list;`"
+      - text: "`Func<string> makeString = makeObject;`"
+      - text: "`IList<object> objectIList = list;`"
+    explanation: >
+      `IEnumerable<out T>` коваріантний, а `Action<in T>` контраваріантний: послідовність рядків можна читати
+      як послідовність `object`, а дія над `object` годиться для рядка. `List<T>` та `IList<T>` інваріантні,
+      а `Func<out TResult>` дозволяє лише перехід від `Func<string>` до `Func<object>`, не навпаки.
+
+  - id: csharp-010
+    level: senior
+    type: single
+    text: Що виведе цей код?
+    code:
+      lang: csharp
+      source: |
+        Console.WriteLine(new Holder().Next());
+
+        struct Counter
+        {
+            public int Value;
+            public void Increment() => Value++;
+        }
+
+        class Holder
+        {
+            private readonly Counter _counter = new();
+
+            public int Next()
+            {
+                _counter.Increment();
+                return _counter.Value;
+            }
+        }
+    options:
+      - text: "`0`"
+        correct: true
+      - text: "`1`"
+      - text: "Помилка компіляції: `readonly`-поле не можна змінювати"
+      - text: Виняток під час виконання
+    explanation: >
+      Поле `readonly` не можна змінити поза конструктором, тому перед викликом звичайного (не `readonly`) методу
+      структури компілятор робить захисну копію поля. `Increment` збільшує копію, а саме поле лишається `0`.
+
+  - id: csharp-011
+    level: senior
+    type: single
+    text: Що виведе цей код?
+    code:
+      lang: csharp
+      source: |
+        var actions = new List<Action>();
+        for (var i = 0; i < 3; i++)
+        {
+            actions.Add(() => Console.Write(i));
+        }
+
+        foreach (var action in actions)
+        {
+            action();
+        }
+    options:
+      - text: "`333`"
+        correct: true
+      - text: "`012`"
+      - text: "`222`"
+      - text: "Помилка компіляції: лямбда не може захоплювати змінну циклу"
+    explanation: >
+      Лямбда захоплює саму змінну, а не її значення. У циклі `for` змінна `i` одна на всі ітерації, і після циклу
+      вона дорівнює 3. У `foreach` з C# 5 кожна ітерація має власну змінну, тому там лямбди побачили б різні значення.
+
+  - id: csharp-012
+    level: senior
+    type: single
+    text: Що дають `static abstract` члени інтерфейсів, які з'явилися в C# 11?
+    options:
+      - text: Тип мусить реалізувати статичні члени й оператори, а generic-код викликає їх як `T.Parse(...)`
+        correct: true
+      - text: Статичні члени можна викликати через змінну типу інтерфейсу, як віртуальні методи екземпляра
+      - text: Інтерфейс задає статичну реалізацію за замовчуванням, яку типи не можуть перевизначити
+      - text: Усі методи інтерфейсу автоматично стають статичними, тож екземпляр для їх виклику не потрібен
+    explanation: >
+      На цьому побудовано generic math: `INumber<T>` вимагає від типу операторів і членів на кшталт `T.Zero`,
+      і узагальнений метод викликає їх без екземпляра. Через екземпляр чи змінну інтерфейсу такі члени не викликаються.

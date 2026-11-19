@@ -1,0 +1,324 @@
+id: dotnet-async
+title: Async і багатопотоковість
+description: Task, async/await, SynchronizationContext, lock, TPL, Channels, дедлоки.
+questions:
+  - id: dotnet-async-001
+    level: junior
+    type: single
+    text: "Чим `await task` відрізняється від `task.Wait()`, якщо задача ще не завершилась?"
+    options:
+      - text: "`await` не блокує потік і продовжить метод після завершення задачі, а `Wait()` блокує"
+        correct: true
+      - text: "`await` запускає задачу в окремому потоці, а `Wait()` виконує її в поточному"
+      - text: "Нічим: обидва блокують поточний потік, `await` лише коротший запис"
+      - text: "`await` лише запускає задачу й одразу йде далі, а результат потім беруть через `Result`"
+    explanation: >
+      На незавершеній задачі `await` реєструє решту методу як продовження й повертає керування викликачу,
+      тож потік вільний для іншої роботи. Окремих потоків `async` і `await` самі не створюють, тому варіант
+      про «окремий потік» хибний. `Wait()` і `Result` натомість тримають потік заблокованим до кінця задачі.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/await
+      - https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/task-asynchronous-programming-model#threads
+
+  - id: dotnet-async-002
+    level: junior
+    type: single
+    text: Що виведе цей код?
+    code:
+      lang: csharp
+      source: |
+        Console.Write("A");
+        var task = PrintAsync();
+        Console.Write("C");
+        await task;
+        Console.Write("E");
+
+        static async Task PrintAsync()
+        {
+            Console.Write("B");
+            await Task.Delay(100);
+            Console.Write("D");
+        }
+    options:
+      - text: "`ABCDE`"
+        correct: true
+      - text: "`ACBDE`"
+      - text: "`ACEBD`"
+      - text: "`ABDCE`"
+    explanation: >
+      Async-метод виконується синхронно до першого `await` незавершеної задачі, тому `B` друкується ще до
+      повернення з `PrintAsync`. На `await Task.Delay` метод повертає керування, друкується `C`, а `await task`
+      чекає, поки `PrintAsync` виведе `D`, і лише потім виводиться `E`.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/task-asynchronous-programming-model#what-happens-in-an-async-method
+
+  - id: dotnet-async-003
+    level: junior
+    type: multiple
+    text: "Які твердження про оператор `lock` правильні?"
+    options:
+      - text: "Тіло `lock` на тому самому об'єкті одночасно виконує щонайбільше один потік"
+        correct: true
+      - text: "Блокування знімається, навіть якщо в тілі `lock` кинуто виняток"
+        correct: true
+      - text: "Використати `await` усередині тіла `lock` не можна: це помилка компіляції"
+        correct: true
+      - text: "Потік, який дійшов до зайнятого `lock`, отримує виняток замість очікування"
+      - text: "`lock` не дає іншим потокам читати поля об'єкта, навіть якщо вони не беруть блокування"
+    explanation: >
+      `lock` дає взаємне виключення: інші потоки чекають, поки блокування звільниться, а не отримують виняток.
+      Компілятор розгортає його в `try`/`finally`, тому вихід через виняток теж знімає блокування, а `await`
+      у тілі заборонено. Захищає `lock` лише той код, який бере те саме блокування: читання поля без `lock`
+      ніхто не зупинить.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/lock
+
+  - id: dotnet-async-004
+    level: junior
+    type: single
+    text: Приблизно скільки часу покаже цей код?
+    code:
+      lang: csharp
+      source: |
+        using System.Diagnostics;
+
+        var stopwatch = Stopwatch.StartNew();
+        Task first = Task.Delay(1000);
+        Task second = Task.Delay(1000);
+        await Task.WhenAll(first, second);
+        Console.WriteLine(stopwatch.Elapsed);
+    options:
+      - text: "Близько 1 секунди: обидві затримки йдуть одночасно"
+        correct: true
+      - text: "Близько 2 секунд: друга затримка почнеться лише тоді, коли закінчиться перша"
+      - text: "Майже 0: `Task.WhenAll` не чекає задач, а лише об'єднує їх в одну"
+      - text: "Залежить від кількості ядер: кожна затримка займає окреме ядро"
+    explanation: >
+      Метод, що повертає `Task`, запускає операцію одразу, тож обидві затримки йдуть паралельно ще до
+      `WhenAll`. `await Task.WhenAll` завершується, коли завершились усі задачі, тобто приблизно через секунду.
+      Дві секунди вийшли б, якби кожну затримку чекали окремим `await` одразу після створення.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/#start-tasks-concurrently
+      - https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/#apply-await-expressions-to-tasks-efficiently
+
+  - id: dotnet-async-005
+    level: middle
+    type: single
+    text: Що станеться під час запуску цього консольного застосунку?
+    code:
+      lang: csharp
+      source: |
+        try
+        {
+            SendAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            Console.WriteLine("caught");
+        }
+
+        await Task.Delay(500);
+        Console.WriteLine("done");
+
+        static async void SendAsync()
+        {
+            await Task.Delay(100);
+            throw new InvalidOperationException("boom");
+        }
+    options:
+      - text: "Процес упаде з необробленим винятком, не вивівши ні `caught`, ні `done`"
+        correct: true
+      - text: "Виведе `caught`, бо виклик обгорнуто в `try`, а потім `done`"
+      - text: "Виведе лише `done`: виняток зникне, бо результат методу ніхто не чекав"
+      - text: "Помилка компіляції: `async`-метод мусить повертати `Task`"
+    explanation: >
+      У `async void` немає `Task`, куди можна зберегти виняток, тому викликач не може його перехопити:
+      на момент кидка `SendAsync` уже повернула керування з `try`. У консольному застосунку виняток кидає
+      потік із пулу, ніхто його не обробляє, і процес завершується. Тихо зникнути міг би виняток із
+      `async Task`, яку ніхто не чекав, тому `async void` лишають лише для обробників подій.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-return-types#void-return-type
+      - https://learn.microsoft.com/en-us/archive/msdn-magazine/2013/march/async-await-best-practices-in-asynchronous-programming#avoid-async-void
+
+  - id: dotnet-async-006
+    level: middle
+    type: multiple
+    text: Обидві задачі падають. Які твердження про цей код правильні?
+    code:
+      lang: csharp
+      source: |
+        var all = Task.WhenAll(FailAsync("first", 100), FailAsync("second", 200));
+        try
+        {
+            await all;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"{ex.GetType().Name}: {ex.Message}");
+            Console.WriteLine(all.Exception!.InnerExceptions.Count);
+        }
+
+        static async Task FailAsync(string name, int delayMs)
+        {
+            await Task.Delay(delayMs);
+            throw new InvalidOperationException(name);
+        }
+    options:
+      - text: "`catch` отримає `InvalidOperationException` з текстом `first`, а не `AggregateException`"
+        correct: true
+      - text: "`all.Exception.InnerExceptions` містить обидва винятки, тож другий рядок виведе `2`"
+        correct: true
+      - text: "`catch` отримає `AggregateException`, у якому зібрано обидва винятки обох задач"
+      - text: "`await all` кине виняток одразу, щойно впаде перша задача, не чекаючи, поки завершиться друга"
+      - text: "Друга задача буде автоматично скасована токеном, щойно впаде перша"
+    explanation: >
+      Задача з `Task.WhenAll` завершується, лише коли завершились усі передані задачі, і зберігає всі їхні
+      винятки. `await` перекидає з неї перший виняток як є, без обгортки, тому `catch (AggregateException)`
+      тут не спрацював би. Решта винятків доступна через `Task.Exception.InnerExceptions`, а `AggregateException`
+      отримує той, хто блокується через `Wait()` чи `Result`.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/#handle-asynchronous-exceptions
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenall
+
+  - id: dotnet-async-007
+    level: middle
+    type: single
+    text: "Що змінює `ConfigureAwait(false)` у виразі `await stream.ReadAsync(buffer).ConfigureAwait(false)`?"
+    options:
+      - text: "Продовження після `await` не повертається в захоплений `SynchronizationContext`"
+        correct: true
+      - text: "Сама операція читання виконуватиметься в окремому потоці з пулу, а не в поточному потоці"
+      - text: "Винятки з `ReadAsync` не перекидатимуться в метод, який чекає на результат"
+      - text: "Якщо задача вже завершена, код після `await` гарантовано перейде в інший потік"
+    explanation: >
+      `ConfigureAwait` впливає лише на те, де виконається продовження: з `false` його не повертають у
+      початковий контекст. Саму операцію він нікуди не переносить. Якщо ж задача на момент `await` уже
+      завершена, код після `await` просто йде далі синхронно в тому самому потоці.
+    sources:
+      - https://devblogs.microsoft.com/dotnet/configureawait-faq/
+
+  - id: dotnet-async-008
+    level: middle
+    type: single
+    text: >
+      Продюсер пише в канал `Channel.CreateBounded<Order>(100)` швидше, ніж консюмер читає.
+      Що відбувається, коли в каналі вже 100 елементів?
+    options:
+      - text: "`WriteAsync` чекатиме на вільне місце, а `TryWrite` одразу поверне `false`"
+        correct: true
+      - text: "`WriteAsync` кине `ChannelClosedException`, бо канал переповнено"
+      - text: "Канал мовчки відкине найстаріший елемент, щоб записати новий"
+      - text: "Канал збільшить місткість, бо обмеження в конструкторі діє лише як підказка для пам'яті"
+    explanation: >
+      За замовчуванням обмежений канал працює в режимі `BoundedChannelFullMode.Wait`: запис асинхронно чекає
+      на вільне місце, і так продюсер отримує зворотний тиск (backpressure). Відкидання найстаріших чи
+      найновіших елементів відбувається лише тоді, коли такий `FullMode` задано явно.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/channels#bounded-channels
+
+  - id: dotnet-async-009
+    level: senior
+    type: single
+    text: У WPF-застосунку натискання кнопки назавжди «вішає» інтерфейс. Чому?
+    code:
+      lang: csharp
+      source: |
+        private void OnLoadClick(object sender, RoutedEventArgs e)
+        {
+            var data = LoadAsync().Result;
+            ResultText.Text = data;
+        }
+
+        private async Task<string> LoadAsync()
+        {
+            var json = await _httpClient.GetStringAsync(_url);
+            return json.Trim();
+        }
+    options:
+      - text: "Продовження після `await` чекає на UI-потік, а той заблоковано на `.Result`"
+        correct: true
+      - text: "`HttpClient` не можна викликати з UI-потоку, тому запит ніколи не відправляється"
+      - text: "`.Result` на незавершеній задачі одразу кидає виняток, а WPF мовчки його ковтає"
+      - text: "Вичерпано пул потоків: `GetStringAsync` тримає потік пулу весь час, поки чекає на відповідь"
+    explanation: >
+      `await` захоплює `SynchronizationContext` UI-потоку й намагається виконати там продовження `LoadAsync`,
+      але єдиний UI-потік синхронно чекає на `.Result`, і жоден не може рушити далі. Виправлення: зробити
+      обробник `async void` і писати `await LoadAsync()`, тобто async до кінця; `ConfigureAwait(false)` у
+      бібліотечному коді теж знімає цей дедлок. Пул потоків тут ні до чого: заблоковано саме UI-потік.
+    sources:
+      - https://devblogs.microsoft.com/dotnet/configureawait-faq/
+      - https://learn.microsoft.com/en-us/archive/msdn-magazine/2013/march/async-await-best-practices-in-asynchronous-programming#async-all-the-way
+
+  - id: dotnet-async-010
+    level: senior
+    type: multiple
+    text: >
+      API на ASP.NET Core під навантаженням відповідає дедалі повільніше. У контролерах асинхронні виклики
+      до бази чекають через `.Result` і `.Wait()`. Які спостереження й висновки відповідають цій ситуації?
+    options:
+      - text: "Кількість потоків у пулі повільно, але стабільно росте, а CPU завантажено значно менше ніж на 100 %"
+        correct: true
+      - text: "Класичного дедлоку, як у WPF, немає: в ASP.NET Core немає `SynchronizationContext`"
+        correct: true
+      - text: "Виправлення — `await` замість `.Result` і `.Wait()`, щоб потік повертався в пул на час запиту"
+        correct: true
+      - text: "CPU завантажено майже на 100 %, бо заблоковані потоки весь час активно крутяться в циклі очікування результату"
+      - text: "Щойно всі потоки пулу зайнято, нові запити одразу отримують `503 Service Unavailable`"
+    explanation: >
+      Блокувальне очікування тримає потік пулу на весь час запиту до бази, нові запити стоять у черзі, а пул
+      додає потоки поступово, тож затримки ростуть за низького CPU. Класичного дедлоку немає, бо продовженню
+      не потрібен якийсь особливий потік, але пропускна здатність падає. Лікується це асинхронністю до кінця:
+      з `await` потік повертається в пул і обслуговує інші запити.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/core/diagnostics/debug-threadpool-starvation#detect-threadpool-starvation
+      - https://devblogs.microsoft.com/dotnet/configureawait-faq/
+
+  - id: dotnet-async-011
+    level: senior
+    type: multiple
+    text: "Метод повертає `ValueTask<int>`. Які дії з отриманим значенням неприпустимі?"
+    options:
+      - text: "Двічі зробити `await` того самого екземпляра"
+        correct: true
+      - text: "Прочитати `.Result`, поки операція ще не завершилась"
+        correct: true
+      - text: "Двічі викликати `AsTask()` на тому самому екземплярі"
+        correct: true
+      - text: "Один раз зробити `await` одразу після виклику"
+      - text: "Один раз викликати `AsTask()` і чекати отриманий `Task` багато разів"
+    explanation: >
+      `ValueTask<T>` допомагає уникнути алокації, коли результат часто готовий синхронно, але спожити його
+      можна лише один раз: повторний `await`, кілька `AsTask()` чи `.Result` до завершення дають невизначену
+      поведінку. Якщо результат потрібен кілька разів або в `WhenAll`, його один раз перетворюють на `Task`.
+      Тому за замовчуванням методи повертають `Task`, а `ValueTask` беруть, коли профілювання показало, що
+      алокації справді заважають.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.valuetask-1#remarks
+
+  - id: dotnet-async-012
+    level: senior
+    type: single
+    text: Що виведе цей код?
+    code:
+      lang: csharp
+      source: |
+        await Task.Factory.StartNew(async () =>
+        {
+            await Task.Delay(1000);
+            Console.WriteLine("inner");
+        });
+        Console.WriteLine("outer");
+        await Task.Delay(2000);
+    options:
+      - text: "`outer`, а приблизно через секунду `inner`"
+        correct: true
+      - text: "`inner`, а потім `outer`"
+      - text: "Лише `outer`: внутрішня задача скасовується, коли завершилась зовнішня"
+      - text: "Помилка компіляції: `StartNew` не приймає async-лямбду"
+    explanation: >
+      Для async-лямбди `StartNew` повертає `Task<Task>`, і зовнішня задача завершується, щойно лямбда дійшла
+      до першого `await` і повернула внутрішню задачу. Тому `await` чекає лише запуск, а не саму роботу.
+      `Task.Run` сам розгортає внутрішню задачу, тож з ним вийшло б `inner`, а потім `outer`; зі `StartNew`
+      для цього потрібен `.Unwrap()`.
+    sources:
+      - https://devblogs.microsoft.com/dotnet/task-run-vs-task-factory-startnew/

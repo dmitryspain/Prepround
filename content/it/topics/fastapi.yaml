@@ -1,0 +1,286 @@
+id: fastapi
+title: FastAPI
+description: Маршрути, Pydantic, залежності, async-ендпоінти, OpenAPI.
+questions:
+  - id: fastapi-001
+    level: junior
+    type: single
+    text: Що поверне FastAPI на запит `GET /items/abc`, якщо обробник оголошено так?
+    code:
+      lang: python
+      source: |
+        @app.get("/items/{item_id}")
+        def read_item(item_id: int):
+            return {"item_id": item_id}
+    options:
+      - text: Відповідь 422 з описом помилки валідації, обробник не викликається
+        correct: true
+      - text: Відповідь 404, бо маршрут `/items/abc` не збігається зі шляхом
+      - text: Відповідь 200, де `item_id` дорівнює `0`
+      - text: Відповідь 500, бо перетворення `"abc"` на `int` кидає `ValueError`
+    explanation: >
+      Анотація `int` у параметрі шляху змушує FastAPI перевіряти значення через Pydantic. Якщо перетворити рядок не вдалося, клієнт одразу отримує
+      422 із полем `detail`, а ваш код не виконується.
+    sources:
+      - https://fastapi.tiangolo.com/tutorial/path-params/#data-validation
+
+  - id: fastapi-002
+    level: junior
+    type: multiple
+    text: Які параметри функції FastAPI сприйме як query-параметри, а не як частину шляху чи тіла?
+    code:
+      lang: python
+      source: |
+        class Item(BaseModel):
+            name: str
+
+        @app.post("/users/{user_id}/items")
+        def create(user_id: int, item: Item, q: str | None = None, limit: int = 10):
+            ...
+    options:
+      - text: "`q`, бо має простий тип і відсутній у шляху"
+        correct: true
+      - text: "`limit`, бо має простий тип і типове значення"
+        correct: true
+      - text: "`user_id`, бо його оголошено в шляху"
+      - text: "`item`, бо він не має типового значення"
+    explanation: >
+      Параметр, якого немає в шляху й тип якого простий (`str`, `int` тощо), стає query-параметром. `user_id` береться зі шляху, а `item`
+      є моделлю Pydantic, тому читається з тіла запиту.
+    sources:
+      - https://fastapi.tiangolo.com/tutorial/query-params/
+      - https://fastapi.tiangolo.com/tutorial/body-multiple-params/
+
+  - id: fastapi-003
+    level: junior
+    type: single
+    text: Де за замовчуванням FastAPI віддає автоматично згенеровану схему OpenAPI?
+    options:
+      - text: За адресою `/openapi.json`, а інтерактивна документація лежить на `/docs` і `/redoc`
+        correct: true
+      - text: За адресою `/swagger.json`, а Swagger UI відкривається на `/swagger`
+      - text: За адресою `/docs/schema`, а ReDoc підключається окремим пакетом
+      - text: Схема з'являється лише після виклику `app.openapi_export()` під час запуску
+    explanation: >
+      FastAPI будує схему з оголошених маршрутів і моделей та віддає її як JSON. Swagger UI і ReDoc читають саме цей файл.
+    sources:
+      - https://fastapi.tiangolo.com/tutorial/first-steps/#openapi
+      - https://fastapi.tiangolo.com/tutorial/metadata/#docs-urls
+
+  - id: fastapi-004
+    level: junior
+    type: single
+    text: Що робить `Depends(get_db)` у параметрі обробника?
+    code:
+      lang: python
+      source: |
+        @app.get("/users")
+        def list_users(db: Session = Depends(get_db)):
+            return db.query(User).all()
+    options:
+      - text: Викликає `get_db` для кожного запиту й передає в обробник її результат
+        correct: true
+      - text: Один раз під час старту застосунку створює `db` і передає той самий об'єкт у кожен запит
+      - text: Додає `get_db` до OpenAPI як окремий маршрут, який можна викликати напряму
+      - text: Імпортує `get_db` із модуля й підставляє саму функцію без її виклику
+    explanation: >
+      `Depends` — це система впровадження залежностей FastAPI: перед обробником фреймворк сам викликає вказану функцію (з власними параметрами)
+      й підставляє те, що вона повернула. Так виносять спільну логіку, наприклад сесію БД чи перевірку токена.
+    sources:
+      - https://fastapi.tiangolo.com/tutorial/dependencies/
+
+  - id: fastapi-005
+    level: middle
+    type: single
+    text: Що станеться з іншими запитами, поки виконується цей ендпоінт у одному воркері Uvicorn?
+    code:
+      lang: python
+      source: |
+        @app.get("/report")
+        async def report():
+            time.sleep(5)
+            return {"ok": True}
+    options:
+      - text: Цикл подій заблоковано на 5 секунд, тож інші запити цього воркера чекають
+        correct: true
+      - text: Нічого, бо FastAPI сам запускає `async def` обробники в окремому потоці
+      - text: Нічого, бо `time.sleep` усередині `async def` автоматично стає неблокувальним
+      - text: Тільки запити до `/report` чекатимуть, а решта маршрутів обслуговується паралельно
+    explanation: >
+      `async def` виконується прямо в циклі подій, а `time.sleep` синхронний і нічого не віддає назад. Через `def` FastAPI запускав би обробник
+      у пулі потоків; в `async def` блокувальні виклики треба замінювати на `await asyncio.sleep` чи `await` для асинхронних бібліотек.
+    sources:
+      - https://fastapi.tiangolo.com/async/#path-operation-functions
+
+  - id: fastapi-006
+    level: middle
+    type: single
+    text: Що відбудеться з полем `password` у відповіді цього ендпоінта?
+    code:
+      lang: python
+      source: |
+        class UserIn(BaseModel):
+            name: str
+            password: str
+
+        class UserOut(BaseModel):
+            name: str
+
+        @app.post("/users", response_model=UserOut)
+        def create_user(user: UserIn):
+            return user
+    options:
+      - text: "Його не буде: FastAPI відфільтрує відповідь за `UserOut`"
+        correct: true
+      - text: Воно потрапить у відповідь, бо повернуто об'єкт `UserIn`
+      - text: Воно потрапить у відповідь, але лише якщо додати `response_model_exclude_unset=True`
+      - text: FastAPI поверне 500, бо тип значення, що повертається, не збігається з `UserOut`
+    explanation: >
+      Із `response_model` FastAPI валідує повернуте значення за цією моделлю й серіалізує лише її поля, тому зайві дані не витікають.
+      Помилка виникла б, лише якби не вистачало обов'язкових полів `UserOut`.
+    sources:
+      - https://fastapi.tiangolo.com/tutorial/response-model/#add-an-output-model
+
+  - id: fastapi-007
+    level: middle
+    type: single
+    text: Скільки разів за один запит буде викликано `get_settings`?
+    code:
+      lang: python
+      source: |
+        def get_settings():
+            return load_settings()
+
+        def get_a(s = Depends(get_settings)): ...
+        def get_b(s = Depends(get_settings)): ...
+
+        @app.get("/")
+        def root(a = Depends(get_a), b = Depends(get_b)): ...
+    options:
+      - text: "Один раз: результат кешується в межах запиту й передається обом залежностям"
+        correct: true
+      - text: Двічі, бо кожне `Depends` викликає функцію окремо
+      - text: Один раз за весь час роботи застосунку, далі береться значення з кешу процесу
+      - text: Тричі, бо `Depends(get_settings)` викликається ще й в обробнику `root`
+    explanation: >
+      Якщо та сама залежність потрібна кільком іншим залежностям в одному запиті, FastAPI викликає її лише раз і повторно використовує значення.
+      Кешування вимикає `Depends(get_settings, use_cache=False)`. Між запитами кешу немає.
+    sources:
+      - https://fastapi.tiangolo.com/tutorial/dependencies/sub-dependencies/#using-the-same-dependency-multiple-times
+
+  - id: fastapi-008
+    level: middle
+    type: multiple
+    text: Що відбувається, коли тіло запиту не проходить валідацію за моделлю Pydantic в обробнику FastAPI?
+    options:
+      - text: Клієнт отримує відповідь 422 із `detail`
+        correct: true
+      - text: Код обробника не виконується
+        correct: true
+      - text: Клієнт отримує статус 400
+      - text: Обробник викликається, а поля стають `None`
+    explanation: >
+      Під час розбору запиту FastAPI кидає `RequestValidationError`, який типовий обробник перетворює на відповідь 422 зі списком помилок у `detail`.
+      До коду обробника справа не доходить, а статус можна змінити лише власним обробником винятку.
+    sources:
+      - https://fastapi.tiangolo.com/tutorial/handling-errors/#override-request-validation-exceptions
+
+  - id: fastapi-009
+    level: senior
+    type: single
+    text: >
+      FastAPI 0.163, Pydantic 2.14. Ту саму модель `Item` використано і як тіло запиту, і як `response_model`, а в OpenAPI з'явилися дві схеми, `Item-Input` та `Item-Output`.
+      Що їх породжує?
+    code:
+      lang: python
+      source: |
+        class Item(BaseModel):
+            model_config = ConfigDict(json_schema_serialization_defaults_required=True)
+            name: str
+            description: str | None = None
+    options:
+      - text: "Налаштування моделі: у вихідній схемі поле з типовим значенням стає обов'язковим, а у вхідній ні"
+        correct: true
+      - text: FastAPI завжди ділить схему моделі, яку використано і на вході, і на виході, незалежно від налаштувань
+      - text: "Тип `str | None` у `description`: кожне поле з `None` дає окремі вхідну й вихідну схеми"
+      - text: Параметр `separate_input_output_schemas=True` у `FastAPI(...)`, який типово вимкнено
+    explanation: >
+      Без цього налаштування схема лишається одна, `Item`, і `description` необов'язкове.
+      Із ним виходить `Item-Output`, де типове поле обов'язкове, бо у відповіді воно завжди є. `separate_input_output_schemas=False` повертає одну схему.
+    sources:
+      - https://docs.pydantic.dev/latest/api/config/#pydantic.config.ConfigDict.json_schema_serialization_defaults_required
+      - https://fastapi.tiangolo.com/how-to/separate-openapi-schemas/
+
+  - id: fastapi-010
+    level: senior
+    type: single
+    text: Як у FastAPI поводяться події запуску, якщо в застосунку одночасно задано `lifespan` і обробник `@app.on_event("startup")`?
+    code:
+      lang: python
+      source: |
+        @asynccontextmanager
+        async def lifespan(app):
+            print("lifespan start")
+            yield
+            print("lifespan stop")
+
+        app = FastAPI(lifespan=lifespan)
+
+        @app.on_event("startup")
+        async def startup():
+            print("startup event")
+    options:
+      - text: Виконується лише `lifespan`, а `on_event`-обробник ігнорується
+        correct: true
+      - text: Спершу виконується `startup event`, потім `lifespan start`
+      - text: Виконуються обидва, у порядку оголошення в коді
+      - text: Запуск завершується помилкою, бо два механізми не можна поєднувати
+    explanation: >
+      Якщо передано `lifespan`, обробники `startup` і `shutdown` не викликаються: використовують або одне, або інше. Рекомендований спосіб — `lifespan`,
+      де код до `yield` виконується при старті, а після нього при зупинці.
+    sources:
+      - https://fastapi.tiangolo.com/advanced/events/#alternative-events-deprecated
+
+  - id: fastapi-011
+    level: senior
+    type: single
+    text: Чому на `BackgroundTasks` у FastAPI не варто покладатися, якщо задачу не можна втратити?
+    options:
+      - text: Задача живе в процесі запиту, тож перезапуск воркера втрачає її без повторів
+        correct: true
+      - text: Вона починає виконуватися до відправлення відповіді й затримує її клієнтові
+      - text: Вона не може бути `async def`, лише звичайною `def`
+      - text: Вона не має доступу до параметрів запиту, які були в обробнику
+    explanation: >
+      Фонові задачі запускаються після відправки відповіді в тому ж процесі, без черги, збереження стану й повторів. Для важких чи критичних завдань
+      документація радить окремі інструменти на кшталт Celery, а `BackgroundTasks` лишає для невеликих справ, як-от лист-сповіщення.
+    sources:
+      - https://fastapi.tiangolo.com/tutorial/background-tasks/#caveat
+
+  - id: fastapi-012
+    level: senior
+    type: multiple
+    text: Які твердження про залежності з `yield` у сучасному FastAPI правильні?
+    code:
+      lang: python
+      source: |
+        async def get_session():
+            session = Session()
+            try:
+                yield session
+            finally:
+                session.close()
+    options:
+      - text: Типово код після `yield` виконується вже після відправлення відповіді клієнтові
+        correct: true
+      - text: "`scope=\"function\"` закриває ресурс після обробника, але до відправлення відповіді"
+        correct: true
+      - text: Якщо залежність B залежить від A, то завершальний код B виконується раніше, ніж A
+        correct: true
+      - text: Без `try`/`finally` код після `yield` виконається, навіть коли обробник кинув виняток
+      - text: Код після `yield` може змінити статус відповіді, яку вже відправлено
+    explanation: >
+      Завершальний код іде після відправлення відповіді, якщо не задати `scope="function"`, а залежності закриваються у зворотному порядку.
+      Виняток обробника повертається у `yield` як виняток, тож без `try`/`finally` прибирання не гарантоване, а відправлену відповідь вже не змінити.
+    sources:
+      - https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/

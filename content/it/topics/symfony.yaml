@@ -1,0 +1,215 @@
+id: symfony
+title: Symfony
+description: Бандли, DI-контейнер, події, форми, конфігурація.
+questions:
+  - id: symfony-001
+    level: junior
+    type: single
+    text: Що зробить контейнер Symfony 8.1 для такого сервісу з увімкненим автовайрингом?
+    code:
+      lang: php
+      source: |
+        # config/services.yaml
+        services:
+            _defaults:
+                autowire: true
+                autoconfigure: true
+            App\:
+                resource: '../src/'
+
+        // src/Service/Reporter.php
+        class Reporter
+        {
+            public function __construct(private Mailer $mailer) {}
+        }
+    options:
+      - text: Передасть у конструктор сервіс `Mailer`, знайдений за типом аргумента
+        correct: true
+      - text: Викличе помилку, доки в `services.yaml` не вказано `arguments` для `Reporter`
+      - text: Шукатиме сервіс за іменем параметра `$mailer`, а тип аргумента проігнорує
+      - text: Створить новий екземпляр `Mailer` на кожен виклик, бо він не позначений як спільний
+    explanation: >
+      Автовайринг дивиться на тип аргумента конструктора й підставляє зареєстрований сервіс цього класу чи інтерфейсу. Явні `arguments` для цього не потрібні, а сервіси за замовчуванням спільні, тож новий екземпляр на кожну ін'єкцію не створюється.
+    sources:
+      - https://symfony.com/doc/8.1/service_container/autowiring.html
+  - id: symfony-002
+    level: junior
+    type: multiple
+    text: 'Які твердження про бандли в Symfony 8.1 правильні? (позначте всі)'
+    options:
+      - text: Потрібні застосунку бандли вмикають у `config/bundles.php`, зокрема окремо для кожного оточення
+        correct: true
+      - text: Бандли призначені для спільного використання коду й можливостей між застосунками
+        correct: true
+      - text: Власний код застосунку в `src/` не потрібно загортати в окремий бандл
+        correct: true
+      - text: Бандл із `vendor/` вмикається сам після `composer install`, хоч у `bundles.php` його нема
+      - text: Увесь код має лежати в одному бандлі, інакше сервіси не потраплять у контейнер
+    explanation: >
+      Список активних бандлів і оточень, у яких вони працюють, лежить у `config/bundles.php` (Flex дописує його під час встановлення рецепта). Документація прямо каже, що організовувати код застосунку бандлами більше не рекомендовано. Сам по собі пакет у `vendor/` ще не бандл застосунку.
+    sources:
+      - https://symfony.com/doc/8.1/bundles.html
+  - id: symfony-003
+    level: junior
+    type: single
+    text: Як у Symfony 8.1 зареєструвати метод класу слухачем події, не пишучи ні рядка в `services.yaml`, якщо в проєкті ввімкнено autoconfigure?
+    options:
+      - text: Позначити клас або метод атрибутом `#[AsEventListener]`
+        correct: true
+      - text: Назвати метод `onEventName`, і контейнер сам знайде його за назвою
+      - text: Викликати `$kernel->listen()` у конструкторі контролера
+      - text: Додати клас у `config/bundles.php` поруч з іншими бандлами
+    explanation: >
+      Атрибут `#[AsEventListener]` дозволяє описати подію, метод і пріоритет просто в класі, а autoconfigure додає потрібний тег. Назва методу без атрибута чи тега слухачем його не робить, а `bundles.php` призначений лише для бандлів.
+    sources:
+      - https://symfony.com/doc/8.1/event_dispatcher.html#defining-event-listeners-with-php-attributes
+  - id: symfony-004
+    level: junior
+    type: single
+    text: Контролер Symfony 8.1 обробляє форму так. Як правильно перевірити дані після `handleRequest`?
+    code:
+      lang: php
+      source: |
+        $form = $this->createForm(TaskType::class, $task);
+        $form->handleRequest($request);
+
+        // тут перевірка
+    options:
+      - text: '`if ($form->isSubmitted() && $form->isValid())`'
+        correct: true
+      - text: '`if ($form->isValid())` без перевірки відправлення, бо для GET вона поверне `false`'
+      - text: '`if ($form->isSubmitted())`, бо відправлена форма вже пройшла валідацію'
+      - text: '`if ($request->isMethod(''POST''))`, бо форма сама визначає дані за методом'
+    explanation: >
+      Спершу треба впевнитись, що форму відправлено, і лише потім питати про валідність. Виклик `isValid()` на невідправленій формі в сучасних версіях кидає `LogicException`, а не повертає `false`.
+    sources:
+      - https://symfony.com/doc/8.1/forms.html#processing-forms
+  - id: symfony-005
+    level: middle
+    type: single
+    text: Що виведе цей код (symfony/event-dispatcher 8.1, PHP 8.5)?
+    code:
+      lang: php
+      source: |
+        $d = new EventDispatcher();
+        $d->addListener('e', fn () => print("A "));
+        $d->addListener('e', fn () => print("B "), 10);
+        $d->addListener('e', fn () => print("C "), -5);
+        $d->addListener('e', fn () => print("D "));
+        $d->dispatch(new stdClass(), 'e');
+    options:
+      - text: '`B A D C`'
+        correct: true
+      - text: '`A D B C`'
+      - text: '`C A D B`'
+      - text: '`B D A C`'
+    explanation: >
+      Слухачі з вищим пріоритетом викликаються раніше, а за нульового пріоритету за замовчуванням діє порядок реєстрації. Тому `B` (10) іде першим, далі `A` і `D` (0), а `C` (-5) останнім.
+    sources:
+      - https://symfony.com/doc/8.1/event_dispatcher.html
+  - id: symfony-006
+    level: middle
+    type: single
+    text: 'Клас `Notifier` має аргумент типу `NotifierInterface`. Інтерфейс реалізують два сервіси, `SmsNotifier` і `EmailNotifier`, обидва зареєстровані, псевдоніма для інтерфейсу немає. Що станеться під час компіляції контейнера Symfony 8.1?'
+    options:
+      - text: Контейнер видасть помилку автовайрингу й запропонує створити псевдонім для інтерфейсу
+        correct: true
+      - text: Контейнер візьме сервіс, зареєстрований першим, бо порядок визначає вибір
+      - text: Контейнер візьме сервіс із найкоротшою назвою класу, бо це найменш специфічна реалізація
+      - text: Помилки не буде, а у `Notifier` потрапить `null` до першого виклику
+    explanation: >
+      Автовайринг не вгадує між кількома реалізаціями: компіляція падає з повідомленням «references interface ... You should maybe alias this interface to one of these existing services». Вирішують це псевдонімом (`#[AsAlias]`), `#[Autowire]` або іменованим автовайрингом із `#[Target]`.
+    sources:
+      - https://symfony.com/doc/8.1/service_container/autowiring.html#dealing-with-multiple-implementations-of-the-same-type
+  - id: symfony-007
+    level: middle
+    type: single
+    text: 'У Symfony 8.1 є сервіс `Registry`, якому передають `!tagged_iterator app.handler`, а під цим тегом ще 20 важких сервісів. Коли контейнер створить екземпляри цих обробників?'
+    options:
+      - text: Лише під час ітерації, і по одному по мірі проходу
+        correct: true
+      - text: Усі разом у момент створення `Registry`, бо аргумент розв'язується в конструкторі
+      - text: Усі під час прогрівання кешу, бо контейнер зберігає готові об'єкти в `var/cache`
+      - text: Лише першого з обробників, а решту створить `foreach` після `rewind()`
+    explanation: >
+      Tagged iterator передає ледачий ітератор: сервіси створюються, коли `foreach` до них доходить. `Registry` створюється до ітерації, а обробники по одному. Якщо ітерація не потрібна, «зайві» сервіси не будуть створені взагалі.
+    sources:
+      - https://symfony.com/doc/8.1/service_container/tags.html#referencing-tagged-services
+  - id: symfony-008
+    level: middle
+    type: multiple
+    text: 'Є файли `.env`, `.env.local`, `.env.test`, `.env.test.local`, а також реальна змінна оточення ОС `DB=real`. Застосунок Symfony 8.1 стартує з `APP_ENV=test`. Які твердження правильні? (позначте всі)'
+    options:
+      - text: Значення з `.env.test` перекривають значення з `.env`
+        correct: true
+      - text: Значення з `.env.test.local` перекривають значення з `.env.test`
+        correct: true
+      - text: Реальна змінна оточення має вищий пріоритет за будь-який із цих файлів
+        correct: true
+      - text: Файл `.env.local` читається в `test` і перекриває `.env.test`
+      - text: Файли `.env.*` читаються лише в `dev`, а в `test` застосунок бере змінні тільки з ОС
+    explanation: >
+      Каскад такий: `.env`, потім `.env.<env>`, потім `.env.<env>.local`, а `.env.local` у `test` пропускається, щоб тести були відтворювані. Реальні змінні оточення завжди переможуть.
+    sources:
+      - https://symfony.com/doc/8.1/configuration.html#configuring-environment-variables-in-env-files
+  - id: symfony-009
+    level: senior
+    type: single
+    text: 'Слухач події `kernel.request` у Symfony 8.1 пише рядок аудиту на кожен запит. Після того як у шаблоні з''явився `{{ render(controller(''App\\Controller\\Widget::box'')) }}`, на одне відкриття сторінки з''являється два рядки. Що це і як виправити?'
+    options:
+      - text: '`render(controller())` виконує підзапит, який теж диспетчеризує `kernel.request`, тож слухач має вийти за `!$event->isMainRequest()`'
+        correct: true
+      - text: Подія `kernel.request` диспетчеризується двічі на кожен запит через `kernel.terminate`, тому слухач треба переписати на `kernel.response`
+      - text: Twig кешує фрагмент, тому слухач викликається повторно, і треба вимкнути кеш фрагмента
+      - text: Слухач зареєстровано двічі через autoconfigure і атрибут одночасно, тож достатньо прибрати тег
+    explanation: >
+      Підзапити проходять увесь життєвий цикл HttpKernel, зокрема `kernel.request`, тому слухач без перевірки спрацьовує і для головного запиту, і для фрагмента. `KernelEvent::isMainRequest()` дозволяє відрізнити їх. Дублювання реєстрації тут не причина: на сторінці без `render` рядок один.
+    sources:
+      - https://symfony.com/doc/8.1/components/http_kernel.html#sub-requests
+  - id: symfony-010
+    level: senior
+    type: multiple
+    text: 'Які твердження про скомпільований контейнер Symfony 8.1 правильні? (позначте всі)'
+    options:
+      - text: Приватний сервіс, на який ніхто не посилається, видаляється під час компіляції
+        correct: true
+      - text: Значення `%env(DATABASE_URL)%` розв'язується під час виконання, тому його зміна не потребує очищення кешу
+        correct: true
+      - text: Compiler pass працює на етапі компіляції з визначеннями сервісів, а не з їхніми готовими об'єктами
+        correct: true
+      - text: Публічний сервіс, на який ніхто не посилається, теж видаляється під час компіляції як невикористаний
+      - text: Compiler pass виконується під час кожного запиту перед створенням перших сервісів, щоб конфігурація завжди була свіжою
+    explanation: >
+      Контейнер збирається один раз і кешується в `var/cache`, а `%env()` відкладається до виконання. Під час компіляції невикористані приватні сервіси викидаються, а публічні лишаються, бо їх можна дістати напряму.
+    sources:
+      - https://symfony.com/doc/8.1/service_container/compiler_passes.html
+      - https://symfony.com/doc/8.1/configuration.html#configuration-based-on-environment-variables
+  - id: symfony-011
+    level: senior
+    type: single
+    text: 'Бандл має зібрати в реєстр усі сервіси з тегом `app.exporter`, які можуть оголошувати й інші бандли та застосунок, і змінити їхні визначення. Куди розмістити цю логіку в Symfony 8.1?'
+    options:
+      - text: У compiler pass, який реєструє клас бандла, бо він виконується після завантаження конфігурації всіх бандлів
+        correct: true
+      - text: У метод `load()` розширення цього бандла, бо воно виконується першим і бачить визначення всіх інших
+      - text: У слухач `kernel.request`, бо контейнер уже зібраний і всі теги відомі
+      - text: У конструктор реєстру, перебравши `$container->getDefinitions()` під час першого виклику
+    explanation: >
+      Метод `load()` розширення отримує не справжній контейнер, а його копію лише з параметрами, тож визначень інших бандлів і застосунку він не бачить. Compiler pass працює із уже злитим контейнером, і саме там можна шукати теги та змінювати визначення. На етапі виконання контейнер зібраний, і визначень, які можна змінити, там немає.
+    sources:
+      - https://symfony.com/doc/8.1/service_container/compiler_passes.html
+      - https://symfony.com/doc/8.1/bundles/extension.html
+  - id: symfony-012
+    level: senior
+    type: single
+    text: 'У формі Symfony 8.1 є `CollectionType` для тегів із `allow_add`. Сутність `Task` зберігає `tags` як `Collection` (`ArrayCollection`) і має метод `addTag(Tag $t)`, який викликає `$t->addTask($this)`, та `removeTag(Tag $t)`. Нові теги з форми не потрапляють у зворотний зв''язок. У чому причина?'
+    options:
+      - text: За замовчуванням `by_reference` дорівнює `true`, тож `addTag` не викликається; потрібно `false`
+        correct: true
+      - text: Для `allow_add` обов'язково потрібен ще й `allow_delete`, інакше форма пропускає виклики методів сутності
+      - text: Поле треба оголосити з `mapped => false`, і тоді форма сама викличе `addTag` для кожного тегу
+      - text: Метод має називатися `setTags`, бо форма викликає лише сеттери для колекцій
+    explanation: >
+      Із `by_reference => true` форма отримує колекцію через `getTags()` і додає елементи прямо в неї, оминаючи `addTag()`. Значення `false` вмикає виклик adder і remover, де можна синхронізувати зворотну сторону зв'язку. Прапорці `allow_add` та `allow_delete` незалежні один від одного.
+    sources:
+      - https://symfony.com/doc/8.1/form/form_collections.html

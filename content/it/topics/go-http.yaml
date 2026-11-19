@@ -1,0 +1,281 @@
+id: go-http
+title: net/http і фреймворки
+description: net/http, middleware, Gin/Echo, graceful shutdown.
+questions:
+  - id: go-http-001
+    level: junior
+    type: single
+    text: Що поверне цей код для запиту `GET /items/42` (Go 1.27)?
+    code:
+      lang: go
+      source: |
+        mux := http.NewServeMux()
+        mux.HandleFunc("GET /items/{id}", func(w http.ResponseWriter, r *http.Request) {
+            fmt.Fprint(w, "item ", r.PathValue("id"))
+        })
+        rec := httptest.NewRecorder()
+        mux.ServeHTTP(rec, httptest.NewRequest("GET", "/items/42", nil))
+        fmt.Println(rec.Code, rec.Body.String())
+    options:
+      - text: '`200 item 42`'
+        correct: true
+      - text: '`200 item {id}`'
+      - text: '`404 404 page not found`, бо шаблон із методом у `ServeMux` не підтримується'
+      - text: 'Код не скомпілюється: змінні `{id}` у шляху доступні лише у Gin і Echo'
+    explanation: >
+      Починаючи з Go 1.22 `ServeMux` приймає в шаблоні метод і змінні сегменти, а значення сегмента повертає `r.PathValue`. Запит `GET /items/42` збігається з шаблоном, тому код відповіді 200, а `id` дорівнює `42`.
+    sources:
+      - https://go.dev/doc/go1.22#enhanced_routing_patterns
+      - https://pkg.go.dev/net/http#hdr-Patterns-ServeMux
+  - id: go-http-002
+    level: junior
+    type: single
+    text: Що виведе цей код (Go 1.27)?
+    code:
+      lang: go
+      source: |
+        h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            fmt.Fprint(w, "ok")
+            w.WriteHeader(http.StatusTeapot)
+        })
+        rec := httptest.NewRecorder()
+        h.ServeHTTP(rec, httptest.NewRequest("GET", "/", nil))
+        fmt.Println(rec.Code, rec.Body.String())
+    options:
+      - text: '`200 ok`'
+        correct: true
+      - text: '`418 ok`'
+      - text: '`418` і порожнє тіло, бо `WriteHeader` перезаписує відповідь'
+      - text: Паніка під час виконання, бо заголовок уже надіслано
+    explanation: >
+      Перший `Write` без явного `WriteHeader` неявно надсилає статус 200. Пізніший `WriteHeader` не змінює статус: сервер лише пише в лог про зайвий виклик, а паніки немає. Тому статус задають до першого запису в тіло.
+    sources:
+      - https://pkg.go.dev/net/http#ResponseWriter
+  - id: go-http-003
+    level: junior
+    type: multiple
+    text: 'Які твердження про відповідь `http.Get` правильні (Go 1.27)?'
+    options:
+      - text: Тіло відповіді треба закрити, коли воно більше не потрібне
+        correct: true
+      - text: Відповідь зі статусом 404 не дає `err != nil`; код статусу перевіряють окремо
+        correct: true
+      - text: Якщо `err == nil`, то `resp` не `nil`, і `resp.Body` теж не `nil`
+        correct: true
+      - text: Закривати `resp.Body` не обов'язково, бо збирач сміття сам закриє з'єднання
+      - text: Клієнт `http.DefaultClient` перериває запит, який триває довше за 30 секунд
+    explanation: >
+      `Get` повертає помилку лише за проблем із запитом чи з'єднанням, а не за статусом не 2xx, і тіло завжди треба закривати. Збирач сміття з'єднання не звільняє, а `DefaultClient` має нульовий `Timeout`, тобто ліміту часу немає.
+    sources:
+      - https://pkg.go.dev/net/http#Get
+      - https://pkg.go.dev/net/http#Client
+  - id: go-http-004
+    level: junior
+    type: single
+    text: Що поверне цей код для `GET /users/7` (Echo v5.4)?
+    code:
+      lang: go
+      source: |
+        e := echo.New()
+        e.GET("/users/:id", func(c *echo.Context) error {
+            return c.String(200, "user "+c.Param("id"))
+        })
+        rec := httptest.NewRecorder()
+        e.ServeHTTP(rec, httptest.NewRequest("GET", "/users/7", nil))
+        fmt.Println(rec.Code, rec.Body.String())
+    options:
+      - text: '`200 user 7`'
+        correct: true
+      - text: '`200 user :id`'
+      - text: '`404`, бо параметри шляху в Echo задаються лише через `{id}`'
+      - text: '`200 user ` з порожнім значенням, бо `Param` читає query-рядок'
+    explanation: >
+      Echo позначає параметр шляху двокрапкою, а `c.Param("id")` повертає фактичний сегмент, тобто `7`. Query-параметри читають окремим методом `QueryParam`. Echo сам реалізує `http.Handler`, тому його можна викликати через `httptest` без порту.
+    sources:
+      - https://echo.labstack.com/guide/routing/
+  - id: go-http-005
+    level: middle
+    type: single
+    text: Який порядок виводу дасть цей код (Go 1.27)?
+    code:
+      lang: go
+      source: |
+        func wrap(name string) func(http.Handler) http.Handler {
+            return func(next http.Handler) http.Handler {
+                return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+                    fmt.Println(name, "before")
+                    next.ServeHTTP(w, r)
+                    fmt.Println(name, "after")
+                })
+            }
+        }
+
+        final := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            fmt.Println("handler")
+        })
+        h := wrap("A")(wrap("B")(final))
+        h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/", nil))
+    options:
+      - text: '`A before`, `B before`, `handler`, `B after`, `A after`'
+        correct: true
+      - text: '`A before`, `A after`, `B before`, `B after`, `handler`'
+      - text: '`B before`, `A before`, `handler`, `A after`, `B after`'
+      - text: '`A before`, `B before`, `handler`, `A after`, `B after`'
+    explanation: >
+      Зовнішній обгортник `A` виконує свій код до виклику `next`, потім керування йде всередину, а після повернення кожен шар завершує свою частину у зворотному порядку. Тому «after» стоять у порядку `B`, потім `A`.
+    sources:
+      - https://pkg.go.dev/net/http#Handler
+      - https://pkg.go.dev/net/http#HandlerFunc
+  - id: go-http-006
+    level: middle
+    type: single
+    text: >
+      Сервіс викликає `http.Get(url)` до зовнішнього API. Одного дня API приймає з'єднання, але перестає відповідати. Що станеться з горутиною, яка викликала `http.Get` (Go 1.27)?
+    options:
+      - text: Вона блокуватиметься, доки API не відповість чи не розірве з'єднання, бо в `DefaultClient` ліміту часу немає
+        correct: true
+      - text: '`http.Get` поверне помилку через 30 секунд, бо `DefaultClient` має такий таймаут'
+      - text: '`http.Get` повернеться з `resp` зі статусом 504, бо клієнт сам вирішить, що сервер недоступний'
+      - text: Запит перерветься, щойно завершиться горутина, яка його викликала
+    explanation: >
+      Нульовий `Client.Timeout` означає відсутність ліміту, тож зависла відповідь тримає горутину довільно довго, а таких горутин у навантаженні накопичується багато. Виправлення: власний `http.Client{Timeout: …}` або контекст із дедлайном у `NewRequestWithContext`.
+    sources:
+      - https://pkg.go.dev/net/http#Client
+      - https://pkg.go.dev/net/http#NewRequestWithContext
+  - id: go-http-007
+    level: middle
+    type: single
+    text: Що поверне цей код для запиту `POST /items` (Go 1.27)?
+    code:
+      lang: go
+      source: |
+        mux := http.NewServeMux()
+        mux.HandleFunc("GET /items", func(w http.ResponseWriter, r *http.Request) {
+            fmt.Fprint(w, "list")
+        })
+        rec := httptest.NewRecorder()
+        mux.ServeHTTP(rec, httptest.NewRequest("POST", "/items", nil))
+        fmt.Println(rec.Code, rec.Header().Get("Allow"))
+    options:
+      - text: '`405 GET, HEAD`'
+        correct: true
+      - text: '`404` і порожній заголовок `Allow`'
+      - text: '`200` і порожній заголовок `Allow`, бо метод ігнорується'
+      - text: '`405` і порожній заголовок `Allow`, бо мультиплексор не знає, які методи дозволені'
+    explanation: >
+      Шлях збігається, а метод ні, тому мультиплексор Go 1.22+ відповідає 405 і заповнює `Allow` методами, які шлях підтримує: шаблон `GET` охоплює ще й `HEAD`. Код 404 був би лише тоді, коли жоден шаблон не підходить за шляхом.
+    sources:
+      - https://pkg.go.dev/net/http#hdr-Patterns-ServeMux
+      - https://go.dev/blog/routing-enhancements
+  - id: go-http-008
+    level: middle
+    type: single
+    text: Що виведе цей код і яку відповідь отримає клієнт без заголовка `X-Token` (Gin 1.12)?
+    code:
+      lang: go
+      source: |
+        r := gin.New()
+        r.Use(func(c *gin.Context) {
+            if c.GetHeader("X-Token") == "" {
+                c.AbortWithStatus(http.StatusUnauthorized)
+                fmt.Println("after abort")
+            }
+            c.Next()
+            fmt.Println("after next")
+        })
+        r.GET("/", func(c *gin.Context) {
+            fmt.Println("handler")
+            c.String(200, "ok")
+        })
+        rec := httptest.NewRecorder()
+        r.ServeHTTP(rec, httptest.NewRequest("GET", "/", nil))
+        fmt.Println(rec.Code)
+    options:
+      - text: '`after abort`, `after next`, `401`; обробник маршруту не викликається'
+        correct: true
+      - text: '`after next`, `401`; решта middleware пропускається ще до `println`'
+      - text: '`after abort`, `handler`, `after next`, `401`, бо `Next` ігнорує `Abort`'
+      - text: '`after abort`, `handler`, `after next`, `200`, бо `c.String` перекриває статус'
+    explanation: >
+      `Abort` лише позначає ланцюжок як перерваний і не зупиняє виконання поточної функції, тому обидва `Println` виконуються. Далі `c.Next()` бачить прапорець і не викликає наступні обробники. Щоб вийти одразу, після `Abort` потрібен `return`.
+    sources:
+      - https://pkg.go.dev/github.com/gin-gonic/gin#Context.Abort
+  - id: go-http-009
+    level: senior
+    type: multiple
+    text: 'Які твердження про таймаути `http.Server` правильні (Go 1.27)?'
+    options:
+      - text: '`ReadHeaderTimeout` обмежує лише читання заголовків запиту, а читання тіла лишається на розсуд обробника'
+        correct: true
+      - text: '`ReadTimeout` охоплює читання всього запиту разом із тілом'
+        correct: true
+      - text: Якщо `IdleTimeout` нульовий, для з'єднань у режимі keep-alive береться значення `ReadTimeout`
+        correct: true
+      - text: Сервер без таймаутів безпечний, бо сам закриває будь-яке з'єднання, що простоює понад 30 секунд
+      - text: '`WriteTimeout` скидається після кожного виклику `Write`, тож обмежує паузу між частинами відповіді'
+    explanation: >
+      Нульові таймаути означають «без обмежень», тому повільний клієнт, що мляво шле заголовки, тримає з'єднання скільки захоче, і саме проти цього задають `ReadHeaderTimeout`. `WriteTimeout` не скидається після кожного `Write`: його відлік оновлюється, коли читається заголовок нового запиту.
+    sources:
+      - https://pkg.go.dev/net/http#Server
+  - id: go-http-010
+    level: senior
+    type: single
+    text: >
+      Сервіс на `net/http` має такий `main`. Після `SIGTERM` в оркестраторі кілька довгих запитів обриваються, хоча `Shutdown` має ліміт 30 секунд (Go 1.27). Що відбувається і що виправити?
+    code:
+      lang: go
+      source: |
+        srv := &http.Server{Addr: ":8080", Handler: mux}
+        go func() {
+            <-sigCh
+            ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+            defer cancel()
+            srv.Shutdown(ctx)
+        }()
+        if err := srv.ListenAndServe(); err != nil {
+            log.Fatal(err)
+        }
+    options:
+      - text: '`ListenAndServe` одразу повертає `ErrServerClosed`, `log.Fatal` вбиває процес до кінця `Shutdown`; треба ігнорувати цю помилку й дочекатися `Shutdown`'
+        correct: true
+      - text: '`Shutdown` одразу закриває всі активні з''єднання, тож його слід замінити на `Close`, який дозволяє запитам завершитися коректно'
+      - text: '`Shutdown` не діє, доки `ListenAndServe` не повернеться, тому його слід викликати лише з обробника запиту до `mux`'
+      - text: Ліміт 30 секунд замалий для таких запитів; обриви зникнуть, якщо замінити `context.WithTimeout` на `context.Background()`
+    explanation: >
+      Документація прямо попереджає: після `Shutdown` методи `Serve` повертають `ErrServerClosed` одразу, тож програма не повинна виходити, доки `Shutdown` не повернеться. Тут `log.Fatal` вбиває процес негайно. Правильно трактувати `ErrServerClosed` як нормальний вихід і дочекатися горутини з `Shutdown`.
+    sources:
+      - https://pkg.go.dev/net/http#Server.Shutdown
+      - https://pkg.go.dev/net/http#ErrServerClosed
+  - id: go-http-011
+    level: senior
+    type: multiple
+    text: 'Які твердження про `r.Context()` у серверному обробнику правильні (Go 1.27)?'
+    options:
+      - text: Контекст скасовується, коли клієнт закриває з'єднання, тож довгий обробник може вчасно припинити роботу
+        correct: true
+      - text: Контекст також скасовується, коли `ServeHTTP` повертається, тому горутина, що пережила обробник, побачить скасований контекст
+        correct: true
+      - text: Скасування допомагає лише тоді, коли обробник передає `r.Context()` у виклики БД і HTTP або слухає `Done()`
+        correct: true
+      - text: Контекст скасовується автоматично, щойно обробник почав писати відповідь, тому після `Write` ним користуватись не можна
+      - text: Контекст запиту завжди `context.Background()`, а скасування клієнта сервер сигналізує лише через `panic`
+    explanation: >
+      Серверний контекст скасовується, коли закривається з'єднання клієнта, скасовується запит (HTTP/2) або повертається `ServeHTTP`. Саме скасування нічого не зупиняє: код має сам спостерігати за контекстом, інакше робота триває даремно. Початок запису відповіді контекст не скасовує.
+    sources:
+      - https://pkg.go.dev/net/http#Request.Context
+  - id: go-http-012
+    level: senior
+    type: single
+    text: >
+      Сервіс робить тисячі запитів на секунду до одного upstream. Моніторинг показує постійний ріст нових TCP-з'єднань до нього, хоча `Transport` стандартний. Код читає лише статус і робить `defer resp.Body.Close()`, а великі тіла відповідей (кілька мегабайт) ігнорує (Go 1.27). Яка найімовірніша причина і виправлення?
+    options:
+      - text: Тіло не вичитане до EOF, тому з'єднання не повертається в пул; перед `Close` потрібен `io.Copy(io.Discard, resp.Body)`
+        correct: true
+      - text: '`defer resp.Body.Close()` завжди розриває TCP-з''єднання з upstream, тож відкладений `Close` треба прибрати з коду'
+      - text: "Стандартний `Transport` не вміє keep-alive, тому потрібен власний `Transport` із полем `DisableKeepAlives: false`"
+      - text: Перевикористанню заважає `Client.Timeout` на клієнті, тому цей ліміт часу краще прибрати зовсім
+    explanation: >
+      Для повторного використання keep-alive-з'єднання тіло має бути прочитане до EOF і закрите. З Go 1.27 `Close()` сам дочитує непрочитане, але лише до консервативного ліміту (близько 256 КіБ), тож великі тіла треба вичитати вручну, інакше з'єднання закривається і кожен запит відкриває нове. Keep-alive у стандартному `Transport` увімкнений, а `Client.Timeout` перевикористання не блокує.
+    sources:
+      - https://pkg.go.dev/net/http#Client.Do
+      - https://go.dev/doc/go1.27#nethttppkgnethttp

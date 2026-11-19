@@ -1,0 +1,282 @@
+id: react-state
+title: Стан у React
+description: Context, Redux Toolkit, Zustand, підйом стану.
+questions:
+  - id: react-state-001
+    level: junior
+    type: single
+    text: Два сусідні компоненти (React 19) мають показувати той самий текст фільтра, а один із них його редагує. Де слід зберігати цей стан?
+    options:
+      - text: "У найближчому спільному предку обох компонентів, а значення й обробник зміни передати їм пропами"
+        correct: true
+      - text: "У кожному компоненті свій `useState`, а синхронізувати значення через `useEffect`"
+      - text: "У змінній на рівні модуля: вона спільна для обох, а зміна автоматично перемальовує всіх, хто її імпортує"
+      - text: "У тому компоненті, що редагує, а сусід читає його стан напряму через `ref`"
+    explanation: >
+      Дані, потрібні кільком компонентам, піднімають до їхнього найближчого спільного предка й спускають пропами. Змінна модуля не запускає рендер при зміні, а дубльований стан із синхронізацією в ефекті дає зайві рендери й розбіжності.
+    sources:
+      - https://react.dev/learn/sharing-state-between-components
+
+  - id: react-state-002
+    level: junior
+    type: single
+    text: Що відрендерить `Badge` (React 19), якщо над ним у дереві немає жодного провайдера `ThemeContext`?
+    code:
+      lang: jsx
+      source: |
+        const ThemeContext = createContext('light');
+
+        function Badge() {
+          const theme = useContext(ThemeContext);
+          return <span>{theme}</span>;
+        }
+
+        function App() {
+          return <Badge />;
+        }
+    options:
+      - text: "`light`: без провайдера `useContext` повертає значення за замовчуванням із `createContext`"
+        correct: true
+      - text: "Порожній `span`: без провайдера `useContext` повертає `undefined`"
+      - text: "Нічого: `useContext` кидає помилку, що провайдер не знайдено"
+      - text: "`null`: без провайдера контекст порожній, а `createContext` значення не зберігає"
+    explanation: >
+      Аргумент `createContext` є значенням за замовчуванням: його отримує компонент, над яким немає відповідного провайдера. Помилки в React не буде, її кидають лише власні обгортки на кшталт `useTheme`, якщо автор їх так написав.
+    sources:
+      - https://react.dev/reference/react/createContext#createcontext
+      - https://react.dev/learn/passing-data-deeply-with-context
+
+  - id: react-state-003
+    level: junior
+    type: single
+    text: Чи допустимий такий редʼюсер у Redux Toolkit 2.14 і що відбувається з `state`?
+    code:
+      lang: js
+      source: |
+        const todosSlice = createSlice({
+          name: 'todos',
+          initialState: [],
+          reducers: {
+            added(state, action) {
+              state.push(action.payload);
+            },
+          },
+        });
+    options:
+      - text: "Допустимий: `state` є чернеткою Immer, яка фіксує зміни й дає нову незмінну копію масиву"
+        correct: true
+      - text: "Недопустимий: `push` змінює вихідний масив, і Redux не побачить нового стану"
+      - text: "Допустимий лише в production-збірці, а в режимі розробки Redux кидає виняток"
+      - text: "Недопустимий: у `createSlice` редʼюсер зобов'язаний повертати новий масив через `concat`"
+    explanation: >
+      `createSlice` обгортає редʼюсери в Immer, тому «мутація» чернетки перетворюється на оновлену копію, а оригінал лишається цілим. Поза Immer така мутація справді зламала б Redux.
+    sources:
+      - https://redux-toolkit.js.org/usage/immer-reducers
+
+  - id: react-state-004
+    level: junior
+    type: multiple
+    text: Які твердження про сховище Zustand 5 правильні?
+    options:
+      - text: "`create` повертає хук для читання стану, провайдер для нього не потрібен"
+        correct: true
+      - text: "`set({ count: 1 })` зберігає інші поля стану: новий об'єкт зливається з поточним"
+        correct: true
+      - text: "`set({ count: 1 })` видаляє інші поля стану, бо замінює весь об'єкт стану"
+      - text: "Хук сховища працює лише всередині `<StoreProvider>`, інакше кидає помилку під час рендеру"
+    explanation: >
+      Zustand зберігає стан у замиканні модуля, тож хук доступний будь-де без провайдера. Виклик `set` за замовчуванням поверхнево зливає частковий об'єкт зі станом; повна заміна можлива лише з другим аргументом `true`.
+    sources:
+      - https://zustand.docs.pmnd.rs/learn/getting-started/introduction
+      - https://zustand.docs.pmnd.rs/learn/guides/updating-state
+
+  - id: react-state-005
+    level: middle
+    type: single
+    text: Після кліку по кнопці в `App` (React 19) компонент `Profile`, обгорнутий у `memo`, перерендерюється? Чому?
+    code:
+      lang: jsx
+      source: |
+        const UserContext = createContext(null);
+
+        function App() {
+          const [tick, setTick] = useState(0);
+          const [user] = useState({ name: 'Ann' });
+          return (
+            <UserContext value={{ user }}>
+              <button onClick={() => setTick(tick + 1)}>{tick}</button>
+              <Profile />
+            </UserContext>
+          );
+        }
+
+        const Profile = memo(function Profile() {
+          const { user } = useContext(UserContext);
+          return <p>{user.name}</p>;
+        });
+    options:
+      - text: "Так: `{ user }` щоразу новий об'єкт, а зміна `value` за `Object.is` оновлює споживача попри `memo`"
+        correct: true
+      - text: "Ні: `memo` порівнює пропи, а в `Profile` їх немає, тож рендер завжди пропускається"
+      - text: "Ні: React порівнює вміст `value` поверхнево, а `user` лишився тим самим об'єктом"
+      - text: "Так, але лише якщо `Profile` у JSX читає `tick`, бо інакше React не бачить зміни"
+    explanation: >
+      `memo` не захищає від оновлень через контекст: щойно `value` змінюється за `Object.is`, споживач рендериться. Новий літерал `{ user }` на кожному рендері `App` цю умову виконує, тому значення варто мемоізувати через `useMemo`.
+    sources:
+      - https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
+
+  - id: react-state-006
+    level: middle
+    type: single
+    text: Що станеться при виклику `slice.reducer(undefined, slice.actions.bump())` у Redux Toolkit 2.14?
+    code:
+      lang: js
+      source: |
+        const slice = createSlice({
+          name: 'counter',
+          initialState: { n: 0 },
+          reducers: {
+            bump(state) {
+              state.n += 1;
+              return { n: 100 };
+            },
+          },
+        });
+    options:
+      - text: "Виняток: редʼюсер і змінив чернетку, і повернув нове значення, а Immer дозволяє лише одне з двох"
+        correct: true
+      - text: "Результат `{ n: 100 }`: повернене значення має пріоритет, а зміна чернетки ігнорується"
+      - text: "Результат `{ n: 101 }`: Immer застосовує мутацію, а потім поверх неї повернений об'єкт"
+      - text: "Результат `{ n: 1 }`: `return` у редʼюсері `createSlice` ігнорується, враховується лише мутація"
+    explanation: >
+      Редʼюсер Immer має або змінити чернетку, або повернути нове значення, але не обидва способи одразу, і Immer кидає помилку про це. Тому варіант із пріоритетом повернутого значення хибний: порушення виявляється, а не розв'язується мовчки.
+    sources:
+      - https://redux-toolkit.js.org/usage/immer-reducers#returning-new-state-from-reducers
+
+  - id: react-state-007
+    level: middle
+    type: single
+    text: Що станеться з цим компонентом у Zustand 5.1, якщо сховище містить поля `a` і `b`, і як це виправити?
+    code:
+      lang: jsx
+      source: |
+        const useStore = create(() => ({ a: 1, b: 2 }));
+
+        function View() {
+          const { a, b } = useStore((s) => ({ a: s.a, b: s.b }));
+          return <p>{a + b}</p>;
+        }
+    options:
+      - text: "Селектор щоразу повертає новий об'єкт, і у v5 це зациклює рендер; селектор обгортають у `useShallow`"
+        correct: true
+      - text: "Працює, але рендериться при зміні будь-якого поля сховища; на `View` слід додати `memo`"
+      - text: "Кидає помилку, що селектор має повертати примітив; потрібно читати кожне поле окремим хуком із `s.a`"
+      - text: "Працює без проблем: v5 за замовчуванням порівнює результат селектора поверхнево"
+    explanation: >
+      У Zustand 5 селектор, що повертає нове посилання на кожен виклик, спричиняє нескінченні оновлення. `useShallow` порівнює вміст результату поверхнево й повертає стабільне посилання; читати кожне поле окремим хуком теж можна, але помилки про примітиви немає.
+    sources:
+      - https://zustand.docs.pmnd.rs/reference/migrations/migrating-to-v5
+      - https://zustand.docs.pmnd.rs/reference/hooks/use-shallow
+
+  - id: react-state-008
+    level: middle
+    type: single
+    text: Компонент (React 19, react-redux 9) читає список невиконаних задач так. Яка в нього проблема і що її усуває?
+    code:
+      lang: jsx
+      source: |
+        function Pending() {
+          const items = useSelector((state) =>
+            state.todos.filter((t) => !t.done)
+          );
+          return <List items={items} />;
+        }
+    options:
+      - text: "`filter` щоразу дає новий масив, а `useSelector` порівнює через `===`, тож рендер іде після кожної дії; допоможе `createSelector`"
+        correct: true
+      - text: "`useSelector` порівнює масиви поверхнево, тож проблеми немає, а `createSelector` потрібен лише для читабельності коду"
+      - text: "Селектор не може містити `filter`: похідні дані обчислюють лише в редʼюсері й кладуть у стан"
+      - text: "Компонент рендериться лише при зміні `todos`, але `createSelector` прибирає й ці рендери"
+    explanation: >
+      Селектор, що повертає нове посилання, змушує `useSelector` вважати результат зміненим після кожної дії стору. `createSelector` кешує результат за вхідними значеннями й повертає те саме посилання, доки `state.todos` не змінився.
+    sources:
+      - https://react-redux.js.org/api/hooks#equality-comparisons-and-updates
+      - https://redux.js.org/usage/deriving-data-selectors
+
+  - id: react-state-009
+    level: senior
+    type: multiple
+    text: Які твердження про Context у React 19 правильні?
+    options:
+      - text: "Споживач `useContext` рендериться при зміні `value` за `Object.is`, навіть читаючи лише одне поле"
+        correct: true
+      - text: "Окремий контекст дій зі стабільними функціями звільняє компоненти, що лише викликають дії, від рендеру при зміні стану"
+        correct: true
+      - text: "Обгортання споживача в `React.memo` не дає оновленню через контекст дійти до нього, бо пропи не змінилися"
+      - text: "Деструктуризація `const { user } = useContext(Ctx)` підписує компонент лише на зміну поля `user`, а інші поля `value` ігноруються"
+    explanation: >
+      Контекст не має селекторів: підписка стосується всього `value`, тож `memo` її не блокує, а деструктуризація нічого не звужує. Тому часті зміни тримають в окремому контексті від стабільних дій на кшталт `dispatch`.
+    sources:
+      - https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
+      - https://react.dev/learn/scaling-up-with-reducer-and-context
+
+  - id: react-state-010
+    level: senior
+    type: multiple
+    text: Які твердження про стандартні middleware, що додає `configureStore` у Redux Toolkit 2.14, правильні?
+    options:
+      - text: "`serializableCheck` у режимі розробки пише в консоль помилку, коли в стані чи дії є `Date`, а сама дія все одно виконується"
+        correct: true
+      - text: "`immutableCheck` у режимі розробки виявляє мутацію стану поза редʼюсером"
+        correct: true
+      - text: "У production-збірці стандартний набір не містить ні `serializableCheck`, ні `immutableCheck`"
+        correct: true
+      - text: "`serializableCheck` кидає виняток і скасовує дію, якщо в ній є значення, яке не можна серіалізувати"
+    explanation: >
+      Обидві перевірки існують лише для розробки: вони лише попереджають у консолі й нічого не блокують. Тому «виняток зі скасуванням дії» хибний, а в production їхній код у збірку стандартного набору не потрапляє.
+    sources:
+      - https://redux-toolkit.js.org/api/getDefaultMiddleware
+      - https://redux.js.org/faq/organizing-state#can-i-put-functions-promises-or-other-non-serializable-items-in-my-store-state
+
+  - id: react-state-011
+    level: senior
+    type: single
+    text: Що виведе цей код (Redux Toolkit 2.14) і як перехопити помилку санки?
+    code:
+      lang: js
+      source: |
+        const fetchUser = createAsyncThunk('user/fetch', async (id) => {
+          throw new Error('boom');
+        });
+
+        try {
+          await store.dispatch(fetchUser(1));
+          console.log('ok');
+        } catch {
+          console.log('caught');
+        }
+    options:
+      - text: "`ok`: проміс `dispatch` не відхиляється, а дає rejected-дію; виняток повертає `.unwrap()`"
+        correct: true
+      - text: "`caught`: виняток із payload creator проходить крізь `await dispatch`"
+      - text: "Нічого: проміс відхиляється поза `try`, і Node завершує процес через unhandled rejection"
+      - text: "`ok`: помилку в цьому випадку ковтає Immer, а `.unwrap()` повертає лише `payload`"
+    explanation: >
+      Санка, створена `createAsyncThunk`, завжди завершується промісом з дією `fulfilled` або `rejected`, а не відхиленням. Щоб отримати виняток у `try/catch`, треба викликати `.unwrap()` на промісі, який повертає `dispatch`.
+    sources:
+      - https://redux-toolkit.js.org/api/createAsyncThunk#unwrapping-result-actions
+
+  - id: react-state-012
+    level: senior
+    type: single
+    text: Застосунок на Next.js (App Router) тримає Zustand 5.1 стор, створений через `create` на рівні модуля. Після запуску користувачі зрідка бачать на сервері дані інших користувачів, збережені в сторі під час SSR. У чому причина і що рекомендує документація Zustand?
+    options:
+      - text: "Модуль на сервері спільний для запитів; створювати стор на запит через `createStore` і віддавати через контекст"
+        correct: true
+      - text: "`create` у Zustand 5 кешує стан у `localStorage` між запитами; треба вимкнути middleware `persist` у сторі"
+      - text: "Серверні компоненти реально рендеряться в браузері, тому стор спільний між вкладками; потрібен `BroadcastChannel`"
+      - text: "Селектор без `useShallow` повертає стан чужого рендеру; слід обгорнути кожен селектор"
+    explanation: >
+      Модульний синглтон на сервері переживає окремі запити, тому стан потрапляє до різних користувачів. Документація Zustand радить для SSR створювати сховище на кожен запит через `createStore` і передавати його компонентам через контекст.
+    sources:
+      - https://zustand.docs.pmnd.rs/learn/guides/nextjs

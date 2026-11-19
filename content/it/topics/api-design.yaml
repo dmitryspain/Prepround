@@ -1,0 +1,244 @@
+id: api-design
+title: API-дизайн
+description: REST, коди статусів, версіонування, ідемпотентність, gRPC і Protobuf, GraphQL, WebSocket.
+questions:
+  - id: api-design-001
+    level: junior
+    type: multiple
+    text: Які HTTP-методи за RFC 9110 є ідемпотентними?
+    options:
+      - text: "`GET`"
+        correct: true
+      - text: "`PUT`"
+        correct: true
+      - text: "`DELETE`"
+        correct: true
+      - text: "`POST`"
+      - text: "`PATCH`"
+    explanation: >
+      Ідемпотентний метод має однаковий ефект при одному й кількох однакових запитах. RFC 9110 відносить до таких `PUT`, `DELETE` і всі безпечні методи, зокрема `GET`.
+      `POST` і `PATCH` цього не гарантують: повторний `POST` може створити ще один ресурс.
+    sources:
+      - https://www.rfc-editor.org/rfc/rfc9110.html#name-idempotent-methods
+  - id: api-design-002
+    level: junior
+    type: single
+    text: Яка відповідь найточніше відображає успішне створення ресурсу цим запитом?
+    code:
+      lang: http
+      source: |
+        POST /orders HTTP/1.1
+        Content-Type: application/json
+
+        {"item": 123, "quantity": 2}
+    options:
+      - text: "`201 Created` із заголовком `Location: /orders/42`"
+        correct: true
+      - text: "`202 Accepted`, бо замовлення вже збережено, але відповідь пізніше"
+      - text: "`204 No Content` без тіла й заголовків: клієнт сам знайде нове замовлення"
+      - text: "`302 Found` із переадресацією на `/orders`"
+    explanation: >
+      `201` означає, що ресурс створено, а `Location` вказує його адресу. `202` описує прийнятий, але ще не виконаний запит, а `204` не повідомляє клієнту,
+      де шукати створений ресурс.
+    sources:
+      - https://www.rfc-editor.org/rfc/rfc9110.html#name-201-created
+  - id: api-design-003
+    level: junior
+    type: single
+    text: >
+      Клієнт надіслав валідний токен, але користувач не має права видаляти чужий ресурс. Сервер не приховує існування ресурсу. Який статус доречний?
+    options:
+      - text: "`403 Forbidden`: сервер розуміє запит, але відмовляє в доступі"
+        correct: true
+      - text: "`401 Unauthorized`: токен є, але прав недостатньо для видалення"
+      - text: "`400 Bad Request`: клієнт надіслав помилковий запит"
+      - text: "`405 Method Not Allowed`: видаляти не можна нікому"
+    explanation: >
+      `401` вживають, коли автентифікація відсутня або недійсна, і разом із ним сервер передає виклик `WWW-Authenticate`. Коли облікові дані прийнято, але їх недостатньо
+      для доступу, потрібен `403`.
+    sources:
+      - https://www.rfc-editor.org/rfc/rfc9110.html#name-403-forbidden
+      - https://www.rfc-editor.org/rfc/rfc9110.html#name-challenge-and-response
+  - id: api-design-004
+    level: junior
+    type: single
+    text: Для чого призначений документ OpenAPI?
+    options:
+      - text: "Мовно-незалежний опис HTTP API: шляхи, операції, схеми"
+        correct: true
+      - text: "Бібліотека, що автоматично реалізує серверну логіку API за замовчуванням"
+      - text: "Протокол обміну повідомленнями поверх TCP, альтернативний HTTP"
+      - text: "Формат, що замінює JSON при передачі даних між клієнтом і сервером"
+    explanation: >
+      OpenAPI лише описує інтерфейс. З такого опису можна згенерувати документацію, клієнтський код або заготовки серверу, але сам документ нічого не виконує
+      і транспорт не змінює.
+    sources:
+      - https://spec.openapis.org/oas/latest.html
+  - id: api-design-005
+    level: middle
+    type: single
+    text: >
+      Запит `POST /payments` завершився тайм-аутом, і клієнт не знає, чи списано гроші. Як безпечно повторити операцію?
+    options:
+      - text: "Повторити запит із тим самим `Idempotency-Key`: сервер поверне результат першої спроби"
+        correct: true
+      - text: "Просто повторити `POST` без додаткових заголовків: сервер сам визначить дублікат за тілом запиту"
+      - text: "Перейти на `GET /payments`, бо безпечний метод можна повторювати без наслідків"
+      - text: "Щоразу генерувати новий `Idempotency-Key`, щоб сервер не відхилив повтор"
+    explanation: >
+      `POST` не ідемпотентний, і RFC 9110 радить не повторювати такі запити автоматично без способу виявити дублікат. Ключ ідемпотентності, однаковий для всіх спроб
+      однієї логічної операції, дає серверу такий спосіб. Заголовок описано в чернетці IETF, а не в завершеному RFC.
+    sources:
+      - https://www.rfc-editor.org/rfc/rfc9110.html#name-idempotent-methods
+      - https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/
+  - id: api-design-006
+    level: middle
+    type: single
+    text: >
+      У користувача `7` є поля `name` і `phone`. Яка семантика цього запиту за RFC 9110 і як змінити лише ім'я?
+    code:
+      lang: http
+      source: |
+        PUT /users/7 HTTP/1.1
+        Content-Type: application/json
+
+        {"name": "Anna"}
+    options:
+      - text: "`PUT` замінює стан ресурсу переданим представленням; для часткової зміни є `PATCH`"
+        correct: true
+      - text: "`PUT` оновлює лише передані поля й лишає `phone` без змін"
+      - text: "`PUT` можна застосовувати лише для створення нових ресурсів, а для змін призначено `POST`"
+      - text: "`PUT` змінює тільки поля, які не вказані в запиті, а решту лишає"
+    explanation: >
+      `PUT` створює ресурс або замінює його стан представленням із запиту, тож відсутнє поле має зникнути або скинутися. Для часткового оновлення існує `PATCH`.
+      Сервер може трактувати відсутні поля по-своєму, але тоді він порушує семантику методу.
+    sources:
+      - https://www.rfc-editor.org/rfc/rfc9110.html#name-put
+  - id: api-design-007
+    level: middle
+    type: single
+    text: Що має зробити сервер, якщо ресурс із цим `ETag` не змінювався?
+    code:
+      lang: http
+      source: |
+        GET /reports/5 HTTP/1.1
+        If-None-Match: "v12"
+    options:
+      - text: "Відповісти `304 Not Modified` без тіла: клієнт використає свою збережену копію"
+        correct: true
+      - text: "Відповісти `200 OK` і повне тіло, щоб клієнт переконався в актуальності"
+      - text: "Відповісти `412 Precondition Failed`, бо умова `If-None-Match` виконана"
+      - text: "Відповісти `204 No Content`, що означає відсутність змін"
+    explanation: >
+      Для умовного `GET` збіг валідатора означає, що клієнт уже має актуальне представлення, тому сервер повертає `304` без передачі тіла. Це економить трафік.
+      `412` застосовують до умов, які для небезпечних методів не виконались.
+    sources:
+      - https://www.rfc-editor.org/rfc/rfc9110.html#name-304-not-modified
+  - id: api-design-008
+    level: middle
+    type: multiple
+    text: Які з цих членів визначає RFC 9457 для тіла помилки з типом `application/problem+json`?
+    code:
+      lang: http
+      source: |
+        HTTP/1.1 422 Unprocessable Content
+        Content-Type: application/problem+json
+
+        {
+          "type": "https://example.com/probs/invalid-email",
+          "title": "Invalid email",
+          "instance": "/users/signup/abc",
+          "errorCode": 1042,
+          "message": "Email format is wrong"
+        }
+    options:
+      - text: "`type`: URI, що ідентифікує вид проблеми"
+        correct: true
+      - text: "`title`: короткий опис виду проблеми"
+        correct: true
+      - text: "`instance`: URI конкретного випадку проблеми"
+        correct: true
+      - text: "`errorCode`: числовий код помилки"
+      - text: "`message`: текст помилки для користувача"
+    explanation: >
+      RFC 9457 визначає члени `type`, `status`, `title`, `detail` та `instance`. Додаткові поля на кшталт `errorCode` дозволені як розширення,
+      але стандартом не задані, а замість `message` для опису конкретного випадку існує `detail`.
+    sources:
+      - https://www.rfc-editor.org/rfc/rfc9457.html#name-members-of-a-problem-details
+  - id: api-design-009
+    level: senior
+    type: single
+    text: >
+      Два клієнти редагують один документ. Клієнт B надсилає запит із застарілим тегом, бо клієнт A уже встиг зберегти зміни. Яку відповідь має дати сервер, щоб не втратити оновлення A?
+    code:
+      lang: http
+      source: |
+        PUT /docs/5 HTTP/1.1
+        If-Match: "v7"
+        Content-Type: application/json
+
+        {"text": "Правка клієнта B"}
+        # поточний ETag документа на сервері: "v8"
+    options:
+      - text: "`412 Precondition Failed`: умова `If-Match` не збіглась, тож зміну не виконано"
+        correct: true
+      - text: "`200 OK`: сервер перезаписує документ, бо останній запит завжди має пріоритет"
+      - text: "`304 Not Modified`: клієнт B має відновити свою збережену копію"
+      - text: "`428 Precondition Required`: тег застарів, тому запит потрібно зробити умовним"
+    explanation: >
+      Запит із `If-Match` не повинен виконуватись, якщо тег не збігається з поточним: сервер відповідає `412`, а клієнт перечитує документ і повторює правку.
+      `428` призначено для випадку, коли умовного заголовка немає взагалі, а сервер його вимагає.
+    sources:
+      - https://www.rfc-editor.org/rfc/rfc9110.html#name-if-match
+      - https://www.rfc-editor.org/rfc/rfc6585.html#section-3
+  - id: api-design-010
+    level: senior
+    type: multiple
+    text: Які зміни схеми Protobuf не порушують двійкову сумісність зі старими клієнтами та серверами?
+    options:
+      - text: "Додати нове поле з раніше не використаним номером"
+        correct: true
+      - text: "Видалити поле й позначити його номер як `reserved`"
+        correct: true
+      - text: "Додати нове значення в `enum`"
+        correct: true
+      - text: "Перенумерувати поля для порядку"
+      - text: "Повторно використати номер видаленого поля"
+    explanation: >
+      У двійковому форматі поле ідентифікує номер, тому старий код ігнорує невідомі поля (зберігає їх як unknown fields), і додавання безпечне. Зміна або повторне
+      використання номера дорівнює видаленню поля й створенню нового з тим самим номером, що веде до помилок розбору чи пошкоджених даних.
+    sources:
+      - https://protobuf.dev/programming-guides/proto3/#updating
+      - https://protobuf.dev/programming-guides/proto3/#consequences
+  - id: api-design-011
+    level: senior
+    type: single
+    text: >
+      GraphQL-запит коректний, але resolver одного поля кинув виняток, а решта полів обчислилась. Що за специфікацією GraphQL over HTTP (чернетка) для `application/graphql-response+json` має повернути сервер?
+    options:
+      - text: "Статус 2xx (чернетка радить `294 Partial Success`) із частковим `data` і масивом `errors`"
+        correct: true
+      - text: "`500 Internal Server Error` без `data`, бо виконання запиту не вдалося"
+      - text: "`400 Bad Request` із масивом `errors`, бо клієнт запитав проблемне поле"
+      - text: "`502 Bad Gateway` із частковим `data` і масивом `errors`, бо поле не обчислилось"
+    explanation: >
+      Коли є і `data`, і `errors`, чернетка вимагає статус 2xx і радить `294`, який клієнти без його підтримки трактують як `200`. Статуси 4xx і 5xx тут недоречні:
+      помилки самого запиту немає, а часткова відповідь вважається успішним виконанням. Тому клієнти GraphQL мають перевіряти `errors`, а не лише код статусу.
+    sources:
+      - https://http-spec.graphql.org/draft/
+  - id: api-design-012
+    level: senior
+    type: single
+    text: >
+      Браузерному клієнту треба лише отримувати від сервера потік оновлень котирувань: проксі пропускають HTTP, а повідомлень від клієнта немає. Що найпростіше використати?
+    options:
+      - text: "Server-Sent Events (`EventSource`): односпрямований потік поверх HTTP з автоперепідключенням"
+        correct: true
+      - text: "WebSocket: це єдиний спосіб передавати події від сервера клієнту без постійного опитування"
+      - text: "Довге опитування (long polling) з окремим запитом на кожну подію"
+      - text: "gRPC unary-виклики, які клієнт надсилає раз на секунду"
+    explanation: >
+      Для сценарію «сервер → клієнт» достатньо SSE: `EventSource` сам перепідключається й передає `Last-Event-ID`, щоб сервер міг продовжити з потрібного місця.
+      WebSocket потрібен, коли обидві сторони активно надсилають повідомлення, але він складніший у масштабуванні й проходженні через інфраструктуру.
+    sources:
+      - https://html.spec.whatwg.org/multipage/server-sent-events.html

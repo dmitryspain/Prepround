@@ -1,0 +1,292 @@
+id: go-concurrency
+title: Горутини й канали
+description: Goroutines, channels, select, sync, context, data race.
+questions:
+  - id: go-concurrency-001
+    level: junior
+    type: single
+    text: Що станеться під час виконання цього коду (Go 1.27)?
+    code:
+      lang: go
+      source: |
+        ch := make(chan int)
+        ch <- 1
+        fmt.Println(<-ch)
+    options:
+      - text: 'Програма завершиться з `fatal error: all goroutines are asleep - deadlock!`'
+        correct: true
+      - text: Виведе `1`, бо значення потрапляє в канал і одразу зчитується
+      - text: Надсилання пропуститься, а виведеться нульове значення `0`
+      - text: Код не скомпілюється, бо канал без буфера не можна створити через `make`
+    explanation: >
+      Надсилання в небуферизований канал блокується, доки інша горутина не почне отримувати. Єдина горутина вже заблокована на надсиланні й до читання не дійде, тож рантайм виявляє взаємне блокування. Для передачі в межах однієї горутини потрібен буфер.
+    sources:
+      - https://go.dev/ref/spec#Channel_types
+      - https://go.dev/ref/spec#Send_statements
+  - id: go-concurrency-002
+    level: junior
+    type: multiple
+    text: 'Які твердження про закриття каналу функцією `close` правильні? (Go 1.27)'
+    options:
+      - text: Отримання із закритого каналу не блокується й повертає нульове значення з `ok == false`, коли буфер уже порожній
+        correct: true
+      - text: Надсилання в закритий канал спричиняє panic
+        correct: true
+      - text: Повторний виклик `close` для вже закритого каналу спричиняє panic
+        correct: true
+      - text: Незакритий канал неминуче залишається в пам'яті, поки процес не завершиться
+      - text: Виклик `close` блокується, доки всі отримувачі не прочитають решту буфера
+    explanation: >
+      Закритий канал віддає решту буфера, потім нульові значення з `ok == false`; надсилати в нього й закривати його вдруге не можна, обидва випадки дають panic. Закривати канал для звільнення пам'яті не потрібно: його забирає збирач сміття, а `close` лише сигналізує отримувачам, що значень більше не буде, і не блокується.
+    sources:
+      - https://go.dev/ref/spec#Close
+      - https://go.dev/ref/spec#Receive_operator
+  - id: go-concurrency-003
+    level: junior
+    type: single
+    text: Що виведе цей код (Go 1.27)?
+    code:
+      lang: go
+      source: |
+        var mu sync.Mutex
+        var wg sync.WaitGroup
+        n := 0
+        for i := 0; i < 1000; i++ {
+            wg.Add(1)
+            go func() {
+                defer wg.Done()
+                mu.Lock()
+                n++
+                mu.Unlock()
+            }()
+        }
+        wg.Wait()
+        fmt.Println(n)
+    options:
+      - text: '`1000`'
+        correct: true
+      - text: Число менше за `1000`, бо горутини можуть втратити частину інкрементів навіть під м'ютексом
+      - text: '`0`, бо `main` читає `n`, поки горутини ще не стартували'
+      - text: Невизначене число, бо `WaitGroup` не гарантує завершення горутин
+    explanation: >
+      `mu` робить інкремент взаємовиключним, тож жодне оновлення не губиться, а `wg.Wait()` повертається лише після `Done` від усіх тисячі горутин. Тому `main` читає остаточне значення. Без м'ютекса результат був би непередбачуваним через гонку даних.
+    sources:
+      - https://pkg.go.dev/sync#WaitGroup
+      - https://pkg.go.dev/sync#Mutex
+  - id: go-concurrency-004
+    level: junior
+    type: single
+    text: Що виведе цей код (Go 1.27)?
+    code:
+      lang: go
+      source: |
+        ch := make(chan string, 3)
+        ch <- "a"
+        ch <- "b"
+        <-ch
+        fmt.Println(len(ch), cap(ch))
+    options:
+      - text: '`1 3`'
+        correct: true
+      - text: '`2 3`'
+      - text: '`1 2`'
+      - text: '`0 3`'
+    explanation: >
+      `cap` — це розмір буфера, він лишається `3`. `len` показує, скільки значень зараз у буфері: після двох надсилань їх два, а одне читання залишає одне. Програма не блокується, бо буфер не заповнений.
+    sources:
+      - https://go.dev/ref/spec#Length_and_capacity
+  - id: go-concurrency-005
+    level: middle
+    type: single
+    text: Що виведе цей код (Go 1.27)?
+    code:
+      lang: go
+      source: |
+        ch := make(chan int, 1)
+        ch <- 1
+        select {
+        case ch <- 2:
+            fmt.Println("sent")
+        default:
+            fmt.Println("full")
+        }
+        fmt.Println(len(ch))
+    options:
+      - text: '`full`, а потім `1`'
+        correct: true
+      - text: '`sent`, а потім `2`'
+      - text: Нічого не виведе, бо `select` заблокується на повному буфері
+      - text: '`full`, а потім `0`, бо `default` спорожнює канал'
+    explanation: >
+      Буфер на одне місце вже зайнятий, тож надсилання в `case` не готове до виконання. Якщо жоден `case` не готовий і є `default`, `select` одразу виконує `default` і не блокується. Канал при цьому не змінюється, у ньому лишається одне значення.
+    sources:
+      - https://go.dev/ref/spec#Select_statements
+  - id: go-concurrency-006
+    level: middle
+    type: single
+    text: Що виведе цей код (Go 1.27)?
+    code:
+      lang: go
+      source: |
+        ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+        defer cancel()
+        select {
+        case <-time.After(time.Second):
+            fmt.Println("done")
+        case <-ctx.Done():
+            fmt.Println(ctx.Err())
+        }
+    options:
+      - text: '`context deadline exceeded`'
+        correct: true
+      - text: '`context canceled`, бо відкладений `cancel` спрацював раніше за таймер'
+      - text: '`done`, бо `time.After` не залежить від контексту й завжди виграє'
+      - text: '`<nil>`, бо контекст формально ще не завершений до виходу з функції'
+    explanation: >
+      Контекст спливає через 50 мс, раніше за секундний таймер, тож закривається `ctx.Done()`. Причину повертає `ctx.Err()`: після спливу часу це `context.DeadlineExceeded`, а `context.Canceled` буває лише після явного виклику `cancel` чи скасування батька. `<nil>` `Err` повертає лише до закриття `Done`.
+    sources:
+      - https://pkg.go.dev/context#WithTimeout
+      - https://pkg.go.dev/context#Context
+  - id: go-concurrency-007
+    level: middle
+    type: single
+    text: Яка проблема в цьому коді (Go 1.27) і як її усунути?
+    code:
+      lang: go
+      source: |
+        func first(urls []string) string {
+            ch := make(chan string)
+            for _, u := range urls {
+                go func() { ch <- fetch(u) }()
+            }
+            return <-ch
+        }
+    options:
+      - text: Усі горутини, крім першої, назавжди блокуються на надсиланні; виправлення — буфер місткістю `len(urls)`
+        correct: true
+      - text: Горутини читають `u` одночасно, тож потрібна копія змінної циклу в кожній ітерації
+      - text: Функція поверне порожній рядок, бо `<-ch` виконується до старту горутин
+      - text: Горутини спричинять panic на надсиланні; виправлення — `defer close(ch)` у кожній з них
+    explanation: >
+      Результат прочитає лише один `<-ch`, а решта горутин чекатиме на отримувача, якого вже немає, тобто тече пам'ять і горутини. Буфер на всі відповіді дозволяє їм надіслати значення й завершитись, а ще можна передати скасовуваний контекст. Копія `u` зайва, бо з Go 1.22 змінна циклу окрема для кожної ітерації.
+    sources:
+      - https://go.dev/blog/pipelines#explicit-cancellation
+      - https://go.dev/ref/spec#Send_statements
+  - id: go-concurrency-008
+    level: middle
+    type: multiple
+    text: 'Які твердження про `sync.Mutex` правильні? (Go 1.27)'
+    options:
+      - text: Заблокований м'ютекс не прив'язаний до горутини, тож іншу горутину можна змусити його розблокувати
+        correct: true
+      - text: Копіювати `Mutex` після першого використання не можна, `go vet` ловить це
+        correct: true
+      - text: Розблокування м'ютекса, який не заблокований, є фатальною помилкою
+        correct: true
+      - text: Горутина, що вже тримає м'ютекс, може викликати `Lock` повторно, лічильник захоплень зростає
+      - text: Вільний `Mutex` у Go без ініціалізації не готовий до роботи й потребує `sync.NewMutex()`
+    explanation: >
+      Нульове значення `Mutex` — це готовий розблокований м'ютекс, а власника він не пам'ятає, тому розблокувати його може й інша горутина. Повторний `Lock` з тієї ж горутини не рахується, а блокується назавжди, бо м'ютекс не реентрантний. `Unlock` без `Lock` завершує програму з фатальною помилкою, а копія вже використаного `Mutex` ламає його стан.
+    sources:
+      - https://pkg.go.dev/sync#Mutex
+      - https://pkg.go.dev/sync#Mutex.Unlock
+  - id: go-concurrency-009
+    level: senior
+    type: multiple
+    text: 'Які твердження про детектор гонок (`go run -race`, `go test -race`) правильні? (Go 1.27)'
+    options:
+      - text: Він знаходить лише гонки, що справді сталися під час цього запуску
+        correct: true
+      - text: Він суттєво збільшує споживання пам'яті й час виконання, тому його не вмикають у звичайних релізах
+        correct: true
+      - text: Звіт містить стеки обох конфліктних доступів і місце створення відповідних горутин
+        correct: true
+      - text: Чистий прогін тестів із `-race` доводить, що в коді немає гонок даних
+      - text: Прапорець працює лише для `go test`, а `go run` і `go build` його не приймають
+    explanation: >
+      Детектор спостерігає за виконанням, тому гонка, яку не спровокував прогін, лишається непоміченою, і чистий результат нічого не доводить. Інструментація дорого коштує за пам'яттю й часом, а звіт показує обидва доступи та стеки створення горутин. Прапорець `-race` приймають також `go run` і `go build`.
+    sources:
+      - https://go.dev/doc/articles/race_detector
+  - id: go-concurrency-010
+    level: senior
+    type: single
+    text: Чому цей код (Go 1.27) небезпечний і як його виправити?
+    code:
+      lang: go
+      source: |
+        var done bool
+
+        func main() {
+            go func() {
+                time.Sleep(time.Millisecond)
+                done = true
+            }()
+            for !done {
+            }
+            fmt.Println("finished")
+        }
+    options:
+      - text: Немає впорядкування happens-before, тож завершення циклу не гарантоване; виправлення — `atomic.Bool` або закриття каналу
+        correct: true
+      - text: Запис `bool` не атомарний, тож `done` може бути прочитане напівзаписаним; виправлення — `int32`
+      - text: Цикл завжди завершиться, бо `time.Sleep` скидає кеші процесора, а небезпека лише в зайнятому очікуванні
+      - text: Потрібне ключове слово `volatile` біля оголошення змінної `done`
+    explanation: >
+      Модель пам'яті Go не гарантує, що запис в одній горутині стане видимий іншій без синхронізації, тож цикл може не побачити `done`, а `Sleep` синхронізацією не є. На практиці цикл часто завершується, але це особливість поточного компілятора, а не гарантія. Тому потрібне ребро happens-before: `atomic.Bool`, канал чи м'ютекс. Ключового слова `volatile` у Go немає.
+    sources:
+      - https://go.dev/ref/mem#badsync
+      - https://pkg.go.dev/sync/atomic#Bool
+  - id: go-concurrency-011
+    level: senior
+    type: single
+    text: >
+      Воркер (Go 1.27) читає з `jobs` у циклі через `select` із двома `case`: `<-ctx.Done()` і `j := <-jobs`. Після `cancel()` у каналі лишилися сотні завдань. Чи може воркер обробити ще завдання після `cancel()` і що робити?
+    code:
+      lang: go
+      source: |
+        for {
+            select {
+            case <-ctx.Done():
+                return
+            case j := <-jobs:
+                process(j)
+            }
+        }
+    options:
+      - text: 'Так: серед готових `case` `select` обирає псевдовипадково; перевіряй `ctx.Err()` перед `process`'
+        correct: true
+      - text: 'Ні: `case` із `ctx.Done()` стоїть першим у списку, тож має пріоритет і воркер завершиться'
+      - text: 'Так, усі: `select` віддає перевагу каналу з даними, тож завершення настане після спорожнення буфера'
+      - text: 'Ні: виклик `cancel()` також очищає канал `jobs`, тому воркер не побачить жодного завдання'
+    explanation: >
+      Коли готові кілька `case`, `select` обирає один псевдовипадково, а порядок запису пріоритету не задає. Тому після скасування завдання ще можуть прослизнути. Перевірка `ctx.Err() != nil` перед роботою або вкладений `select` із пріоритетом це виправляє.
+    sources:
+      - https://go.dev/ref/spec#Select_statements
+      - https://pkg.go.dev/context#Context
+  - id: go-concurrency-012
+    level: senior
+    type: single
+    text: >
+      Сервіс (Go 1.27) зливає два канали циклом `select` без перевірки `ok`. Після закриття `a` процесор заповнюється на 100%, а `b` обробляється повільно. Що відбувається і як виправити?
+    code:
+      lang: go
+      source: |
+        for {
+            select {
+            case v := <-a:
+                handle(v)
+            case v := <-b:
+                handle(v)
+            }
+        }
+    options:
+      - text: Закритий `a` завжди готовий і віддає нулі; перевіряй `ok` і став `a = nil`, щоб вимкнути цей `case`
+        correct: true
+      - text: Закритий `a` блокує `select`, тож `b` не обробляється; виправлення — закрити також `b`
+      - text: Закритий канал спричиняє panic у `select`, який перехоплює `recover` і крутить цикл
+      - text: Закритий `a` лишається готовим лише один раз, а далі зайняте очікування створює `b`
+    explanation: >
+      Отримання із закритого каналу завжди готове й одразу повертає нульове значення, тому `select` крутиться вхолосту й часто обирає саме його. Канал зі значенням `nil` ніколи не готовий, тож присвоєння `a = nil` після `!ok` вимикає `case`.
+    sources:
+      - https://go.dev/ref/spec#Receive_operator
+      - https://go.dev/ref/spec#Channel_types

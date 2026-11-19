@@ -1,0 +1,321 @@
+id: angular-change-detection
+title: Change detection і Signals
+description: zone.js vs zoneless, OnPush, signal/computed/effect.
+questions:
+  - id: angular-change-detection-001
+    level: junior
+    type: single
+    text: >
+      Angular 22. У компоненті є поле `count = signal(0)`. Як прочитати його значення в шаблоні так, щоб вигляд
+      оновлювався при зміні сигналу?
+    options:
+      - text: "`{{ count() }}`: сигнал читають, викликаючи його як функцію"
+        correct: true
+      - text: "`{{ count.value }}`: значення лежить у властивості `value`"
+      - text: "`{{ count.get() }}`: у сигналу є метод `get`"
+      - text: "`{{ count | async }}`: сигнал треба розгорнути через `async`-pipe"
+    explanation: >
+      Сигнал є функцією-геттером: виклик `count()` повертає значення й водночас реєструє шаблон як споживача, тож зміна
+      сигналу оновить вигляд. Властивості `value` і методу `get` у сигналу немає, а `async` призначений для Observable
+      та Promise.
+    sources:
+      - https://angular.dev/guide/signals#writable-signals
+
+  - id: angular-change-detection-002
+    level: junior
+    type: multiple
+    text: Які твердження про `computed` у Angular 22 правильні?
+    options:
+      - text: "Це сигнал лише для читання: значення виводиться з інших сигналів, і в нього немає методу `set`"
+        correct: true
+      - text: "Обчислене значення кешується й не перераховується, доки не змінився жоден сигнал, прочитаний у функції"
+        correct: true
+      - text: "Функція виконується ліниво: вперше тоді, коли значення хтось прочитав, а не під час створення"
+        correct: true
+      - text: "Значення можна тимчасово перезаписати викликом `set`, а при зміні залежності воно знову обчислиться"
+      - text: "Функція перевиконується при кожному проході change detection, щоб значення завжди було свіжим"
+    explanation: >
+      `computed` лише виводить значення: записати в нього напряму не можна. Результат кешується, а функція запускається
+      тільки на читанні й лише якщо змінилась якась із залежностей. Перерахунок на кожному проході change detection
+      суперечив би кешуванню.
+    sources:
+      - https://angular.dev/guide/signals#computed-signals
+
+  - id: angular-change-detection-003
+    level: junior
+    type: single
+    text: Що виведе цей код (Angular 22)?
+    code:
+      lang: typescript
+      source: |
+        const n = signal(1);
+        n.set(n() + 1);
+        n.update(v => v * 10);
+        console.log(n());
+    options:
+      - text: "`20`"
+        correct: true
+      - text: "`11`"
+      - text: "`2`"
+      - text: "`10`"
+    explanation: >
+      `set` записує нове значення `2`, а `update` приймає поточне значення й повертає наступне: `2 * 10 = 20`. Результат
+      `11` вийшов би, якби `update` додавав, а не множив.
+    sources:
+      - https://angular.dev/guide/signals#writable-signals
+
+  - id: angular-change-detection-004
+    level: junior
+    type: multiple
+    text: Які твердження про `effect` у Angular 22 правильні?
+    options:
+      - text: "Ефект виконується щонайменше один раз і повторюється, коли змінюється сигнал, прочитаний усередині нього"
+        correct: true
+      - text: "Він призначений для побічних дій, як-от логування чи синхронізація з `localStorage`"
+        correct: true
+      - text: "Він запускається синхронно в момент виклику `set` на сигналі, який читає, ще до наступного рядка коду"
+      - text: "Він повертає обчислене значення, яке можна читати в шаблоні й у коді, як і `computed`"
+    explanation: >
+      `effect` не повертає значення й слугує для побічних дій: він запускається спершу й потім щоразу, коли
+      змінюється його залежність. Запуск не відбувається всередині `set`: Angular планує ефект на пізніше. Для похідних
+      значень правильний інструмент — `computed`.
+    sources:
+      - https://angular.dev/guide/signals#effects
+
+  - id: angular-change-detection-005
+    level: middle
+    type: single
+    text: >
+      Angular 22. Дочірній компонент має `OnPush` і читає об'єкт `user` зі звичайного `input`. Що побачить користувач
+      після кліку на кнопку «x» у батька?
+    code:
+      lang: typescript
+      source: |
+        @Component({
+          selector: 'app-child',
+          changeDetection: ChangeDetectionStrategy.OnPush,
+          template: `<p>{{ user().name }}</p>`,
+        })
+        class Child { user = input.required<{ name: string }>(); }
+
+        @Component({
+          imports: [Child],
+          template: `<app-child [user]="u" /><button (click)="rename()">x</button>`,
+        })
+        class Parent {
+          u = { name: 'Ann' };
+          rename() { this.u.name = 'Bob'; }
+        }
+    options:
+      - text: "`Ann`: посилання на `u` не змінилось, тож OnPush-дитину не позначено для перевірки"
+        correct: true
+      - text: "`Bob`: клік у батька завжди перевіряє всіх нащадків, і OnPush цього не змінює"
+      - text: "`Bob`, бо `input()` сам відстежує вкладені властивості об'єкта"
+      - text: "Помилка `NG0100`, бо значення змінилося після перевірки"
+    explanation: >
+      OnPush-компонент перевіряється, коли input отримує нове значення за посиланням, коли в ньому спрацьовує подія або
+      коли змінився сигнал, прочитаний у шаблоні. Мутація властивості того самого об'єкта нічого з цього не викликає. Щоб
+      оновити дитину, батько має передати новий об'єкт.
+    sources:
+      - https://angular.dev/best-practices/skipping-subtrees
+
+  - id: angular-change-detection-006
+    level: middle
+    type: single
+    text: >
+      Angular 22, застосунок без zone.js (типовий zoneless). Компонент нижче створено, і більше нічого в застосунку не
+      відбувається. Що буде на екрані через 2 секунди?
+    code:
+      lang: typescript
+      source: |
+        @Component({ template: `<p>{{ title }}</p>` })
+        export class App {
+          title = 'old';
+          constructor() {
+            setTimeout(() => (this.title = 'new'), 1000);
+          }
+        }
+    options:
+      - text: "`old`: звичайне присвоєння поля не запускає перевірку"
+        correct: true
+      - text: "`new`: колбек `setTimeout` завжди запускає change detection"
+      - text: "`new`, бо Angular запускає перевірку за таймером кожну секунду"
+      - text: "Порожній `<p>`: до першої перевірки поле не доступне шаблону"
+    explanation: >
+      Без zone.js Angular не стежить за `setTimeout`. Перевірку запускають лише сповіщення від API Angular: зміна
+      сигналу з шаблону, подія шаблону, `markForCheck`, `async` pipe. Звичайне присвоєння поля до них не належить, тому
+      вигляд лишається старим, аж доки щось інше не запустить перевірку.
+    sources:
+      - https://angular.dev/guide/zoneless
+
+  - id: angular-change-detection-007
+    level: middle
+    type: single
+    text: >
+      Angular 22. Ефект створено в кореневому контексті ін'єкції (наприклад, у сервісі `providedIn: 'root'`), і весь
+      код нижче виконується синхронно в одному блоці. Лише після нього застосунок проходить цикл change detection. У
+      якому порядку з'являться рядки в консолі?
+    code:
+      lang: typescript
+      source: |
+        const s = signal(0);
+        effect(() => console.log('effect', s()));
+        console.log('sync1');
+        s.set(1);
+        console.log('sync2');
+    options:
+      - text: "`sync1`, `sync2`, `effect 1`"
+        correct: true
+      - text: "`effect 0`, `sync1`, `effect 1`, `sync2`"
+      - text: "`sync1`, `effect 1`, `sync2`"
+      - text: "`effect 0`, `effect 1`, `sync1`, `sync2`"
+    explanation: >
+      Ефект не виконується під час створення чи `set`: Angular планує його на пізніше й запускає під час наступного
+      проходу. До цього моменту сигнал уже дорівнює `1`, тож ефект спрацьовує один раз і з актуальним значенням, а
+      проміжного `effect 0` немає.
+    sources:
+      - https://angular.dev/guide/signals#effects
+
+  - id: angular-change-detection-008
+    level: middle
+    type: single
+    text: Скільки разів виконається функція всередині `computed` до виводу в консоль (Angular 22)?
+    code:
+      lang: typescript
+      source: |
+        let runs = 0;
+        const flag = signal(true);
+        const a = signal(1);
+        const b = signal(10);
+        const c = computed(() => { runs++; return flag() ? a() : b(); });
+
+        c();
+        b.set(11); c();
+        a.set(2);  c();
+        flag.set(false); c();
+        a.set(3);  c();
+        console.log(runs);
+    options:
+      - text: "`3`"
+        correct: true
+      - text: "`5`"
+      - text: "`4`"
+      - text: "`2`"
+    explanation: >
+      Залежності `computed` відстежуються динамічно, за тим, що реально прочитано під час останнього виконання. Спершу це
+      `flag` і `a`, тож зміна `b` перерахунку не викликає. Після `flag.set(false)` залежностями стають `flag` і `b`, а
+      тому зміна `a` знову нічого не перераховує. Виконань три: перше читання, зміна `a`, зміна `flag`.
+    sources:
+      - https://angular.dev/guide/signals#computed-signals-are-both-lazily-evaluated-and-memoized
+
+  - id: angular-change-detection-009
+    level: senior
+    type: single
+    text: >
+      Angular 22. Дочірній компонент у `ngAfterViewInit` змінює звичайне поле батька, яке батьківський шаблон виводить
+      вище за дитину. Під `ng serve` у консолі з'являється `NG0100 ExpressionChangedAfterItHasBeenChecked`, а в prod-збірці
+      помилки немає. Чому так?
+    options:
+      - text: "Другий прохід порівняння виразів є лише в dev-режимі, у prod розбіжність не виявляється"
+        correct: true
+      - text: "У prod Angular після кожної перевірки автоматично запускає ще один прохід, і значення сходиться"
+      - text: "У prod помилка знижується до попередження в консолі браузера, а вигляд оновлюється"
+      - text: "Помилку кидає zone.js, який вимкнений у prod-збірці разом з іншими dev-інструментами"
+    explanation: >
+      Після звичайної перевірки dev-режим ганяє ще один прохід лише для порівняння: чи значення виразів лишилися тими самими.
+      Якщо ні, кидається `NG0100`. У prod цього проходу немає, тож проблема не зникає, а лишається непоміченою.
+      Правильне виправлення — змінити потік даних (наприклад, сигнал), а не покладатися на prod.
+    sources:
+      - https://angular.dev/errors/NG0100
+
+  - id: angular-change-detection-010
+    level: senior
+    type: single
+    text: >
+      Angular 22. Список `options` задається сигналом. Поточний вибір `selected` має бути записуваним (користувач його
+      змінює), за замовчуванням дорівнювати першому елементу, а коли список змінюється, лишатися, якщо значення ще є,
+      інакше ставати першим. Жодного проміжного кадру із застарілим вибором бути не повинно. Що підходить?
+    code:
+      lang: typescript
+      source: |
+        options = signal(['a', 'b', 'c']);
+        selected = /* ? */;
+    options:
+      - text: "`linkedSignal` із `source` і `computation`, яка перевіряє `previous` і за потреби бере перший елемент"
+        correct: true
+      - text: "`computed(() => this.options()[0])`: він перераховується при зміні списку, а вибір задається через `set`"
+      - text: "Звичайний `signal` і `effect`, що на зміну `options` записує в `selected` потрібне значення"
+      - text: "Звичайний `signal` і `toObservable(this.options)` із підпискою, яка пише в `selected`"
+    explanation: >
+      `linkedSignal` одночасно записуваний і залежний від іншого сигналу, а `computation` отримує попереднє значення, тож
+      вибір можна зберегти. Результат перераховується синхронно на читанні. У `computed` немає `set`. Ефект і
+      `toObservable` оновлюють `selected` пізніше за зміну списку, тож перед цим можна прочитати застарілий вибір.
+    sources:
+      - https://angular.dev/guide/signals/linked-signal
+
+  - id: angular-change-detection-011
+    level: senior
+    type: multiple
+    text: >
+      Angular 22, zoneless. Компонент зі стратегією за замовчуванням виводить `{{ data }}`, а звичайне поле `data`
+      присвоюється всередині `subscribe` у конструкторі, після таймера на 10 мс. Вигляд лишається зі старим значенням, інших подій у
+      застосунку немає. Які зміни це виправляють?
+    code:
+      lang: typescript
+      source: |
+        @Component({ template: `<p>{{ data }}</p>` })
+        export class Report {
+          data = 'none';
+          constructor() {
+            timer(10).subscribe(() => (this.data = 'loaded'));
+          }
+        }
+    options:
+      - text: "Зробити `data` сигналом і писати в нього через `set` у `subscribe`"
+        correct: true
+      - text: "Після присвоєння викликати `ChangeDetectorRef.markForCheck()`"
+        correct: true
+      - text: "Виводити `data$ | async`, де `data$` — Observable із цього таймера"
+        correct: true
+      - text: "Додати компоненту `changeDetection: ChangeDetectionStrategy.OnPush`"
+      - text: "Замінити поле на getter, який шаблон викликає при кожній перевірці"
+    explanation: >
+      Перевірку запускають лише сповіщення Angular: сигнал із шаблону, `markForCheck` (його викликає й `async` pipe).
+      Стратегія `OnPush` лише обмежує, що перевіряти, а запускати перевірку не вміє. Getter теж не допомагає: його ніхто не
+      викличе, бо перевірки немає.
+    sources:
+      - https://angular.dev/guide/zoneless
+
+  - id: angular-change-detection-012
+    level: senior
+    type: single
+    text: >
+      Angular 22. Ефект має слати запит у лог лише при зміні `query`, але спрацьовує й при зміні `user`, хоча `user`
+      у самому ефекті не згадується. Чому і що робити?
+    code:
+      lang: typescript
+      source: |
+        class Tracker {
+          query = signal('');
+          user = signal('guest');
+
+          private send(q: string) {
+            console.log(q, this.user());
+          }
+
+          constructor() {
+            effect(() => this.send(this.query()));
+          }
+        }
+    options:
+      - text: "`send` читає `user()` синхронно під час ефекту, тож той стає залежністю; виклик `send` слід обгорнути в `untracked`"
+        correct: true
+      - text: "Ефект відстежує всі поля екземпляра класу, тож треба винести `user` в окремий клас"
+      - text: "Читання в приватному методі не відстежується, тож причина в `query`, який змінюється разом із `user`"
+      - text: "Лише читання в тілі стрілочної функції ефекту відстежуються, а `send` треба зробити стрілочною властивістю"
+    explanation: >
+      Залежності ефекту збираються з усіх сигналів, прочитаних під час його синхронного виконання, зокрема в
+      викликаних функціях. Тому прихована залежність від `user` реальна. `untracked(() => this.send(q))` читає
+      сигнали без відстеження, а `query` лишається залежністю.
+    sources:
+      - https://angular.dev/guide/signals#reading-without-tracking-dependencies

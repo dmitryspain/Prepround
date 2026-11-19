@@ -1,0 +1,179 @@
+id: azure
+title: Azure
+description: App Service, Functions, Azure SQL, Service Bus, Key Vault, Entra ID.
+questions:
+  - id: azure-001
+    level: junior
+    type: single
+    text: Що визначає App Service plan в Azure App Service?
+    options:
+    - text: 'Обчислювальні ресурси: розмір і кількість екземплярів, регіон, тариф для всіх застосунків плану'
+      correct: true
+    - text: Лише доменне ім'я, сертифікат і правила маршрутизації одного окремого вебзастосунку в підписці
+    - text: Схему бази даних і рядки підключення, спільні для всіх застосунків, що працюють у цьому плані
+    - text: Мову програмування та версію середовища виконання, які дозволені для застосунків у цьому плані
+    explanation: |
+      План — це «ферма» віртуальних машин із певним тарифом, на якій запускаються один або кілька застосунків. Домени й сертифікати налаштовуються на рівні самого застосунку, а мова обирається стеком застосунку, не планом.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/app-service/overview-hosting-plans
+  - id: azure-002
+    level: junior
+    type: single
+    text: Для чого призначений Azure Key Vault?
+    options:
+    - text: Безпечне зберігання секретів, ключів шифрування й сертифікатів із керуванням доступом
+      correct: true
+    - text: Зберігання бінарних файлів і медіа з публічним доступом за URL для вебзастосунків та мобільних клієнтів
+    - text: Запуск контейнерів без керування серверами, з автоматичним масштабуванням за кількістю запитів
+    - text: Маршрутизація HTTP-трафіку між регіонами з перевіркою стану бекендів і глобальним балансуванням
+    explanation: |
+      Key Vault централізує секрети, ключі та сертифікати, щоб їх не зберігати в коді чи конфігурації застосунку. Файли й медіа належать Blob Storage, а маршрутизація трафіку — Front Door або Traffic Manager.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/key-vault/general/overview
+  - id: azure-003
+    level: junior
+    type: single
+    text: Яку проблему розв'язує managed identity для застосунку в Azure?
+    options:
+    - text: Застосунок автентифікується в ресурсах, захищених Entra ID, без пароля чи ключа в коді або конфігурації
+      correct: true
+    - text: Автоматично шифрує всі дані, які застосунок записує в базу, ключами з Key Vault
+    - text: Дає застосунку доступ до всіх ресурсів підписки за замовчуванням без окремих призначень ролей
+    - text: Замінює мережеві правила брандмауера для ресурсу та обмежує вхідні підключення за IP-адресою
+    explanation: |
+      Платформа сама видає й оновлює облікові дані ідентичності, тож секрету для зберігання немає. Права доступу все одно треба видати окремо через призначення ролей, за замовчуванням ідентичність нічого не може.
+    sources:
+    - https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
+  - id: azure-004
+    level: junior
+    type: single
+    text: Чим тема (topic) із підписками в Azure Service Bus відрізняється від черги (queue)?
+    options:
+    - text: Кожна підписка отримує власну копію повідомлення, тож споживачі обробляють його незалежно
+      correct: true
+    - text: Тема гарантує порядок доставки повідомлень, а звичайна черга такої гарантії не дає зовсім
+    - text: Тема зберігає повідомлення вічно, а черга автоматично видаляє їх через одну годину після надходження
+    - text: Тема працює лише по HTTP, а черга доступна тільки через протокол AMQP 1.0
+    explanation: |
+      Тема реалізує публікацію-підписку, і кожна підписка поводиться як окрема черга. У звичайній черзі повідомлення бере один зі співспоживачів.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-queues-topics-subscriptions
+  - id: azure-005
+    level: middle
+    type: multiple
+    text: Які твердження про тригери й прив'язки (bindings) в Azure Functions правильні?
+    options:
+    - text: Функція має рівно один тригер
+      correct: true
+    - text: Прив'язки необов'язкові, а функція може мати кілька вхідних і вихідних
+      correct: true
+    - text: Функція може мати кілька тригерів, якщо вони різних типів
+    - text: Вихідна прив'язка працює лише разом із HTTP-тригером
+    explanation: |
+      Тригер визначає, що запускає функцію, і він завжди один. Вхідні й вихідні прив'язки лише спрощують доступ до сервісів, їх може не бути або бути кілька. Типи тригера й вихідної прив'язки між собою не пов'язані.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/azure-functions/functions-triggers-bindings
+  - id: azure-006
+    level: middle
+    type: multiple
+    text: Що правильно про слоти розгортання (deployment slots) в Azure App Service?
+    options:
+    - text: Слот є живим застосунком зі своїм іменем хоста
+      correct: true
+    - text: Перед підміною слот прогрівається, тож трафік переходить без простою
+      correct: true
+    - text: Слоти використовують ресурси того самого App Service plan
+      correct: true
+    - text: Слоти доступні вже на безкоштовному тарифі Free і на тарифі Shared
+    explanation: |
+      Слоти підтримують тарифи Standard, Premium та Isolated і працюють на інстансах того самого плану, тож навантаження на staging забирає ресурси в production. Free не підтримує слотів.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots
+    - https://learn.microsoft.com/en-us/azure/app-service/overview-hosting-plans
+  - id: azure-007
+    level: middle
+    type: single
+    text: Споживач Service Bus у режимі PeekLock узяв повідомлення, але не викликав ні `Complete`, ні `Abandon`, і блокування сплило. Що станеться з повідомленням?
+    options:
+    - text: Воно знову стане доступним, а після досягнення Max Delivery Count піде в dead-letter чергу
+      correct: true
+    - text: Воно буде безповоротно видалене з черги, бо споживач уже отримав його й почав обробку
+    - text: Воно лишиться заблокованим, доки адміністратор не зніме блокування вручну через портал Azure
+    - text: Воно одразу потрапить у dead-letter чергу після першого ж збою обробки без повторних спроб
+    explanation: |
+      Блокування лише тимчасово ховає повідомлення від інших споживачів. Після спливання воно повертається в чергу, а кожна невдала спроба збільшує лічильник доставок. Видаляє повідомлення саме режим ReceiveAndDelete, а не PeekLock.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-transfers-locks-settlement#peeklock
+  - id: azure-008
+    level: middle
+    type: single
+    text: Чим user-assigned managed identity відрізняється від system-assigned?
+    options:
+    - text: Вона є окремим ресурсом зі своїм життєвим циклом і її можна призначити кільком ресурсам
+      correct: true
+    - text: Вона не потребує призначення ролей, бо отримує повний доступ до ресурсів своєї групи ресурсів
+    - text: Вона працює лише в межах одного регіону й одного застосунку, до якого її прив'язано
+    - text: Вона створюється й видаляється разом із ресурсом, до якого привʼязана, і не існує окремо
+    explanation: |
+      System-assigned ідентичність належить одному ресурсу й зникає разом із ним. User-assigned створюють окремо, тож її зручно ділити між кількома застосунками. Ролі потрібні в обох випадках.
+    sources:
+    - https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview#managed-identity-types
+  - id: azure-009
+    level: senior
+    type: multiple
+    text: Які твердження про захист видалення в Azure Key Vault правильні?
+    options:
+    - text: Для нового сховища soft-delete увімкнено за замовчуванням, і вимкнути його не можна
+      correct: true
+    - text: Термін зберігання видаленого можна задати від 7 до 90 днів лише під час створення сховища
+      correct: true
+    - text: За ввімкненого purge protection видалене сховище чи обʼєкт не можна остаточно видалити до кінця терміну зберігання
+      correct: true
+    - text: Власник підписки може будь-коли вимкнути purge protection, якщо потрібно швидко звільнити імʼя
+    explanation: |
+      Soft-delete лишає видалене відновним, а purge protection забороняє навіть привілейованим користувачам очистити його раніше. Імʼя видаленого сховища не можна використати повторно, доки не мине термін, тому «звільнити імʼя» вимкненням захисту не вийде.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/key-vault/general/soft-delete-overview
+  - id: azure-010
+    level: senior
+    type: single
+    text: Відправник надіслав повідомлення в Service Bus, отримав тайм-аут і не знає, чи воно прийняте. Що найнадійніше уникне дубліката в черзі при повторній відправці?
+    options:
+    - text: Увімкнути duplicate detection на черзі й повторно надіслати з тим самим `MessageId`
+      correct: true
+    - text: Перейти з PeekLock на ReceiveAndDelete у споживача, щоб повідомлення не оброблялося двічі
+    - text: Збільшити Max Delivery Count черги, щоб брокер не відкидав повторні спроби доставки
+    - text: Надсилати кожну спробу з новим `MessageId`, щоб кожне повідомлення було унікальним у черзі
+    explanation: |
+      Duplicate detection відкидає повідомлення з уже баченим `MessageId` у межах заданого вікна. Режим споживача й Max Delivery Count стосуються отримання, а новий `MessageId` якраз робить повтор несхожим на дублікат.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/service-bus-messaging/duplicate-detection
+  - id: azure-011
+    level: senior
+    type: single
+    text: Для обробки подій одного замовлення треба зберегти порядок (FIFO), але паралельно обробляти різні замовлення. Що застосувати в Service Bus?
+    options:
+    - text: 'Сесії: `SessionId` = номер замовлення, і одну сесію в кожний момент обробляє один споживач'
+      correct: true
+    - text: Кілька конкурентних споживачів на звичайній черзі без сесій, які забирають повідомлення по черзі
+    - text: Окрема тема Service Bus для кожного замовлення з однією підпискою на кожну таку тему
+    - text: Режим ReceiveAndDelete зі збільшеним prefetch, щоб споживач отримував повідомлення пачками
+    explanation: |
+      Повідомлення однієї сесії доставляються по порядку й під ексклюзивним блокуванням, а різні сесії обробляються паралельно. Конкурентні споживачі на звичайній черзі порядок не гарантують.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/service-bus-messaging/message-sessions
+  - id: azure-012
+    level: senior
+    type: single
+    text: Команда розгортає нову версію у слот staging, який має рядок підключення до тестової БД, і виконує swap із production. Рядок підключення не позначено як «Deployment slot setting». Що буде після підміни?
+    options:
+    - text: Рядок підключення до тестової БД перейде в production разом із вмістом слота
+      correct: true
+    - text: Production збереже свій рядок підключення, бо це налаштування середовища
+    - text: Підміна завершиться помилкою через розбіжність налаштувань
+    - text: Обидва слоти отримають порожній рядок підключення
+    explanation: |
+      Параметри застосунку й рядки підключення за замовчуванням переходять разом із вмістом. Щоб значення лишилося у своєму слоті, його треба позначити як slot setting. Через це перевіряють налаштування перед підміною.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots#which-settings-are-swapped
+    - https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots#make-an-app-setting-unswappable

@@ -1,0 +1,260 @@
+id: hibernate-jpa
+title: Hibernate і JPA
+description: Сутності, зв'язки, lazy/eager, N+1, транзакції, кеш першого/другого рівня.
+questions:
+  - id: hibernate-jpa-001
+    level: junior
+    type: multiple
+    text: Які вимоги Jakarta Persistence 3.2 ставить до класу сутності?
+    options:
+      - text: "Клас має бути позначений `@Entity` (або оголошений сутністю в XML-дескрипторі)"
+        correct: true
+      - text: "Клас не може бути `final`"
+        correct: true
+      - text: "Має бути `public` або `protected` конструктор без параметрів"
+        correct: true
+      - text: "Клас має реалізовувати `java.io.Serializable`"
+      - text: "Для кожного поля мають бути публічні `get` і `set`"
+    explanation: >
+      Провайдеру потрібно створювати екземпляри й підміняти їх проксі, тому клас не може бути `final`
+      і має конструктор без параметрів. `Serializable` стає потрібним лише тоді, коли відокремлені
+      екземпляри передають за значенням (наприклад, віддалено), а геттери й сеттери не потрібні, якщо використовується доступ через поля.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+  - id: hibernate-jpa-002
+    level: junior
+    type: single
+    text: >
+      Яке значення Hibernate запише в колонку `status` для замовлення зі статусом `PAID`?
+    code:
+      lang: java
+      source: |
+        public enum Status { NEW, PAID, SHIPPED }
+
+        @Entity
+        public class Orders {
+            @Id @GeneratedValue Long id;
+            Status status;   // без @Enumerated
+        }
+    options:
+      - text: "Число `1`: порядковий номер константи, що відлічується від нуля"
+        correct: true
+      - text: "Рядок `PAID`: ім'я константи"
+      - text: "Число `2`: порядковий номер константи, що відлічується від одиниці"
+      - text: "Нічого: без `@Enumerated` поле не зберігається"
+    explanation: >
+      Для enum-поля без `@Enumerated` діє `EnumType.ORDINAL`, тобто зберігається позиція константи з нуля.
+      Це крихко: вставка нової константи посередині змінить зміст уже збережених рядків, тому часто явно вказують `EnumType.STRING`.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+  - id: hibernate-jpa-003
+    level: junior
+    type: single
+    text: Що станеться з базою даних під час коміту цієї транзакції?
+    code:
+      lang: java
+      source: |
+        em.getTransaction().begin();
+        User u = em.find(User.class, 1L);
+        u.setName("Anna");
+        em.getTransaction().commit();
+    options:
+      - text: "Hibernate помітить зміну керованої сутності й виконає `UPDATE` під час `flush` перед комітом"
+        correct: true
+      - text: "Нічого, бо без явного виклику `em.persist(u)` або `em.merge(u)` зміни не зберігаються"
+      - text: "Буде виконано `INSERT` нового рядка з іменем `Anna`"
+      - text: "Транзакція впаде, бо сутність потрібно спершу заблокувати"
+    explanation: >
+      Сутність, отримана через `find`, керована контекстом персистентності, який порівнює її з початковим станом (dirty checking).
+      Окремий виклик `merge` потрібен лише для відокремлених екземплярів.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+  - id: hibernate-jpa-004
+    level: junior
+    type: single
+    text: Що означає `mappedBy` в анотації `@OneToMany(mappedBy = "order")`?
+    options:
+      - text: "Власник зв'язку — поле `order` на іншій стороні; ця сторона колонку FK не записує"
+        correct: true
+      - text: "Hibernate створить окрему таблицю зв'язку з назвою `order`"
+      - text: "Операції з батьком каскадно застосовуватимуться до всіх елементів колекції"
+      - text: "Колекція завантажуватиметься лише тоді, коли до неї звернуться"
+    explanation: >
+      Із двох боків двонаправленого зв'язку база оновлюється лише за власником, тобто `@ManyToOne`-стороною.
+      `mappedBy` позначає зворотну сторону. Каскади й ліниве завантаження налаштовуються окремими атрибутами `cascade` та `fetch`.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+  - id: hibernate-jpa-005
+    level: middle
+    type: single
+    text: >
+      У Hibernate 7 в базі 100 книжок із 100 різними авторами. Скільки SQL-запитів приблизно виконає цей код?
+    code:
+      lang: java
+      source: |
+        @Entity
+        public class Book {
+            @Id Long id;
+            @ManyToOne Author author;   // fetch не вказано
+        }
+
+        List<Book> books = em.createQuery("select b from Book b", Book.class)
+                             .getResultList();
+    options:
+      - text: "До 101: один запит за книжками й по одному додатковому на кожного автора"
+        correct: true
+      - text: "Рівно 1: `@ManyToOne` завжди підтягується через `JOIN` у тому самому запиті"
+      - text: "Рівно 1: за замовчуванням `@ManyToOne` лінивий, тож авторів ніхто не вантажить"
+      - text: "Рівно 2: Hibernate збере ідентифікатори авторів і завантажить усіх одним `IN`"
+    explanation: >
+      `@ManyToOne` за замовчуванням має `fetch = EAGER`, але JPQL його не враховує у власному `SELECT`.
+      Тому Hibernate довантажує кожного ще не завантаженого автора окремим запитом. Це класична проблема N+1, і її вирішують `join fetch`, графом сутностей або `@BatchSize`.
+    sources:
+      - https://docs.jboss.org/hibernate/orm/7.0/userguide/html_single/Hibernate_User_Guide.html
+  - id: hibernate-jpa-006
+    level: middle
+    type: single
+    text: Чому останній рядок кидає `LazyInitializationException`?
+    code:
+      lang: java
+      source: |
+        Order order;
+        try (EntityManager em = emf.createEntityManager()) {
+            order = em.find(Order.class, 1L);
+        }
+        System.out.println(order.getItems().size());   // @OneToMany, lazy
+    options:
+      - text: "Колекція лінива, а контекст персистентності вже закрито, тож дозавантажити її нема як"
+        correct: true
+      - text: "Метод `find` не завантажує зв'язки, і їх можна читати лише через JPQL"
+      - text: "Метод `size()` на колекції сутності заборонений поза транзакцією"
+      - text: "Після `close()` потрібно було викликати `em.flush()`, інакше колекція порожня"
+    explanation: >
+      Замість колекції в сутності лежить проксі, що читає дані через відкриту сесію. Найнадійніше виправлення: підтягнути потрібні зв'язки
+      до закриття контексту (`join fetch`, граф сутностей), а не робити все `EAGER`.
+    sources:
+      - https://docs.jboss.org/hibernate/orm/7.0/userguide/html_single/Hibernate_User_Guide.html
+  - id: hibernate-jpa-007
+    level: middle
+    type: single
+    text: >
+      Що станеться, якщо у керованого замовлення з `@OneToMany(mappedBy = "order", orphanRemoval = true)`
+      видалити позицію з колекції `items` і зробити `flush`?
+    options:
+      - text: "Рядок позиції буде видалено з бази командою `DELETE`"
+        correct: true
+      - text: "Рядок позиції лишиться в таблиці, а в ньому обнулиться зовнішній ключ"
+      - text: "Рядок лишиться без змін: колекція є зворотною стороною, тому база не оновлюється"
+      - text: "Буде видалено й саме замовлення, бо в нього більше немає цієї позиції"
+    explanation: >
+      `orphanRemoval` означає, що сутність, виключена зі зв'язку, видаляється під час `flush`. Без цього прапорця на зворотній стороні
+      нічого не змінилося б, а видалення замовлення цей атрибут не спричиняє.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+  - id: hibernate-jpa-008
+    level: middle
+    type: multiple
+    text: Які твердження про різницю між `em.find` і `em.getReference` у Jakarta Persistence правильні?
+    options:
+      - text: "`find` повертає `null`, якщо рядка з таким ключем немає"
+        correct: true
+      - text: "`getReference` може повернути проксі без запиту до бази, а стан підвантажується пізніше"
+        correct: true
+      - text: "Якщо рядка немає, `EntityNotFoundException` виникає при першому зверненні до стану посилання"
+        correct: true
+      - text: "`getReference` завжди одразу виконує `SELECT` і повертає `null` для відсутнього рядка"
+      - text: "`find` кидає `EntityNotFoundException`, коли сутності з таким ключем у базі немає"
+    explanation: >
+      `find` повертає сутність або `null`, тоді як `getReference` дає посилання, стан якого може завантажуватись ліниво. Тому відсутність рядка проявляється
+      винятком `EntityNotFoundException` лише під час доступу до стану. Таке посилання зручно підставляти у зв'язок, не читаючи сутність.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+  - id: hibernate-jpa-009
+    level: senior
+    type: single
+    text: >
+      Запит `select a from Author a join fetch a.books` викликають із `setMaxResults(10)`. Що відбувається у Hibernate 6.x і 7.0–7.3?
+    options:
+      - text: "Обмеження не потрапляє в SQL: Hibernate читає всі збіги й застосовує ліміт у пам'яті"
+        correct: true
+      - text: "У SQL додається `LIMIT 10`, тож повертається рівно 10 рядків з авторами та книжками"
+      - text: "Hibernate мовчки ігнорує `setMaxResults` і повертає всіх авторів без жодного попередження"
+      - text: "Запит завершується помилкою, бо `join fetch` із пагінацією заборонений"
+    explanation: >
+      Рядки результату дублюються по книжках, тому ліміт у SQL обрізав би колекції, і Hibernate застосовує його в пам'яті (з попередженням `HHH90003004`).
+      Починаючи з 7.4 ліміт іде в SQL-підзапит, а стару поведінку повертає hint `org.hibernate.limitInMemory`.
+      Типове рішення для старіших версій: спершу вибрати сторінку ідентифікаторів, а потім довантажити книжки другим запитом.
+    sources:
+      - https://docs.jboss.org/hibernate/orm/7.0/querylanguage/html_single/Hibernate_Query_Language.html
+      - https://docs.hibernate.org/orm/7.4/migration-guide/migration-guide.html
+  - id: hibernate-jpa-010
+    level: senior
+    type: single
+    text: Що виведе цей код, якщо початковий статус користувача з `id = 1` дорівнює `ACTIVE`?
+    code:
+      lang: java
+      source: |
+        em.getTransaction().begin();
+        User u = em.find(User.class, 1L);
+        em.createQuery("update User x set x.status = 'BLOCKED' where x.id = 1")
+          .executeUpdate();
+        System.out.println(u.getStatus());
+        System.out.println(em.find(User.class, 1L).getStatus());
+        em.getTransaction().commit();
+    options:
+      - text: "`ACTIVE` і `ACTIVE`: масовий `UPDATE` не синхронізує контекст персистентності"
+        correct: true
+      - text: "`BLOCKED` і `BLOCKED`: Hibernate оновлює керовані сутності після масового `UPDATE`"
+      - text: "`ACTIVE` і `BLOCKED`: `find` завжди перечитує рядок із бази"
+      - text: "Виняток, бо масове оновлення не можна виконувати, коли в контексті є керовані сутності"
+    explanation: >
+      Масовий `UPDATE` іде прямо в базу, а керований екземпляр у кеші першого рівня лишається старим. Повторний `find` повертає той самий екземпляр
+      з контексту. Тому масові операції виконують на початку транзакції або після цього роблять `refresh` чи `clear`.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+      - https://docs.jboss.org/hibernate/orm/7.0/querylanguage/html_single/Hibernate_Query_Language.html
+  - id: hibernate-jpa-011
+    level: senior
+    type: multiple
+    text: Які твердження про кеш другого рівня Hibernate 7 правильні?
+    options:
+      - text: "Він прив'язаний до `EntityManagerFactory`, тому спільний для всіх її сесій"
+        correct: true
+      - text: "За `ENABLE_SELECTIVE` сутність кешується лише з анотацією `@Cacheable`"
+        correct: true
+      - text: "Сутності лежать у розібраному вигляді (значення атрибутів), а не як об'єкти"
+        correct: true
+      - text: "Кеш запитів вмикається автоматично, щойно ввімкнено кеш другого рівня для сутностей"
+      - text: "Кеш очищається щоразу, коли закривається `EntityManager`, який його заповнив"
+    explanation: >
+      Кеш другого рівня живе стільки, скільки фабрика, тоді як контекст персистентності очищається разом з `EntityManager`.
+      Кеш запитів вимкнений за замовчуванням: його вмикають окремою властивістю і позначають запити кешованими.
+    sources:
+      - https://docs.jboss.org/hibernate/orm/7.0/userguide/html_single/Hibernate_User_Guide.html
+  - id: hibernate-jpa-012
+    level: senior
+    type: single
+    text: >
+      Сутність `Product` має поле `@Version`. Дві транзакції (T1 і T2) завантажили той самий рядок із версією 5 і змінили ціну.
+      T1 закомітила першою. Що станеться з T2?
+    code:
+      lang: java
+      source: |
+        @Entity
+        public class Product {
+            @Id Long id;
+            @Version long version;
+            BigDecimal price;
+        }
+        // T1 і T2: p = em.find(Product.class, 1L); p.setPrice(...); commit
+    options:
+      - text: "`UPDATE` з умовою на версію зачепить 0 рядків: T2 отримає `OptimisticLockException`"
+        correct: true
+      - text: "T2 мовчки перезапише ціну від T1, а версія стане 7"
+      - text: "T2 заблокується на `UPDATE`, поки T1 не закомітить, а потім успішно завершиться"
+      - text: "Hibernate автоматично перечитає рядок і повторить зміну T2 на версії 6"
+    explanation: >
+      Оптимістичне блокування не тримає блокувань під час роботи: при коміті версія в `WHERE` уже не збігається, тому провайдер кидає
+      `OptimisticLockException` і позначає транзакцію на відкат. Застосунок сам вирішує, чи повторити операцію.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2

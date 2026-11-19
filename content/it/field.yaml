@@ -1,0 +1,43 @@
+id: it
+title: IT
+levels:                 # порядок = ранг, від нижчого до вищого
+  - id: junior
+    title: Junior
+  - id: middle
+    title: Middle
+  - id: senior
+    title: Senior
+directions:
+  - id: backend
+    title: Backend
+    stacks:
+      - id: dotnet
+        title: .NET (C#)
+        topics: [csharp, dotnet-clr, dotnet-async, aspnet-core, ef-core, sql, architecture, messaging, azure, docker-k8s]
+      - id: java
+        title: Java
+        topics: [java-core, jvm, java-concurrency, spring-boot, hibernate-jpa, sql, architecture, messaging, aws, docker-k8s]
+      - id: python
+        title: Python
+        topics: [python-core, python-async, django, fastapi, sqlalchemy, celery, pytest, sql, nosql, docker-k8s]
+      - id: nodejs
+        title: Node.js
+        topics: [javascript, typescript, nodejs-runtime, express-fastify, nestjs, prisma-typeorm, sql, nosql, api-design, docker-k8s]
+      - id: go
+        title: Go
+        topics: [go-lang, go-concurrency, go-runtime, go-http, go-db, api-design, sql, messaging, architecture, docker-k8s]
+      - id: php
+        title: PHP
+        topics: [php-lang, laravel, symfony, php-orm, composer-psr, phpunit, sql, nosql, api-design, architecture]
+  - id: frontend
+    title: Frontend
+    stacks:
+      - id: react
+        title: React
+        topics: [javascript, typescript, html-css, react-core, react-hooks, react-state, nextjs, react-data-routing, frontend-testing, web-performance]
+      - id: angular
+        title: Angular
+        topics: [javascript, typescript, html-css, angular-components, angular-di, angular-change-detection, rxjs, ngrx, angular-routing-forms, frontend-testing]
+      - id: vue
+        title: Vue
+        topics: [javascript, typescript, html-css, vue-core, vue-composition-api, pinia, vue-router, nuxt, frontend-testing, web-performance]

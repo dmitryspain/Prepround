@@ -1,0 +1,257 @@
+id: django
+title: Django і DRF
+description: Моделі, ORM, міграції, views, middleware, серіалізатори DRF.
+questions:
+  - id: django-001
+    level: junior
+    type: single
+    text: Що робить команда `python manage.py migrate`?
+    options:
+      - text: Застосовує до бази міграції, які ще не були застосовані
+        correct: true
+      - text: Створює нові файли міграцій за змінами у `models.py`
+      - text: Змінює таблиці за моделями, минаючи файли міграцій
+      - text: Видаляє всі таблиці й створює їх заново
+    explanation: >
+      `migrate` читає файли міграцій і виконує ті, яких немає в таблиці `django_migrations`.
+      Файли створює інша команда, `makemigrations`: саме її часто плутають з `migrate`.
+    sources:
+      - https://docs.djangoproject.com/en/6.1/topics/migrations/#the-commands
+
+  - id: django-002
+    level: junior
+    type: single
+    text: На якому рядку Django вперше звертається до бази даних?
+    code:
+      lang: python
+      source: |
+        books = Book.objects.filter(year__gt=2000)  # 1
+        books = books.order_by("title")             # 2
+        first = books[0]                            # 3
+        print(first.title)                          # 4
+    options:
+      - text: На рядку 3
+        correct: true
+      - text: На рядку 1
+      - text: На рядку 2
+      - text: На рядку 4
+    explanation: >
+      `filter()` і `order_by()` лише будують `QuerySet`, SQL не виконується. Запит іде, коли результат справді потрібен:
+      тут це індексація `books[0]`. Рядок 4 працює вже з готовим об'єктом.
+    sources:
+      - https://docs.djangoproject.com/en/6.1/topics/db/queries/#querysets-are-lazy
+
+  - id: django-003
+    level: junior
+    type: multiple
+    text: Які винятки може кинути `Book.objects.get(...)`?
+    options:
+      - text: "`Book.DoesNotExist`, якщо жодного рядка не знайдено"
+        correct: true
+      - text: "`Book.MultipleObjectsReturned`, якщо знайдено два рядки й більше"
+        correct: true
+      - text: "`ValueError`, якщо під умову підходить більше одного рядка"
+      - text: "`IntegrityError`, якщо жоден рядок не підходить під умову запиту"
+    explanation: >
+      `get()` очікує рівно один результат: нуль дає `DoesNotExist`, а два й більше дають `MultipleObjectsReturned`.
+      Це власні винятки моделі, а `IntegrityError` стосується порушення обмежень під час запису, не читання.
+    sources:
+      - https://docs.djangoproject.com/en/6.1/ref/models/querysets/#get
+
+  - id: django-004
+    level: junior
+    type: single
+    text: Що дає `ModelSerializer` у Django REST framework порівняно зі звичайним `Serializer`?
+    options:
+      - text: Будує поля за моделлю і має готові `create()` та `update()`
+        correct: true
+      - text: Сам реєструє маршрути для моделі в `urls.py`
+      - text: Додає до ендпоінта автентифікацію та перевірку прав
+      - text: Кешує серіалізовані дані між запитами
+    explanation: >
+      `ModelSerializer` бере список полів і валідатори з моделі, а збереження в БД реалізує через `create()` й `update()`.
+      Маршрутизацією займаються роутери та `ViewSet`, а автентифікація й права задаються окремо, у налаштуваннях або у view.
+    sources:
+      - https://www.django-rest-framework.org/api-guide/serializers/#modelserializer
+
+  - id: django-005
+    level: middle
+    type: single
+    text: Скільки запитів до БД виконає цей цикл для 100 книг, і що з цим робити?
+    code:
+      lang: python
+      source: |
+        for book in Book.objects.all():
+            print(book.author.name)  # author — ForeignKey
+    options:
+      - text: 101 запит; `select_related("author")` зведе їх до одного запиту з JOIN
+        correct: true
+      - text: 101 запит, а `select_related("author")` не працює з `ForeignKey`, тільки `prefetch_related`
+      - text: 2 запити, бо `all()` кешує авторів після першого звернення до `book.author`
+      - text: Один запит, бо `all()` завжди підтягує зв'язані моделі через JOIN
+    explanation: >
+      Один запит бере книги, і ще по одному запиту на кожного автора під час першого звернення до `book.author` (проблема N+1).
+      `select_related` додає JOIN у початковий запит і працює саме з `ForeignKey` та `OneToOneField`.
+    sources:
+      - https://docs.djangoproject.com/en/6.1/ref/models/querysets/#select-related
+
+  - id: django-006
+    level: middle
+    type: single
+    text: >
+      `MIDDLEWARE = ["A", "B"]`, кожен middleware друкує "in" перед викликом `get_response` і "out" після нього.
+      У якому порядку з'являться повідомлення для одного запиту?
+    code:
+      lang: python
+      source: |
+        # middleware A (B аналогічний, з іменем "B")
+        def A(get_response):
+            def middleware(request):
+                print("A in")
+                response = get_response(request)
+                print("A out")
+                return response
+            return middleware
+    options:
+      - text: A in, B in, view, B out, A out
+        correct: true
+      - text: A in, B in, view, A out, B out
+      - text: B in, A in, view, A out, B out
+      - text: A in, view, A out, B in, view, B out
+    explanation: >
+      Під час запиту middleware виконуються згори вниз за списком, а відповідь повертається знизу вгору, як у вкладених викликах.
+      Тому A обгортає B, і останнім завершується той, що стоїть першим.
+    sources:
+      - https://docs.djangoproject.com/en/6.1/topics/http/middleware/#activating-middleware
+
+  - id: django-007
+    level: middle
+    type: single
+    text: Чим другий варіант інкремента лічильника безпечніший за перший, коли запити надходять паралельно?
+    code:
+      lang: python
+      source: |
+        # 1
+        post = Post.objects.get(pk=1)
+        post.views += 1
+        post.save()
+
+        # 2
+        Post.objects.filter(pk=1).update(views=F("views") + 1)
+    options:
+      - text: Інкремент виконує сама БД одним `UPDATE`, без читання значення в Python
+        correct: true
+      - text: "`update()` блокує всю таблицю на час виконання запиту"
+      - text: "`F()` кешує значення лічильника в пам'яті процесу між запитами"
+      - text: "`save()` завжди виконується поза транзакцією, а `update()` усередині неї"
+    explanation: >
+      У першому варіанті два процеси можуть прочитати те саме значення й обидва записати `views + 1`, тож один інкремент губиться.
+      `F("views") + 1` перетворюється на `SET views = views + 1` в SQL, і значення ніколи не потрапляє в Python.
+    sources:
+      - https://docs.djangoproject.com/en/6.1/ref/models/expressions/#avoiding-race-conditions-using-f
+
+  - id: django-008
+    level: middle
+    type: multiple
+    text: Які з цих викликів не запускають метод `save()` моделі й сигнали `pre_save` та `post_save` для змінюваних об'єктів?
+    options:
+      - text: "`Book.objects.filter(...).update(...)`"
+        correct: true
+      - text: "`Book.objects.bulk_create([...])`"
+        correct: true
+      - text: "`Book.objects.create(...)`"
+      - text: "`Book.objects.get_or_create(...)`, коли об'єкта ще немає"
+    explanation: >
+      `update()` і `bulk_create()` виконують один SQL-запит і обходять `save()`, тому логіка в `save()` та обробники сигналів не спрацюють.
+      `create()` викликає `save()` напряму, а `get_or_create()` викликає `create()`.
+    sources:
+      - https://docs.djangoproject.com/en/6.1/ref/models/querysets/#bulk-create
+      - https://docs.djangoproject.com/en/6.1/ref/models/querysets/#update
+
+  - id: django-009
+    level: senior
+    type: single
+    text: >
+      PostgreSQL, `ATOMIC_REQUESTS = False`, ніякого `atomic` навколо виклику. Що станеться під час виконання цього коду?
+    code:
+      lang: python
+      source: |
+        def take_seat(pk):
+            seat = Seat.objects.select_for_update().get(pk=pk)
+            seat.taken = True
+            seat.save()
+    options:
+      - text: "`get()` кине `TransactionManagementError`: `select_for_update` вимагає транзакції"
+        correct: true
+      - text: Рядок буде заблоковано лише на час виконання `get()`, потім блокування знімається
+      - text: Код працюватиме, але `select_for_update` мовчки ігнорується в режимі автокоміту
+      - text: "`get()` поверне об'єкт, а блокування з'явиться лише під час `seat.save()`"
+    explanation: >
+      Блокування рядків у PostgreSQL живе до кінця транзакції, а в автокоміті транзакція закінчується одразу після запиту.
+      Тому Django забороняє таку комбінацію винятком; потрібен `with transaction.atomic():` навколо читання й запису.
+    sources:
+      - https://docs.djangoproject.com/en/6.1/ref/models/querysets/#select-for-update
+
+  - id: django-010
+    level: senior
+    type: single
+    text: >
+      PostgreSQL, поле `Author.name` унікальне. Що станеться з цим кодом?
+    code:
+      lang: python
+      source: |
+        with transaction.atomic():
+            Author.objects.create(name="A")
+            try:
+                Author.objects.create(name="A")   # порушення унікальності
+            except IntegrityError:
+                pass
+            Author.objects.create(name="B")
+    options:
+      - text: "Третій `create` впаде: транзакцію перервано, `try` треба обгорнути власним `atomic`"
+        correct: true
+      - text: Збережуться Author A і B, бо `IntegrityError` скасовує лише невдалий запит `INSERT`
+      - text: Блок завершиться без винятку, але в БД не збережеться жоден запис
+      - text: Усе виконається, а помилку Django кине вже під час виходу з блоку `atomic`
+    explanation: >
+      Django позначає транзакцію зламаною (а PostgreSQL її й так перервав) і до кінця блоку `atomic` відхиляє будь-які запити з `TransactionManagementError`.
+      Безпечний шаблон: `try` назовні блоку або вкладений `with transaction.atomic():` довкола ризикованого запиту, який став savepoint.
+    sources:
+      - https://docs.djangoproject.com/en/6.1/topics/db/transactions/#controlling-transactions-explicitly
+
+  - id: django-011
+    level: senior
+    type: single
+    text: >
+      Задача в черзі, поставлена всередині `transaction.atomic()` одразу після створення замовлення, інколи не знаходить цей рядок у БД.
+      Яка причина і яке виправлення?
+    options:
+      - text: Воркер встигає виконатися до коміту, тож задачу ставлять через `transaction.on_commit`
+        correct: true
+      - text: "`create()` усередині `atomic` відкладає `INSERT` до виходу з блоку, тож перед постановкою задачі потрібен `refresh_from_db()`"
+      - text: Воркер читає зі старої репліки, тому `.delay()` треба викликати з параметром `using="default"`
+      - text: "`atomic` кешує записи в пам'яті процесу, тому задачі передають весь об'єкт замовлення, а не його `id`"
+    explanation: >
+      Зміни видно іншим з'єднанням лише після коміту, а воркер може стартувати раніше. Колбек у `transaction.on_commit` виконується після успішного коміту
+      і не виконується взагалі, якщо транзакцію відкотили.
+    sources:
+      - https://docs.djangoproject.com/en/6.1/topics/db/transactions/#performing-actions-after-commit
+
+  - id: django-012
+    level: senior
+    type: multiple
+    text: Які твердження про `CursorPagination` у DRF правильні?
+    options:
+      - text: Дає лише посилання на наступну й попередню сторінки, без переходу за номером
+        correct: true
+      - text: Потребує стабільного порядку за незмінним полем, типово це `-created`
+        correct: true
+      - text: Вставки інших клієнтів під час перегляду не дають побачити той самий запис двічі
+        correct: true
+      - text: Повертає в кожній відповіді загальну кількість записів у полі `count`
+      - text: Для кожної сторінки рахує зсув `OFFSET` від початку таблиці й тому повільний на великих таблицях
+    explanation: >
+      Курсор запам'ятовує позицію за значенням поля впорядкування, тому не сповільнюється на великих таблицях і не дублює записи при вставках,
+      але порядок має бути стабільним. Кількості записів він не повертає, а номерні сторінки та `count` належать `PageNumberPagination`.
+    sources:
+      - https://www.django-rest-framework.org/api-guide/pagination/#cursorpagination

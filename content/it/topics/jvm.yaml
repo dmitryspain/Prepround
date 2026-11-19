@@ -1,0 +1,220 @@
+id: jvm
+title: JVM, пам'ять і GC
+description: heap/stack, class loading, збирачі сміття, JIT, тюнінг.
+questions:
+  - id: jvm-001
+    level: junior
+    type: single
+    text: Де в JVM зберігаються самі об'єкти (екземпляри класів) і де — локальні змінні примітивних типів із методів?
+    options:
+      - text: Об'єкти лежать у купі (heap), а примітивні локальні змінні — у кадрі стека потоку
+        correct: true
+      - text: Усе лежить у стеку потоку, а купа призначена лише для статичних полів
+      - text: Об'єкти лежать у стеку потоку, а примітивні локальні змінні — у купі
+      - text: Об'єкти лежать у Metaspace, а примітивні локальні змінні — у купі
+    explanation: >
+      Екземпляри класів і масиви виділяються в купі, спільній для потоків, а кожен метод отримує у стеку свого потоку кадр із локальними змінними.
+      У кадрі лежить і посилання на об'єкт, але не сам об'єкт. Metaspace зберігає метадані класів, а не екземпляри.
+    sources:
+      - https://docs.oracle.com/javase/specs/jvms/se25/html/jvms-2.html#jvms-2.5
+  - id: jvm-002
+    level: junior
+    type: single
+    text: Що станеться під час виконання цього коду (Java 25), якщо метод ніколи не доходить до умови виходу?
+    code:
+      lang: java
+      source: |
+        static int depth = 0;
+        static void rec() {
+            depth++;
+            rec();
+        }
+    options:
+      - text: Буде викинуто `StackOverflowError`, бо вичерпається стек потоку
+        correct: true
+      - text: "Буде викинуто `OutOfMemoryError: Java heap space`"
+      - text: Метод працюватиме нескінченно, а JIT перетворить рекурсію на цикл
+      - text: Буде викинуто `NullPointerException` після кількох тисяч викликів
+    explanation: >
+      Кожен виклик додає кадр у стек потоку, і коли його розмір вичерпується, JVM кидає `StackOverflowError`. Купа тут не росте, тому `OutOfMemoryError` неправильна відповідь.
+      Оптимізації хвостової рекурсії в HotSpot немає. Під час запуску помилка була зловлена, а `depth` перевищив тисячу.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/StackOverflowError.html
+  - id: jvm-003
+    level: junior
+    type: multiple
+    text: Які області пам'яті JVM спільні для всіх потоків застосунку?
+    options:
+      - text: Купа (heap)
+        correct: true
+      - text: Metaspace з метаданими класів
+        correct: true
+      - text: Стек Java-потоку
+      - text: Регістр pc (лічильник команд)
+    explanation: >
+      Купа й область методів (у HotSpot — Metaspace) створюються разом зі стартом JVM і доступні всім потокам.
+      Стек і лічильник команд належать окремому потоку: кожен потік має власні.
+    sources:
+      - https://docs.oracle.com/javase/specs/jvms/se25/html/jvms-2.html#jvms-2.5
+  - id: jvm-004
+    level: junior
+    type: single
+    text: Коли об'єкт може бути зібраний збирачем сміття в Java?
+    options:
+      - text: Коли він недосяжний від жодного кореня збирання (GC root) через ланцюжок посилань
+        correct: true
+      - text: "Коли лічильник посилань на нього стає нульовим, як у системах із підрахунком посилань"
+      - text: Одразу після виходу з блоку, у якому оголошено змінну з посиланням
+      - text: Лише після явного виклику `System.gc()`
+    explanation: >
+      JVM визначає живі об'єкти досяжністю від коренів (стеки потоків, статичні поля тощо), тому група об'єктів, що посилаються лише одне на одного, теж збирається.
+      Підрахунку посилань у HotSpot немає, а `System.gc()` лише просить JVM запустити збирання.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/gctuning/garbage-collector-implementation.html
+  - id: jvm-005
+    level: middle
+    type: single
+    text: Що станеться під час запуску `java -Xmx32m Oom.java` (Java 25)?
+    code:
+      lang: java
+      source: |
+        List<byte[]> l = new ArrayList<>();
+        try {
+            while (true) l.add(new byte[1024 * 1024]);
+        } catch (OutOfMemoryError e) {
+            l = null;
+            System.out.println(e);
+        }
+    options:
+      - text: "Виняток буде зловлено, і виведеться `java.lang.OutOfMemoryError: Java heap space`"
+        correct: true
+      - text: Програма завершиться без винятку, бо операційна система вб'є процес
+      - text: "Буде зловлено `OutOfMemoryError: Metaspace`"
+      - text: Програма не зловить нічого, бо `OutOfMemoryError` не можна перехопити
+    explanation: >
+      Масиви залишаються досяжними зі списку, тож збирач їх не звільняє, і купа з обмеженням `-Xmx` вичерпується. `OutOfMemoryError` є звичайним `Throwable`, і його можна зловити, хоч відновлюватися після цього зазвичай не варто.
+      Metaspace зберігає метадані класів, а не масиви. Вивід підтверджено запуском.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/troubleshoot/troubleshooting-memory-leaks.html
+  - id: jvm-006
+    level: middle
+    type: single
+    text: Що виведе цей код (Java 25), якщо клас скомпільовано `javac` і запущено як `java Main`?
+    code:
+      lang: java
+      source: |
+        System.out.println(String.class.getClassLoader());
+        System.out.println(Main.class.getClassLoader().getClass().getSimpleName());
+    options:
+      - text: "`null` і `AppClassLoader`"
+        correct: true
+      - text: "`null` і `null`"
+      - text: "`AppClassLoader` і `AppClassLoader`"
+      - text: "`BootstrapClassLoader` і `AppClassLoader`"
+    explanation: >
+      Класи модуля `java.base` завантажує завантажувач початкового рівня, який не представлений об'єктом `ClassLoader`, тож `getClassLoader()` повертає `null`. Клас застосунку з класового шляху завантажує системний завантажувач, у реалізації це `AppClassLoader`.
+      Результат підтверджено запуском.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Class.html#getClassLoader()
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/ClassLoader.html
+  - id: jvm-007
+    level: middle
+    type: multiple
+    text: Які твердження про JIT-компіляцію в HotSpot правильні?
+    options:
+      - text: "Код спершу інтерпретується, а гарячі методи компілюються під час роботи"
+        correct: true
+      - text: "У tiered-компіляції проміжний код збирає профіль для глибших оптимізацій"
+        correct: true
+      - text: "Усі методи застосунку компілюються в машинний код до виклику `main`"
+      - text: Прапорець `-XX:-TieredCompilation` вимикає JIT, і код виконується лише інтерпретатором
+    explanation: >
+      HotSpot інтерпретує код і компілює «гарячі» методи, а під ступінчастою компіляцією ще й збирає профіль у скомпільованому коді, тому на старті застосунок повільніший (прогрів).
+      Прапорець `-XX:-TieredCompilation` вимикає лише ступінчастість, а JIT лишається.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/vm/java-hotspot-virtual-machine-performance-enhancements.html
+  - id: jvm-008
+    level: middle
+    type: single
+    text: "Після кількох повторних розгортань веб-застосунку на одному сервері додаток падає з `OutOfMemoryError: Metaspace`. Яка причина найімовірніша?"
+    options:
+      - text: "Старі завантажувачі класів лишаються досяжними, тож їхні класи не вивантажуються"
+        correct: true
+      - text: "Купа замала, тому треба збільшити `-Xmx` і перезапустити сервер із більшою пам'яттю"
+      - text: "Стек потоків замалий, тому треба збільшити `-Xss` для всіх потоків застосунку"
+      - text: "Збирач сміття не вміє збирати об'єкти, створені до чергового розгортання застосунку"
+    explanation: >
+      Клас можна вивантажити, лише коли недосяжний його завантажувач, а метадані класів лежать у Metaspace. Якщо щось утримує старий завантажувач, кожне розгортання додає ще одну копію класів.
+      `-Xmx` і `-Xss` стосуються купи та стеків, тож Metaspace не лікують.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/troubleshoot/troubleshooting-memory-leaks.html
+  - id: jvm-009
+    level: senior
+    type: single
+    text: Контейнер запущено з обмеженням пам'яті 2 GiB, JVM Java 25 стартує без `-Xmx` і `-XX:MaxRAMPercentage`. Яким буде максимальний розмір купи і чому процес усе одно може бути вбитий за перевищення ліміту?
+    code:
+      lang: bash
+      source: |
+        docker run --rm --memory=2g eclipse-temurin:25 \
+          java -XX:+PrintFlagsFinal -version | grep MaxHeapSize
+    options:
+      - text: "Близько 512 MiB, тобто чверть ліміту; Metaspace, стеки потоків і кеш коду рахуються окремо від купи"
+        correct: true
+      - text: "Близько 2 GiB, оскільки JVM визначає ліміт контейнера й віддає під купу всю пам'ять до ліміту"
+      - text: Близько 1 GiB, тобто половина ліміту, а процес не може вийти за ліміт, бо JVM його контролює
+      - text: Близько 512 MiB, і процес не може вийти за ліміт, бо все, що не є купою, обмежується разом із нею
+    explanation: >
+      HotSpot враховує ліміт контейнера і за замовчуванням бере 25 % від нього під максимальну купу (`MaxRAMPercentage`). Але RSS процесу складається не лише з купи: Metaspace, стеки потоків, кеш коду й direct-буфери не входять до `-Xmx`.
+      У запуску було `MaxHeapSize = 536870912`.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/specs/man/java.html#extra-options-for-java
+  - id: jvm-010
+    level: senior
+    type: multiple
+    text: Які твердження про вибір збирача сміття в Java 25 правильні?
+    options:
+      - text: "ZGC дає низькі паузи, незалежні від розміру купи, ціною пропускної здатності"
+        correct: true
+      - text: "Parallel GC націлений на пропускну здатність, збирає кількома потоками із зупинкою"
+        correct: true
+      - text: "Негенераційний режим ZGC у Java 25 досі вмикається окремим прапорцем `-XX:-ZGenerational`"
+      - text: "G1 виконує всі фази збирання одночасно із застосунком, без жодних пауз для його потоків"
+    explanation: >
+      ZGC обирають, коли важлива затримка, а Parallel — коли важлива сумарна пропускна здатність і паузи не критичні. Режим ZGC без поколінь видалено в JDK 24 (JEP 490), лишилася лише поколіннева реалізація.
+      G1 теж зупиняє потоки на частини фаз, але намагається вкластися в цільову паузу.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/gctuning/available-collectors.html
+      - https://openjdk.org/jeps/490
+  - id: jvm-011
+    level: senior
+    type: multiple
+    text: Використання пам'яті купи в продакшн-сервісі невпинно росте, і ви підозрюєте витік. Які дії допоможуть знайти його причину?
+    options:
+      - text: "Зняти дамп купи (`jcmd <pid> GC.heap_dump /tmp/heap.hprof`) й дослідити утримувачів в аналізаторі"
+        correct: true
+      - text: Увімкнути `-XX:+HeapDumpOnOutOfMemoryError`, щоб отримати дамп у момент падіння
+        correct: true
+      - text: "Викликати `System.gc()` у циклі: якщо пам'ять після цього не зменшується, витік доведено"
+      - text: "Просто збільшити `-Xmx` удвічі, бо витік зникне, коли в купі буде більше вільного місця"
+    explanation: >
+      Витік — це живі, але непотрібні об'єкти, тому причину видно з дампа: що утримує пам'ять і через який корінь. Прапорець `-XX:+HeapDumpOnOutOfMemoryError` дає дамп у момент падіння.
+      `System.gc()` лише запит, а непорожня купа після нього не відрізняє витік від законних даних. Більша купа лише відкладає падіння.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/specs/man/java.html#advanced-runtime-options-for-java
+      - https://docs.oracle.com/en/java/javase/25/troubleshoot/troubleshooting-memory-leaks.html
+  - id: jvm-012
+    level: senior
+    type: single
+    text: Клас тримає нативний ресурс (дескриптор файла), і розробник звик звільняти його в `finalize()`. Що робити в сучасній Java (Java 25)?
+    options:
+      - text: "Реалізувати `AutoCloseable` і закривати через `try`-with-resources, `Cleaner` лише як запасний варіант"
+        correct: true
+      - text: "Лишити `finalize()` і викликати `System.runFinalization()` після кожного використання ресурсу"
+      - text: "Спиратися на `WeakReference`: ресурс закриється, коли об'єкт збере збирач"
+      - text: "Додати shutdown hook для кожного екземпляра, щоб закрити ресурс під час завершення JVM і нічого не робити раніше"
+    explanation: >
+      Метод `finalize()` оголошено застарілим із планом видалення (JEP 421), бо момент його виклику непередбачуваний і навіть не гарантований. Детерміноване закриття дає `try`-with-resources, а `Cleaner` лише підстраховує, якщо про закриття забули.
+      Shutdown hook на кожен екземпляр накопичував би витоки до кінця роботи процесу.
+    sources:
+      - https://openjdk.org/jeps/421
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/ref/Cleaner.html

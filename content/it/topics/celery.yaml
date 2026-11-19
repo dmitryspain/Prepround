@@ -1,0 +1,226 @@
+id: celery
+title: Celery і фонові задачі
+description: брокери, воркери, ретраї, ідемпотентність, періодичні задачі.
+questions:
+  - id: celery-001
+    level: junior
+    type: single
+    text: Яку роль у Celery відіграє брокер повідомлень?
+    options:
+      - text: Приймає від застосунку повідомлення про задачі й віддає їх воркерам
+        correct: true
+      - text: Сам виконує код задач, а воркери лише стежать за його роботою
+      - text: Зберігає виключно результати задач, а самі задачі йдуть напряму воркерам
+      - text: Запускає задачі за розкладом, тому окремий планувальник не потрібен
+    explanation: >
+      Застосунок відправляє повідомлення в брокер (наприклад, RabbitMQ чи Redis), а воркери беруть їх звідти й виконують код задач.
+      Результати кладуть окремо в result backend, а розклад веде `celery beat`.
+    sources:
+      - https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/index.html
+  - id: celery-002
+    level: junior
+    type: single
+    text: Що повертає виклик `add.delay(2, 3)`?
+    code:
+      lang: python
+      source: |
+        @app.task
+        def add(x, y):
+            return x + y
+
+        result = add.delay(2, 3)
+        print(type(result).__name__)
+    options:
+      - text: "`AsyncResult`: посилання на задачу, виклик не чекає її завершення"
+        correct: true
+      - text: "`int` зі значенням `5`, бо `delay` дочекається виконання"
+      - text: "`NoneType`, бо `delay` лише кладе задачу в чергу"
+      - text: "`Task`, тобто сама задача, яку можна викликати ще раз"
+    explanation: >
+      `delay` лише надсилає повідомлення в брокер і одразу повертає `AsyncResult`, через який потім можна дізнатися стан чи отримати значення.
+      Значення `5` з'явиться, коли воркер виконає задачу, а `.get()` працює лише за налаштованого result backend.
+    sources:
+      - https://docs.celeryq.dev/en/stable/getting-started/first-steps-with-celery.html
+  - id: celery-003
+    level: junior
+    type: single
+    text: Яка команда запускає воркер для застосунку Celery з модуля `proj`?
+    options:
+      - text: "`celery -A proj worker --loglevel=INFO`"
+        correct: true
+      - text: "`celery -A proj start --loglevel=INFO`"
+      - text: "`celery worker proj --run --loglevel=INFO`"
+      - text: "`python -m celery run proj --loglevel=INFO`"
+    explanation: >
+      Воркер стартує підкомандою `worker` із прапорцем `-A` (застосунок), як у посібнику «First steps». Інших підкоманд на кшталт `start` чи `run` для цього немає.
+    sources:
+      - https://docs.celeryq.dev/en/stable/getting-started/first-steps-with-celery.html
+  - id: celery-004
+    level: junior
+    type: multiple
+    text: Які брокери мають у документації Celery 5.7 статус Stable?
+    options:
+      - text: RabbitMQ (AMQP)
+        correct: true
+      - text: Redis (у пам'яті)
+        correct: true
+      - text: Amazon SQS (AWS)
+        correct: true
+      - text: Apache Kafka
+      - text: Google Pub/Sub (GCP)
+    explanation: >
+      У таблиці брокерів стабільними названо RabbitMQ, Redis і Amazon SQS. Kafka й Google Pub/Sub мають статус Experimental: вони можуть працювати, але не мають окремих супровідників.
+    sources:
+      - https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/index.html#broker-overview
+  - id: celery-005
+    level: middle
+    type: single
+    text: Що станеться із задачею за налаштуваннями за замовчуванням, якщо процес воркера аварійно завершився посеред її виконання?
+    options:
+      - text: Повідомлення підтверджене до старту, тож задачу не доставлять знову, і вона втратиться
+        correct: true
+      - text: Брокер доставить повідомлення іншому воркеру, бо воркер не підтвердив результат роботи
+      - text: Задача лишиться в черзі й виконається з початку після відновлення цього самого воркера
+      - text: Celery сам повторить задачу за налаштованим розкладом, і вона отримає стан `RETRY`
+    explanation: >
+      За замовчуванням воркер підтверджує повідомлення прямо перед виконанням, щоб уже розпочату задачу ніколи не запускали вдруге.
+      Повторну доставку після аварії дає `acks_late=True`, але тоді задача має бути ідемпотентною.
+    sources:
+      - https://docs.celeryq.dev/en/stable/userguide/tasks.html#Task.acks_late
+  - id: celery-006
+    level: middle
+    type: multiple
+    text: Що правильно про цю задачу (Celery 5.7, значення за замовчуванням не змінювали)?
+    code:
+      lang: python
+      source: |
+        @app.task(bind=True, default_retry_delay=60)
+        def fetch(self, url):
+            try:
+                return http_get(url)
+            except ConnectionError as exc:
+                raise self.retry(exc=exc)
+    options:
+      - text: "`bind=True` потрібен, щоб задача отримала `self` і могла викликати `self.retry`"
+        correct: true
+      - text: Повтор запланується приблизно через 60 секунд, а не відразу
+        correct: true
+      - text: Після трьох невдалих повторів буде піднято початковий виняток `ConnectionError`
+        correct: true
+      - text: Повтор виконується в тому самому виклику, без нового повідомлення в брокері
+      - text: Якщо `max_retries` не задано, задача повторюється нескінченно
+    explanation: >
+      `retry` надсилає нове повідомлення з затримкою `default_retry_delay`, а `max_retries` типово дорівнює 3. Коли ліміт вичерпано й передано `exc`, піднімається саме він.
+      Нескінченні повтори вмикає лише `max_retries=None`.
+    sources:
+      - https://docs.celeryq.dev/en/stable/userguide/tasks.html#retrying
+      - https://docs.celeryq.dev/en/stable/userguide/tasks.html#Task.max_retries
+  - id: celery-007
+    level: middle
+    type: single
+    text: Задачі відправляють без явного маршруту, але жодна не виконується. Чому?
+    code:
+      lang: bash
+      source: |
+        celery -A proj worker --loglevel=INFO -Q emails
+    options:
+      - text: Без маршруту задачі йдуть у чергу за замовчуванням `celery`, а цей воркер слухає лише `emails`
+        correct: true
+      - text: "`-Q` змушує воркер брати лише задачі, імена яких починаються з `emails`"
+      - text: Задачі без маршруту Celery розподіляє між усіма воркерами, навіть якщо в них є `-Q`
+      - text: "`-Q` задає лише порядок пріоритету черг, а обмеженням не є"
+    explanation: >
+      Опція `-Q` перелічує черги, з яких воркер споживає. Якщо маршрутів немає, повідомлення потрапляє у типову чергу `celery`, і воркер без неї його не побачить.
+      Виправлення: додати маршрут (`task_routes`, `queue=`) або включити `celery` у `-Q`.
+    sources:
+      - https://docs.celeryq.dev/en/stable/userguide/workers.html#queues
+      - https://docs.celeryq.dev/en/stable/userguide/routing.html
+  - id: celery-008
+    level: middle
+    type: multiple
+    text: Що правильно про `celery beat`?
+    options:
+      - text: Він лише надсилає задачі в брокер за розкладом, а виконують їх воркери
+        correct: true
+      - text: Для одного розкладу має працювати лише один екземпляр beat, інакше задачі дублюватимуться
+        correct: true
+      - text: За замовчуванням записи розкладу беруться з налаштування `beat_schedule`
+        correct: true
+      - text: Beat виконує задачі у власному процесі, тому воркер для них не потрібен
+      - text: Для надійності розклад варто вести кількома екземплярами beat на різних вузлах
+    explanation: >
+      Beat є планувальником: «будить» задачу в потрібний момент, а далі її виконує будь-який вільний воркер. Два екземпляри з одним розкладом надішлють кожну задачу двічі.
+    sources:
+      - https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html#introduction
+  - id: celery-009
+    level: senior
+    type: single
+    text: Платіжна задача має `acks_late=True`. Воркер зник після списання коштів, але до підтвердження повідомлення. Що буде далі й що з цим робити?
+    options:
+      - text: Повідомлення прийде знову, списання може повторитися, тож потрібна ідемпотентність, наприклад ключ операції
+        correct: true
+      - text: Повідомлення пропаде, бо підтвердження не надійшло, тож досить додати ще один ретрай задачі
+      - text: Celery гарантує виконання рівно один раз, тому нічого додатково робити не потрібно
+      - text: Брокер збереже стан задачі й продовжить її з місця аварії на іншому вільному воркері
+    explanation: >
+      Із пізнім підтвердженням гарантія така: задача виконається щонайменше раз, а не рівно раз. Після збою воркера вона повернеться в чергу й може виконатися повторно.
+      Тому побічні ефекти захищають ключем ідемпотентності чи перевіркою стану перед дією.
+      Повторна доставка гарантована, коли зник увесь воркер чи вузол; якщо помирає лише дочірній процес пулу, повідомлення підтверджується і без `task_reject_on_worker_lost` задачу знову не доставлять.
+    sources:
+      - https://docs.celeryq.dev/en/stable/userguide/tasks.html#Task.acks_late
+  - id: celery-010
+    level: senior
+    type: single
+    text: Із Redis-брокером задачі з `countdown` у кілька годин виконуються по кілька разів. Яка причина?
+    options:
+      - text: Відкладена задача непідтверджена довше за `visibility_timeout` (типово 1 година), тож Redis вертає її в чергу
+        correct: true
+      - text: Redis не підтримує відкладені задачі, тому `countdown` ігнорується, а задача запускається одразу ж після відправлення
+      - text: Через `countdown` воркер вимикає підтвердження, і кожне перезавантаження воркера знову повторює задачу
+      - text: Redis видаляє повідомлення після години без читання й створює копію з тим самим id
+    explanation: >
+      Для транспорту Redis непідтверджене повідомлення повертається в чергу після `visibility_timeout`, а воркер тримає ETA-задачу непідтвердженою до запуску.
+      Тому задача з ETA довшим за таймаут виконується знову й знову. Лікують збільшенням таймауту, а для віддаленого майбутнього беруть періодичні задачі.
+    sources:
+      - https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html#visibility-timeout
+  - id: celery-011
+    level: senior
+    type: single
+    text: Яку проблему несе такий дизайн задач?
+    code:
+      lang: python
+      source: |
+        @app.task
+        def update_page(url):
+            page = fetch_page.delay(url).get()
+            return parse_page.delay(page).get()
+    options:
+      - text: Задача займає слот пулу, чекаючи інші, і це може дати deadlock; краще `chain` чи колбеки
+        correct: true
+      - text: Метод `.get()` усередині задачі завжди повертає `None`, бо воркер не бачить результатів інших задач
+      - text: Підзадачі виконаються лише тоді, коли `update_page` викликана синхронно, а не через `delay` чи `apply_async`
+      - text: "`delay` усередині задачі заборонений, тому Celery мовчки пропустить обидва виклики без будь-якої помилки"
+    explanation: >
+      Задача, що блокується на результаті іншої, неефективна: якщо всі процеси пулу так чекають, для підзадач не лишається вільного слота, і виникає deadlock.
+      Документація радить будувати асинхронний потік через `chain` чи колбеки.
+      У Celery 5.7 `.get()` усередині задачі за замовчуванням одразу піднімає `RuntimeError` (`disable_sync_subtasks=True`), а deadlock можливий лише з `disable_sync_subtasks=False`.
+    sources:
+      - https://docs.celeryq.dev/en/stable/userguide/tasks.html#avoid-launching-synchronous-subtasks
+  - id: celery-012
+    level: senior
+    type: multiple
+    text: Що правильно про prefetch у воркері Celery 5.7?
+    options:
+      - text: Типово резервується `worker_prefetch_multiplier` × кількість слотів конкурентності
+        correct: true
+      - text: Для багатьох довгих задач документація радить множник 1
+        correct: true
+      - text: З `task_acks_late` і множником 1 резерв дорівнює кількості слотів виконання
+        correct: true
+      - text: Prefetch задає кількість задач, які воркер виконує одночасно
+      - text: Prefetch кешує результати попередніх задач, щоб `get()` повертав їх швидше
+    explanation: >
+      Prefetch обмежує, скільки повідомлень воркер резервує наперед, а одночасність виконання задає окремо `concurrency`. Великий резерв за довгих задач тримає повідомлення
+      у «чужому» воркері, поки інші простоюють. Множник 1 разом із пізнім підтвердженням зводить резерв до кількості слотів.
+    sources:
+      - https://docs.celeryq.dev/en/stable/userguide/optimizing.html#prefetch-limits

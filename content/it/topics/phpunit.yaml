@@ -1,0 +1,265 @@
+id: phpunit
+title: Тестування в PHP
+description: PHPUnit, моки, data providers.
+questions:
+  - id: phpunit-001
+    level: junior
+    type: multiple
+    text: Які методи класу, що успадковує `TestCase`, PHPUnit 13.4 запустить як тести?
+    options:
+      - text: Публічний метод `testTotal()` без жодних атрибутів над ним
+        correct: true
+      - text: Публічний метод `totalIsZero()` з атрибутом `#[Test]` над ним
+        correct: true
+      - text: Приватний метод `testTotal()`, бо він має префікс `test`
+      - text: Публічний метод `totalIsZero()` із коментарем `/** @test */`
+    explanation: >
+      Тестом є публічний метод з іменем `test*` або метод, позначений атрибутом `#[Test]`. Приватний метод не підходить, хоч і має префікс, а анотація `@test` у docblock у новітніх версіях PHPUnit більше не працює.
+    sources:
+      - https://docs.phpunit.de/en/13.4/writing-tests-for-phpunit.html
+  - id: phpunit-002
+    level: junior
+    type: single
+    text: Що покаже PHPUnit 13.4 для цих двох тестів?
+    code:
+      lang: php
+      source: |
+        public function testEquals(): void
+        {
+            $this->assertEquals('1', 1);
+        }
+
+        public function testSame(): void
+        {
+            $this->assertSame('1', 1);
+        }
+    options:
+      - text: "`testEquals` пройде, `testSame` впаде"
+        correct: true
+      - text: Обидва тести пройдуть, бо `'1'` і `1` рівні за значенням
+      - text: "`testEquals` впаде, `testSame` пройде, бо він суворіший"
+      - text: Обидва тести впадуть, бо типи `string` і `int` різні
+    explanation: >
+      `assertEquals` порівнює вільно, як оператор `==`, тож `'1'` дорівнює `1`. `assertSame` вимагає ідентичності, як `===`, а значення різних типів ідентичними не бувають.
+    sources:
+      - https://docs.phpunit.de/en/13.4/assertions.html
+  - id: phpunit-003
+    level: junior
+    type: single
+    text: Що покаже PHPUnit 13.4 для цього класу?
+    code:
+      lang: php
+      source: |
+        final class CounterTest extends TestCase
+        {
+            private int $count = 0;
+
+            protected function setUp(): void
+            {
+                $this->count++;
+            }
+
+            public function testFirst(): void
+            {
+                $this->assertSame(1, $this->count);
+            }
+
+            public function testSecond(): void
+            {
+                $this->assertSame(1, $this->count);
+            }
+        }
+    options:
+      - text: Обидва тести пройдуть
+        correct: true
+      - text: "`testSecond` впаде, бо `$count` уже дорівнює 2"
+      - text: Обидва впадуть, бо `setUp()` треба викликати з тесту вручну
+      - text: "`testFirst` пройде, а `testSecond` буде пропущено через спільний стан"
+    explanation: >
+      PHPUnit створює новий екземпляр класу для кожного тестового методу й перед ним викликає `setUp()`. Тому `$count` щоразу починається з нуля й у тесті дорівнює 1.
+    sources:
+      - https://docs.phpunit.de/en/13.4/fixtures.html
+  - id: phpunit-004
+    level: junior
+    type: single
+    text: Що напише PHPUnit 13.4 у підсумку для цього тесту?
+    code:
+      lang: php
+      source: |
+        public static function numbers(): iterable
+        {
+            yield 'one' => [1];
+            yield 'two' => [2];
+            yield 'three' => [3];
+        }
+
+        #[DataProvider('numbers')]
+        public function testPositive(int $n): void
+        {
+            $this->assertGreaterThan(0, $n);
+        }
+    options:
+      - text: "`OK (3 tests, 3 assertions)`"
+        correct: true
+      - text: "`OK (1 test, 3 assertions)`"
+      - text: "`OK (1 test, 1 assertion)`"
+      - text: "`OK (3 tests, 1 assertion)`"
+    explanation: >
+      Кожен набір даних із провайдера запускається як окремий тест: тут їх три, і в кожному по одній перевірці. Лічильник тестів не збирає їх в один.
+    sources:
+      - https://docs.phpunit.de/en/13.4/attributes.html
+  - id: phpunit-005
+    level: middle
+    type: single
+    text: 'Що станеться з цим тестом у PHPUnit 13.4 (інтерфейс `Mailer` має метод `send(string $to): bool`)?'
+    code:
+      lang: php
+      source: |
+        public function testSendsOnce(): void
+        {
+            $mailer = $this->createMock(Mailer::class);
+            $mailer->expects($this->once())->method('send')->willReturn(true);
+
+            $mailer->send('a@example.com');
+            $mailer->send('b@example.com');
+        }
+    options:
+      - text: Тест впаде, бо `send` викликали більше одного разу
+        correct: true
+      - text: Тест пройде, бо `once()` вимагає щонайменше одного виклику
+      - text: Тест пройде, але буде позначений як risky через відсутність `assert`
+      - text: Тест завершиться помилкою `TypeError`, бо другий виклик повернув `null`
+    explanation: >
+      `once()` означає рівно один виклик, і очікування мока порушується на другому. Очікування мока самі є перевіркою, тому окремий `assert` не потрібен.
+    sources:
+      - https://docs.phpunit.de/en/13.4/test-doubles.html
+  - id: phpunit-006
+    level: middle
+    type: single
+    text: Що станеться з цим тестом у PHPUnit 13.4?
+    code:
+      lang: php
+      source: |
+        public function testThrows(): void
+        {
+            $this->parse('');
+            $this->expectException(InvalidArgumentException::class);
+        }
+
+        private function parse(string $s): void
+        {
+            throw new InvalidArgumentException('empty');
+        }
+    options:
+      - text: Тест завершиться помилкою, бо виняток викинули до виклику `expectException`
+        correct: true
+      - text: Тест пройде, бо виняток відповідає очікуваному типу
+      - text: Тест пройде, бо PHPUnit збирає всі `expectException` перед запуском тіла
+      - text: Тест буде пропущено, бо очікування записано після виклику
+    explanation: >
+      `expectException` лише запам'ятовує очікування для тесту, який ще виконується. Виняток вилетів раніше, ніж воно з'явилося, тож PHPUnit бачить непередбачений виняток. Очікування ставлять перед кодом, що кидає.
+    sources:
+      - https://docs.phpunit.de/en/13.4/writing-tests-for-phpunit.html
+  - id: phpunit-007
+    level: middle
+    type: multiple
+    text: Які твердження про data provider у PHPUnit 13.4 правильні?
+    options:
+      - text: Рядкові ключі наборів даних потрапляють у назву запуску, наприклад `testSum@zero`
+        correct: true
+      - text: Метод провайдера має бути публічним і статичним, інакше PHPUnit повідомить про помилку
+        correct: true
+      - text: Провайдер може повертати генератор або інший ітерований обʼєкт замість масиву
+        correct: true
+      - text: Провайдер викликається вже після `setUp()` того екземпляра, що запускає тест
+    explanation: >
+      Провайдер статичний, а дані збирають до створення екземплярів тестів, тому `setUp()` ще не виконувався. Іменовані набори допомагають знайти, який саме набір впав.
+    sources:
+      - https://docs.phpunit.de/en/13.4/writing-tests-for-phpunit.html#requirements-for-a-data-provider-method
+      - https://docs.phpunit.de/en/13.4/attributes.html
+  - id: phpunit-008
+    level: middle
+    type: single
+    text: >
+      У PHPUnit 13.4 `testA` падає на `assertTrue(false)`, а `testB` має `#[Depends('testA')]`.
+      Який статус отримає `testB`?
+    options:
+      - text: Його пропустять без запуску, бо залежність не пройшла
+        correct: true
+      - text: Він запуститься й пройде, якщо в ньому самому все гаразд
+      - text: Він упаде з тією самою помилкою, що й `testA`
+      - text: Він запуститься, але буде позначений як risky
+    explanation: >
+      Залежний тест запускається лише тоді, коли тест, від якого він залежить, пройшов. Інакше PHPUnit позначає його пропущеним, і причина видна саме в `testA`.
+    sources:
+      - https://docs.phpunit.de/en/13.4/writing-tests-for-phpunit.html
+  - id: phpunit-009
+    level: senior
+    type: single
+    text: >
+      Інтерфейс `Limiter` має метод `rate(string $key): int`. У PHPUnit 13.4 stub налаштований як
+      `$stub->method('rate')->willReturnMap([['a', 5], ['b', 7]])`.
+      Що станеться при `$stub->rate('zzz')`?
+    options:
+      - text: Для невідомого ключа повернеться `null`, а оскільки тип результату `int`, виникне `TypeError`
+        correct: true
+      - text: Повернеться `0`, бо PHPUnit підставить значення за замовчуванням для типу `int`
+      - text: Повернеться `7`, бо мапа віддає значення свого останнього рядка
+      - text: Тест впаде з повідомленням, що аргументи не збігаються з жодним очікуванням
+    explanation: >
+      Мапа порівнює аргументи виклику з рядками й повертає останній елемент збіжного рядка. Якщо збігу немає, повертається `null`, а повернути його з методу з типом `int` не можна. Значення за замовчуванням діє лише тоді, коли для методу взагалі нічого не налаштовано.
+    sources:
+      - https://docs.phpunit.de/en/13.4/test-doubles.html
+  - id: phpunit-010
+    level: senior
+    type: single
+    text: >
+      Тест, що додає елемент у `public static array $items` і перевіряє `assertCount(1, …)`, проходить із
+      `--filter`, але впадає в повному прогоні разом з іншим тестом, який теж додає елемент. Яка причина й лікування?
+    options:
+      - text: Статична властивість живе весь прогін; її скидають у `setUp()` чи позбуваються статичного стану
+        correct: true
+      - text: PHPUnit тримає один екземпляр класу на всі тести, тож лікує це лише `#[Depends]` між ними
+      - text: PHPUnit сам відновлює статичні властивості після кожного тесту, а падіння спричиняє `--filter`
+      - text: Тести виконуються паралельно у кількох процесах, тому лічильник розходиться між ними
+    explanation: >
+      Екземпляр `TestCase` новий для кожного тесту, а статичні властивості належать процесові й переживають усі тести. Тест, що проходить лише окремо, виказує приховану залежність від порядку. Автоматично PHPUnit статичний стан не відновлює, лише на вимогу: атрибутом `BackupStaticProperties`, опцією `--static-backup` або `backupStaticProperties="true"` в XML.
+    sources:
+      - https://docs.phpunit.de/en/13.4/fixtures.html
+      - https://docs.phpunit.de/en/13.4/attributes.html
+  - id: phpunit-011
+    level: senior
+    type: multiple
+    text: >
+      Тест у PHPUnit 13.4 не містить жодної перевірки й не має очікувань мока. Команда запускає його без `phpunit.xml`
+      (`failOnRisky` не задано) і хоче, щоб CI ловив такі тести. Які твердження правильні?
+    options:
+      - text: PHPUnit позначить тест як risky, а код виходу прогону лишиться нульовим
+        correct: true
+      - text: З опцією `--fail-on-risky` той самий прогін завершиться з ненульовим кодом
+        correct: true
+      - text: Risky-статус навмисно порожнього тесту прибирає `#[DoesNotPerformAssertions]`
+        correct: true
+      - text: Risky-тест PHPUnit не виконує взагалі, а одразу показує його в підсумку як пропущений
+      - text: Без `phpunit.xml` будь-який risky-тест завершує весь прогін із кодом виходу 1
+    explanation: >
+      Risky означає, що тест виконався, але з підозрою на марність. Поки `failOnRisky` вимкнено, що є типовим, це лише попередження й код виходу нульовий. Щоб CI зупинявся, `failOnRisky` вмикають, а для навмисних випадків позначають тест атрибутом.
+    sources:
+      - https://docs.phpunit.de/en/13.4/risky-tests.html#useless-tests
+      - https://docs.phpunit.de/en/13.4/configuration.html
+  - id: phpunit-012
+    level: senior
+    type: single
+    text: >
+      Під час переходу на PHPUnit 13.4 потрібно перевірити, що `Mailer::send` викликали рівно двічі: спершу з `'a'`,
+      потім з `'b'`. Який підхід працює?
+    options:
+      - text: "`expects($this->exactly(2))->method('send')->withParameterSetsInOrder(['a'], ['b'])`"
+        correct: true
+      - text: "`expects($this->exactly(2))->method('send')->withConsecutive(['a'], ['b'])`"
+      - text: "`expects($this->exactly(2))->method('send')->willReturnOnConsecutiveCalls('a', 'b')`"
+      - text: "`expects($this->exactly(2))->method('send')->with($this->anything())`"
+    explanation: >
+      Методу `withConsecutive` у PHPUnit 13.4 немає, замість нього є `withParameterSetsInOrder()`, що звіряє аргументи викликів за порядком. `willReturnOnConsecutiveCalls` лише задає значення, що повертаються, а `anything()` не перевіряє аргументів. Колбек `willReturnCallback` теж міг би записати аргументи, але це обхідний шлях.
+    sources:
+      - https://docs.phpunit.de/en/13.4/test-doubles.html#expecting-calls-to-the-same-method-with-varying-arguments-in-specific-order

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!-- Shared with Prepround.ContentTool so the connection string is set once. -->
+    <UserSecretsId>afefe7b6-6838-46c0-8db9-3f8880eba7d3</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Prepround.Application\Prepround.Application.csproj" />
+    <ProjectReference Include="..\Prepround.Infrastructure\Prepround.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

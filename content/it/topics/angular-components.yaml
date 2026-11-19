@@ -1,0 +1,287 @@
+id: angular-components
+title: Компоненти й шаблони
+description: Standalone, input/output, життєвий цикл, control flow, content projection.
+questions:
+  - id: angular-components-001
+    level: junior
+    type: single
+    text: >
+      Angular 22, проєкт без NgModule. Шаблон `ProfileComponent` містить тег `<app-avatar />`, а `AvatarComponent` є окремим
+      компонентом. Що потрібно зробити, щоб тег запрацював?
+    options:
+      - text: "Додати `AvatarComponent` у масив `imports` декоратора `@Component` компонента `ProfileComponent`"
+        correct: true
+      - text: "Додати `AvatarComponent` у масив `declarations` декоратора `@Component` компонента `ProfileComponent`"
+      - text: "Додати `AvatarComponent` у масив `providers` декоратора `@Component` компонента `ProfileComponent`"
+      - text: "Нічого не робити: усі компоненти проєкту автоматично видимі в усіх шаблонах за своїм селектором"
+    explanation: >
+      Шаблон standalone-компонента бачить лише те, що перелічено в його `imports`. `declarations` існує тільки в NgModule,
+      а `providers` стосується сервісів, а не елементів шаблону. Глобальної видимості компонентів за селектором немає.
+    sources:
+      - https://angular.dev/guide/components#using-components
+
+  - id: angular-components-002
+    level: junior
+    type: single
+    text: Що отримає метод `onSaved` у батьківському компоненті після натискання кнопки?
+    code:
+      lang: typescript
+      source: |
+        @Component({
+          selector: 'app-editor',
+          template: `<button (click)="save()">Зберегти</button>`,
+        })
+        export class Editor {
+          saved = output<string>();
+          save() { this.saved.emit('draft'); }
+        }
+
+        // у шаблоні батька:
+        // <app-editor (saved)="onSaved($event)" />
+    options:
+      - text: "Рядок `'draft'`: `$event` містить значення, передане в `emit`"
+        correct: true
+      - text: "Об'єкт `MouseEvent` від кліку по кнопці, бо подія виникла саме від нього"
+      - text: "Об'єкт `CustomEvent`, у властивості `detail` якого лежить рядок `'draft'`"
+      - text: "Нічого не отримає: `output()` треба підписувати вручну через `subscribe`"
+    explanation: >
+      Подія виходу доставляє слухачеві рівно те, що передали в `emit`. Клік по кнопці всередині `Editor` до батька не
+      потрапляє, а обгортки `CustomEvent` Angular не створює. Підписуватися вручну потрібно лише тоді, коли
+      компонент створюють програмно.
+    sources:
+      - https://angular.dev/guide/components/outputs
+
+  - id: angular-components-003
+    level: junior
+    type: multiple
+    text: Які твердження про блок `@for` у вбудованому control flow Angular 22 правильні?
+    options:
+      - text: "Вираз `track` обов'язковий: за ним Angular зіставляє елементи колекції з вузлами DOM"
+        correct: true
+      - text: "Блок `@empty` після `@for` показується, коли колекція порожня"
+        correct: true
+      - text: "Усередині блока доступна змінна `$index` з індексом поточного елемента"
+        correct: true
+      - text: "Блок працює лише з масивами, а `Set` чи `Map` перебирати в ньому не можна"
+      - text: "Щоб `@for` запрацював, `NgFor` має бути в масиві `imports` компонента"
+    explanation: >
+      `@for` вбудований у шаблонний синтаксис, тому імпортувати нічого не треба, а колекцією може бути будь-який
+      ітерований об'єкт, не лише масив. Без `track` шаблон не скомпілюється, бо Angular не знав би, як зіставляти вузли.
+    sources:
+      - https://angular.dev/guide/templates/control-flow
+      - https://angular.dev/api/core/@for
+
+  - id: angular-components-004
+    level: junior
+    type: single
+    text: Що відрендерить цей шаблон Angular 22?
+    code:
+      lang: typescript
+      source: |
+        @Component({
+          selector: 'app-sw',
+          template: `
+            @switch (v()) {
+              @case (1)   { <i>one</i> }
+              @case ('1') { <i>str</i> }
+              @default    { <i>def</i> }
+            }
+          `,
+        })
+        export class Sw { v = signal<number | string>('1'); }
+    options:
+      - text: "`<i>str</i>`: значення порівнюється з кожним `@case` через `===`, тому рядок `'1'` не дорівнює числу `1`"
+        correct: true
+      - text: "`<i>one</i>`: порівняння нестроге, тож `'1'` збігається з першим `@case (1)` і блок завершується"
+      - text: "`<i>one</i>` і `<i>str</i>`: після першого збігу виконання продовжується далі, як у `switch` без `break`"
+      - text: "`<i>def</i>`: рядкове значення не можна порівнювати з числовими `@case`, тож вибирається `@default`"
+    explanation: >
+      `@switch` порівнює вираз із виразами `@case` оператором `===`, а провалювання між гілками немає. Тому спрацьовує
+      тільки другий `@case`. Нестрогого порівняння, як у деяких мовах, тут не буває.
+    sources:
+      - https://angular.dev/guide/templates/control-flow
+
+  - id: angular-components-005
+    level: middle
+    type: single
+    text: >
+      Angular 22. Батько передає значення так: `<app-greet name="Ann" />`. Що станеться під час створення `Greet`?
+    code:
+      lang: typescript
+      source: |
+        @Component({ selector: 'app-greet', template: `Hi, {{ name() }}` })
+        export class Greet {
+          name = input.required<string>();
+
+          constructor() {
+            console.log(this.name());
+          }
+        }
+    options:
+      - text: "Виклик у конструкторі кине помилку NG0950: значення вхідного сигналу ще не встановлено"
+        correct: true
+      - text: "У консоль потрапить `Ann`, бо значення з шаблону батька Angular підставляє до виклику конструктора"
+      - text: "У консоль потрапить `undefined`, бо сигнал без початкового значення повертає його до першого оновлення"
+      - text: "Шаблон не скомпілюється, бо читати `input.required` дозволено лише в шаблоні, а не в класі"
+    explanation: >
+      Інпути виставляються після створення екземпляра, тож у конструкторі обов'язковий вхідний сигнал ще порожній, а його читання
+      кидає помилку. Читати значення безпечно в шаблоні, у `computed`, `effect` і з хука `ngOnInit`.
+    sources:
+      - https://angular.dev/guide/components/inputs
+
+  - id: angular-components-006
+    level: middle
+    type: single
+    text: >
+      Компонент не має жодних вхідних властивостей і містить вміст у `<ng-content />`. Які з перелічених хуків і в якому порядку
+      викличуться під час першого прогону детекції змін?
+    code:
+      lang: typescript
+      source: |
+        export class Life {
+          ngOnChanges()        { log('changes'); }
+          ngOnInit()           { log('init'); }
+          ngDoCheck()          { log('check'); }
+          ngAfterContentInit() { log('content'); }
+          ngAfterViewInit()    { log('view'); }
+        }
+    options:
+      - text: "`init`, `check`, `content`, `view`: `ngOnChanges` не викликається, коли немає прив'язаних вхідних властивостей"
+        correct: true
+      - text: "`changes`, `init`, `check`, `content`, `view`: `ngOnChanges` завжди першим, навіть без вхідних властивостей"
+      - text: "`init`, `view`, `content`, `check`: хуки власного перегляду стоять раніше за хуки проєктованого вмісту"
+      - text: "`check`, `init`, `content`, `view`: `ngDoCheck` викликається раніше за `ngOnInit` для кожного компонента"
+    explanation: >
+      `ngOnChanges` запускається лише тоді, коли змінилася прив'язана вхідна властивість, тож тут його не буде. Далі
+      порядок фіксований: `ngOnInit`, `ngDoCheck`, потім хуки проєктованого вмісту, потім хуки власного перегляду.
+    sources:
+      - https://angular.dev/guide/components/lifecycle
+
+  - id: angular-components-007
+    level: middle
+    type: single
+    text: >
+      Дочірній компонент оголошує `count = model(0)` і викликає `this.count.set(5)` по кліку. Яке значення матиме
+      `c()` у батька після кліку?
+    code:
+      lang: typescript
+      source: |
+        @Component({
+          selector: 'app-counter',
+          template: `<button (click)="count.set(5)">Задати</button>`,
+        })
+        export class Counter { count = model(0); }
+
+        @Component({
+          selector: 'app-host',
+          imports: [Counter],
+          template: `<app-counter [(count)]="c" />`,
+        })
+        export class Host { c = signal(1); }
+    options:
+      - text: "`5`: двостороння прив'язка `[(count)]` записує нове значення моделі назад у сигнал `c`"
+        correct: true
+      - text: "`1`: `set` у дочірньому змінює лише його локальну копію, а сигнал батька залишається недоторканим"
+      - text: "`0`: початкове значення `model(0)` перекриває значення, яке батько передав під час створення"
+      - text: "Помилка компіляції: двостороння прив'язка потребує окремого `output()` з назвою `countChange`"
+    explanation: >
+      `model()` оголошує і вхід, і подію зміни: Angular сам створює `countChange`. Запис у модель дочірнього компонента
+      синтаксис `[(count)]` передає в записуваний сигнал батька. Для цього прив'язка має вказувати на `WritableSignal`.
+    sources:
+      - https://angular.dev/guide/signals/model
+
+  - id: angular-components-008
+    level: middle
+    type: multiple
+    text: >
+      Шаблон `Card` — `<h1><ng-content select="h2" /></h1><div><ng-content select=".body" /></div>`, слота без `select` немає.
+      Які твердження правильні для `<app-card><h2>T</h2><p class="body">B</p><span>S</span>текст</app-card>`?
+    options:
+      - text: "Елемент `<h2>` потрапить усередину `<h1>` шаблону картки, а `<p class=\"body\">` — у `<div>`"
+        correct: true
+      - text: "`<span>` і текстовий вузол «текст» у DOM не з'являться, бо їм не відповідає жоден слот"
+        correct: true
+      - text: "Якщо додати `<ng-content />` без `select`, `<span>` і текст потраплять саме в цей слот"
+        correct: true
+      - text: "`<span>` і текст додадуться в кінець останнього слота, тобто в `<div>`, де лежить `<p>`"
+      - text: "Збірка завершиться помилкою, бо у вмісті є вузли без відповідного слота в шаблоні картки"
+    explanation: >
+      Кожен проєктований вузол іде в перший слот, чий селектор йому підходить, а слот без `select` збирає решту. Якщо
+      такого слота немає, зайвий вміст просто не рендериться: ні помилки, ні дописування в інші слоти не буде.
+    sources:
+      - https://angular.dev/guide/components/content-projection
+
+  - id: angular-components-009
+    level: senior
+    type: single
+    text: >
+      Angular 22. `HeavyChart` — standalone-компонент, доданий в `imports` хоста й використаний у `@defer (on viewport)`.
+      У білді окремого чанка для нього немає: він лежить в основному бандлі. У тому ж файлі хоста є рядок
+      `chart = viewChild(HeavyChart);`. Що найімовірніше пояснює це?
+    options:
+      - text: "Згадка `HeavyChart` поза блоком `@defer`, зокрема в запиті `viewChild`, змушує завантажувати залежність eagerly"
+        correct: true
+      - text: "`@defer` без блока `@placeholder` ніколи не виносить залежності в окремий чанк, бо не знає, що показати"
+      - text: "Компонент залишається в `imports` хоста, тому компілятор не може його відкласти, і запис треба прибрати з `imports`"
+      - text: "Відкладене завантаження працює лише разом із SSR, тому в клієнтському білді чанк не створюється"
+    explanation: >
+      Щоб залежність потрапила в окремий чанк, її не можна згадувати поза `@defer` у тому ж файлі, зокрема в `viewChild`.
+      Запис в `imports` потрібен і для відкладених залежностей, а `@placeholder` необов'язковий.
+    sources:
+      - https://angular.dev/guide/templates/defer
+
+  - id: angular-components-010
+    level: senior
+    type: single
+    text: >
+      Angular 22 із SSR. Віджет має виміряти ширину свого елемента й ініціалізувати бібліотеку графіків, яка звертається до `window`.
+      Де це безпечно робити, щоб не падав рендер на сервері?
+    options:
+      - text: "У колбеку `afterNextRender`: він виконується лише в браузері після першого рендеру, і DOM уже готовий"
+        correct: true
+      - text: "У `ngAfterViewInit`: цей хук викликається лише в браузері, а сервер пропускає всі хуки перегляду"
+      - text: "У `ngOnInit`: серверний рендер викликає його до створення DOM, тому `window` там існує як порожня заглушка"
+      - text: "У конструкторі: перевірка в ньому гарантує, що код виконається один раз і тільки на клієнті"
+    explanation: >
+      Колбеки `afterNextRender` і `afterEveryRender` не виконуються ні під час SSR, ні під час prerender, тому звертатися до DOM і глобалів у них
+      безпечно. Звичайні хуки життєвого циклу, зокрема `ngAfterViewInit`, під час SSR працюють так само, як у браузері.
+    sources:
+      - https://angular.dev/guide/components/lifecycle
+
+  - id: angular-components-011
+    level: senior
+    type: multiple
+    text: >
+      Шаблон `Panel`: `@if (open()) { <ng-content /> }`. Хост пише `<app-panel><app-report /></app-panel>`, а `open()`
+      дорівнює `false`. Які твердження правильні?
+    options:
+      - text: "Екземпляр `Report` усе одно створюється, хоча його вузли в DOM не вставлено"
+        correct: true
+      - text: "Для відкладеного створення `Panel` має приймати `TemplateRef` і вставляти його через `ngTemplateOutlet` під `@if`"
+        correct: true
+      - text: "Щоразу, коли `open()` стає `true`, вміст створюється наново, а при `false` знищується разом із станом"
+      - text: "Створення `Report` відкладається, бо слот `ng-content` не потрапив у шаблон, поки `@if` хибний"
+    explanation: >
+      Проєктований вміст належить шаблону батька: його створює хост незалежно від того, чи слот зараз у DOM. Умовний
+      `ng-content` лише ховає вузли. Лінивість дає передача `ng-template`, який дочірній компонент сам вставляє, коли треба.
+    sources:
+      - https://angular.dev/guide/components/content-projection
+
+  - id: angular-components-012
+    level: senior
+    type: single
+    text: >
+      Таблиця перерисовується кожні 5 с новим масивом із API: об'єкти нові, а `id` ті самі. У рядках є `<input>`, і користувач
+      втрачає фокус та введений текст. Шаблон: `@for (r of rows(); track r)`. Порядок рядків може змінюватися. Який `track`
+      виправляє проблему коректно?
+    options:
+      - text: "`track r.id`: стабільний ключ зберігає вузли DOM рядка, навіть коли порядок змінюється"
+        correct: true
+      - text: "`track $index`: позиція в масиві не змінюється між оновленнями, тож усі вузли DOM лишаються на місці"
+      - text: "`track r.updatedAt`: мітка часу змінюється разом з даними, тож Angular оновлює лише змінені рядки"
+      - text: "`track r`: порівняння за посиланням на об'єкт ловить кожну зміну даних і перерисовує лише потрібне"
+    explanation: >
+      `track r` порівнює за посиланням, а нові об'єкти щоразу нові, тож усі рядки створюються заново. `$index` не руйнує
+      DOM, але прив'язує стан `<input>` до позиції, а не до запису, і після перестановки введене опиниться не в тому рядку.
+    sources:
+      - https://angular.dev/guide/templates/control-flow

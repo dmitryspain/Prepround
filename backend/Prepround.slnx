@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Prepround.Api/Prepround.Api.csproj" />
+    <Project Path="src/Prepround.Application/Prepround.Application.csproj" />
+    <Project Path="src/Prepround.ContentTool/Prepround.ContentTool.csproj" />
+    <Project Path="src/Prepround.Domain/Prepround.Domain.csproj" />
+    <Project Path="src/Prepround.Infrastructure/Prepround.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Prepround.Tests/Prepround.Tests.csproj" />
+  </Folder>
+</Solution>

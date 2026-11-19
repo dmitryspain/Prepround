@@ -1,0 +1,303 @@
+id: angular-di
+title: DI і сервіси
+description: Інжектори, providedIn, токени, ієрархія, inject().
+questions:
+  - id: angular-di-001
+    level: junior
+    type: single
+    text: >
+      Angular 22. Клас `ThemeService` оголошено як `@Injectable({ providedIn: 'root' })`, і його ін'єктують два різні
+      компоненти. Скільки екземплярів `ThemeService` буде створено?
+    options:
+      - text: "Один спільний на весь застосунок, створений при першій ін'єкції"
+        correct: true
+      - text: "По одному на кожен компонент, який його ін'єктує"
+      - text: "Два: один для першого компонента і один для другого, бо вони в різних файлах"
+      - text: "Жодного, доки його не додано в масив `providers` якогось компонента"
+    explanation: >
+      `providedIn: 'root'` реєструє сервіс у кореневому інжекторі, тому всі споживачі отримують той самий екземпляр. Окремі
+      екземпляри з'являються лише тоді, коли сервіс додатково оголошено в `providers` компонента чи маршруту.
+    sources:
+      - https://angular.dev/guide/di/creating-and-using-services
+
+  - id: angular-di-002
+    level: junior
+    type: single
+    text: >
+      Потрібно передати в сервіси базову адресу API, рядок `'https://api.example.com'`. Чому для цього створюють
+      `InjectionToken`, а не просто вказують `string` як ключ залежності?
+    code:
+      lang: typescript
+      source: |
+        export const API_URL = new InjectionToken<string>('API_URL');
+
+        // app.config.ts
+        providers: [{ provide: API_URL, useValue: 'https://api.example.com' }]
+
+        // у сервісі
+        private readonly apiUrl = inject(API_URL);
+    options:
+      - text: "Тип `string` зникає після компіляції, тож для не-класового значення потрібен об'єкт-ключ, який існує в рантаймі"
+        correct: true
+      - text: "Angular дозволяє зберігати рядки лише у вигляді токенів, а інші значення потребують класу"
+      - text: "Без токена значення було б створено заново під час кожної ін'єкції, а токен робить його синглтоном"
+      - text: "Токен шифрує значення під час збірки, тому адреса API не потрапляє у фінальний бандл застосунку у відкритому вигляді"
+    explanation: >
+      Інтерфейси й типи TypeScript стираються, тому DI потрібен ключ, який існує під час виконання. Для класів ним є сам клас,
+      а для рядків, об'єктів конфігурації й функцій створюють `InjectionToken`. Шифрування чи окрема поведінка
+      синглтона до цього не стосуються.
+    sources:
+      - https://angular.dev/guide/di/defining-dependency-providers
+
+  - id: angular-di-003
+    level: junior
+    type: multiple
+    text: Які з наведених способів отримати `ApiService` усередині компонента Angular 22 коректні?
+    options:
+      - text: "Поле класу `private readonly api = inject(ApiService);` у тілі компонента"
+        correct: true
+      - text: "Параметр конструктора `constructor(private api: ApiService) {}` у класі"
+        correct: true
+      - text: "Виклик `this.injector.get(ApiService)`, де `injector = inject(Injector)`"
+        correct: true
+      - text: "Вираз `new ApiService()` у полі класу, залежності підставить DI"
+      - text: "Звичайний `import { ApiService }` у файлі: імпорт сам створює екземпляр"
+    explanation: >
+      Зареєстровану залежність дістають через `inject()`, параметр конструктора або явний виклик `get` на інжекторі.
+      Створений вручну через `new` об'єкт DI не відстежує і залежностей у нього не підставить, а імпорт лише робить клас
+      доступним для коду.
+    sources:
+      - https://angular.dev/guide/di/dependency-injection
+
+  - id: angular-di-004
+    level: junior
+    type: single
+    text: Що станеться під час кліку на кнопку в компоненті Angular 22?
+    code:
+      lang: typescript
+      source: |
+        @Injectable({ providedIn: 'root' })
+        class Logger { log(m: string) { console.log(m); } }
+
+        @Component({
+          selector: 'app-btn',
+          template: `<button (click)="onClick()">OK</button>`,
+        })
+        export class Btn {
+          onClick() {
+            inject(Logger).log('clicked');
+          }
+        }
+    options:
+      - text: "Помилка NG0203: `inject()` викликано поза контекстом ін'єкції"
+        correct: true
+      - text: "У консоль виведеться `clicked`: `Logger` доступний через `providedIn: 'root'`"
+      - text: "Помилка NG0201: для `Logger` не знайдено провайдера"
+      - text: "У консоль виведеться `clicked`, але `Logger` створиться заново під час кожного кліку"
+    explanation: >
+      `inject()` працює лише під час створення об'єкта: у конструкторі, ініціалізаторі поля чи фабриці провайдера. Обробник
+      події виконується пізніше, тоді поточного інжектора вже немає. Тому помилка стосується контексту, а не відсутності
+      провайдера, який тут якраз є.
+    sources:
+      - https://angular.dev/guide/di/dependency-injection-context
+
+  - id: angular-di-005
+    level: middle
+    type: single
+    text: >
+      Angular 22. `Counter` має `providedIn: 'root'`, а в компоненті `Item` його ще й додано в `providers`. Що відрендерить
+      шаблон `Host`?
+    code:
+      lang: typescript
+      source: |
+        @Injectable({ providedIn: 'root' })
+        class Counter { count = 0; }
+
+        @Component({
+          selector: 'app-item',
+          template: '{{ counter.count }}',
+          providers: [Counter],
+        })
+        class Item {
+          counter = inject(Counter);
+          constructor() { this.counter.count++; }
+        }
+
+        @Component({ imports: [Item], template: '<app-item /><app-item />' })
+        class Host {}
+    options:
+      - text: "`11`: кожен екземпляр `Item` має власний `Counter`"
+        correct: true
+      - text: "`22`: обидва компоненти змінюють один і той самий `Counter` із кореня"
+      - text: "`12`: другий компонент бачить уже збільшене значення першого"
+      - text: "`00`: `Counter` з `providers` створюється без виклику конструктора `Item`"
+    explanation: >
+      Провайдер у `providers` компонента належить його ElementInjector, тому на кожен екземпляр компонента створюється
+      окремий `Counter` і знищується разом із ним. Корінний синглтон при цьому не використовується. Без рядка
+      `providers: [Counter]` обидва компоненти ділили б один сервіс і шаблон показав би `22`.
+    sources:
+      - https://angular.dev/guide/di/hierarchical-dependency-injection
+
+  - id: angular-di-006
+    level: middle
+    type: single
+    text: >
+      Хелпер `loadUser()` усередині викликає `inject(HttpClient)`. З компонента його викликають у колбеку `setTimeout`,
+      і Angular 22 кидає NG0203. Як виправити, не змінюючи сам хелпер?
+    code:
+      lang: typescript
+      source: |
+        function loadUser() {
+          return inject(HttpClient).get('/api/me');
+        }
+
+        @Component({ selector: 'app-profile', template: '' })
+        class Profile {
+          ngOnInit() {
+            setTimeout(() => loadUser().subscribe(), 1000);
+          }
+        }
+    options:
+      - text: "Взяти `Injector` у полі через `inject(Injector)` і викликати `runInInjectionContext(this.injector, () => loadUser())`"
+        correct: true
+      - text: "Додати `HttpClient` у масив `providers` компонента, щоб `inject()` у колбеку таймера знайшов провайдера"
+      - text: "Позначити `loadUser` як `async`, щоб `inject()` виконувався в мікрозадачі після спрацювання таймера"
+      - text: "Додати до `loadUser` декоратор `@Injectable()`, щоб Angular сам створив її й підставив контекст"
+    explanation: >
+      Помилка в тому, що виклик відбувається поза контекстом ін'єкції, а не в тому, що провайдера немає. `runInInjectionContext`
+      тимчасово вмикає контекст для переданого інжектора й дозволяє `inject()` усередині функції. `async` контекст не повертає,
+      а декоратор до звичайної функції не застосовується.
+    sources:
+      - https://angular.dev/guide/di/dependency-injection-context
+      - https://angular.dev/api/core/runInInjectionContext
+
+  - id: angular-di-007
+    level: middle
+    type: multiple
+    text: Які твердження про налаштування провайдерів `useClass`, `useExisting`, `useFactory` і `useValue` у Angular 22 правильні?
+    options:
+      - text: "`useExisting` робить токен псевдонімом: обидва токени віддають один і той самий екземпляр"
+        correct: true
+      - text: "`{ provide: Base, useClass: Impl }` віддає на запит `Base` екземпляр, створений із класу `Impl`"
+        correct: true
+      - text: "Усередині `useFactory` можна викликати `inject()`, бо фабрика працює в контексті ін'єкції"
+        correct: true
+      - text: "`useValue` викликає передану функцію як конструктор і віддає результат як залежність"
+    explanation: >
+      Псевдонім через `useExisting` не створює другого об'єкта, на відміну від двох окремих `useClass`. `useClass` підміняє
+      реалізацію, а фабрика може сама діставати свої залежності через `inject()`. `useValue` віддає значення як є, навіть якщо
+      це функція: вона не викликається.
+    sources:
+      - https://angular.dev/guide/di/defining-dependency-providers
+
+  - id: angular-di-008
+    level: middle
+    type: single
+    text: >
+      Токен `VALIDATORS` зареєстровано двома провайдерами з `multi: true` у такому порядку. Що поверне
+      `inject(VALIDATORS)`?
+    code:
+      lang: typescript
+      source: |
+        const VALIDATORS = new InjectionToken<string[]>('VALIDATORS');
+
+        providers: [
+          { provide: VALIDATORS, useValue: 'required', multi: true },
+          { provide: VALIDATORS, useValue: 'email', multi: true },
+        ]
+    options:
+      - text: "Масив `['required', 'email']`: значення всіх multi-провайдерів у порядку реєстрації"
+        correct: true
+      - text: "Рядок `'email'`: останній провайдер перекриває попередній"
+      - text: "Рядок `'required'`: перший провайдер має пріоритет, а решту ігноровано"
+      - text: "Масив `['email', 'required']`: значення збираються у зворотному порядку"
+    explanation: >
+      З `multi: true` Angular накопичує значення всіх провайдерів токена в один масив, зберігаючи порядок реєстрації. Без цього
+      прапорця діяв би останній провайдер, тож результатом був би `'email'`. На цьому тримаються точки розширення на кшталт
+      `HTTP_INTERCEPTORS`.
+    sources:
+      - https://angular.dev/api/core/Provider
+      - https://angular.dev/api/core/InjectionToken
+
+  - id: angular-di-009
+    level: senior
+    type: single
+    text: >
+      Angular 22. `CartStore` має `providedIn: 'root'`. Для маршруту `checkout` команда додала `providers: [CartStore]`,
+      щоб ізолювати стан. Тепер шапка сайту, що лежить поза цим маршрутом, показує стару кількість товарів, поки
+      сторінки всередині `checkout` змінюють кошик. Яка причина?
+    options:
+      - text: "Провайдер маршруту створює окремий інжектор і другий екземпляр `CartStore`, тож шапка читає кореневий, а сторінки свій"
+        correct: true
+      - text: "Шапка не підписана на зміни сигналів, бо `providedIn: 'root'` вимикає реактивність усередині сервісу"
+      - text: "Маршрут перекриває кореневий екземпляр, тому шапка звертається до вже знищеного `CartStore` без стану"
+      - text: "Екземпляр у `providers` маршруту синхронізується зі шапкою лише після повного завершення кожної навігації"
+    explanation: >
+      Маршрут із `providers` отримує власний EnvironmentInjector. Компоненти всередині знаходять `CartStore` у ньому, а компоненти
+      поза маршрутом і далі беруть кореневий екземпляр. Це дає ізоляцію, але й розсинхронізацію. Щоб стан був спільним,
+      прибирають `CartStore` з `providers` маршруту.
+    sources:
+      - https://angular.dev/guide/routing/define-routes#route-level-providers-for-dependency-injection
+      - https://angular.dev/guide/di/hierarchical-dependency-injection
+
+  - id: angular-di-010
+    level: senior
+    type: single
+    text: >
+      Angular 22. Компонент `Panel` оголошує `viewProviders: [{ provide: THEME, useValue: 'dark' }]` і містить
+      `<ng-content />`. Батьківський шаблон передає всередину `<app-panel><app-badge /></app-panel>`. `Badge` робить
+      `inject(THEME, { optional: true })`. Що він отримає і чому?
+    options:
+      - text: "`null`: `viewProviders` видимі лише шаблону `Panel`, а проєктований вміст до його представлення не належить"
+        correct: true
+      - text: "Значення `'dark'`: проєктований вміст є нащадком `Panel` в ієрархії, тож бачить його провайдери"
+      - text: "Помилку NG0201 навіть із `optional: true`, бо `THEME` оголошено, але видимість недосяжна для нього"
+      - text: "Значення `'dark'`, але лише якщо `Badge` оголосити безпосередньо в шаблоні `Panel`, а не в проєкції"
+    explanation: >
+      `viewProviders` додають токен в інжектор лише для вмісту представлення компонента. Проєктований через `ng-content`
+      вміст оголошено у шаблоні батька, тому токена не бачить, і `optional` повертає `null`. З `providers` замість
+      `viewProviders` провайдер був би видимий і проєктованому вмісту.
+    sources:
+      - https://angular.dev/guide/di/hierarchical-dependency-injection#using-the-viewproviders-array
+
+  - id: angular-di-011
+    level: senior
+    type: multiple
+    text: >
+      Angular 22. Токен `TOKEN` у батьківському компоненті надано через `providers`, а в дочірньому компоненті його
+      також надано власним `providers`. Які твердження про модифікатори в `inject(TOKEN, {...})` у дочірньому
+      компоненті правильні?
+    options:
+      - text: "`{ self: true }` обмежує пошук власним елементом, тож повертається значення з `providers` самого компонента"
+        correct: true
+      - text: "`{ skipSelf: true }` починає пошук із батьківського інжектора й повертає значення батька"
+        correct: true
+      - text: "`{ optional: true }` замість винятку віддає `null`, якщо токен не знайдено в жодному інжекторі"
+        correct: true
+      - text: "`{ host: true }` розширює пошук до кореневого EnvironmentInjector, тож знаходить провайдери застосунку"
+    explanation: >
+      `self` і `skipSelf` задають, де пошук починається й де обривається, а `optional` лише змінює реакцію на невдачу. `host`
+      діє навпаки: він зупиняє пошук на межі хост-елемента поточного компонента, а не розширює його до кореня.
+    sources:
+      - https://angular.dev/guide/di/hierarchical-dependency-injection#resolution-modifiers
+      - https://angular.dev/api/core/inject
+
+  - id: angular-di-012
+    level: senior
+    type: single
+    text: >
+      Angular 22. `AuditService` зареєстровано в `providedIn: 'root'`, у `providers` маршруту `/reports` і в `providers`
+      компонента `ReportView`, що відкривається цим маршрутом. Який екземпляр отримає `ReportChart`, вкладений у шаблон
+      `ReportView`, і чому?
+    options:
+      - text: "Той, що з `providers` компонента `ReportView`: спершу перебирається ієрархія ElementInjector, а EnvironmentInjector лише потім"
+        correct: true
+      - text: "Той, що з `providers` маршруту: маршрут ближчий до компонента, ніж корінь, тож має вищий пріоритет за корінь"
+      - text: "Кореневий: `providedIn: 'root'` завжди має вищий пріоритет за провайдери, оголошені локально в дереві"
+      - text: "Помилку дубльованого провайдера: один і той самий токен у трьох місцях Angular не дозволяє"
+    explanation: >
+      Пошук іде у два етапи. Спершу вгору по ElementInjector від елемента `ReportChart`, де власник `ReportView` уже має провайдера.
+      До EnvironmentInjector, де лежать маршрут і корінь, Angular навіть не доходить. Збіг токена на різних рівнях не помилка:
+      береться перший знайдений.
+    sources:
+      - https://angular.dev/guide/di/hierarchical-dependency-injection#resolution-rules

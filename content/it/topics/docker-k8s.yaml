@@ -1,0 +1,231 @@
+id: docker-k8s
+title: Docker і Kubernetes
+description: Образи, шари, compose, поди, деплойменти, сервіси, probes, ресурси.
+questions:
+  - id: docker-k8s-001
+    level: junior
+    type: single
+    text: Чим образ (image) Docker відрізняється від контейнера?
+    options:
+    - text: Образ є незмінним шаблоном, а контейнер є запущеним екземпляром цього образу
+      correct: true
+    - text: Образ є запущеним процесом у памʼяті, а контейнер є його архівом, що зберігається на диску
+    - text: Образ і контейнер є двома назвами одного й того самого обʼєкта в залежності від стану
+    - text: Образ зберігає дані користувача між запусками, а контейнер містить лише код застосунку
+    explanation: |
+      З одного образу можна запустити багато контейнерів, і кожен отримує власний тонкий шар для запису. Дані, записані в контейнері, не змінюють образ.
+    sources:
+    - https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/
+    - https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/
+  - id: docker-k8s-002
+    level: junior
+    type: single
+    text: Що робить інструкція `EXPOSE 8080` у Dockerfile?
+    code:
+      lang: dockerfile
+      source: |
+        FROM nginx:stable
+        COPY site/ /usr/share/nginx/html
+        EXPOSE 8080
+    options:
+    - text: Документує, що застосунок слухає порт 8080, але сам порт на хості не публікує
+      correct: true
+    - text: Робить порт 8080 контейнера доступним на тому самому порту хоста без додаткових прапорців
+    - text: Змушує nginx слухати порт 8080 замість стандартного порту 80 у конфігурації за замовчуванням
+    - text: Відкриває порт 8080 у брандмауері хоста для всього вхідного трафіку з мережі
+    explanation: |
+      `EXPOSE` лише повідомляє, який порт задумано використовувати. Опублікувати його на хості можна ключем `-p 8080:8080` або `-P` під час `docker run`.
+    sources:
+    - https://docs.docker.com/reference/dockerfile/#expose
+  - id: docker-k8s-003
+    level: junior
+    type: single
+    text: Що таке Pod у Kubernetes?
+    options:
+    - text: Найменша одиниця розгортання з одного чи кількох контейнерів, які ділять мережу й сховище
+      correct: true
+    - text: Окремий фізичний або віртуальний сервер кластера, на якому працюють контейнери застосунків
+    - text: Набір правил, що відкриває застосунок назовні через стабільну адресу та балансує трафік
+    - text: Файл конфігурації, у якому описано образ, змінні середовища й порти для запуску контейнера
+    explanation: |
+      Контейнери одного Pod працюють на одному вузлі, мають спільну IP-адресу й можуть ділитися томами. Сервер у Kubernetes називається вузлом (node), а стабільну адресу дає Service.
+    sources:
+    - https://kubernetes.io/docs/concepts/workloads/pods/
+  - id: docker-k8s-004
+    level: junior
+    type: single
+    text: Яку задачу розв'язує обʼєкт Service типу ClusterIP?
+    options:
+    - text: Дає стабільні віртуальну IP-адресу й DNS-імʼя для набору Pod-ів, обраних за мітками
+      correct: true
+    - text: Автоматично збільшує кількість реплік, коли росте навантаження на процесор вузлів кластера
+    - text: Зберігає секрети й передає їх у контейнери як змінні середовища чи змонтовані файли
+    - text: Запускає завдання за розкладом і зберігає результат кожного запуску для подальшого аналізу
+    explanation: |
+      Pod-и створюються й зникають, а їхні IP змінюються, тому клієнти звертаються до Service, який балансує запити між готовими Pod-ами. Масштабування — задача HPA, секрети — Secret, розклад — CronJob.
+    sources:
+    - https://kubernetes.io/docs/concepts/services-networking/service/
+  - id: docker-k8s-005
+    level: middle
+    type: single
+    text: Після кожної правки коду збірка цього образу заново виконує `npm ci`. Що виправить це?
+    code:
+      lang: dockerfile
+      source: |
+        FROM node:24-slim
+        WORKDIR /app
+        COPY . .
+        RUN npm ci
+        CMD ["node", "server.js"]
+    options:
+    - text: Спершу копіювати лише `package*.json` і виконати `npm ci`, а потім робити `COPY . .`
+      correct: true
+    - text: Замінити `RUN npm ci` на `CMD npm ci`, щоб залежності ставилися під час запуску контейнера
+    - text: Перенести `WORKDIR /app` після `RUN npm ci`, щоб шар залежностей не залежав від теки
+    - text: Додати до `COPY` прапорець, що вимикає кешування для вихідних файлів у цій інструкції
+    explanation: |
+      Зміна будь-якого файлу, скопійованого інструкцією `COPY . .`, скидає кеш цього шару і всіх наступних, зокрема `npm ci`. Якщо залежності встановлювати до копіювання коду, шар перевикористовується, поки `package*.json` не змінився.
+    sources:
+    - https://docs.docker.com/build/cache/optimize/#order-your-layers
+  - id: docker-k8s-006
+    level: middle
+    type: multiple
+    text: Які твердження про probes у Kubernetes правильні?
+    options:
+    - text: Після невдалої liveness probe kubelet перезапускає контейнер
+      correct: true
+    - text: Контейнер із невдалою readiness probe прибирають із балансування Service, але не перезапускають
+      correct: true
+    - text: Поки startup probe не пройде, liveness і readiness probes не виконуються
+      correct: true
+    - text: Невдала readiness probe призводить до перезапуску контейнера так само, як liveness
+    explanation: |
+      Liveness відповідає на питання «чи треба перезапустити», readiness — «чи можна слати трафік». Startup probe потрібна повільним застосункам, щоб liveness не вбила їх, поки вони ще стартують.
+    sources:
+    - https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/
+    - https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  - id: docker-k8s-007
+    level: middle
+    type: single
+    text: Deployment оновлюється за такою стратегією. Скільки Pod-ів можуть існувати одночасно і скільки щонайменше мають бути доступні під час оновлення?
+    code:
+      lang: yaml
+      source: |
+        spec:
+          replicas: 4
+          strategy:
+            type: RollingUpdate
+            rollingUpdate:
+              maxSurge: 1
+              maxUnavailable: 0
+    options:
+    - text: Не більше 5 Pod-ів, і не менше 4 доступних
+      correct: true
+    - text: Не більше 4 Pod-ів, і не менше 3 доступних
+    - text: Не більше 5 Pod-ів, і не менше 3 доступних
+    - text: Не більше 8 Pod-ів, і не менше 4 доступних
+    explanation: |
+      `maxSurge: 1` дозволяє на один Pod більше за `replicas`, а `maxUnavailable: 0` забороняє мати менше за 4 доступні. Тому спершу піднімається новий Pod, і лише коли він готовий, зупиняється старий.
+    sources:
+    - https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment
+  - id: docker-k8s-008
+    level: middle
+    type: single
+    text: Що станеться з контейнером, який перевищив свій `limits.memory`, і з контейнером, який впирається в `limits.cpu`?
+    options:
+    - text: Перший буде зупинений через OOM (OOMKilled), а другий лише сповільнений (CPU throttling)
+      correct: true
+    - text: Обидва будуть негайно зупинені й перезапущені kubelet за політикою перезапуску Pod-а
+    - text: Перший буде сповільнений, а другий зупинений через OOM-killer ядра на вузлі
+    - text: Обидва лише сповільняться, доки на вузлі не звільниться відповідний ресурс для контейнера
+    explanation: |
+      Пам'ять не можна «стиснути», тому ядро вбиває процес при перевищенні ліміту. Процесорний час ділиться, тож контейнер просто отримує менше квантів. Планувальник же орієнтується на `requests`, а не на `limits`.
+    sources:
+    - https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#how-pods-with-resource-limits-are-run
+  - id: docker-k8s-009
+    level: senior
+    type: single
+    text: Контейнер запущено з цим Dockerfile. Після `docker stop` застосунок завершується лише через таймаут, а обробник SIGTERM не спрацьовує. Чому?
+    code:
+      lang: dockerfile
+      source: |
+        FROM node:24-slim
+        COPY server.js .
+        ENTRYPOINT node server.js
+    options:
+    - text: Shell-форма запускає `node` дочірнім процесом `sh -c`, який не передає сигнали далі
+      correct: true
+    - text: '`docker stop` надсилає SIGINT, який `node` у контейнері за замовчуванням ігнорує повністю'
+    - text: Образ `node:24-slim` не підтримує коректну зупинку процесів по сигналах операційної системи
+    - text: SIGTERM надсилається лише контейнерам із `CMD`, а контейнери з `ENTRYPOINT` його не отримують
+    explanation: |
+      У контейнері PID 1 стає `sh`, а `node` отримує інший PID, тож SIGTERM лишається в оболонці. Після таймауту (10 с) Docker шле SIGKILL. Перевірено запуском: з `ENTRYPOINT ["node", "server.js"]` процес стає PID 1 і обробник спрацьовує.
+    sources:
+    - https://docs.docker.com/reference/dockerfile/#entrypoint
+  - id: docker-k8s-010
+    level: senior
+    type: multiple
+    text: Які твердження про зупинку Pod-а в Kubernetes правильні?
+    options:
+    - text: Хук `preStop` має завершитися до того, як контейнеру надішлють SIGTERM
+      correct: true
+    - text: Відлік `terminationGracePeriodSeconds` (типово 30 с) починається до `preStop` і охоплює також час після SIGTERM
+      correct: true
+    - text: Прибирання Pod-а з endpoints Service іде паралельно зі зупинкою, тож короткий час він ще може отримувати запити
+      correct: true
+    - text: Якщо застосунок обробляє SIGTERM, kubelet чекає його завершення без обмеження в часі
+    explanation: |
+      Після спливання grace period kubelet надсилає SIGKILL, тож довге завершення вимагає збільшити `terminationGracePeriodSeconds`. Через паралельність із endpoints у `preStop` часто додають невелику паузу, щоб балансувальник встиг прибрати Pod.
+    sources:
+    - https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination
+    - https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
+  - id: docker-k8s-011
+    level: senior
+    type: single
+    text: HorizontalPodAutoscaler налаштовано на 70% завантаження CPU, але Deployment не задає для CPU ні `requests`, ні `limits`, а LimitRange у namespace немає. Що станеться?
+    code:
+      lang: yaml
+      source: |
+        apiVersion: autoscaling/v2
+        kind: HorizontalPodAutoscaler
+        spec:
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: web
+          minReplicas: 2
+          maxReplicas: 10
+          metrics:
+            - type: Resource
+              resource:
+                name: cpu
+                target:
+                  type: Utilization
+                  averageUtilization: 70
+    options:
+    - text: HPA не обчислить відсоток завантаження, бо він рахується від `requests`, тож не масштабуватиме
+      correct: true
+    - text: HPA візьме за 100% усі ядра вузла й масштабуватиме від цього значення завантаження
+    - text: HPA прийме нульовий запит і масштабуватиме Deployment до значення `maxReplicas` одразу
+    - text: Kubernetes сам підставить типовий запит із ліміту вузла, і HPA працюватиме як звичайно
+    explanation: |
+      `Utilization` — це частка від запиту CPU контейнера, тож без `requests` знаменника немає, і HPA повідомляє про помилку метрики. Тип `AverageValue` не залежить від запитів, але тоді поріг задають в абсолютних одиницях.
+    sources:
+    - https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-resource-metrics
+  - id: docker-k8s-012
+    level: senior
+    type: multiple
+    text: Які твердження про секрети й шари під час збірки образу Docker правильні?
+    options:
+    - text: Значення з `ARG` і `ENV` лишаються в готовому образі
+      correct: true
+    - text: Секрет із `RUN --mount=type=secret` не потрапляє в шари образу
+      correct: true
+    - text: Файл, доданий в одному шарі й видалений наступним `RUN rm`, лишається в образі
+      correct: true
+    - text: Видалення файлу наступним `RUN rm` зменшує розмір образу
+    explanation: |
+      Шари незмінні й складаються один на одного, тому видалення лише приховує файл у підсумковій файловій системі, але дані лежать у попередньому шарі. Секрет, змонтований на час `RUN`, не записується в шар.
+    sources:
+    - https://docs.docker.com/build/building/secrets/
+    - https://docs.docker.com/build/building/best-practices/

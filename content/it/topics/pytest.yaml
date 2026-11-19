@@ -1,0 +1,271 @@
+id: pytest
+title: Тестування в Python
+description: pytest, фікстури, параметризація, моки.
+questions:
+  - id: pytest-001
+    level: junior
+    type: single
+    text: Яку пару файлу й функції pytest збере за правилами пошуку тестів за замовчуванням?
+    options:
+      - text: Файл `test_math.py` і функцію `test_add`
+        correct: true
+      - text: Файл `math_tests.py` і функцію `test_add`
+      - text: Файл `test_math.py` і функцію `check_add`
+      - text: Файл `math.py` і функцію `test_add`
+    explanation: >
+      За замовчуванням pytest шукає файли `test_*.py` або `*_test.py`, а в них функції й методи з префіксом `test`.
+      `math_tests.py` не підпадає під жоден шаблон імені файлу, а `check_add` не має потрібного префікса.
+    sources:
+      - https://docs.pytest.org/en/stable/explanation/goodpractices.html#conventions-for-python-test-discovery
+  - id: pytest-002
+    level: junior
+    type: single
+    text: Як у pytest записують перевірку в тесті і що він показує, коли вона падає?
+    options:
+      - text: Звичайним `assert`; pytest переписує його й показує значення частин виразу
+        correct: true
+      - text: Лише методами на кшталт `self.assertEqual`, бо голий `assert` pytest просто ігнорує
+      - text: Звичайним `assert`, але в звіті буде лише `AssertionError` без жодних значень
+      - text: Спеціальною функцією `pytest.check()`, яку імпортують з основного пакета pytest
+    explanation: >
+      pytest перехоплює `assert` на етапі імпорту модуля тесту (assertion rewriting) і при падінні виводить проміжні значення виразу.
+      Тому класи `unittest.TestCase` і методи `assertEqual` для нього не потрібні.
+    sources:
+      - https://docs.pytest.org/en/stable/how-to/assert.html#asserting-with-the-assert-statement
+  - id: pytest-003
+    level: junior
+    type: single
+    text: Як тест `test_sum` отримує дані з фікстури `numbers`?
+    code:
+      lang: python
+      source: |
+        import pytest
+
+        @pytest.fixture
+        def numbers():
+            return [1, 2, 3]
+
+        def test_sum(numbers):
+            assert sum(numbers) == 6
+    options:
+      - text: "Через параметр із тим самим іменем: pytest викликає фікстуру й підставляє її результат"
+        correct: true
+      - text: Тест сам викликає `numbers()` у своєму тілі, а декоратор лише реєструє функцію
+      - text: Фікстуру треба імпортувати в тест і передати в декоратор `@pytest.use`
+      - text: Результат фікстури зберігається в глобальній змінній `numbers`, яку тест читає
+    explanation: >
+      pytest зіставляє імена параметрів тесту з іменами фікстур, викликає їх і передає значення. Прямий виклик фікстури як звичайної функції не підтримується.
+    sources:
+      - https://docs.pytest.org/en/stable/how-to/fixtures.html#requesting-fixtures
+  - id: pytest-004
+    level: junior
+    type: multiple
+    text: Які з цих маркерів вбудовані в pytest?
+    options:
+      - text: "`@pytest.mark.skip`"
+        correct: true
+      - text: "`@pytest.mark.xfail`"
+        correct: true
+      - text: "`@pytest.mark.parametrize`"
+        correct: true
+      - text: "`@pytest.mark.slow`"
+      - text: "`@pytest.mark.retry`"
+    explanation: >
+      `skip`, `skipif`, `xfail`, `parametrize`, `usefixtures` і `filterwarnings` вбудовані. Маркери на кшталт `slow` команда вигадує сама й реєструє в конфігурації,
+      а повтор нестабільних тестів дає сторонній плагін, не ядро pytest.
+    sources:
+      - https://docs.pytest.org/en/stable/reference/reference.html#marks
+  - id: pytest-005
+    level: middle
+    type: single
+    text: Скільки разів виконається код до `yield` у фікстурі, якщо обидва тести модуля її використовують?
+    code:
+      lang: python
+      source: |
+        import pytest
+
+        @pytest.fixture(scope="module")
+        def conn():
+            print("open")
+            yield "db"
+            print("close")
+
+        def test_a(conn):
+            assert conn == "db"
+
+        def test_b(conn):
+            assert conn == "db"
+    options:
+      - text: Один раз, а `close` виконається після останнього тесту модуля
+        correct: true
+      - text: "Двічі: перед кожним тестом, а `close` після кожного"
+      - text: Один раз, а `close` одразу після першого тесту, який її використав
+      - text: Двічі `open` перед першим тестом і двічі `close` після другого
+    explanation: >
+      Область `module` означає один екземпляр фікстури на модуль: створюється при першому запиті й знищується після останнього тесту модуля.
+      За типової області `function` було б два `open` і два `close`.
+    sources:
+      - https://docs.pytest.org/en/stable/how-to/fixtures.html#fixture-scopes
+  - id: pytest-006
+    level: middle
+    type: single
+    text: Скільки тестів pytest згенерує з цієї функції?
+    code:
+      lang: python
+      source: |
+        import pytest
+
+        @pytest.mark.parametrize("a", [1, 2, 3])
+        @pytest.mark.parametrize("b", [10, 20])
+        def test_pair(a, b):
+            assert a < b
+    options:
+      - text: Шість, по одному на кожну комбінацію `a` і `b`
+        correct: true
+      - text: П'ять, бо значення двох списків просто складаються
+      - text: Три, бо береться лише верхній декоратор
+      - text: Два, бо береться лише нижній декоратор
+    explanation: >
+      Кілька `parametrize` на одній функції перемножуються, тож виходить 3 × 2 = 6 тестів.
+      Щоб запускати значення парами без комбінацій, їх передають в одному декораторі з двома іменами.
+    sources:
+      - https://docs.pytest.org/en/stable/how-to/parametrize.html#pytest-mark-parametrize
+  - id: pytest-007
+    level: middle
+    type: single
+    text: Тест патчить `app.clients.fetch`, але `load()` усе одно викликає справжню функцію. Чому?
+    code:
+      lang: python
+      source: |
+        # app/service.py
+        from app.clients import fetch
+
+        def load():
+            return fetch()
+
+        # test_service.py
+        from unittest.mock import patch
+        from app.service import load
+
+        def test_load():
+            with patch("app.clients.fetch") as m:
+                load()
+    options:
+      - text: Після `from ... import` модуль `service` має власне ім'я `fetch`, тож патчити треба `app.service.fetch`
+        correct: true
+      - text: "`patch` працює лише як декоратор, а в блоці `with` він мовчки нічого не підміняє в модулях"
+      - text: "`patch` не підміняє функції, імпортовані з іншого пакета: він працює лише з методами класів"
+      - text: Підміну треба вмикати окремим викликом `m.start()`, а без нього `patch` лише створює об'єкт `Mock`
+    explanation: >
+      `patch` підміняє ім'я в просторі імен модуля, а не сам об'єкт функції. Після `from app.clients import fetch` `service` тримає власне ім'я,
+      яке підміна `app.clients.fetch` не зачіпає. Правило з документації: патчимо там, де об'єкт шукають, а не там, де його визначено.
+    sources:
+      - https://docs.python.org/3/library/unittest.mock.html#where-to-patch
+  - id: pytest-008
+    level: middle
+    type: multiple
+    text: Що правильно про фікстури з `yield`?
+    options:
+      - text: Код після `yield` — це teardown, він виконується після завершення тесту
+        correct: true
+      - text: Teardown фікстур одного тесту йде у порядку, зворотному до setup
+        correct: true
+      - text: Якщо фікстура впала до `yield`, її teardown пропускається, а решти виконуються
+        correct: true
+      - text: Якщо сам тест упав, код після `yield` пропускається, щоб зберегти стан для розбору падіння
+      - text: Teardown виконується в тому ж порядку, у якому фікстури було створено при setup
+    explanation: >
+      pytest ставить фікстури в лінійний порядок, запускає кожну до `yield`, а після тесту проходить список у зворотному напрямку й виконує залишок кожної.
+      Падіння тесту teardown не скасовує, а винятком до `yield` скасовується лише teardown самої цієї фікстури.
+    sources:
+      - https://docs.pytest.org/en/stable/how-to/fixtures.html#yield-fixtures-recommended
+      - https://docs.pytest.org/en/stable/how-to/fixtures.html#handling-errors-for-yield-fixture
+  - id: pytest-009
+    level: senior
+    type: single
+    text: Що буде вмістом `order` у кінці цього тесту (фікстури однакової області `function`)?
+    code:
+      lang: python
+      source: |
+        import pytest
+
+        @pytest.fixture
+        def order():
+            return []
+
+        @pytest.fixture
+        def b(order):
+            order.append("b")
+
+        @pytest.fixture
+        def a(b, order):
+            order.append("a")
+
+        @pytest.fixture(autouse=True)
+        def z(order):
+            order.append("z")
+
+        def test_it(a, order):
+            print(order)
+    options:
+      - text: "`['z', 'b', 'a']`"
+        correct: true
+      - text: "`['b', 'a', 'z']`"
+      - text: "`['a', 'b', 'z']`"
+      - text: "`['z', 'a', 'b']`"
+    explanation: >
+      Autouse-фікстури виконуються першими в межах своєї області, а залежності визначають решту: `a` залежить від `b`, тож `b` іде перед `a`.
+      Порядок оголошення й порядок параметрів тесту на це не впливають.
+    sources:
+      - https://docs.pytest.org/en/stable/reference/fixtures.html#autouse-fixtures-are-executed-first-within-their-scope
+  - id: pytest-010
+    level: senior
+    type: single
+    text: Яку проблему вирішує `patch(..., autospec=True)` порівняно зі звичайним `patch`, що створює `MagicMock`?
+    options:
+      - text: Мок повторює сигнатуру й атрибути оригіналу, тож хибний виклик чи неіснуючий метод дають помилку
+        correct: true
+      - text: Мок перестає записувати виклики, тому тест працює швидше й менше навантажує пам'ять процесу
+      - text: Мок сам повертає значення, які справжня функція повернула б на цих самих аргументах
+      - text: Патч лишається активним після завершення тесту, і наступні тести отримують ту саму підміну
+    explanation: >
+      Звичайний `MagicMock` приймає будь-які аргументи й будь-які атрибути, тому тест може проходити, коли оригінал уже змінив сигнатуру.
+      Auto-speccing створює мок за специфікацією реального об'єкта, і помилковий виклик дає той самий `TypeError`, що й справжній код.
+    sources:
+      - https://docs.python.org/3/library/unittest.mock.html#autospeccing
+  - id: pytest-011
+    level: senior
+    type: multiple
+    text: Що правильно про `@pytest.mark.xfail`?
+    options:
+      - text: За замовчуванням несподівано пройдений тест (XPASS) не валить набір, а лише потрапляє в підсумок
+        correct: true
+      - text: З `strict=True` XPASS вважається провалом набору
+        correct: true
+      - text: Значення `strict` за замовчуванням для всього проєкту можна змінити опцією `xfail_strict` у конфігурації
+        correct: true
+      - text: Тест із `xfail` не виконується, pytest одразу позначає його як очікувано впалий
+      - text: Очікуваний провал такого тесту рахується в підсумку як `failed`
+    explanation: >
+      `xfail` запускає тест і порівнює результат із очікуванням: падіння дає `xfailed`, проходження дає `xpassed`.
+      Строгий режим перетворює `xpassed` на помилку, щоб виправлену помилку не забули зняти з позначки.
+      Починаючи з pytest 9.0 опція називається `strict_xfail`, а `xfail_strict` лишається її аліасом.
+    sources:
+      - https://docs.pytest.org/en/stable/how-to/skipping.html#strict-parameter
+  - id: pytest-012
+    level: senior
+    type: multiple
+    text: Що правильно про `conftest.py` і видимість фікстур?
+    options:
+      - text: Фікстури з `conftest.py` доступні тестам у цій теці та вкладених без жодного імпорту
+        correct: true
+      - text: Фікстуру з тим самим іменем у тестовому модулі або в `conftest.py` глибшої теки перекриває ту, що вище
+        correct: true
+      - text: Фікстури з `conftest.py` сусідньої теки також видимі, бо pytest складає всі в один реєстр
+      - text: Щоб скористатися фікстурою з `conftest.py`, її треба імпортувати рядком `from conftest import ...`
+    explanation: >
+      Видимість фікстури визначає місце її оголошення: `conftest.py` діє на свою теку й вкладені, а ближче оголошення перекриває дальше.
+      Сусідні гілки теки одна одної не бачать, тож спільні фікстури піднімають у спільний предок.
+    sources:
+      - https://docs.pytest.org/en/stable/reference/fixtures.html#conftest-py-sharing-fixtures-across-multiple-files
+      - https://docs.pytest.org/en/stable/how-to/fixtures.html#override-a-fixture-on-a-directory-conftest-level

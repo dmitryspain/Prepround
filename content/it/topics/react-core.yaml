@@ -1,0 +1,283 @@
+id: react-core
+title: "React: компоненти й рендер"
+description: JSX, props/state, reconciliation, keys, Virtual DOM, StrictMode.
+questions:
+  - id: react-core-001
+    level: junior
+    type: single
+    text: Компонент (React 19) має повернути заголовок і абзац поруч, не додаючи зайвого елемента в DOM. Що використати?
+    options:
+      - text: "Фрагмент `<>…</>`, який групує сусідні елементи, але не створює власного вузла"
+        correct: true
+      - text: "Порожній тег `<template>`, який React прибирає з DOM, а вміст лишає без обгортки"
+      - text: "Обгортку `<div>` довкола обох елементів, бо JSX завжди вимагає саме елемент `div`"
+      - text: "Два оператори `return` поспіль: React зіб'є результати обох викликів у один вузол"
+    explanation: >
+      Вираз JSX має один корінь, а фрагмент дає цей корінь без додаткового вузла в DOM. Другий `return` недосяжний, тож нічого не додасть,
+      а `<template>` — звичайний HTML-елемент, який React лишає в DOM.
+    sources:
+      - https://react.dev/reference/react/Fragment
+      - https://react.dev/learn/writing-markup-with-jsx#1-return-a-single-root-element
+
+  - id: react-core-002
+    level: junior
+    type: single
+    text: Дочірній компонент `Counter` отримує `count` як проп і має його збільшувати. Як це робиться в React?
+    options:
+      - text: "Батько тримає стан і передає `count` та функцію-обробник як props, а дочірній викликає її"
+        correct: true
+      - text: "Дочірній компонент присвоює `props.count = props.count + 1`, і React перемальовує обидва компоненти"
+      - text: "Дочірній компонент змінює об'єкт `props` через `Object.assign`, і новий вміст береться з нього"
+      - text: "Props двосторонні: запис у `props.count` у дочірньому автоматично змінює змінну в батька"
+    explanation: >
+      Props працюють лише на читання, дані течуть зверху вниз. Щоб дочірній компонент ініціював зміну, батько передає йому колбек,
+      який оновлює стан у батька. Пряме присвоєння `props.count` стан не змінює й не викликає рендеру.
+    sources:
+      - https://react.dev/learn/passing-props-to-a-component#how-props-change-over-time
+      - https://react.dev/learn/sharing-state-between-components
+
+  - id: react-core-003
+    level: junior
+    type: multiple
+    text: Які твердження про атрибут `key` у списку елементів у React 19 правильні?
+    options:
+      - text: "Ключ має бути унікальним серед сусідніх елементів одного масиву, а не в межах усього застосунку"
+        correct: true
+      - text: "Компонент не бачить власного `key` у `props`: ключ потрібен лише самому React"
+        correct: true
+      - text: "Ключ на основі індексу масиву ненадійний, коли елементи вставляють, видаляють або переставляють"
+        correct: true
+      - text: "Ключ має бути унікальним на всій сторінці, тому два списки не можуть мати однакових значень"
+      - text: "Ключ генерують під час кожного рендеру через `Math.random()`, щоб значення точно не збігалися"
+    explanation: >
+      React порівнює ключі лише між сусідами в одному списку, тож однакові значення в різних списках допустимі. `key` не потрапляє в `props`.
+      Індекс прив'язує стан до позиції, а не до даних, а випадкові ключі змушують React щоразу знищувати й створювати елементи наново.
+    sources:
+      - https://react.dev/learn/rendering-lists#rules-of-keys
+      - https://react.dev/learn/rendering-lists#why-does-react-need-keys
+
+  - id: react-core-004
+    level: junior
+    type: single
+    text: Що відрендерить цей компонент, якщо `count` дорівнює `0` (React 19)?
+    code:
+      lang: jsx
+      source: |
+        function Inbox({ count }) {
+          return <div>{count && <p>Нових листів: {count}</p>}</div>;
+        }
+    options:
+      - text: "Число `0` всередині `div`, бо `0 && …` повертає саме `0`, а React виводить числа"
+        correct: true
+      - text: "Порожній `div`, бо `0` хибне, а React не показує жодних хибних значень у розмітці"
+      - text: "Абзац із текстом «Нових листів: 0», бо умова з числом нуль у JSX завжди вважається істинною"
+      - text: "Помилку під час рендеру: у фігурних дужках JSX не можна ставити число замість булевого значення"
+    explanation: >
+      Оператор `&&` повертає перший хибний операнд, тобто саме `0`. React не відкидає числа, тому нуль потрапляє в розмітку. `false`, `null` і `undefined`
+      не виводяться, а `0` виводиться. Безпечніше написати `count > 0 && …`.
+    sources:
+      - https://react.dev/learn/conditional-rendering#logical-and-operator-
+      - https://react.dev/learn/conditional-rendering#pitfall
+
+  - id: react-core-005
+    level: middle
+    type: single
+    text: Користувач натиснув кнопку в `Counter`, і там показано `n=1`. Потім батько змінив `userId` з `1` на `2`. Що буде з лічильником?
+    code:
+      lang: jsx
+      source: |
+        function Page({ userId }) {
+          return <Counter key={userId} />;
+        }
+
+        function Counter() {
+          const [n, setN] = useState(0);
+          return <button onClick={() => setN(n + 1)}>n={n}</button>;
+        }
+    options:
+      - text: "Знову `n=0`: інший `key` означає інший елемент, тож React знищує старий екземпляр і створює новий"
+        correct: true
+      - text: "Лишається `n=1`: `key` застосовують лише в списках, а в одиночному елементі його ігнорують"
+      - text: "Лишається `n=1`: стан живе у функції `Counter`, а зміна `key` лише перемальовує вже наявний вузол"
+      - text: "Буде помилка: React забороняє змінювати `key` в елемента, який уже змонтовано в дереві"
+    explanation: >
+      Стан зберігається за місцем у дереві й ідентичністю елемента, а `key` входить у цю ідентичність. Новий `key` призводить до повного перемонтування,
+      тому початкове значення стану повертається. Це штатний спосіб скинути стан компонента.
+    sources:
+      - https://react.dev/learn/preserving-and-resetting-state#option-2-resetting-state-with-a-key
+
+  - id: react-core-006
+    level: middle
+    type: single
+    text: У `Counter` натиснули кнопку, і там `n=1`. Потім `a` змінилося з `true` на `false`. Що покаже лічильник?
+    code:
+      lang: jsx
+      source: |
+        function Panel({ a }) {
+          return (
+            <div>
+              {a ? <Counter label="A" /> : <Counter label="B" />}
+            </div>
+          );
+        }
+    options:
+      - text: "Той самий екземпляр зі станом `n=1`: на тій самій позиції той самий тип компонента"
+        correct: true
+      - text: "Новий лічильник із `n=0`, бо проп `label` змінився й React вважає це іншим компонентом"
+      - text: "Новий лічильник із `n=0`, бо гілки тернарного оператора мають різні вирази в коді JSX"
+      - text: "Лічильник зникне з DOM, бо тернарний оператор лишає лише один екземпляр компонента"
+    explanation: >
+      React зіставляє елементи за позицією в дереві й за типом. Обидві гілки дають `Counter` в одному місці, отже екземпляр і його стан зберігаються,
+      змінюються тільки props. Щоб скинути стан, потрібні різні `key` або різні позиції.
+    sources:
+      - https://react.dev/learn/preserving-and-resetting-state#same-component-at-the-same-position-preserves-state
+
+  - id: react-core-007
+    level: middle
+    type: single
+    text: Скільки разів відрендериться `Form` (React 19, без `StrictMode`) після одного кліку по кнопці?
+    code:
+      lang: jsx
+      source: |
+        function Form() {
+          const [a, setA] = useState(0);
+          const [b, setB] = useState(0);
+          console.log('render');
+          return (
+            <button onClick={() => {
+              setTimeout(() => { setA(1); setB(1); }, 0);
+            }}>
+              {a}{b}
+            </button>
+          );
+        }
+    options:
+      - text: "Один раз: оновлення в таймері групуються автоматично, а не лише в обробниках подій"
+        correct: true
+      - text: "Двічі: поза обробником події кожен виклик `setX` одразу запускає окремий рендер"
+      - text: "Жодного разу: оновлення стану в `setTimeout` React ігнорує, поки не буде новий клік"
+      - text: "Тричі: два оновлення стану й один додатковий рендер для узгодження DOM після змін"
+    explanation: >
+      Від React 18 оновлення, що відбуваються в одному «тіку», групуються в один рендер незалежно від джерела: таймер, проміс чи обробник події.
+      Раніше групувалися лише оновлення всередині подій React, тому в таймері було б два рендери.
+    sources:
+      - https://react.dev/learn/queueing-a-series-of-state-updates#react-batches-state-updates
+      - https://react.dev/blog/2022/03/29/react-v18#new-feature-automatic-batching
+
+  - id: react-core-008
+    level: middle
+    type: multiple
+    text: Які твердження про керовані й некеровані поля форми в React 19 правильні?
+    options:
+      - text: "Поле з `value`, але без `onChange` лишається недоступним для редагування, і React попереджає про це"
+        correct: true
+      - text: "У керованого поля текст, який бачить користувач, задається значенням зі стану компонента"
+        correct: true
+      - text: "Після монтування зміна `defaultValue` не оновлює вже введений у некероване поле текст"
+        correct: true
+      - text: "Керованому полю потрібен `ref`, інакше React не зможе прочитати введений користувачем текст"
+      - text: "Змінна `defaultValue` у некерованого поля працює як `value`: нове значення одразу потрапляє в поле"
+    explanation: >
+      `value` віддає контроль над полем React, тому без `onChange` ввід не змінює нічого. `defaultValue` задає лише початкове значення, а далі поле
+      веде DOM. Читати значення керованого поля через `ref` не потрібно: воно вже лежить у стані.
+    sources:
+      - https://react.dev/reference/react-dom/components/input#controlling-an-input-with-a-state-variable
+      - https://react.dev/reference/react-dom/components/input#providing-an-initial-value-for-an-input
+
+  - id: react-core-009
+    level: senior
+    type: single
+    text: У проєкті на React 19 після кліку в батьківському компоненті втрачається стан у `Inner`, а поле введення скидається. У чому причина?
+    code:
+      lang: jsx
+      source: |
+        function Parent() {
+          const [tick, setTick] = useState(0);
+
+          function Inner() {
+            const [text, setText] = useState('');
+            return <input value={text} onChange={e => setText(e.target.value)} />;
+          }
+
+          return <div><Inner /><button onClick={() => setTick(tick + 1)}>+</button></div>;
+        }
+    options:
+      - text: "`Inner` оголошено всередині `Parent`: щоразу це нова функція, тож React бачить інший тип і перемонтовує"
+        correct: true
+      - text: "Стан у `Inner` губиться, бо `Parent` тримає власний стан `tick` і передає батьківські props вниз"
+      - text: "Поле введення скидається, бо `Inner` не отримав `key`, а без нього React не зберігає стан елементів"
+      - text: "Стан зникає, бо `setTick` у `Parent` примусово скидає стан усіх дочірніх компонентів у дереві"
+    explanation: >
+      React порівнює тип елемента за посиланням на функцію. Вкладена функція створюється заново під час кожного рендеру `Parent`, тому тип щоразу новий,
+      і старе піддерево знищується разом зі станом. Компоненти оголошують на верхньому рівні модуля, а потрібні дані передають через props.
+    sources:
+      - https://react.dev/learn/your-first-component#nesting-and-organizing-components
+      - https://react.dev/learn/preserving-and-resetting-state#different-components-at-the-same-position-reset-state
+
+  - id: react-core-010
+    level: senior
+    type: multiple
+    text: Які твердження про `StrictMode` у React 19 у режимі розробки правильні?
+    options:
+      - text: "Функція компонента викликається двічі, щоб виявити побічні ефекти й мутації в рендері"
+        correct: true
+      - text: "Під час монтування React ще раз проганяє ефект: setup, потім cleanup, потім знову setup"
+        correct: true
+      - text: "У продакшн-збірці додаткових викликів немає: `StrictMode` змінює поведінку лише в розробці"
+        correct: true
+      - text: "Другий виклик рендеру автоматично виправляє нечисті компоненти й прибирає дублі з даних"
+      - text: "Подвійні виклики видно користувачеві: у DOM з'являються дві копії кожного елемента"
+    explanation: >
+      `StrictMode` навмисно шукає порушення чистоти: зайвий виклик рендеру й імітація перемонтування ефектів тільки в dev. Нічого не лагодить
+      і не міняє DOM, лише робить помилки помітними, наприклад, відсутній cleanup чи запис у зовнішній масив під час рендеру.
+    sources:
+      - https://react.dev/reference/react/StrictMode#fixing-bugs-found-by-double-rendering-in-development
+      - https://react.dev/reference/react/StrictMode#fixing-bugs-found-by-re-running-effects-in-development
+
+  - id: react-core-011
+    level: senior
+    type: single
+    text: Користувач ввів текст у перше поле списку й натиснув «Видалити» біля першого рядка. Що станеться (React 19)?
+    code:
+      lang: jsx
+      source: |
+        function List() {
+          const [items, setItems] = useState(['a', 'b', 'c']);
+          return (
+            <div>
+              <button onClick={() => setItems(items.slice(1))}>Видалити</button>
+              {items.map((item, i) => (
+                <label key={i}>{item}<input /></label>
+              ))}
+            </div>
+          );
+        }
+    options:
+      - text: "Введений текст лишиться в першому полі, але біля підпису `b`: DOM-вузол прив'язаний до індексу"
+        correct: true
+      - text: "Текст зникне разом із рядком `a`, бо React видалить саме той вузол, що відповідав першому елементу"
+      - text: "Текст лишиться біля підпису `a`, а рядок із `b` зникне, бо React звіряє елементи за змістом"
+      - text: "React кине помилку про дубльовані ключі, бо після видалення перший ключ збігається з іншим"
+    explanation: >
+      Ключі `0` і `1` лишилися, тож React вирішує, що змінилися лише підписи: оновлює текст у перших двох рядках і прибирає останній вузол. Некероване
+      поле зберігає стан у DOM і лишається в першому рядку. Стабільні ключі з ідентифікатора даних прив'язують вузли до елементів.
+    sources:
+      - https://react.dev/learn/rendering-lists#why-does-react-need-keys
+      - https://react.dev/learn/preserving-and-resetting-state#option-2-resetting-state-with-a-key
+
+  - id: react-core-012
+    level: senior
+    type: single
+    text: Профайлер показує, що дочірній компонент перерендерюється при кожному кліку в батька, хоча його розмітка не змінюється. Що це означає?
+    options:
+      - text: "Рендер лише обчислює новий опис UI, а DOM зміниться тільки там, де React знайде відмінності"
+        correct: true
+      - text: "Кожен рендер повністю замінює піддерево в DOM, тому дочірні вузли щоразу створюються заново"
+      - text: "Віртуальний DOM гарантує, що компонент із незмінною розміткою зовсім не викликатиметься вдруге"
+      - text: "Перерендер означає, що DOM уже оновлено, а проміжне порівняння дерев відбувається після нього"
+    explanation: >
+      Рендер — це виклик функції компонента, а коміт у DOM відбувається після порівняння з попереднім результатом. Для незмінної розмітки
+      DOM-вузли лишаються тими самими, але робота зі створення елементів і порівняння все одно виконується. Це може бути вартим уваги лише тоді, коли рендер дорогий.
+    sources:
+      - https://react.dev/learn/render-and-commit#step-3-react-commits-changes-to-the-dom
+      - https://react.dev/learn/render-and-commit#epilogue-browser-paint

@@ -1,0 +1,4 @@
+id: frontend-testing
+title: Тестування фронтенду
+description: Юніт-тести (Vitest, Jest), Testing Library, e2e (Playwright), моки.
+questions: []

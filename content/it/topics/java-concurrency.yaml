@@ -1,0 +1,276 @@
+id: java-concurrency
+title: Багатопотоковість у Java
+description: Thread, ExecutorService, CompletableFuture, synchronized, java.util.concurrent, virtual threads.
+questions:
+  - id: java-concurrency-001
+    level: junior
+    type: single
+    text: Що виведе програма (Java 25)?
+    code:
+      lang: java
+      source: |
+        Thread t = new Thread(
+            () -> System.out.println("in " + Thread.currentThread().getName()),
+            "worker");
+        t.run();
+        t.start();
+        t.join();
+    options:
+      - text: "`in main`, потім `in worker`"
+        correct: true
+      - text: "`in worker` двічі"
+      - text: "`in worker`, потім `in main`"
+      - text: "`in main` двічі"
+    explanation: >
+      `run()` — звичайний виклик методу в поточному потоці (тут `main`), а новий потік створює лише `start()`.
+      Тому перший рядок друкує `main`, а другий — `worker`; порядок підтверджено запуском.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Thread.html#start()
+  - id: java-concurrency-002
+    level: junior
+    type: multiple
+    text: Що гарантує `synchronized` у Java?
+    options:
+      - text: Одночасно лише один потік може тримати монітор того самого об'єкта
+        correct: true
+      - text: Зміни, зроблені потоком до виходу з блоку, видимі наступному потоку, що входить у блок на тому ж моніторі
+        correct: true
+      - text: Потоки входять у блок у тому порядку, у якому звернулися до нього (чесна черга)
+      - text: Синхронізований метод екземпляра блокує всі синхронізовані методи будь-яких об'єктів цього класу
+    explanation: >
+      Монітор дає взаємне виключення й видимість: розблокування монітора відбувається раніше за наступне блокування того самого монітора.
+      Порядок входу при цьому не гарантується, а метод екземпляра блокує лише монітор свого об'єкта (`this`), а не всього класу.
+    sources:
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-17.html#jls-17.4.5
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.19
+  - id: java-concurrency-003
+    level: junior
+    type: single
+    text: Що станеться після того, як `main` завершить цей код (Java 25)?
+    code:
+      lang: java
+      source: |
+        ExecutorService ex = Executors.newFixedThreadPool(2);
+        ex.submit(() -> System.out.println("done")).get();
+        System.out.println("main end");
+    options:
+      - text: Програма надрукує обидва рядки, але JVM не завершиться, бо потоки пулу не є демонами
+        correct: true
+      - text: Програма надрукує обидва рядки й одразу завершиться, бо `main` закінчився
+      - text: Пул сам закриється, бо завдання виконано
+      - text: Програма викине `RejectedExecutionException`
+    explanation: >
+      Потоки з фабрики за замовчуванням — не демони, тому живий пул тримає JVM, доки не буде викликано `shutdown()`. Неактивний `ExecutorService` слід закривати.
+      Під час запуску з обмеженням у 4 секунди програма надрукувала обидва рядки й була зупинена таймером.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ExecutorService.html
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/Executors.html#defaultThreadFactory()
+  - id: java-concurrency-004
+    level: junior
+    type: single
+    text: Чому цей код (Java 25) зазвичай друкує число менше за 200000?
+    code:
+      lang: java
+      source: |
+        static int c = 0;
+        Runnable r = () -> { for (int i = 0; i < 100_000; i++) c++; };
+        Thread t1 = new Thread(r), t2 = new Thread(r);
+        t1.start(); t2.start();
+        t1.join(); t2.join();
+        System.out.println(c);
+    options:
+      - text: "`c++` — читання, збільшення й запис, тож оновлення двох потоків перекриваються"
+        correct: true
+      - text: "Потік `t2` починає з нуля, бо `c` копіюється в кожен потік під час створення"
+      - text: "Метод `join()` завершує потоки раніше, ніж вони закінчать свій цикл"
+      - text: "Цикл у кожного потоку виконується менше 100000 разів через рішення планувальника"
+    explanation: >
+      `c++` не атомарна, тому два потоки можуть прочитати те саме значення й записати однакове нове. Лічильник слід захистити `synchronized` або замінити на `AtomicInteger`.
+      У запуску вийшло 149253.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/atomic/package-summary.html
+  - id: java-concurrency-005
+    level: middle
+    type: single
+    text: Що виведе програма (Java 25)?
+    code:
+      lang: java
+      source: |
+        static int load() { throw new IllegalStateException("boom"); }
+
+        CompletableFuture.supplyAsync(Main::load)
+            .thenApply(x -> x + 1)
+            .exceptionally(ex -> {
+                System.out.println(ex.getClass().getSimpleName()
+                    + " / " + ex.getCause().getClass().getSimpleName());
+                return -1;
+            })
+            .join();
+    options:
+      - text: "`CompletionException / IllegalStateException`"
+        correct: true
+      - text: "`IllegalStateException`, а далі `NullPointerException` на `getCause()`"
+      - text: "`ExecutionException / IllegalStateException`"
+      - text: "`CompletionException / CompletionException`"
+    explanation: >
+      Виняток із залежної стадії передається далі, загорнутий у `CompletionException`, тож в `exceptionally` приходить обгортка, а справжня причина лежить у `getCause()`. `ExecutionException` кидає `get()`, а не стадія.
+      Поведінку підтверджено запуском еквівалентного коду.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletionStage.html#exceptionally(java.util.function.Function)
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html
+  - id: java-concurrency-006
+    level: middle
+    type: single
+    text: Що може піти не так у цьому коді (Java 25)?
+    code:
+      lang: java
+      source: |
+        static boolean stop = false;
+
+        Thread t = new Thread(() -> {
+            long n = 0;
+            while (!stop) n++;
+        });
+        t.start();
+        Thread.sleep(500);
+        stop = true;
+        t.join();
+    options:
+      - text: "Потік може ніколи не побачити `stop = true`, бо поле не `volatile`, і тоді `join()` зависне"
+        correct: true
+      - text: Запис у `boolean` не атомарний, тому потік побачить напівзаписане значення
+      - text: Код не скомпілюється, бо змінна, що змінюється в іншому потоці, мусить бути `final`
+      - text: Виклик `Thread.sleep` скидає кеш потоку, тож зміна завжди буде помічена
+    explanation: >
+      Без `volatile` чи синхронізації між записом і читанням немає відношення happens-before, і JIT має право винести читання `stop` з циклу. Достатньо оголосити `volatile boolean stop`.
+      Під час запуску потік після 2 секунд очікування `join` ще працював.
+    sources:
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-17.html#jls-17.4.5
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.3.1.4
+  - id: java-concurrency-007
+    level: middle
+    type: single
+    text: Чому цей код небезпечний, хоча `cache` є `ConcurrentHashMap` (Java 25)?
+    code:
+      lang: java
+      source: |
+        if (!cache.containsKey(key)) {
+            cache.put(key, load(key));
+        }
+    options:
+      - text: "Між `containsKey` і `put` інший потік може вставити значення; потрібен `computeIfAbsent`"
+        correct: true
+      - text: Метод `put` у `ConcurrentHashMap` не потокобезпечний, тож потрібен зовнішній замок
+      - text: Метод `containsKey` блокує всю таблицю, тому код працює повільно, а не неправильно
+      - text: Метод `containsKey` повертає застарілі дані, бо `ConcurrentHashMap` кешує результат
+    explanation: >
+      Кожна окрема операція `ConcurrentHashMap` потокобезпечна, але послідовність «перевірити, потім діяти» — ні, і `load` може виконатись двічі або затерти чуже значення.
+      `computeIfAbsent` та `putIfAbsent` виконують перевірку й вставку атомарно.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ConcurrentHashMap.html#computeIfAbsent(K,java.util.function.Function)
+  - id: java-concurrency-008
+    level: middle
+    type: multiple
+    text: Які твердження про обробку винятків у завданнях `ThreadPoolExecutor` правильні (Java 25)?
+    options:
+      - text: "Виняток із `submit` зберігається у `Future` і виходить із `get()` як `ExecutionException`"
+        correct: true
+      - text: "Виняток із `execute` не потрапляє у `Future`, а йде в обробник необроблених винятків потоку"
+        correct: true
+      - text: "Якщо не викликати `get()`, виняток із `submit` усе одно буде надруковано в `stderr` потоком пулу"
+      - text: "Метод `get()` кидає оригінальний виняток завдання напряму, без жодної обгортки `ExecutionException`"
+    explanation: >
+      `submit` повертає `Future`, який «поглинає» виняток, тож без `get()` про збій нічого не видно. `execute` жодного `Future` не має, тому виняток доходить до `UncaughtExceptionHandler`, а у виводі видно стек із потоку `pool-1-thread-1`.
+      Це підтверджено запуском.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/Future.html#get()
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ThreadPoolExecutor.html
+  - id: java-concurrency-009
+    level: senior
+    type: multiple
+    text: Які твердження про віртуальні потоки в Java 25 правильні?
+    options:
+      - text: "Для блокуючого I/O на кожну задачу створюють новий віртуальний потік, без пулу"
+        correct: true
+      - text: "У Java 25 блокування в `synchronized` здебільшого не прив'язує потік до носія (JEP 491)"
+        correct: true
+      - text: Віртуальні потоки прискорюють CPU-важкі обчислення, бо їх можна створити більше, ніж ядер
+      - text: "Одночасно може існувати не більше віртуальних потоків, ніж ядер процесора на сервері"
+    explanation: >
+      Віртуальні потоки дешеві, тож їх не пулять, а обмежують паралелізм, наприклад, семафором. Вони виграють на задачах, що здебільшого чекають, а для CPU-навантаження бракує ядер, а не потоків.
+      Починаючи з Java 24 `synchronized` більше не призводить до pinning у переважній більшості випадків.
+    sources:
+      - https://openjdk.org/jeps/491
+      - https://openjdk.org/jeps/444
+  - id: java-concurrency-010
+    level: senior
+    type: single
+    text: Сервіс завис, а два потоки стоять у стані BLOCKED. Яким є найшвидший спосіб підтвердити взаємне блокування (deadlock) і яке виправлення правильне (Java 25)?
+    code:
+      lang: java
+      source: |
+        new Thread(() -> { synchronized (A) { pause(); synchronized (B) { } } }, "t1").start();
+        new Thread(() -> { synchronized (B) { pause(); synchronized (A) { } } }, "t2").start();
+    options:
+      - text: "Зняти дамп потоків через `jcmd <pid> Thread.print` і узгодити порядок замків"
+        correct: true
+      - text: "Викликати `interrupt()` на заблокованих потоках, бо переривання знімає очікування монітора"
+      - text: "Збільшити розмір стека `-Xss`, бо глибока вкладеність викликів тримає замки в потоках"
+      - text: Замінити `synchronized` на `volatile` у полях `A` і `B`
+    explanation: >
+      Дамп потоків показує, хто який монітор тримає й чекає, а JVM прямо повідомляє про цикл очікування. Цикл розривається єдиним порядком захоплення замків (або одним замком).
+      `interrupt()` не виводить потік з очікування монітора. У запуску `jcmd` вивів `Found one Java-level deadlock` для `t1` і `t2`.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/troubleshoot/troubleshooting-hanging-or-looping-process.html
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Thread.html#interrupt()
+  - id: java-concurrency-011
+    level: senior
+    type: single
+    text: Чому цей варіант double-checked locking без `volatile` вважають небезпечним (Java 25)?
+    code:
+      lang: java
+      source: |
+        private static Config inst;
+
+        static Config get() {
+            if (inst == null) {
+                synchronized (Holder.class) {
+                    if (inst == null) inst = new Config();
+                }
+            }
+            return inst;
+        }
+    options:
+      - text: "Потік може побачити не `null`, але об'єкт із ще не видимими полями"
+        correct: true
+      - text: Другий потік завжди створить другий екземпляр, бо `synchronized` не захищає статичні поля
+      - text: Перевірка `inst == null` поза блоком спричиняє deadlock
+      - text: "`synchronized (Holder.class)` недопустимий у статичному методі"
+    explanation: >
+      Запис посилання `inst` і запис полів нового об'єкта можуть стати видимими іншому потокові в іншому порядку, бо читання поза монітором не утворює happens-before. Виправлення — `volatile` на `inst` або ініціалізація через клас-холдер.
+      Другий потік, що зайде в монітор, побачить уже встановлене значення, тож «другий екземпляр» не виникає.
+    sources:
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-17.html#jls-17.4.5
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.3.1.4
+  - id: java-concurrency-012
+    level: senior
+    type: single
+    text: >-
+      Пул створено як на коді нижче, і в нього поспіль подано 10 завдань по 100 мс. Скільки потоків він використає і чому (Java 25)?
+    code:
+      lang: java
+      source: |
+        var ex = new ThreadPoolExecutor(
+            2, 4, 60, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>());
+    options:
+      - text: "Два: після `corePoolSize` завдання йдуть у необмежену чергу, тож `maximumPoolSize` не використовується"
+        correct: true
+      - text: Чотири, бо надлишкові завдання одразу розширюють пул до максимуму
+      - text: Десять, бо кожне завдання отримує власний потік
+      - text: Чотири, бо пул спершу заповнює чергу, а потім розширюється, поки не вичерпається `keepAliveTime`
+    explanation: >
+      Спершу пул створює потоки до `corePoolSize`, далі віддає перевагу черзі, а новий потік понад ядро додає лише тоді, коли чергу неможливо поповнити. Необмежена `LinkedBlockingQueue` не заповнюється, тож пул не виходить за 2 потоки.
+      Запуск показав `threads=2`, а з `ArrayBlockingQueue(2)` — чотири потоки й відмови після переповнення.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ThreadPoolExecutor.html

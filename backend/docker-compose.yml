@@ -1,0 +1,27 @@
+# Local development database only. Explicit project name keeps it apart from other repos' "backend" folders.
+name: prepround
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: prepround-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: prepround
+      POSTGRES_USER: prepround
+      # Dev-only password for this local container; the API reads it from appsettings.Development.json, ContentTool from user-secrets or ConnectionStrings__Prepround.
+      POSTGRES_PASSWORD: prepround
+    ports:
+      - "5433:5432"
+    volumes:
+      # Postgres 18 images keep data under /var/lib/postgresql/<major>/docker, so the volume mounts the parent.
+      - prepround_pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prepround -d prepround"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  prepround_pgdata:
+    name: prepround_pgdata

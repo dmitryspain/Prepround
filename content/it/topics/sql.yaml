@@ -1,0 +1,216 @@
+id: sql
+title: SQL і реляційні БД
+description: Запити, JOIN, індекси, транзакції, рівні ізоляції, нормалізація, плани виконання.
+questions:
+  - id: sql-001
+    level: junior
+    type: single
+    text: Чим `WHERE` відрізняється від `HAVING`?
+    options:
+      - text: "`WHERE` фільтрує рядки до групування, а `HAVING` — групи після `GROUP BY`"
+        correct: true
+      - text: Нічим, це синоніми
+      - text: "`HAVING` працює лише з індексованими колонками"
+      - text: "`WHERE` можна використовувати лише разом з агрегатними функціями"
+    explanation: >
+      `WHERE` відкидає рядки ще до `GROUP BY`, тому агрегатних функцій у ньому бути не може.
+      `HAVING` застосовується до вже сформованих груп і зазвичай містить умову з агрегатом, наприклад `HAVING COUNT(*) > 5`.
+
+  - id: sql-002
+    level: junior
+    type: single
+    text: Скільки рядків поверне цей запит?
+    code:
+      lang: sql
+      source: |
+        -- customers (id, name): (1, 'Ann'), (2, 'Bob'), (3, 'Eve')
+        -- orders (id, customer_id): (10, 1), (11, 1), (12, 2)
+        SELECT c.name, o.id
+        FROM customers c
+        LEFT JOIN orders o ON o.customer_id = c.id;
+    options:
+      - text: "`4`"
+        correct: true
+      - text: "`3`"
+      - text: "`5`"
+      - text: "`9`"
+    explanation: >
+      `LEFT JOIN` повертає кожен рядок лівої таблиці з усіма відповідними рядками правої: Ann двічі, Bob один раз.
+      Eve замовлень не має, тож потрапляє в результат один раз, з `NULL` замість `o.id`.
+
+  - id: sql-003
+    level: junior
+    type: multiple
+    text: Які твердження про `NULL` у SQL правильні?
+    options:
+      - text: "`NULL = NULL` дає не `TRUE`, а `NULL` (невідомо)"
+        correct: true
+      - text: Перевіряти значення на `NULL` треба через `IS NULL` або `IS NOT NULL`
+        correct: true
+      - text: "`COUNT(email)` не рахує рядки, де `email` дорівнює `NULL`"
+        correct: true
+      - text: "`COUNT(*)` пропускає рядки, у яких є хоч один `NULL`"
+      - text: "`WHERE email <> 'a@b.c'` поверне й рядки, де `email` дорівнює `NULL`"
+    explanation: >
+      Звичайне порівняння з `NULL` дає `NULL`, а `WHERE` пропускає лише рядки з `TRUE`, тому для `NULL` є `IS NULL`.
+      `COUNT(column)` рахує лише значення, відмінні від `NULL`, а `COUNT(*)` — усі рядки.
+
+  - id: sql-004
+    level: junior
+    type: single
+    text: Що гарантує обмеження `PRIMARY KEY`?
+    options:
+      - text: Значення ключа унікальні й не `NULL`; PostgreSQL створює для нього індекс
+        correct: true
+      - text: Лише унікальність значень, а один або кілька `NULL` у ключі дозволено стандартом
+      - text: Рядки фізично зберігаються на диску відсортованими за значенням ключа завжди
+      - text: Значення ключа база автоматично генерує, навіть якщо його не вказано
+    explanation: >
+      Первинний ключ — це `UNIQUE` разом із `NOT NULL`, і в таблиці він може бути лише один.
+      PostgreSQL створює для нього унікальний індекс, але порядок рядків у таблиці від цього не залежить,
+      а автогенерацію значень задають окремо, наприклад `GENERATED ALWAYS AS IDENTITY`.
+
+  - id: sql-005
+    level: middle
+    type: single
+    text: >
+      На колонці `email` таблиці `users` є звичайний B-tree індекс. Як зробити, щоб запит
+      `SELECT * FROM users WHERE lower(email) = 'ann@example.com'` міг використати індекс?
+    options:
+      - text: "Створити індекс за виразом: `CREATE INDEX ON users (lower(email));`"
+        correct: true
+      - text: "Нічого не робити: PostgreSQL сам застосує індекс на `email` до `lower(email)`"
+      - text: "Замінити `=` на `LIKE`"
+      - text: "Виконати `VACUUM users`"
+    explanation: >
+      Індекс на `email` зберігає самі значення колонки, а умова порівнює результат функції, тож цей індекс їй не підходить.
+      Індекс за виразом `lower(email)` зберігає саме результат функції, і запит з тим самим виразом може ним скористатися.
+
+  - id: sql-006
+    level: middle
+    type: multiple
+    text: Які аномалії можливі в PostgreSQL на рівні ізоляції `READ COMMITTED`?
+    options:
+      - text: Неповторюване читання (non-repeatable read)
+        correct: true
+      - text: Фантомне читання (phantom read)
+        correct: true
+      - text: Аномалія серіалізації (serialization anomaly)
+        correct: true
+      - text: Брудне читання (dirty read) чужих змін
+    explanation: >
+      У `READ COMMITTED` кожна команда бачить дані, зафіксовані до її початку, тож два однакові `SELECT`
+      в одній транзакції можуть повернути різне. Незафіксованих змін інших транзакцій PostgreSQL не показує
+      на жодному рівні ізоляції, тому брудного читання в ньому не буває.
+
+  - id: sql-007
+    level: middle
+    type: single
+    text: >
+      У відділі три співробітники: двоє мають однакову найвищу зарплату, третій — меншу.
+      Які значення `r` вони отримають?
+    code:
+      lang: sql
+      source: |
+        SELECT name,
+               RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS r
+        FROM employees;
+    options:
+      - text: "`1, 1, 3`"
+        correct: true
+      - text: "`1, 2, 3`"
+      - text: "`1, 1, 2`"
+      - text: "`1, 1, 1`"
+    explanation: >
+      `RANK()` дає однаковим значенням однаковий ранг і пропускає наступні номери, тому після двох перших іде 3.
+      Без пропусків (`1, 1, 2`) нумерує `DENSE_RANK()`, а `ROW_NUMBER()` нумерує всі рядки підряд (`1, 2, 3`).
+
+  - id: sql-008
+    level: middle
+    type: single
+    text: Чим `EXPLAIN ANALYZE` відрізняється від `EXPLAIN` у PostgreSQL?
+    options:
+      - text: "`EXPLAIN ANALYZE` виконує запит і показує фактичний час і кількість рядків"
+        correct: true
+      - text: Нічим, це синоніми, а `ANALYZE` лише додає до виводу колір і нумерацію
+      - text: "Перед побудовою плану оновлює статистику таблиці, як команда `ANALYZE`"
+      - text: Показує план без виконання запиту, але точніший, бо враховує кеш
+    explanation: >
+      `EXPLAIN` лише показує план з оцінками планувальника, а з `ANALYZE` запит виконується, і видно фактичні значення.
+      Тому `INSERT`, `UPDATE` чи `DELETE` під `EXPLAIN ANALYZE` справді змінять дані, якщо не обгорнути їх
+      у транзакцію з `ROLLBACK`.
+
+  - id: sql-009
+    level: senior
+    type: single
+    text: Яка аномалія ще можлива в PostgreSQL на рівні ізоляції `REPEATABLE READ`?
+    options:
+      - text: Аномалія серіалізації, як-от write skew
+        correct: true
+      - text: Фантомне читання нових рядків із тією самою умовою
+      - text: Неповторюване читання вже прочитаних рядків
+      - text: Брудне читання незафіксованих змін
+    explanation: >
+      У PostgreSQL `REPEATABLE READ` працює з одним знімком даних на всю транзакцію, тому неповторюваних
+      і фантомних читань там немає, хоча стандарт SQL фантоми на цьому рівні дозволяє.
+      Аномалії серіалізації, як-от write skew, виключає лише `SERIALIZABLE`.
+
+  - id: sql-010
+    level: senior
+    type: multiple
+    text: Які причини можуть пояснити, чому PostgreSQL не використовує B-tree індекс на колонці з умови `WHERE`?
+    options:
+      - text: Умова відбирає велику частку рядків таблиці, і послідовне сканування дешевше
+        correct: true
+      - text: "Умова має вигляд `LIKE '%term'`, тобто шаблон починається з `%`"
+        correct: true
+      - text: Статистика застаріла, і планувальник помиляється в оцінці кількості рядків
+        correct: true
+      - text: Умова — точна рівність за унікальною колонкою у великій таблиці
+      - text: Сама наявність у таблиці інших індексів забороняє планувальнику брати цей B-tree
+    explanation: >
+      Планувальник обирає план за оцінкою вартості: якщо рядків вибирається багато або статистика (`ANALYZE`) неточна,
+      послідовне сканування виявляється чи здається дешевшим. B-tree допомагає `LIKE` лише тоді, коли шаблон
+      закріплено на початку рядка, як `'term%'`.
+
+  - id: sql-011
+    level: senior
+    type: single
+    text: Запит віддає стрічку постів сторінками. Чому на далеких сторінках він повільний і що краще зробити?
+    code:
+      lang: sql
+      source: |
+        SELECT id, created_at, title
+        FROM posts
+        ORDER BY created_at DESC, id DESC
+        LIMIT 20 OFFSET 100000;
+    options:
+      - text: >
+          `OFFSET` змушує відкинути 100 000 рядків; краще keyset: `WHERE (created_at, id) < ($1, $2)` з індексом
+        correct: true
+      - text: "Повільний через `LIMIT`, його варто замінити на `FETCH FIRST 20 ROWS ONLY`, який працює швидше"
+      - text: "Допоможе `SELECT DISTINCT`, бо зменшить кількість рядків, які база мусить відкинути"
+      - text: "Треба збільшити `work_mem`, і тоді `OFFSET` стане безкоштовним навіть на далеких сторінках"
+    explanation: >
+      Рядки, пропущені через `OFFSET`, усе одно обчислюються на сервері, тож вартість росте з номером сторінки.
+      Keyset-пагінація продовжує з останнього показаного ключа `(created_at, id)` і з відповідним індексом
+      читає лише потрібні 20 рядків.
+
+  - id: sql-012
+    level: senior
+    type: multiple
+    text: Які твердження про `SELECT … FOR UPDATE` у PostgreSQL правильні?
+    options:
+      - text: >
+          Блокує вибрані рядки до кінця транзакції: інші не можуть їх змінити, видалити чи так само заблокувати
+        correct: true
+      - text: "З `SKIP LOCKED` запит пропускає заблоковані рядки, тож кілька воркерів беруть задачі з однієї таблиці"
+        correct: true
+      - text: "З `NOWAIT` запит не чекає, а одразу завершується помилкою, якщо рядок уже заблоковано"
+        correct: true
+      - text: "Блокує рядки й для звичайних `SELECT` інших транзакцій, які чекають на `COMMIT`"
+      - text: "Блокування знімається одразу після завершення `SELECT`, ще до кінця транзакції, тож тримати його не треба"
+    explanation: >
+      Блокування рядків у PostgreSQL заважають лише тим, хто змінює або блокує ті самі рядки, а звичайне читання їх не помічає.
+      `FOR UPDATE` тримає блокування до `COMMIT` чи `ROLLBACK`, а `NOWAIT` і `SKIP LOCKED` визначають лише,
+      що робити з уже заблокованими рядками.

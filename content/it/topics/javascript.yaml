@@ -1,0 +1,276 @@
+id: javascript
+title: JavaScript
+description: Типи, замикання, прототипи, this, event loop, проміси, async/await, модулі.
+questions:
+  - id: javascript-001
+    level: junior
+    type: single
+    text: Що виведе код?
+    code:
+      lang: javascript
+      source: |
+        const o = { n: 1 };
+        o.n = 2;
+        console.log(o.n);
+        try { o = { n: 3 }; } catch (e) { console.log(e.constructor.name); }
+    options:
+      - text: "`2`, а потім `TypeError`"
+        correct: true
+      - text: "`1`, а потім `TypeError`"
+      - text: "`2`, а потім ніякої помилки: `o` стає `{ n: 3 }`"
+      - text: "`TypeError` уже на рядку `o.n = 2`: об'єкт під `const` заморожений"
+    explanation: >
+      `const` забороняє лише повторне присвоєння самої змінної, а не зміну вмісту об'єкта, на який вона посилається.
+      Тому `o.n = 2` працює, а `o = { n: 3 }` кидає `TypeError`. Щоб заборонити зміну полів, потрібен `Object.freeze`.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const
+
+  - id: javascript-002
+    level: junior
+    type: multiple
+    text: Які з цих значень під час приведення до булевого дають `false`?
+    options:
+      - text: "`0` (число нуль, а також від'ємний `-0`)"
+        correct: true
+      - text: "`NaN` (наприклад, результат `0 / 0`)"
+        correct: true
+      - text: "`null` (навмисно задана відсутність значення)"
+        correct: true
+      - text: "`'0'` (непорожній рядок із символом нуля)"
+      - text: "`[]` (порожній масив без жодного елемента)"
+      - text: "`{}` (об'єкт без власних властивостей)"
+    explanation: >
+      Хибними (falsy) є `false`, `0`, `-0`, `0n`, `''`, `null`, `undefined` і `NaN`. Рядок `'0'` непорожній, а масиви й об'єкти
+      завжди істинні, навіть порожні, тому `if ([])` виконується.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Glossary/Falsy
+
+  - id: javascript-003
+    level: junior
+    type: single
+    text: Що виведе код?
+    code:
+      lang: javascript
+      source: |
+        console.log(0 == '', null == undefined, null == 0, NaN == NaN);
+    options:
+      - text: "`true true false false`"
+        correct: true
+      - text: "`false true false false`"
+      - text: "`true false false true`"
+      - text: "`true true true false`"
+    explanation: >
+      `==` приводить типи: `0 == ''` дає `true`, бо порожній рядок стає `0`. `null == undefined` — окреме правило, а з жодним іншим значенням
+      `null` нестрого не дорівнює, тому `null == 0` хибне. `NaN` не дорівнює навіть собі. Саме тому за замовчуванням беруть `===`.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Equality_comparisons_and_sameness
+
+  - id: javascript-004
+    level: junior
+    type: single
+    text: Що виведе код?
+    code:
+      lang: javascript
+      source: |
+        const r1 = [1, 2, 3].forEach(x => x * 2);
+        const r2 = [1, 2, 3].map(x => x * 2);
+        console.log(r1, r2);
+    options:
+      - text: "`undefined [ 2, 4, 6 ]`"
+        correct: true
+      - text: "`[ 2, 4, 6 ] [ 2, 4, 6 ]`"
+      - text: "`[ 1, 2, 3 ] [ 2, 4, 6 ]`"
+      - text: "`undefined undefined`"
+    explanation: >
+      `forEach` призначений для побічних ефектів і завжди повертає `undefined`, а `map` будує новий масив із результатів колбека.
+      Початковий масив жоден із методів не змінює.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
+
+  - id: javascript-005
+    level: middle
+    type: single
+    text: Що виведуть ці два цикли і чому результати різні?
+    code:
+      lang: javascript
+      source: |
+        for (var i = 0; i < 3; i++) setTimeout(() => console.log('var', i), 0);
+        for (let j = 0; j < 3; j++) setTimeout(() => console.log('let', j), 0);
+    options:
+      - text: "Перший цикл виводить `3` тричі, другий — `0 1 2`: `let` створює нову змінну на кожній ітерації"
+        correct: true
+      - text: "Обидва цикли виводять `0 1 2`: колбек запам'ятовує значення на момент виклику `setTimeout`"
+      - text: "Обидва цикли виводять `3` тричі: колбеки спрацьовують після завершення циклу"
+      - text: "Перший виводить `0 1 2`, другий — `3` тричі: `let` живе до кінця функції"
+    explanation: >
+      `var` має одну змінну на всю функцію, і до запуску колбеків цикл її вже довів до `3`. Для `let` кожна ітерація отримує власну прив'язку,
+      яку замикає колбек. Колбеки в обох випадках виконуються після циклу, але бачать різні змінні.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for#lexical_declarations_in_the_initialization_block
+
+  - id: javascript-006
+    level: middle
+    type: single
+    text: Що станеться під час виклику `inc()` і чому?
+    code:
+      lang: javascript
+      source: |
+        class Counter {
+          count = 0;
+          inc() { return ++this.count; }
+        }
+        const c = new Counter();
+        const inc = c.inc;
+        inc();
+    options:
+      - text: "Кине `TypeError`: без отримувача `this` — `undefined`, бо код класу строгий"
+        correct: true
+      - text: "Поверне `1`: метод залишається прив'язаним до екземпляра `c`"
+      - text: "Поверне `1`: `this` стане глобальним об'єктом, у якому створиться `count`"
+      - text: "Поверне `NaN`: `this.count` буде `undefined`, а `++undefined` дає `NaN`"
+    explanation: >
+      Значення `this` визначається тим, як викликано функцію, а не де її оголошено. Звичайний виклик `inc()` не має об'єкта перед крапкою,
+      а в тілі класу діє строгий режим, тож `this` — `undefined`, і читання `this.count` кидає `TypeError`. Виправлення: `c.inc.bind(c)` або поле-стрілка.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
+      - https://tc39.es/ecma262/#sec-strict-mode-code
+
+  - id: javascript-007
+    level: middle
+    type: multiple
+    text: Які твердження про статичні методи `Promise` правильні?
+    options:
+      - text: "`Promise.all` відхиляється, щойно відхилено будь-який із вхідних промісів"
+        correct: true
+      - text: "`Promise.allSettled` виконується з масивом описів результатів, навіть якщо частину входів відхилено"
+        correct: true
+      - text: "`Promise.any` виконується значенням першого успішного входу"
+        correct: true
+      - text: "`Promise.race` ігнорує відхилені проміси й чекає першого виконаного"
+      - text: "`Promise.all` чекає завершення всіх входів і лише потім повідомляє про відхилення"
+    explanation: >
+      `all` завершується достроково на першій відмові, `allSettled` ніколи не відхиляється через входи, `any` відхиляється лише коли відмовили всі.
+      `race` повторює долю найшвидшого проміса незалежно від того, виконано його чи відхилено, тож не ігнорує відмови.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise#promise_concurrency
+
+  - id: javascript-008
+    level: middle
+    type: single
+    text: Що виведе код?
+    code:
+      lang: javascript
+      source: |
+        function Box() {}
+        Box.prototype.items = [];
+        const a = new Box();
+        const b = new Box();
+        a.items.push(1);
+        console.log(b.items.length);
+        a.items = ['x'];
+        console.log(b.items.length);
+    options:
+      - text: "`1`, потім `1`: масив спільний на прототипі, а присвоєння створює власну властивість"
+        correct: true
+      - text: "`0`, потім `0`: кожен екземпляр отримує власну копію масиву під час виклику конструктора"
+      - text: "`1`, потім `0`: присвоєння `a.items` замінює масив на самому прототипі `Box`"
+      - text: "`0`, потім `1`: `push` спершу копіює масив у `a`, а вже потім додає елемент"
+    explanation: >
+      Читання `a.items` знаходить масив на `Box.prototype`, і `push` змінює саме його, тож `b` теж бачить елемент. Присвоєння ж завжди пише
+      у власні властивості об'єкта, тому `a.items = ['x']` не чіпає прототип. Через це змінні дані на прототипі — типова помилка.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Inheritance_and_the_prototype_chain
+
+  - id: javascript-009
+    level: senior
+    type: single
+    text: У якому порядку код виведе рядки?
+    code:
+      lang: javascript
+      source: |
+        async function f() {
+          console.log(1);
+          await null;
+          console.log(2);
+        }
+        console.log(0);
+        f();
+        Promise.resolve().then(() => console.log(3));
+        setTimeout(() => console.log('T'), 0);
+        console.log(4);
+    options:
+      - text: "`0 1 4 2 3 T`"
+        correct: true
+      - text: "`0 1 2 4 3 T`"
+      - text: "`0 1 4 3 2 T`"
+      - text: "`0 1 4 T 2 3`"
+    explanation: >
+      Тіло `f` виконується синхронно до першого `await`, тому `1` виходить до `4`. Продовження після `await` іде в чергу мікрозадач раніше,
+      ніж `then`, зареєстрований пізніше, тож `2` передує `3`. Усі мікрозадачі виконуються до наступної макрозадачі, якою є таймер.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises#task_queues_vs._microtasks
+
+  - id: javascript-010
+    level: senior
+    type: single
+    text: Що станеться під час виконання цього коду?
+    code:
+      lang: javascript
+      source: |
+        try {
+          [1, 2].forEach(async (n) => { throw new Error('fail ' + n); });
+          console.log('after forEach');
+        } catch (e) {
+          console.log('caught');
+        }
+    options:
+      - text: "Виведеться `after forEach`, `catch` не спрацює, відмови промісів лишаться необробленими"
+        correct: true
+      - text: "Виведеться `caught`: `forEach` дочекається всіх колбеків і прокине першу помилку далі"
+      - text: "Виведеться `caught` двічі, по одному разу на кожен елемент масиву в циклі"
+      - text: "Нічого не виведеться: виконання перерветься на першому `throw`"
+    explanation: >
+      `async`-функція не кидає синхронно, а повертає відхилений проміс. `forEach` ігнорує значення, які повертає колбек, тому `try/catch` нічого
+      не бачить, а відмови нікому не передано. Виправлення: `for...of` з `await` або `await Promise.all(arr.map(...))`.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function#description
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach#description
+
+  - id: javascript-011
+    level: senior
+    type: multiple
+    text: Які твердження про ES-модулі (`import` / `export`) правильні?
+    options:
+      - text: "Імпортовані прив'язки живі: якщо експортер змінить `let`-змінну, імпортер побачить нове значення"
+        correct: true
+      - text: "Модуль виконується один раз, навіть якщо його імпортують з багатьох місць"
+        correct: true
+      - text: "У циклічній залежності звернення до `let` / `const`-експорту до його ініціалізації дає `ReferenceError`"
+        correct: true
+      - text: "`import { x }` копіює значення на момент імпорту в локальну змінну, тож пізніші зміни `x` в експортері не видно"
+      - text: "Динамічний `import()` синхронно повертає простір імен модуля, якщо файл уже завантажено"
+    explanation: >
+      Імпорт — це посилання на змінну експортера, а не копія, і лише експортер може її змінювати. Кожен модуль створюється й виконується один раз
+      за ключем у мапі модулів. Динамічний `import()` повертає проміс, тому синхронним він бути не може.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#imported_values_can_only_be_modified_by_the_exporter
+      - https://tc39.es/ecma262/#sec-modules
+
+  - id: javascript-012
+    level: senior
+    type: single
+    text: >
+      Потрібно зберігати обчислені дані для довільних об'єктів так, щоб запис у кеші не заважав збирачу сміття
+      звільнити сам об'єкт. Що використати?
+    options:
+      - text: "`WeakMap` з об'єктом як ключем: ключі тримаються слабко"
+        correct: true
+      - text: "`Map` з об'єктом як ключем: запис зникає, щойно на об'єкт не лишиться інших посилань"
+      - text: "Звичайний об'єкт, де ключем слугує `String(obj)`: рядок не тримає об'єкт у пам'яті"
+      - text: "`Set` пар `[obj, value]`: набір сам прибирає пари, чий об'єкт став недосяжним"
+    explanation: >
+      `Map` і `Set` тримають свої ключі й елементи сильними посиланнями, тож об'єкт не буде зібраний, поки запис у колекції. У `WeakMap` посилання
+      на ключ слабке, і запис пропадає разом з ним. Рядковий ключ `String(obj)` до того ж давав би `[object Object]` для всіх об'єктів.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap
