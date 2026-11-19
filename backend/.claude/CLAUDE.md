@@ -129,7 +129,7 @@ Clean Architecture, CQRS-хендлери без MediatR, стандартний
 
 - Angular 22 зі стандартними налаштуваннями CLI: standalone, сигнали, zoneless, Vitest, SCSS. Без NgRx, без UI-бібліотеки.
 - Теми Aurora / Daylight / Terminal + «Авто» (spec 3.6): набори токенів під `[data-theme]` у `src/styles/`, кольори в компонентах лише через токени (`var(--…)`), тему й акцент вибирає `PrefsService` (PRP-015). Системні налаштування (`matchMedia`) лише через DI-токен `MEDIA`. Верстка спершу під телефон.
-- Усі HTTP-виклики й маппінг DTO → модель живуть у `src/app/core/api.service.ts`, моделі в `src/app/core/models.ts`. Адресу API код бере лише через токен `API_BASE_URL` (`src/app/core/config.ts`), а значення лежить у `src/environments/environment.ts`.
+- Усі HTTP-виклики й маппінг DTO → модель живуть у `src/app/core/api.service.ts`, моделі в `src/app/core/models.ts`. Адресу API код бере лише через токен `API_BASE_URL` (`src/app/core/config.ts`). Значення для dev server і тестів лежить у `src/environments/environment.ts`, а для продакшн-збірки — у `src/environments/environment.production.ts`, який підставляють `fileReplacements` в `angular.json` (PRP-022).
 - Локальні дані (історія, «вже бачені», налаштування оформлення) зберігаються лише через `src/app/core/storage.ts` (DI-токен). Ключі мають версію: `prepround.history.v1`, `prepround.prefs.v1`. Єдиний виняток — `public/theme-init.js`: до старту Angular він лише читає `prepround.prefs.v1`, щоб не було спалаху теми.
 - Текст із контенту не вставляємо через `[innerHTML]` як є. Inline-код у бектиках і блок `code` рендерить окремий pipe, який спершу екранує текст.
 
