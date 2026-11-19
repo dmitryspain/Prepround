@@ -1,4 +1,5 @@
 id: angular-routing-forms
 title: Роутинг і форми
 description: Роутер, guards, resolvers, lazy loading, reactive forms, валідація.
+draft: true
 questions: []

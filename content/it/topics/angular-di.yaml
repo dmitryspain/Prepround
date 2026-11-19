@@ -1,6 +1,7 @@
 id: angular-di
 title: DI і сервіси
 description: Інжектори, providedIn, токени, ієрархія, inject().
+draft: true
 questions:
   - id: angular-di-001
     level: junior

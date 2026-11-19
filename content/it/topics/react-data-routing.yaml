@@ -1,6 +1,7 @@
 id: react-data-routing
 title: Дані й роутинг
 description: TanStack Query, React Router, кешування запитів, Suspense.
+draft: true
 questions:
   - id: react-data-routing-001
     level: junior

@@ -113,9 +113,32 @@ internal static class ContentToolProcess
     /// add questions all the time (PRP-018 and later); a literal count here broke on each of them.
     /// </summary>
     public static int RealQuestionCount() =>
-        Directory.GetFiles(RealContentDirectory(), "*.yaml", SearchOption.AllDirectories)
-            .Where(path => Path.GetFileName(Path.GetDirectoryName(path)) == "topics")
+        RealTopicFiles().Sum(path => File.ReadLines(path).Count(line => line.StartsWith("  - id: ", StringComparison.Ordinal)));
+
+    /// <summary>
+    /// Ids of the real topics marked <c>draft: true</c> (PRP-023), from the raw top-level line rather than the reader,
+    /// so a reader that drops the flag still fails the import and catalog assertions.
+    /// </summary>
+    public static IReadOnlySet<string> RealDraftTopicIds() =>
+        RealTopicFiles()
+            .Where(IsDraftFile)
+            .Select(path => Path.GetFileNameWithoutExtension(path))
+            .ToHashSet(StringComparer.Ordinal);
+
+    /// <summary>Questions in draft topics, counted from raw lines like <see cref="RealQuestionCount"/>.</summary>
+    public static int RealDraftQuestionCount() =>
+        RealTopicFiles()
+            .Where(IsDraftFile)
             .Sum(path => File.ReadLines(path).Count(line => line.StartsWith("  - id: ", StringComparison.Ordinal)));
+
+    /// <summary>What a default import (without --include-drafts) puts into the database.</summary>
+    public static int RealPublishedQuestionCount() => RealQuestionCount() - RealDraftQuestionCount();
+
+    private static IEnumerable<string> RealTopicFiles() =>
+        Directory.GetFiles(RealContentDirectory(), "*.yaml", SearchOption.AllDirectories)
+            .Where(path => Path.GetFileName(Path.GetDirectoryName(path)) == "topics");
+
+    private static bool IsDraftFile(string path) => File.ReadLines(path).Contains("draft: true", StringComparer.Ordinal);
 
     /// <summary>
     /// The real field as the reader sees it. Tests that work on the real content take question ids and counts from here

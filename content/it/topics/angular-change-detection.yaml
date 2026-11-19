@@ -1,6 +1,7 @@
 id: angular-change-detection
 title: Change detection і Signals
 description: zone.js vs zoneless, OnPush, signal/computed/effect.
+draft: true
 questions:
   - id: angular-change-detection-001
     level: junior

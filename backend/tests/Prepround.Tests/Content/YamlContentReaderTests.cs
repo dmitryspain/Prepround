@@ -142,6 +142,9 @@ public class YamlContentReaderTests
     [InlineData(ContentFixture.AlphaFile, "    level: junior", "explaination", "alpha-001")]
     [InlineData(ContentFixture.AlphaFile, "      lang: csharp", "language", "alpha-002")]
     [InlineData(ContentFixture.AlphaFile, "        correct: true", "corect", "alpha-001")]
+    // PRP-023: draft belongs to the topic only; on a question or in field.yaml it stays an unknown key.
+    [InlineData(ContentFixture.AlphaFile, "    level: junior", "draft", "alpha-001")]
+    [InlineData(ContentFixture.FieldFile, "title: IT", "draft", "it")]
     public void Unknown_key_at_any_depth_is_an_error_with_the_file_and_the_owner_id(
         string file, string afterLine, string unknownKey, string ownerId)
     {
@@ -201,6 +204,46 @@ public class YamlContentReaderTests
 
         Assert.Equal((ContentFixture.AlphaFile, "alpha-001"), (error.File, error.Id));
         Assert.Contains("true або false", error.Message);
+    }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("draft: true", true)]
+    [InlineData("draft: false", false)]
+    [InlineData("draft:", false)]
+    public void Draft_is_read_from_the_topic_and_absent_or_false_is_not_a_draft(string? line, bool expected)
+    {
+        // PRP-023: a top-level topic key; it marks only its own topic.
+        using var content = new ContentFixture();
+        if (line is not null)
+        {
+            content.Replace(ContentFixture.AlphaFile, "description: Перша тема.", $"description: Перша тема.\n{line}");
+        }
+
+        var result = _reader.Read(content.Root);
+
+        Assert.Empty(result.Errors);
+        var topics = Assert.Single(result.Fields).Topics.ToDictionary(topic => topic.Id);
+        Assert.Equal(expected, topics["alpha"].IsDraft);
+        Assert.False(topics["beta"].IsDraft);
+        Assert.Equal(2, topics["alpha"].Questions.Count);
+    }
+
+    [Theory]
+    [InlineData("maybe", "рядку 4 має бути true або false")]
+    [InlineData("yes", "рядку 4 має бути true або false")]
+    [InlineData("1", "рядку 4 має бути true або false")]
+    [InlineData("[true]", "рядку 4 має бути текстом")]
+    public void Draft_accepts_only_true_or_false_and_reports_the_topic_file_and_line(string value, string message)
+    {
+        using var content = new ContentFixture();
+        content.Replace(ContentFixture.AlphaFile, "description: Перша тема.", $"description: Перша тема.\ndraft: {value}");
+
+        var error = Assert.Single(_reader.Read(content.Root).Errors);
+
+        Assert.Equal((ContentFixture.AlphaFile, "alpha"), (error.File, error.Id));
+        Assert.Contains("«draft»", error.Message);
+        Assert.Contains(message, error.Message);
     }
 
     [Theory]

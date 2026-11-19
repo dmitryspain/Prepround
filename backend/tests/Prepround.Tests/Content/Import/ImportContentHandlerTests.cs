@@ -97,6 +97,87 @@ public class ImportContentHandlerTests
         Assert.Equal(FirstImport, questions["alpha-002"].UpdatedAt);
     }
 
+    [Theory]
+    [InlineData(null, false, 2)]
+    [InlineData("draft: false", false, 2)]
+    [InlineData("draft: true", false, 0)]
+    [InlineData("draft: true", true, 2)]
+    [InlineData("draft: false", true, 2)]
+    public async Task Draft_topic_is_imported_but_its_questions_only_with_include_drafts(
+        string? draftLine, bool includeDrafts, int expectedQuestions)
+    {
+        using var content = new ContentFixture();
+        if (draftLine is not null)
+        {
+            content.Replace(ContentFixture.AlphaFile, "description: Перша тема.", $"description: Перша тема.\n{draftLine}");
+        }
+
+        var repository = new FakeCatalogImportRepository();
+
+        var result = await Handler(new YamlContentReader(), repository)
+            .Handle(new ImportContentCommand(content.Root, includeDrafts), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Message : null);
+        Assert.Equal(new ImportCounts(2, 0, 0), result.Value.Topics);
+        Assert.Equal(new ImportCounts(expectedQuestions, 0, 0), result.Value.Questions);
+        Assert.Equal(["alpha", "beta"], repository.Stored.Topics.Select(topic => topic.Id));
+        Assert.All(repository.Stored.Topics, topic => Assert.True(topic.IsActive));
+        Assert.Equal(2, repository.Stored.StackTopics.Count);
+        Assert.Equal(expectedQuestions, repository.Stored.Questions.Count);
+    }
+
+    [Fact]
+    public async Task Default_import_is_safe_without_naming_the_flag()
+    {
+        // The one-argument command is what a forgotten flag looks like: it must leave the drafts out (ADR 005, section 6).
+        Assert.False(new ImportContentCommand("content-root").IncludeDrafts);
+        using var content = new ContentFixture();
+        content.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft: true");
+        var repository = new FakeCatalogImportRepository();
+
+        var result = await Handler(new YamlContentReader(), repository)
+            .Handle(new ImportContentCommand(content.Root), TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ImportCounts(0, 0, 0), result.Value.Questions);
+        Assert.Empty(repository.Stored.Questions);
+    }
+
+    [Fact]
+    public async Task Marking_a_topic_draft_deactivates_its_questions_and_include_drafts_brings_them_back_with_the_old_UpdatedAt()
+    {
+        using var content = new ContentFixture();
+        var repository = new FakeCatalogImportRepository();
+        var clock = new FakeTimeProvider(FirstImport);
+        var ct = TestContext.Current.CancellationToken;
+        Assert.Equal(new ImportCounts(2, 0, 0), (await Handler(new YamlContentReader(), repository, clock)
+            .Handle(new ImportContentCommand(content.Root), ct)).Value.Questions);
+
+        content.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft: true");
+        clock.Now = SecondImport;
+        var off = await Handler(new YamlContentReader(), repository, clock).Handle(new ImportContentCommand(content.Root), ct);
+        var offAgain = await Handler(new YamlContentReader(), repository, clock).Handle(new ImportContentCommand(content.Root), ct);
+
+        Assert.Equal(new ImportCounts(0, 0, 2), off.Value.Questions);
+        Assert.Equal(new ImportCounts(0, 0, 0), off.Value.Topics);
+        Assert.Equal(new ImportCounts(0, 0, 0), offAgain.Value.Questions);
+        Assert.Equal(2, repository.Stored.Questions.Count);
+        Assert.All(repository.Stored.Questions, question => Assert.False(question.IsActive));
+        Assert.All(repository.Stored.Questions, question => Assert.Equal(FirstImport, question.UpdatedAt));
+        Assert.True(Assert.Single(repository.Stored.Topics, topic => topic.Id == "alpha").IsActive);
+
+        clock.Now = SecondImport.AddHours(1);
+        var back = await Handler(new YamlContentReader(), repository, clock)
+            .Handle(new ImportContentCommand(content.Root, IncludeDrafts: true), ct);
+        var backAgain = await Handler(new YamlContentReader(), repository, clock)
+            .Handle(new ImportContentCommand(content.Root, IncludeDrafts: true), ct);
+
+        Assert.Equal(new ImportCounts(0, 2, 0), back.Value.Questions);
+        Assert.Equal(new ImportCounts(0, 0, 0), backAgain.Value.Questions);
+        Assert.All(repository.Stored.Questions, question => Assert.True(question.IsActive));
+        // Only the activity changed, not the content (PRP-004).
+        Assert.All(repository.Stored.Questions, question => Assert.Equal(FirstImport, question.UpdatedAt));
+    }
+
     private static ImportContentHandler Handler(
         IContentReader reader, ICatalogImportRepository repository, TimeProvider? clock = null) =>
         new(new ContentLoader(reader, new ContentValidator()), repository, clock ?? new FakeTimeProvider(FirstImport));

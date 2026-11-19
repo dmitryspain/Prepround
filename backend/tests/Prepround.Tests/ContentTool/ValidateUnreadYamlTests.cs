@@ -131,7 +131,7 @@ public class ValidateUnreadYamlTests
 
     private static (int Topics, int Questions) TopicAndQuestionCount(string stdout)
     {
-        var match = Regex.Match(stdout, @"^it: .*тем (\d+), питань (\d+)$", RegexOptions.Multiline);
+        var match = Regex.Match(stdout, @"^it: .*тем (\d+), питань (\d+)(?:, з них у чернетках [1-9]\d*)?$", RegexOptions.Multiline);
         Assert.True(match.Success, stdout);
         return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
     }

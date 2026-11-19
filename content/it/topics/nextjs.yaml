@@ -1,6 +1,7 @@
 id: nextjs
 title: Next.js
 description: App Router, SSR/SSG/ISR, Server Components, маршрутизація.
+draft: true
 questions:
   - id: nextjs-001
     level: junior

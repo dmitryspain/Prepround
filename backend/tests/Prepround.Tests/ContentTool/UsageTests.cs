@@ -98,6 +98,69 @@ public class UsageTests
         Assert.Empty(run.Stdout);
     }
 
+    [Theory]
+    [InlineData("--bogus")]
+    [InlineData("-x")]
+    [InlineData("--INCLUDE-DRAFTS")]
+    [InlineData("--include-draft")]
+    public async Task Import_with_an_unknown_flag_after_the_directory_names_it_and_exits_with_2(string flag)
+    {
+        // PRP-023: only --include-drafts is known; a typo must not run a default import into the database.
+        var run = await RunIsolatedAsync(ImportWithoutDatabaseTests.Unreachable, null, "import", RealContentDirectory(), flag);
+
+        Assert.Equal(UsageErrorExitCode, run.ExitCode);
+        Assert.Contains($"Невідомий прапорець команди import: {flag}.", run.Stderr);
+        Assert.Contains("Використання", run.Stderr);
+        Assert.DoesNotContain("Не вдалося підключитися", run.Stderr);
+        Assert.Empty(run.Stdout);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Include_drafts_before_the_directory_or_without_one_is_a_usage_error(bool withDirectory)
+    {
+        string[] args = withDirectory ? ["import", "--include-drafts", RealContentDirectory()] : ["import", "--include-drafts"];
+
+        var run = await RunIsolatedAsync(ImportWithoutDatabaseTests.Unreachable, null, args);
+
+        Assert.Equal(UsageErrorExitCode, run.ExitCode);
+        Assert.Contains("Прапорець --include-drafts пишеться після теки", run.Stderr);
+        Assert.Empty(run.Stdout);
+    }
+
+    [Theory]
+    [InlineData("--include-drafts", "extra")]
+    [InlineData("--include-drafts", "--include-drafts")]
+    public async Task Import_with_anything_after_the_flag_is_a_usage_error(string flag, string extra)
+    {
+        var run = await RunIsolatedAsync(ImportWithoutDatabaseTests.Unreachable, null, "import", RealContentDirectory(), flag, extra);
+
+        Assert.Equal(UsageErrorExitCode, run.ExitCode);
+        Assert.Contains("Команді import потрібна рівно одна тека з контентом.", run.Stderr);
+        Assert.Empty(run.Stdout);
+    }
+
+    [Fact]
+    public async Task Import_with_include_drafts_reaches_the_database_step_like_a_plain_import()
+    {
+        // The flag is accepted: the run gets past argument parsing and fails only on the unreachable database (3).
+        var run = await RunIsolatedAsync(ImportWithoutDatabaseTests.Unreachable, null, "import", RealContentDirectory(), "--include-drafts");
+
+        Assert.True(run.ExitCode == DatabaseErrorExitCode, run.Output);
+        Assert.Contains("Не вдалося підключитися до бази даних", run.Stderr);
+    }
+
+    [Fact]
+    public async Task Usage_describes_the_include_drafts_flag_of_import()
+    {
+        var run = await RunAsync();
+
+        Assert.Equal(UsageErrorExitCode, run.ExitCode);
+        Assert.Single(run.StderrLines, line => line.StartsWith("import <тека> [--include-drafts]", StringComparison.Ordinal));
+        Assert.Contains(run.StderrLines, line => line.StartsWith("--include-drafts ", StringComparison.Ordinal) && line.Contains("draft: true", StringComparison.Ordinal));
+    }
+
     [Fact]
     public async Task Import_of_a_missing_directory_names_it_and_exits_with_2_before_asking_for_a_database()
     {

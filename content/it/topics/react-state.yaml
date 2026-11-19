@@ -1,6 +1,7 @@
 id: react-state
 title: Стан у React
 description: Context, Redux Toolkit, Zustand, підйом стану.
+draft: true
 questions:
   - id: react-state-001
     level: junior

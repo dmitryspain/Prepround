@@ -1,0 +1,14 @@
+# Build context of the API image (Dockerfile): only the sources and the build settings are needed.
+**/bin/
+**/obj/
+.claude/
+.idea/
+.vs/
+.vscode/
+.config/
+tests/
+**/*.user
+**/.DS_Store
+docker-compose.yml
+# The production image must not carry even the local dev connection string.
+**/appsettings.Development.json

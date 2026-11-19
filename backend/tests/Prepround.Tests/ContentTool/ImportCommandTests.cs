@@ -20,6 +20,7 @@ public class ImportCommandTests(PostgresFixture postgres)
     private const string FieldFile = "it/field.yaml";
     private const string SqlFile = "it/topics/sql.yaml";
     private const string Done = "Імпорт завершено.";
+    private const string IncludeDrafts = "--include-drafts";
 
     private const string ArchitectLevel = """
           - id: senior
@@ -57,12 +58,13 @@ public class ImportCommandTests(PostgresFixture postgres)
     [Fact]
     public async Task Real_content_is_imported_whole_and_a_repeat_changes_nothing()
     {
+        // PRP-023: "whole" means with the drafts, which only --include-drafts imports (the dev database).
         var db = await postgres.CreateDatabaseAsync();
         var content = RealContentDirectory();
         // Guards the raw-line count itself: seed 36 + PRP-018 36. Content only grows, so this is a lower bound.
         Assert.True(RealQuestionCount() >= 72, $"RealQuestionCount() = {RealQuestionCount()}");
 
-        var first = await RunIsolatedAsync(db, null, "import", content);
+        var first = await RunIsolatedAsync(db, null, "import", content, IncludeDrafts);
 
         Assert.True(first.ExitCode == SuccessExitCode, first.Output);
         Assert.Empty(first.Stderr);
@@ -71,11 +73,98 @@ public class ImportCommandTests(PostgresFixture postgres)
             first.StdoutLines);
         var afterFirst = await PostgresFixture.SnapshotAsync(db);
 
-        var second = await RunIsolatedAsync(db, null, "import", content);
+        var second = await RunIsolatedAsync(db, null, "import", content, IncludeDrafts);
 
         Assert.True(second.ExitCode == SuccessExitCode, second.Output);
         Assert.Equal(NothingChanged, second.StdoutLines);
         Assert.Equal(afterFirst, await PostgresFixture.SnapshotAsync(db));
+    }
+
+    [Fact]
+    public async Task Default_import_leaves_draft_questions_out_include_drafts_adds_them_and_a_default_import_switches_them_off()
+    {
+        // PRP-023 criteria on the real content: each mode is idempotent, and switching back deactivates, never deletes.
+        var db = await postgres.CreateDatabaseAsync();
+        var content = RealContentDirectory();
+        var (all, drafts, published) = (RealQuestionCount(), RealDraftQuestionCount(), RealPublishedQuestionCount());
+
+        var first = await RunIsolatedAsync(db, null, "import", content);
+        Assert.True(first.ExitCode == SuccessExitCode, first.Output);
+        Assert.Equal(
+            Summary(fields: (1, 0, 0), levels: (3, 0, 0), directions: (2, 0, 0), stacks: (9, 0, 0), topics: (61, 0, 0), questions: (published, 0, 0)),
+            first.StdoutLines);
+        Assert.Equal((published, published, 61), await QuestionAndTopicCountsAsync(db));
+        Assert.Equal(NothingChanged, (await RunIsolatedAsync(db, null, "import", content)).StdoutLines);
+
+        var withDrafts = await RunIsolatedAsync(db, null, "import", content, IncludeDrafts);
+        Assert.True(withDrafts.ExitCode == SuccessExitCode, withDrafts.Output);
+        Assert.Equal(Summary(questions: (drafts, 0, 0)), withDrafts.StdoutLines);
+        Assert.Equal((all, all, 61), await QuestionAndTopicCountsAsync(db));
+        Assert.Equal(NothingChanged, (await RunIsolatedAsync(db, null, "import", content, IncludeDrafts)).StdoutLines);
+
+        var switchedOff = await RunIsolatedAsync(db, null, "import", content);
+        Assert.True(switchedOff.ExitCode == SuccessExitCode, switchedOff.Output);
+        Assert.Equal(Summary(questions: (0, 0, drafts)), switchedOff.StdoutLines);
+        Assert.Equal((published, all, 61), await QuestionAndTopicCountsAsync(db));
+        // Exactly the questions of the draft topics are off: the raw "draft: true" lines decide which.
+        await using var context = PostgresFixture.CreateContext(db);
+        var inactiveTopics = await context.Questions.AsNoTracking().Where(question => !question.IsActive)
+            .Select(question => question.TopicId).Distinct().ToListAsync(TestContext.Current.CancellationToken);
+        var draftTopicsWithQuestions = RealField().Topics
+            .Where(topic => RealDraftTopicIds().Contains(topic.Id) && topic.Questions.Count > 0)
+            .Select(topic => topic.Id);
+        Assert.Equal(draftTopicsWithQuestions.Order(StringComparer.Ordinal), inactiveTopics.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public async Task Published_topic_marked_draft_is_switched_off_by_a_default_import_and_comes_back_with_the_same_UpdatedAt()
+    {
+        // ADR 005, section 6: the emergency switch-off of a published topic, then the fix is published again.
+        var db = await postgres.CreateDatabaseAsync();
+        using var content = new RealContentCopy();
+        var original = content.Read(SqlFile);
+        var sqlCount = RealTopic("sql").Questions.Count;
+        await ImportOkAsync(db, content.Root);
+        var before = await UpdatedAtByIdAsync(db);
+
+        content.Replace(SqlFile, "\nquestions:", "\ndraft: true\nquestions:");
+        var off = await RunIsolatedAsync(db, null, "import", content.Root);
+
+        Assert.True(off.ExitCode == SuccessExitCode, off.Output);
+        Assert.Equal(Summary(questions: (0, 0, sqlCount)), off.StdoutLines);
+        await using (var context = PostgresFixture.CreateContext(db))
+        {
+            var sql = await context.Questions.AsNoTracking().Where(question => question.TopicId == "sql")
+                .ToListAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(sqlCount, sql.Count);
+            Assert.All(sql, question => Assert.False(question.IsActive));
+            Assert.All(sql, question => Assert.Equal(before[question.Id], question.UpdatedAt));
+            Assert.True((await context.Topics.AsNoTracking().SingleAsync(topic => topic.Id == "sql", TestContext.Current.CancellationToken)).IsActive);
+        }
+
+        content.Write(SqlFile, original);
+        var back = await RunIsolatedAsync(db, null, "import", content.Root);
+
+        Assert.True(back.ExitCode == SuccessExitCode, back.Output);
+        Assert.Equal(Summary(questions: (0, sqlCount, 0)), back.StdoutLines);
+        Assert.Equal(before, await UpdatedAtByIdAsync(db));
+        Assert.Equal((RealPublishedQuestionCount(), RealPublishedQuestionCount(), 61), await QuestionAndTopicCountsAsync(db));
+    }
+
+    [Fact]
+    public async Task Draft_false_imports_exactly_like_a_topic_without_the_key()
+    {
+        var db = await postgres.CreateDatabaseAsync();
+        using var content = new RealContentCopy();
+        await ImportOkAsync(db, content.Root);
+        var before = await PostgresFixture.SnapshotAsync(db);
+
+        content.Replace(SqlFile, "\nquestions:", "\ndraft: false\nquestions:");
+        var run = await RunIsolatedAsync(db, null, "import", content.Root);
+
+        Assert.True(run.ExitCode == SuccessExitCode, run.Output);
+        Assert.Equal(NothingChanged, run.StdoutLines);
+        Assert.Equal(before, await PostgresFixture.SnapshotAsync(db));
     }
 
     [Fact]
@@ -84,7 +173,7 @@ public class ImportCommandTests(PostgresFixture postgres)
         var db = await postgres.CreateDatabaseAsync();
         var before = DateTimeOffset.UtcNow;
 
-        var run = await RunIsolatedAsync(db, null, "import", RealContentDirectory());
+        var run = await RunIsolatedAsync(db, null, "import", RealContentDirectory(), IncludeDrafts);
 
         Assert.True(run.ExitCode == SuccessExitCode, run.Output);
         await using var context = PostgresFixture.CreateContext(db);
@@ -118,7 +207,7 @@ public class ImportCommandTests(PostgresFixture postgres)
         var deactivated = await QuestionAsync(db, last);
         Assert.False(deactivated.IsActive);
         Assert.Equal(lastBefore.UpdatedAt, deactivated.UpdatedAt);
-        Assert.Equal(RealQuestionCount(), await CountAsync(db, context => context.Questions));
+        Assert.Equal(RealPublishedQuestionCount(), await CountAsync(db, context => context.Questions));
 
         content.Write(SqlFile, original);
         var returned = await RunIsolatedAsync(db, null, "import", content.Root);
@@ -201,7 +290,7 @@ public class ImportCommandTests(PostgresFixture postgres)
     public async Task Stack_topics_options_and_scale_keep_the_order_of_the_files()
     {
         var db = await postgres.CreateDatabaseAsync();
-        await ImportOkAsync(db, RealContentDirectory());
+        await ImportOkAsync(db, RealContentDirectory(), IncludeDrafts);
         var ct = TestContext.Current.CancellationToken;
         var field = Assert.Single(new YamlContentReader().Read(RealContentDirectory()).Fields);
         await using var context = PostgresFixture.CreateContext(db);
@@ -366,10 +455,21 @@ public class ImportCommandTests(PostgresFixture postgres)
         }
     }
 
-    private static async Task ImportOkAsync(string connectionString, string root)
+    private static async Task ImportOkAsync(string connectionString, string root, params string[] flags)
     {
-        var run = await RunIsolatedAsync(connectionString, null, "import", root);
+        var run = await RunIsolatedAsync(connectionString, null, ["import", root, .. flags]);
         Assert.True(run.ExitCode == SuccessExitCode, run.Output);
+    }
+
+    /// <summary>Active questions, all question rows and active topics.</summary>
+    private static async Task<(int ActiveQuestions, int Questions, int ActiveTopics)> QuestionAndTopicCountsAsync(string connectionString)
+    {
+        await using var context = PostgresFixture.CreateContext(connectionString);
+        var ct = TestContext.Current.CancellationToken;
+        return (
+            await context.Questions.CountAsync(question => question.IsActive, ct),
+            await context.Questions.CountAsync(ct),
+            await context.Topics.CountAsync(topic => topic.IsActive, ct));
     }
 
     private static async Task<Question> QuestionAsync(string connectionString, string id)

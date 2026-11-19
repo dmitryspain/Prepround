@@ -86,14 +86,18 @@ public class CatalogEndpointTests(PostgresFixture postgres)
         // Titles, descriptions and counts per level come from the files: the files are the oracle here, since content
         // waves keep filling topics (ADR 004). Counts are compared as exact JSON, so the key order (scale order) and
         // "{}" for a topic without questions (if the content still has one) are checked for every topic.
+        // PRP-023: the default import leaves the questions of draft topics out, so a draft topic counts "{}"; which
+        // topics are drafts is read from the raw "draft: true" lines, not through the reader.
         var file = RealField();
+        var drafts = RealDraftTopicIds();
         var expected = file.Topics.ToDictionary(topic => topic.Id);
         Assert.Equal(expected.Keys.Order(), topicIds.Order());
         Assert.All(topics, topic =>
         {
             var fromFile = expected[Str(topic, "id")];
             Assert.Equal((fromFile.Title, fromFile.Description), (Str(topic, "title"), Str(topic, "description")));
-            Assert.Equal(CountsJson(file.Levels, fromFile.Questions), topic["questionCounts"]!.ToJsonString());
+            var published = drafts.Contains(fromFile.Id) ? [] : fromFile.Questions;
+            Assert.Equal(CountsJson(file.Levels, published), topic["questionCounts"]!.ToJsonString());
         });
         // At least one topic has questions on every level, so the key order above is really checked.
         Assert.Contains(topics, topic => topic["questionCounts"]!.AsObject().Count == levels.Count);
@@ -121,6 +125,31 @@ public class CatalogEndpointTests(PostgresFixture postgres)
         Assert.Contains("azure", Stack(body, "dotnet")["topicIds"]!.AsArray().Select(id => id!.GetValue<string>()));
         // Only azure was emptied: the other topics keep the counts of their files.
         Assert.Equal(CountsJson(RealField().Levels, RealTopic("ef-core").Questions), Topic(body, "ef-core")["questionCounts"]!.ToJsonString());
+    }
+
+    [Fact]
+    public async Task Draft_topic_of_a_stack_stays_in_the_catalog_with_empty_counts_until_drafts_are_included()
+    {
+        // PRP-023, "draft in a stack": ef-core is in the dotnet stack; marking it draft must not break the import
+        // or the stack, only hide its questions from a default import.
+        var db = await postgres.CreateDatabaseAsync();
+        using var content = new RealContentCopy();
+        content.Replace(EfCoreFile, "\nquestions:", "\ndraft: true\nquestions:");
+        await ImportAsync(db, content.Root);
+
+        var (_, hidden) = await GetCatalogAsync(db);
+
+        var efCore = Topic(hidden, "ef-core");
+        Assert.Equal("{}", efCore["questionCounts"]!.ToJsonString());
+        var fromFile = RealTopic("ef-core");
+        Assert.Equal((fromFile.Title, fromFile.Description), (Str(efCore, "title"), Str(efCore, "description")));
+        Assert.Equal(Spec41[0].TopicIds, Stack(hidden, "dotnet")["topicIds"]!.AsArray().Select(id => id!.GetValue<string>()));
+        Assert.Equal(CountsJson(RealField().Levels, RealTopic("sql").Questions), Topic(hidden, "sql")["questionCounts"]!.ToJsonString());
+
+        await ImportAsync(db, content.Root, includeDrafts: true);
+        var (_, shown) = await GetCatalogAsync(db);
+
+        Assert.Equal(CountsJson(RealField().Levels, fromFile.Questions), Topic(shown, "ef-core")["questionCounts"]!.ToJsonString());
     }
 
     [Fact]
@@ -253,7 +282,7 @@ public class CatalogEndpointTests(PostgresFixture postgres)
     }
 
     /// <summary>Imports in-process through the same composition as ContentTool, and fails the test unless it succeeds.</summary>
-    private static async Task ImportAsync(string connectionString, string contentRoot)
+    private static async Task ImportAsync(string connectionString, string contentRoot, bool includeDrafts = false)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { [ApiFactory.ConnectionStringKey] = connectionString })
@@ -264,7 +293,7 @@ public class CatalogEndpointTests(PostgresFixture postgres)
         await using var scope = provider.CreateAsyncScope();
         var handler = scope.ServiceProvider.GetRequiredService<ICommandHandler<ImportContentCommand, ImportSummary>>();
 
-        var result = await handler.Handle(new ImportContentCommand(contentRoot), TestContext.Current.CancellationToken);
+        var result = await handler.Handle(new ImportContentCommand(contentRoot, includeDrafts), TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Message : null);
     }

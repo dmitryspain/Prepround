@@ -59,6 +59,8 @@ public partial class ValidateCommandTests
         ["rule-10-source-with-space"] = c => WithAlphaSources(c,
             "sources: [\"https://www.postgresql.org/docs/18/ddl constraints.html\"]"),
         ["rule-10-sources-not-a-list"] = c => WithAlphaSources(c, "sources: https://www.postgresql.org/docs/18/"),
+        ["draft-not-a-boolean"] = c => c.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft: maybe"),
+        ["draft-not-a-scalar"] = c => c.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft: [true]"),
     };
 
     [Fact]
@@ -68,7 +70,44 @@ public partial class ValidateCommandTests
 
         Assert.True(run.ExitCode == SuccessExitCode, run.Output);
         Assert.Empty(run.Stderr);
-        Assert.Contains(run.StdoutLines, line => SummaryLine().IsMatch(line) && line.StartsWith("it: ", StringComparison.Ordinal));
+        var summary = Assert.Single(run.StdoutLines, line => SummaryLine().IsMatch(line) && line.StartsWith("it: ", StringComparison.Ordinal));
+        // PRP-023: the total and the drafts come from the raw lines of the files; the suffix appears only with drafts.
+        var drafts = RealDraftQuestionCount();
+        Assert.EndsWith(
+            drafts > 0 ? $", питань {RealQuestionCount()}, з них у чернетках {drafts}" : $", питань {RealQuestionCount()}",
+            summary);
+    }
+
+    [Fact]
+    public async Task Draft_topic_is_counted_in_the_summary_and_draft_false_prints_the_old_summary()
+    {
+        using var content = new ContentFixture();
+        content.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft: true");
+
+        var draft = await RunAsync("validate", content.Root);
+
+        content.Replace(ContentFixture.AlphaFile, "draft: true", "draft: false");
+        var notDraft = await RunAsync("validate", content.Root);
+
+        Assert.True(draft.ExitCode == SuccessExitCode, draft.Output);
+        Assert.Equal([$"{ContentFixture.Summary}, з них у чернетках 2"], draft.StdoutLines);
+        Assert.True(notDraft.ExitCode == SuccessExitCode, notDraft.Output);
+        Assert.Equal([ContentFixture.Summary], notDraft.StdoutLines);
+    }
+
+    [Fact]
+    public async Task Draft_topic_is_checked_by_the_same_rules_as_any_other_topic()
+    {
+        using var content = new ContentFixture();
+        content.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft: true");
+        Breakages["rule-6-unknown-type"](content);
+
+        var run = await RunAsync("validate", content.Root);
+
+        Assert.True(run.ExitCode == ContentErrorExitCode, run.Output);
+        Assert.Empty(run.Stdout);
+        Assert.Contains(run.StderrLines, line =>
+            line.StartsWith($"{ContentFixture.AlphaFile}: alpha-001: ", StringComparison.Ordinal) && line.Contains("singel", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -178,6 +217,8 @@ public partial class ValidateCommandTests
     [InlineData("rule-10-repeated-source", ContentFixture.AlphaFile, "alpha-001", "«https://www.postgresql.org/docs/18/» повторюється")]
     [InlineData("rule-10-source-with-space", ContentFixture.AlphaFile, "alpha-001", "без пробілів")]
     [InlineData("rule-10-sources-not-a-list", ContentFixture.AlphaFile, "alpha-001", "«sources» у рядку 7 має бути списком")]
+    [InlineData("draft-not-a-boolean", ContentFixture.AlphaFile, "alpha", "«draft» у рядку 4 має бути true або false")]
+    [InlineData("draft-not-a-scalar", ContentFixture.AlphaFile, "alpha", "«draft» у рядку 4 має бути текстом")]
     public async Task Broken_content_is_reported_as_file_id_message_on_stderr_and_exits_with_1(
         string breakage, string file, string id, string messageFragment)
     {
@@ -229,6 +270,7 @@ public partial class ValidateCommandTests
     private static void WithAlphaSources(ContentFixture content, string sourcesLine) =>
         content.Replace(ContentFixture.AlphaFile, "    level: junior", $"    level: junior\n    {sourcesLine}");
 
-    [GeneratedRegex(@"^[a-z0-9-]+: рівнів \d+, напрямів \d+, стеків \d+, тем \d+, питань \d+$")]
+    // The drafts suffix (PRP-023) is the only optional part, and only with a positive count.
+    [GeneratedRegex(@"^[a-z0-9-]+: рівнів \d+, напрямів \d+, стеків \d+, тем \d+, питань \d+(, з них у чернетках [1-9]\d*)?$")]
     private static partial Regex SummaryLine();
 }

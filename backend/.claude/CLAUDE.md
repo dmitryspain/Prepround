@@ -46,6 +46,7 @@
   - **Tester** бере 2–4 готові теми, згруповані за стеком. Перед його запуском головна сесія один раз на групу робить `validate` → `import` → `dotnet test`, але **на замороженій копії**, бо автори в цей час пишуть `content/`, а тести читають справжній контент (урок 2026-11-17: від прогону до прогону падало від 7 до 18 різних тестів). Порядок такий: `cp -R ../content <scratchpad>/content-snapshot` → `validate` і `import` цієї копії → `PREPROUND_TEST_CONTENT_DIR=<scratchpad>/content-snapshot dotnet test`.
   - **ContentTool** агенти запускають лише з `--no-build`. Збирає головна сесія: паралельні збірки того самого проєкту ламають одна одну.
 - `FAIL` у темі → автору цієї теми секцію «Для кодера», далі той самий tester (до 3 кіл), решта хвилі не чекає;
+- **Чернетки (PRP-023, ADR 005, розділ 6).** Тема без PASS має `draft: true`. Нову тему автор створює одразу з цим рядком, а знімати його не має права. Усі `import` хвиль у dev-БД і на знімку йдуть з `--include-drafts`. Після PASS теми головна сесія видаляє рядок `draft: true` з її файлу. Прод-імпорт (без прапорця) запускає лише власник, на зупинках;
 - після PASS головна сесія оновлює «Хвилі контенту» в беклозі (тема → кількість, PASS) і бере наступну хвилю без зупинки. Зупинка — коли закінчились хвилі напряму (Backend, потім Frontend) або на `critical` у фактчеку.
 
 Зупинись і коротко напиши власнику (що зроблено, що далі, що потрібно від нього), коли:
@@ -179,7 +180,8 @@ docker run --rm --name prepround-api -p 18080:8080 \
 
 # контент (з backend/)
 dotnet run --project src/Prepround.ContentTool -- validate ../content   # exit 0 — валідний, 1 — помилки зі списком (stderr), 2 — немає теки або неправильні аргументи
-dotnet run --project src/Prepround.ContentTool -- import ../content     # ідемпотентний імпорт у БД; спершу `dotnet ef database update`. Exit 0 — ок, 1 — помилки контенту, 2 — аргументи, 3 — БД (немає рядка підключення, недоступна, незастосовані міграції)
+dotnet run --project src/Prepround.ContentTool -- import ../content     # ідемпотентний імпорт у БД; спершу `dotnet ef database update`. Exit 0 — ок, 1 — помилки контенту, 2 — аргументи, 3 — БД (немає рядка підключення, недоступна, незастосовані міграції). Без прапорця питання тем з `draft: true` не імпортуються (прод, PRP-023)
+dotnet run --project src/Prepround.ContentTool -- import ../content --include-drafts   # dev-БД і хвилі контенту: імпортує й чернетки; прапорець лише після теки
 # рядок підключення: user-secrets, а змінна середовища ConnectionStrings__Prepround їх перекриває (агенти користуються саме нею й у user-secrets не пишуть)
 
 # фронт (з /Users/dmitryspain/RiderProjects/PreproundWeb)

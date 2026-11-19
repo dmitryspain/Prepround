@@ -1,6 +1,7 @@
 id: vue-router
 title: Vue Router
 description: Маршрути, guards, lazy loading, вкладені маршрути.
+draft: true
 questions:
   - id: vue-router-001
     level: junior

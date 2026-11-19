@@ -1,4 +1,5 @@
 id: web-performance
 title: Продуктивність і браузер
 description: Рендеринг, reflow/repaint, Core Web Vitals, lazy loading, кешування, бандл.
+draft: true
 questions: []

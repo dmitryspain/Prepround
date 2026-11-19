@@ -1,6 +1,7 @@
 id: pinia
 title: Pinia
 description: Stores, state/getters/actions, плагіни, порівняння з Vuex.
+draft: true
 questions:
   - id: pinia-001
     level: junior
