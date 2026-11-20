@@ -209,7 +209,7 @@ docker run --rm --name prepround-api -p 18080:8080 \
 
 # контент (з backend/)
 dotnet run --project src/Prepround.ContentTool -- validate ../content   # exit 0 — валідний, 1 — помилки зі списком (stderr), 2 — немає теки або неправильні аргументи
-dotnet run --project src/Prepround.ContentTool -- import ../content     # ідемпотентний імпорт у БД; спершу `dotnet ef database update`. Exit 0 — ок, 1 — помилки контенту, 2 — аргументи, 3 — БД (немає рядка підключення, недоступна, незастосовані міграції). Без прапорця питання тем з `draft: true` не імпортуються (прод, PRP-023)
+dotnet run --project src/Prepround.ContentTool -- import ../content     # ідемпотентний імпорт у БД; спершу `dotnet ef database update`. Exit 0 — ок, 1 — помилки контенту, 2 — аргументи, 3 — БД (немає рядка підключення, недоступна, незастосовані міграції). Без прапорця питання тем з `draft: true` не імпортуються (прод, PRP-023), а переклади мов з `draft_<мова>: true` не імпортуються. Підсумок має рядок `Переклади питань: додано N, оновлено M, видалено K` (PRP-026)
 dotnet run --project src/Prepround.ContentTool -- import ../content --include-drafts   # dev-БД і хвилі контенту: імпортує й чернетки; прапорець лише після теки
 # рядок підключення: user-secrets, а змінна середовища ConnectionStrings__Prepround їх перекриває (агенти користуються саме нею й у user-secrets не пишуть)
 

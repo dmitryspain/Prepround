@@ -10,4 +10,5 @@ public sealed record CatalogRows(
     IReadOnlyList<Stack> Stacks,
     IReadOnlyList<StackTopic> StackTopics,
     IReadOnlyList<Topic> Topics,
-    IReadOnlyList<Question> Questions);
+    IReadOnlyList<Question> Questions,
+    IReadOnlyList<QuestionTranslation> QuestionTranslations);

@@ -3,12 +3,22 @@ namespace Prepround.Domain.Catalog;
 /// <summary>A topic of the field's catalog, shared by every stack that lists it.</summary>
 public sealed class Topic : CatalogEntity
 {
-    public Topic(string fieldId, string id, string title, string description)
+    /// <param name="titleTranslations">Null when the title has no translation.</param>
+    /// <param name="descriptionTranslations">Null when the description has no translation.</param>
+    public Topic(
+        string fieldId,
+        string id,
+        string title,
+        string description,
+        IReadOnlyDictionary<string, string>? titleTranslations = null,
+        IReadOnlyDictionary<string, string>? descriptionTranslations = null)
     {
         FieldId = fieldId;
         Id = id;
         Title = title;
         Description = description;
+        TitleTranslations = titleTranslations ?? Translations.None;
+        DescriptionTranslations = descriptionTranslations ?? Translations.None;
     }
 
     public string FieldId { get; private set; }
@@ -20,13 +30,25 @@ public sealed class Topic : CatalogEntity
     /// <summary>Optional in the files; empty when absent.</summary>
     public string Description { get; private set; }
 
+    /// <summary>The title in the translation languages; a language missing here shows <see cref="Title"/> (ADR 006).</summary>
+    public IReadOnlyDictionary<string, string> TitleTranslations { get; private set; }
+
+    /// <summary>The description in the translation languages; a language missing here shows <see cref="Description"/>.</summary>
+    public IReadOnlyDictionary<string, string> DescriptionTranslations { get; private set; }
+
     /// <summary>Takes the values of <paramref name="source"/>, built from the files, and reactivates the topic.</summary>
     /// <returns>True when the row changed.</returns>
     public bool UpdateFrom(Topic source)
     {
-        var changed = Activate() | Title != source.Title | Description != source.Description;
+        var changed = Activate()
+                      | Title != source.Title
+                      | Description != source.Description
+                      | !Translations.Equal(TitleTranslations, source.TitleTranslations)
+                      | !Translations.Equal(DescriptionTranslations, source.DescriptionTranslations);
         Title = source.Title;
         Description = source.Description;
+        TitleTranslations = source.TitleTranslations;
+        DescriptionTranslations = source.DescriptionTranslations;
         return changed;
     }
 }

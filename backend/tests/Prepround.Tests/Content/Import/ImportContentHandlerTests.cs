@@ -1,5 +1,6 @@
 using Prepround.Application.Content;
 using Prepround.Application.Content.Import;
+using Prepround.Domain.Catalog;
 using Prepround.Infrastructure.Content;
 
 namespace Prepround.Tests.Content.Import;
@@ -191,7 +192,7 @@ internal sealed class FakeCatalogImportRepository : ICatalogImportRepository
 {
     public DatabaseStatus Status { get; init; } = new(true, []);
 
-    public CatalogRows Stored { get; private set; } = new([], [], [], [], [], [], []);
+    public CatalogRows Stored { get; private set; } = new([], [], [], [], [], [], [], []);
 
     public int StatusCalls { get; private set; }
 
@@ -213,7 +214,8 @@ internal sealed class FakeCatalogImportRepository : ICatalogImportRepository
         return Task.FromResult(Stored);
     }
 
-    public Task SaveAsync(CatalogRows newRows, CancellationToken cancellationToken)
+    public Task SaveAsync(
+        CatalogRows newRows, IReadOnlyList<QuestionTranslation> removedTranslations, CancellationToken cancellationToken)
     {
         SaveCalls++;
         Stored = new CatalogRows(
@@ -223,7 +225,8 @@ internal sealed class FakeCatalogImportRepository : ICatalogImportRepository
             [.. Stored.Stacks, .. newRows.Stacks],
             [.. Stored.StackTopics, .. newRows.StackTopics],
             [.. Stored.Topics, .. newRows.Topics],
-            [.. Stored.Questions, .. newRows.Questions]);
+            [.. Stored.Questions, .. newRows.Questions],
+            [.. Stored.QuestionTranslations.Except(removedTranslations), .. newRows.QuestionTranslations]);
         return Task.CompletedTask;
     }
 }

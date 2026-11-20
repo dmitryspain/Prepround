@@ -6,8 +6,10 @@ namespace Prepround.Application.Content.Import;
 
 /// <summary>
 /// Puts the content files into the database (ADR 002): the same read-and-check step as validate, then an upsert by id.
-/// Nothing is deleted: rows missing from the files are deactivated, and reactivated when they return.
+/// No catalog row is deleted: rows missing from the files are deactivated, and reactivated when they return.
 /// Questions of draft topics count as missing unless <see cref="ImportContentCommand.IncludeDrafts"/> is set.
+/// Question translations are the exception (ADR 006, section 2): the import keeps exactly those of the questions it
+/// makes active and deletes the rest, since no client keeps a translation's id.
 /// </summary>
 public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand, ImportSummary>
 {
@@ -46,6 +48,7 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
         var rows = await _repository.LoadAsync(cancellationToken);
         var files = FromFiles(content.Fields, command.IncludeDrafts, _timeProvider.GetUtcNow());
         var newRows = new NewRows();
+        var removedTranslations = new List<QuestionTranslation>();
 
         // Stack topics go first: a change in a stack's topic list or order counts as an update of the stack itself.
         var changedStacks = new HashSet<(string FieldId, string StackId)>();
@@ -65,9 +68,11 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
             Topics: Sync(rows.Topics, files.Topics, topic => (topic.FieldId, topic.Id),
                 (row, source) => row.UpdateFrom(source), newRows.Topics),
             Questions: Sync(rows.Questions, files.Questions, question => question.Id,
-                (row, source) => row.UpdateFrom(source), newRows.Questions));
+                (row, source) => row.UpdateFrom(source), newRows.Questions),
+            QuestionTranslations: SyncTranslations(rows.QuestionTranslations, files.QuestionTranslations,
+                newRows.QuestionTranslations, removedTranslations));
 
-        await _repository.SaveAsync(newRows.ToCatalogRows(), cancellationToken);
+        await _repository.SaveAsync(newRows.ToCatalogRows(), removedTranslations, cancellationToken);
 
         return summary;
     }
@@ -121,8 +126,43 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
         return new ImportCounts(addedCount, updatedCount, deactivatedCount);
     }
 
+    /// <summary>
+    /// Makes the translations exactly <paramref name="sources"/>, keyed by question and language: a new one is added
+    /// to <paramref name="newRows"/>, an existing one updated, and every other existing one goes to
+    /// <paramref name="removedRows"/>.
+    /// </summary>
+    private static TranslationCounts SyncTranslations(
+        IReadOnlyList<QuestionTranslation> rows,
+        IReadOnlyList<QuestionTranslation> sources,
+        List<QuestionTranslation> newRows,
+        List<QuestionTranslation> removedRows)
+    {
+        var existing = rows.ToDictionary(row => (row.QuestionId, row.Language));
+        int addedCount = 0, updatedCount = 0;
+
+        foreach (var source in sources)
+        {
+            // Taken out of the map, so what stays in it at the end is exactly what the files no longer have.
+            if (!existing.Remove((source.QuestionId, source.Language), out var row))
+            {
+                newRows.Add(source);
+                addedCount++;
+            }
+            else if (row.UpdateFrom(source))
+            {
+                updatedCount++;
+            }
+        }
+
+        removedRows.AddRange(existing.Values);
+        return new TranslationCounts(addedCount, updatedCount, existing.Count);
+    }
+
     /// <summary>The catalog as the files describe it. Rank and orders are 1-based positions in the files.</summary>
-    /// <param name="includeDrafts">When false, the questions of draft topics are left out as if absent from the files.</param>
+    /// <param name="includeDrafts">
+    /// When false, the questions of draft topics are left out as if absent from the files, and so are the question
+    /// translations into a language the topic marks <c>draft_L: true</c>.
+    /// </param>
     private static CatalogRows FromFiles(IReadOnlyList<FieldDefinition> definitions, bool includeDrafts, DateTimeOffset now)
     {
         var fields = new List<Field>();
@@ -132,25 +172,27 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
         var stackTopics = new List<StackTopic>();
         var topics = new List<Topic>();
         var questions = new List<Question>();
+        var translations = new List<QuestionTranslation>();
 
         foreach (var field in definitions)
         {
-            fields.Add(new Field(field.Id, field.Title));
+            fields.Add(new Field(field.Id, field.Title, field.TitleTranslations));
 
             for (var i = 0; i < field.Levels.Count; i++)
             {
-                levels.Add(new Level(field.Id, field.Levels[i].Id, field.Levels[i].Title, i + 1));
+                var level = field.Levels[i];
+                levels.Add(new Level(field.Id, level.Id, level.Title, i + 1, level.TitleTranslations));
             }
 
             for (var i = 0; i < field.Directions.Count; i++)
             {
                 var direction = field.Directions[i];
-                directions.Add(new Direction(field.Id, direction.Id, direction.Title, i + 1));
+                directions.Add(new Direction(field.Id, direction.Id, direction.Title, i + 1, direction.TitleTranslations));
 
                 for (var j = 0; j < direction.Stacks.Count; j++)
                 {
                     var stack = direction.Stacks[j];
-                    stacks.Add(new Stack(field.Id, stack.Id, direction.Id, stack.Title, j + 1));
+                    stacks.Add(new Stack(field.Id, stack.Id, direction.Id, stack.Title, j + 1, stack.TitleTranslations));
 
                     for (var k = 0; k < stack.TopicIds.Count; k++)
                     {
@@ -163,15 +205,29 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
             {
                 // A draft topic itself stays in the catalog; only its questions count as absent (ADR 002), so the sync
                 // below adds none of them and deactivates those imported before: also the emergency switch-off.
-                topics.Add(new Topic(field.Id, topic.Id, topic.Title, topic.Description));
-                if (includeDrafts || !topic.IsDraft)
+                topics.Add(new Topic(field.Id, topic.Id, topic.Title, topic.Description,
+                    topic.TitleTranslations, topic.DescriptionTranslations));
+                if (!includeDrafts && topic.IsDraft)
                 {
-                    questions.AddRange(topic.Questions.Select(question => ToQuestion(field.Id, topic.Id, question, now)));
+                    continue;
+                }
+
+                // draft_L holds back only the question translations into L: the base questions stay, and the topic's
+                // titles are checked apart from them (ADR 006).
+                var languages = ContentLanguages.Translations
+                    .Where(language => includeDrafts || !topic.DraftLanguages.Contains(language))
+                    .ToList();
+                foreach (var question in topic.Questions)
+                {
+                    questions.Add(ToQuestion(field.Id, topic.Id, question, now));
+                    translations.AddRange(languages
+                        .Where(question.IsTranslatedTo)
+                        .Select(language => ToTranslation(question, language)));
                 }
             }
         }
 
-        return new CatalogRows(fields, levels, directions, stacks, stackTopics, topics, questions);
+        return new CatalogRows(fields, levels, directions, stacks, stackTopics, topics, questions, translations);
     }
 
     private static Question ToQuestion(string fieldId, string topicId, QuestionDefinition question, DateTimeOffset now) =>
@@ -189,6 +245,15 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
             question.Explanation,
             now);
 
+    /// <summary>Only for a language the question is fully translated to: the validator rejects a partial one (rule 11).</summary>
+    private static QuestionTranslation ToTranslation(QuestionDefinition question, string language) =>
+        new(
+            question.Id,
+            language,
+            question.TextTranslations[language],
+            question.Options.Select(option => option.TextTranslations[language]).ToList(),
+            question.ExplanationTranslations[language]);
+
     private sealed class NewRows
     {
         public List<Field> Fields { get; } = [];
@@ -205,6 +270,9 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
 
         public List<Question> Questions { get; } = [];
 
-        public CatalogRows ToCatalogRows() => new(Fields, Levels, Directions, Stacks, StackTopics, Topics, Questions);
+        public List<QuestionTranslation> QuestionTranslations { get; } = [];
+
+        public CatalogRows ToCatalogRows() =>
+            new(Fields, Levels, Directions, Stacks, StackTopics, Topics, Questions, QuestionTranslations);
     }
 }

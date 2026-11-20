@@ -15,5 +15,7 @@ internal sealed class StackConfiguration : IEntityTypeConfiguration<Stack>
             .WithMany()
             .HasForeignKey(stack => new { stack.FieldId, stack.DirectionId })
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(stack => stack.TitleTranslations).HasTranslationsColumn();
     }
 }

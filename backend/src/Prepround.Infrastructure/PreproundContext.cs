@@ -24,6 +24,8 @@ public class PreproundContext : DbContext
 
     public DbSet<Question> Questions => Set<Question>();
 
+    public DbSet<QuestionTranslation> QuestionTranslations => Set<QuestionTranslation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PreproundContext).Assembly);
 }

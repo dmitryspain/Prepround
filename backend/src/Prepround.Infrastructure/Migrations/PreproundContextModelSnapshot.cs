@@ -40,6 +40,12 @@ namespace Prepround.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("TitleTranslations")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
                     b.HasKey("FieldId", "Id");
 
                     b.ToTable("Directions");
@@ -56,6 +62,12 @@ namespace Prepround.Infrastructure.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("TitleTranslations")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'{}'::jsonb");
 
                     b.HasKey("Id");
 
@@ -79,6 +91,12 @@ namespace Prepround.Infrastructure.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("TitleTranslations")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'{}'::jsonb");
 
                     b.HasKey("FieldId", "Id");
 
@@ -139,6 +157,31 @@ namespace Prepround.Infrastructure.Migrations
                     b.ToTable("Questions");
                 });
 
+            modelBuilder.Entity("Prepround.Domain.Catalog.QuestionTranslation", b =>
+                {
+                    b.Property<string>("QuestionId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Language")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OptionTexts")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("QuestionId", "Language");
+
+                    b.ToTable("QuestionTranslations");
+                });
+
             modelBuilder.Entity("Prepround.Domain.Catalog.Stack", b =>
                 {
                     b.Property<string>("FieldId")
@@ -160,6 +203,12 @@ namespace Prepround.Infrastructure.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("TitleTranslations")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'{}'::jsonb");
 
                     b.HasKey("FieldId", "Id");
 
@@ -204,12 +253,24 @@ namespace Prepround.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("DescriptionTranslations")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("TitleTranslations")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'{}'::jsonb");
 
                     b.HasKey("FieldId", "Id");
 
@@ -245,6 +306,15 @@ namespace Prepround.Infrastructure.Migrations
                     b.HasOne("Prepround.Domain.Catalog.Topic", null)
                         .WithMany()
                         .HasForeignKey("FieldId", "TopicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Prepround.Domain.Catalog.QuestionTranslation", b =>
+                {
+                    b.HasOne("Prepround.Domain.Catalog.Question", null)
+                        .WithMany()
+                        .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

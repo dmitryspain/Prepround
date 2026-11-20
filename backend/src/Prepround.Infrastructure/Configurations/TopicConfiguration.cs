@@ -11,5 +11,8 @@ internal sealed class TopicConfiguration : IEntityTypeConfiguration<Topic>
         builder.HasKey(topic => new { topic.FieldId, topic.Id });
 
         builder.HasOne<Field>().WithMany().HasForeignKey(topic => topic.FieldId).OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(topic => topic.TitleTranslations).HasTranslationsColumn();
+        builder.Property(topic => topic.DescriptionTranslations).HasTranslationsColumn();
     }
 }

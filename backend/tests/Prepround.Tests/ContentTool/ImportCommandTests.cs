@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
-using System.Text.RegularExpressions;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Prepround.Domain.Catalog;
@@ -290,14 +290,18 @@ public partial class ImportCommandTests(PostgresFixture postgres)
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task Content_with_an_english_translation_imports_the_same_rows_and_summary_as_without_it(bool includeDrafts)
+    public async Task Content_with_an_english_translation_imports_the_same_base_rows_and_puts_the_translations_beside_them(bool includeDrafts)
     {
-        // PRP-025: import ignores the translations until PRP-026, and draft_en never holds back base questions.
+        // PRP-025 made import read the translations; PRP-026 (ADR 006, section 2) stores them only in the *Translations
+        // columns and QuestionTranslations, so every base value stays as without them. The copy marks every topic
+        // draft_en, which holds back the question translations without the flag and never the base questions.
         using var original = new RealContentCopy();
         using var translated = new RealContentCopy();
         EnglishTranslation.AddTo(translated.Root);
         AssertEveryTextIsTranslated(translated.Root);
         string[] flags = includeDrafts ? [IncludeDrafts] : [];
+        var questionCount = includeDrafts ? RealQuestionCount() : RealPublishedQuestionCount();
+        var translationCount = includeDrafts ? RealQuestionCount() : 0;
 
         var baseDb = await postgres.CreateDatabaseAsync();
         var translatedDb = await postgres.CreateDatabaseAsync();
@@ -306,16 +310,38 @@ public partial class ImportCommandTests(PostgresFixture postgres)
 
         Assert.True(baseRun.ExitCode == SuccessExitCode, baseRun.Output);
         Assert.True(translatedRun.ExitCode == SuccessExitCode, translatedRun.Output);
-        Assert.Equal(baseRun.StdoutLines, translatedRun.StdoutLines);
+        Assert.Equal(
+            Summary(fields: (1, 0, 0), levels: (3, 0, 0), directions: (2, 0, 0), stacks: (9, 0, 0), topics: (61, 0, 0),
+                questions: (questionCount, 0, 0)),
+            baseRun.StdoutLines);
+        Assert.Equal(
+            Summary(fields: (1, 0, 0), levels: (3, 0, 0), directions: (2, 0, 0), stacks: (9, 0, 0), topics: (61, 0, 0),
+                questions: (questionCount, 0, 0), translations: (translationCount, 0, 0)),
+            translatedRun.StdoutLines);
         var baseRows = await PostgresFixture.SnapshotAsync(baseDb);
-        // Two imports never share the clock, so UpdatedAt is the one value that may differ between the databases.
-        Assert.Equal(WithoutUpdatedAt(baseRows), WithoutUpdatedAt(await PostgresFixture.SnapshotAsync(translatedDb)));
+        Assert.All(baseRows, row => Assert.DoesNotContain("\"en\"", row));
+        // Two imports never share the clock, so UpdatedAt is the one base value that may differ between the databases.
+        Assert.Equal(BaseValues(baseRows, keepUpdatedAt: false),
+            BaseValues(await PostgresFixture.SnapshotAsync(translatedDb), keepUpdatedAt: false));
+        await AssertStoredTranslationsAsync(translatedDb, translated.Root, translationCount);
 
         var over = await RunIsolatedAsync(baseDb, null, ["import", translated.Root, .. flags]);
 
         Assert.True(over.ExitCode == SuccessExitCode, over.Output);
-        Assert.Equal(NothingChanged, over.StdoutLines);
-        Assert.Equal(baseRows, await PostgresFixture.SnapshotAsync(baseDb));
+        // "Питання" all zeros next to the added translations: the mechanical proof of a translation wave (ADR 006).
+        Assert.Equal(
+            Summary(fields: (0, 1, 0), levels: (0, 3, 0), directions: (0, 2, 0), stacks: (0, 9, 0), topics: (0, 61, 0),
+                translations: (translationCount, 0, 0)),
+            over.StdoutLines);
+        var afterOver = await PostgresFixture.SnapshotAsync(baseDb);
+        Assert.Equal(BaseValues(baseRows, keepUpdatedAt: true), BaseValues(afterOver, keepUpdatedAt: true));
+        await AssertStoredTranslationsAsync(baseDb, translated.Root, translationCount);
+
+        var repeat = await RunIsolatedAsync(baseDb, null, ["import", translated.Root, .. flags]);
+
+        Assert.True(repeat.ExitCode == SuccessExitCode, repeat.Output);
+        Assert.Equal(NothingChanged, repeat.StdoutLines);
+        Assert.Equal(afterOver, await PostgresFixture.SnapshotAsync(baseDb));
     }
 
     [Fact]
@@ -514,11 +540,66 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         Assert.All(questions, question => Assert.True(question.IsTranslatedTo("en"), question.Id));
     }
 
-    private static List<string> WithoutUpdatedAt(IEnumerable<string> rows) =>
-        rows.Select(row => UpdatedAtValue().Replace(row, "\"UpdatedAt\":null")).Order(StringComparer.Ordinal).ToList();
+    /// <summary>
+    /// The snapshot rows of the base language (ADR 006, section 2): without QuestionTranslations and without the
+    /// <c>*Translations</c> columns, and optionally without <c>UpdatedAt</c>. Every other value is kept as is.
+    /// </summary>
+    private static List<string> BaseValues(IEnumerable<string> rows, bool keepUpdatedAt) =>
+        rows.Where(row => !row.StartsWith("QuestionTranslations ", StringComparison.Ordinal))
+            .Select(row =>
+            {
+                var space = row.IndexOf(' ', StringComparison.Ordinal);
+                var values = JsonNode.Parse(row[(space + 1)..])!.AsObject();
+                values.Remove("TitleTranslations");
+                values.Remove("DescriptionTranslations");
+                if (!keepUpdatedAt)
+                {
+                    values.Remove("UpdatedAt");
+                }
 
-    [GeneratedRegex("\"UpdatedAt\":\"[^\"]*\"")]
-    private static partial Regex UpdatedAtValue();
+                return $"{row[..space]} {values.ToJsonString()}";
+            })
+            .Order(StringComparer.Ordinal)
+            .ToList();
+
+    /// <summary>
+    /// Every catalog title of the translated copy is in the database, and QuestionTranslations holds exactly
+    /// <paramref name="count"/> rows, each with the texts of its question in the files.
+    /// </summary>
+    private static async Task AssertStoredTranslationsAsync(string connectionString, string root, int count)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var field = Assert.Single(new YamlContentReader().Read(root).Fields);
+        await using var context = PostgresFixture.CreateContext(connectionString);
+
+        Assert.Equal(field.TitleTranslations["en"], (await context.Fields.AsNoTracking().SingleAsync(ct)).TitleTranslations["en"]);
+        var levels = await context.Levels.AsNoTracking().ToDictionaryAsync(level => level.Id, ct);
+        Assert.All(field.Levels, level => Assert.Equal(level.TitleTranslations["en"], levels[level.Id].TitleTranslations["en"]));
+        var directions = await context.Directions.AsNoTracking().ToDictionaryAsync(direction => direction.Id, ct);
+        Assert.All(field.Directions, direction =>
+            Assert.Equal(direction.TitleTranslations["en"], directions[direction.Id].TitleTranslations["en"]));
+        var stacks = await context.Stacks.AsNoTracking().ToDictionaryAsync(stack => stack.Id, ct);
+        Assert.All(field.Directions.SelectMany(direction => direction.Stacks), stack =>
+            Assert.Equal(stack.TitleTranslations["en"], stacks[stack.Id].TitleTranslations["en"]));
+        var topics = await context.Topics.AsNoTracking().ToDictionaryAsync(topic => topic.Id, ct);
+        Assert.All(field.Topics, topic =>
+        {
+            Assert.Equal(Pairs(topic.TitleTranslations), Pairs(topics[topic.Id].TitleTranslations));
+            Assert.Equal(Pairs(topic.DescriptionTranslations), Pairs(topics[topic.Id].DescriptionTranslations));
+        });
+
+        var stored = await context.QuestionTranslations.AsNoTracking().ToListAsync(ct);
+        Assert.Equal(count, stored.Count);
+        var questions = field.Topics.SelectMany(topic => topic.Questions).ToDictionary(question => question.Id);
+        Assert.All(stored, translation =>
+        {
+            var question = questions[translation.QuestionId];
+            Assert.Equal("en", translation.Language);
+            Assert.Equal(question.TextTranslations["en"], translation.Text);
+            Assert.Equal(question.Options.Select(option => option.TextTranslations["en"]), translation.OptionTexts);
+            Assert.Equal(question.ExplanationTranslations["en"], translation.Explanation);
+        });
+    }
 
     private static async Task ImportOkAsync(string connectionString, string root, params string[] flags)
     {
@@ -556,10 +637,14 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         return await table(context).CountAsync(TestContext.Current.CancellationToken);
     }
 
-    /// <summary>What a successful import prints: a header and one line per entity type.</summary>
+    /// <summary>
+    /// What a successful import prints: a header, one line per entity type and, right after the questions, the question
+    /// translations (PRP-026), which are deleted rather than deactivated.
+    /// </summary>
     private static string[] Summary(
         (int, int, int) fields = default, (int, int, int) levels = default, (int, int, int) directions = default,
-        (int, int, int) stacks = default, (int, int, int) topics = default, (int, int, int) questions = default) =>
+        (int, int, int) stacks = default, (int, int, int) topics = default, (int, int, int) questions = default,
+        (int Added, int Updated, int Removed) translations = default) =>
     [
         Done,
         Counts("Галузі", fields),
@@ -568,6 +653,7 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         Counts("Стеки", stacks),
         Counts("Теми", topics),
         Counts("Питання", questions),
+        $"Переклади питань: додано {translations.Added}, оновлено {translations.Updated}, видалено {translations.Removed}",
     ];
 
     private static string Counts(string entities, (int Added, int Updated, int Deactivated) counts) =>

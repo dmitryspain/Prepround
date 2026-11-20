@@ -11,5 +11,7 @@ internal sealed class DirectionConfiguration : IEntityTypeConfiguration<Directio
         builder.HasKey(direction => new { direction.FieldId, direction.Id });
 
         builder.HasOne<Field>().WithMany().HasForeignKey(direction => direction.FieldId).OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(direction => direction.TitleTranslations).HasTranslationsColumn();
     }
 }

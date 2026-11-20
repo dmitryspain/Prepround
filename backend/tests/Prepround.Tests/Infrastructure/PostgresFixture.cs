@@ -63,7 +63,8 @@ public sealed class PostgresFixture : IAsyncLifetime
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(ct);
 
-        foreach (var table in new[] { "Fields", "Levels", "Directions", "Stacks", "StackTopics", "Topics", "Questions" })
+        foreach (var table in new[]
+                 { "Fields", "Levels", "Directions", "Stacks", "StackTopics", "Topics", "Questions", "QuestionTranslations" })
         {
             await using var command = new NpgsqlCommand(
                 $"SELECT '{table} ' || row_to_json(t)::text FROM \"{table}\" t ORDER BY row_to_json(t)::text", connection);

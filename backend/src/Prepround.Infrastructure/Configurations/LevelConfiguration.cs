@@ -13,5 +13,7 @@ internal sealed class LevelConfiguration : IEntityTypeConfiguration<Level>
 
         // Rows are never deleted (ADR 002), so no cascade anywhere.
         builder.HasOne<Field>().WithMany().HasForeignKey(level => level.FieldId).OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(level => level.TitleTranslations).HasTranslationsColumn();
     }
 }

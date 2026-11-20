@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Prepround.Application.Content.Import;
+using Prepround.Domain.Catalog;
 
 namespace Prepround.Infrastructure.Repositories;
 
@@ -32,9 +33,11 @@ public sealed class CatalogImportRepository : ICatalogImportRepository
         await _context.Stacks.ToListAsync(cancellationToken),
         await _context.StackTopics.ToListAsync(cancellationToken),
         await _context.Topics.ToListAsync(cancellationToken),
-        await _context.Questions.ToListAsync(cancellationToken));
+        await _context.Questions.ToListAsync(cancellationToken),
+        await _context.QuestionTranslations.ToListAsync(cancellationToken));
 
-    public async Task SaveAsync(CatalogRows newRows, CancellationToken cancellationToken)
+    public async Task SaveAsync(
+        CatalogRows newRows, IReadOnlyList<QuestionTranslation> removedTranslations, CancellationToken cancellationToken)
     {
         _context.Fields.AddRange(newRows.Fields);
         _context.Levels.AddRange(newRows.Levels);
@@ -43,6 +46,9 @@ public sealed class CatalogImportRepository : ICatalogImportRepository
         _context.StackTopics.AddRange(newRows.StackTopics);
         _context.Topics.AddRange(newRows.Topics);
         _context.Questions.AddRange(newRows.Questions);
+        // Inserted after their questions: EF orders the commands by the foreign key.
+        _context.QuestionTranslations.AddRange(newRows.QuestionTranslations);
+        _context.QuestionTranslations.RemoveRange(removedTranslations);
 
         // One transaction for the whole import (ADR 002), stated here instead of left to SaveChanges' defaults:
         // either every row is written or none is.

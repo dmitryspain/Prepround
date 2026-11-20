@@ -31,6 +31,8 @@ const string Usage = $"""
     Прапорець import (лише після теки):
       {IncludeDraftsFlag}   імпортувати й питання тем-чернеток (draft: true). Без нього вони
                          не імпортуються, а раніше імпортовані деактивуються.
+                         Так само з перекладами питань у темі з draft_<мова>: true: без
+                         прапорця вони не імпортуються, а раніше імпортовані видаляються.
                          Dev-база імпортує з прапорцем, прод — без нього.
     """;
 
@@ -167,6 +169,10 @@ static async Task<int> Import(string directory, bool includeDrafts)
     PrintCounts("Стеки", summary.Stacks);
     PrintCounts("Теми", summary.Topics);
     PrintCounts("Питання", summary.Questions);
+    // Right after the questions: a translation wave proves the base content unchanged by these two lines (ADR 006).
+    Console.WriteLine(
+        $"Переклади питань: додано {summary.QuestionTranslations.Added}, " +
+        $"оновлено {summary.QuestionTranslations.Updated}, видалено {summary.QuestionTranslations.Removed}");
 
     return SuccessExitCode;
 }
