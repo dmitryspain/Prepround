@@ -3,7 +3,7 @@ namespace Prepround.Application.Catalog;
 /// <summary>Shape of <c>GET /api/catalog</c> (spec 5.1); the API serializes it in camelCase.</summary>
 public sealed record CatalogResponse(IReadOnlyList<FieldResponse> Fields);
 
-/// <param name="Topics">Every active topic of the field, sorted by title; stacks refer to them by id.</param>
+/// <param name="Topics">Every active topic of the field, sorted by the title shown; stacks refer to them by id.</param>
 public sealed record FieldResponse(
     string Id,
     string Title,
@@ -21,7 +21,8 @@ public sealed record StackResponse(string Id, string Title, IReadOnlyList<string
 
 /// <param name="Description">Empty when the topic file has none.</param>
 /// <param name="QuestionCounts">
-/// Active questions by level id, in scale order; a level without questions is absent, so a topic without any gives {}.
+/// Active questions available in the language of the request, by level id, in scale order; a level without questions
+/// is absent, so a topic without any gives {}.
 /// The client sums the selected levels to get the maximum count for the topic.
 /// </param>
 public sealed record TopicResponse(

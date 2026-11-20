@@ -37,12 +37,14 @@ public sealed class TestGenerationRepository : ITestGenerationRepository
     public async Task<IReadOnlyList<QuestionCandidate>> GetCandidatesAsync(
         string fieldId,
         IReadOnlyCollection<string> topicIds,
+        string language,
         CancellationToken cancellationToken)
     {
         var ids = topicIds.ToArray();
 
         return await _context.Questions.AsNoTracking()
             .Where(question => question.FieldId == fieldId && ids.Contains(question.TopicId))
+            .AvailableIn(_context, language)
             .Select(question => new QuestionCandidate(question.Id, question.TopicId, question.LevelId, question.IsActive))
             .ToListAsync(cancellationToken);
     }
@@ -55,6 +57,19 @@ public sealed class TestGenerationRepository : ITestGenerationRepository
 
         return await _context.Questions.AsNoTracking()
             .Where(question => ids.Contains(question.Id))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>One query for all the picked questions, so a test of 100 questions costs no more round trips than one of 10.</summary>
+    public async Task<IReadOnlyList<QuestionTranslation>> GetTranslationsAsync(
+        IReadOnlyCollection<string> questionIds,
+        string language,
+        CancellationToken cancellationToken)
+    {
+        var ids = questionIds.ToArray();
+
+        return await _context.QuestionTranslations.AsNoTracking()
+            .Where(translation => translation.Language == language && ids.Contains(translation.QuestionId))
             .ToListAsync(cancellationToken);
     }
 }

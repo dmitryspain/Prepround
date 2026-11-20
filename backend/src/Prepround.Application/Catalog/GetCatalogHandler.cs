@@ -1,4 +1,5 @@
 using Prepround.Application.Abstractions.Messaging;
+using Prepround.Application.Content;
 using Prepround.Domain.Catalog;
 using Prepround.Domain.Shared;
 
@@ -6,7 +7,8 @@ namespace Prepround.Application.Catalog;
 
 /// <summary>
 /// Builds the catalog of spec 5.1 from active rows. An active row under an inactive parent is dropped as well,
-/// so the client never sees a stack, topic id or level id it cannot resolve.
+/// so the client never sees a stack, topic id or level id it cannot resolve. Titles come in the language of the
+/// request, each one falling back to the base language on its own (ADR 006, section 3).
 /// </summary>
 public sealed class GetCatalogHandler : IQueryHandler<GetCatalogQuery, CatalogResponse>
 {
@@ -25,19 +27,26 @@ public sealed class GetCatalogHandler : IQueryHandler<GetCatalogQuery, CatalogRe
 
     public async Task<Result<CatalogResponse>> Handle(GetCatalogQuery query, CancellationToken cancellationToken)
     {
-        var catalog = await _repository.GetActiveAsync(cancellationToken);
+        var language = RequestLanguage.Resolve(query.Language);
+        if (language.IsFailure)
+        {
+            return Result.Failure<CatalogResponse>(language.Error);
+        }
+
+        var catalog = await _repository.GetActiveAsync(language.Value, cancellationToken);
         var rows = new CatalogLookups(catalog);
 
+        // Sorted by the title shown, so the order follows the language of the request.
         var fields = catalog.Fields
+            .Select(field => ToResponse(field, rows, language.Value))
             .OrderBy(field => field.Title, TitleComparer)
             .ThenBy(field => field.Id, StringComparer.Ordinal)
-            .Select(field => ToResponse(field, rows))
             .ToList();
 
         return new CatalogResponse(fields);
     }
 
-    private static FieldResponse ToResponse(Field field, CatalogLookups rows)
+    private static FieldResponse ToResponse(Field field, CatalogLookups rows, string language)
     {
         // Rank is not unique (a deactivated level keeps its old one), so the id breaks ties among active levels too.
         var levels = rows.Levels[field.Id]
@@ -45,6 +54,11 @@ public sealed class GetCatalogHandler : IQueryHandler<GetCatalogQuery, CatalogRe
             .ThenBy(level => level.Id, StringComparer.Ordinal)
             .ToList();
         var topics = rows.Topics[field.Id]
+            .Select(topic => new TopicResponse(
+                topic.Id,
+                Localized(topic.Title, topic.TitleTranslations, language),
+                Localized(topic.Description, topic.DescriptionTranslations, language),
+                QuestionCounts(rows.QuestionCounts[(field.Id, topic.Id)], levels)))
             .OrderBy(topic => topic.Title, TitleComparer)
             .ThenBy(topic => topic.Id, StringComparer.Ordinal)
             .ToList();
@@ -55,13 +69,13 @@ public sealed class GetCatalogHandler : IQueryHandler<GetCatalogQuery, CatalogRe
             .ThenBy(direction => direction.Id, StringComparer.Ordinal)
             .Select(direction => new DirectionResponse(
                 direction.Id,
-                direction.Title,
+                Localized(direction.Title, direction.TitleTranslations, language),
                 rows.Stacks[(field.Id, direction.Id)]
                     .OrderBy(stack => stack.Order)
                     .ThenBy(stack => stack.Id, StringComparer.Ordinal)
                     .Select(stack => new StackResponse(
                         stack.Id,
-                        stack.Title,
+                        Localized(stack.Title, stack.TitleTranslations, language),
                         rows.StackTopics[(field.Id, stack.Id)]
                             .Where(link => activeTopicIds.Contains(link.TopicId))
                             .OrderBy(link => link.Order)
@@ -73,16 +87,21 @@ public sealed class GetCatalogHandler : IQueryHandler<GetCatalogQuery, CatalogRe
 
         return new FieldResponse(
             field.Id,
-            field.Title,
-            levels.Select(level => new LevelResponse(level.Id, level.Title, level.Rank)).ToList(),
+            Localized(field.Title, field.TitleTranslations, language),
+            levels
+                .Select(level => new LevelResponse(
+                    level.Id, Localized(level.Title, level.TitleTranslations, language), level.Rank))
+                .ToList(),
             directions,
-            topics.Select(topic => new TopicResponse(
-                    topic.Id,
-                    topic.Title,
-                    topic.Description,
-                    QuestionCounts(rows.QuestionCounts[(field.Id, topic.Id)], levels)))
-                .ToList());
+            topics);
     }
+
+    /// <summary>
+    /// The text in the language of the request, or the base text when that language has no translation of it.
+    /// The base language reads the base text only, so its response stays exactly what it was before translations.
+    /// </summary>
+    private static string Localized(string text, IReadOnlyDictionary<string, string> translations, string language) =>
+        language != ContentLanguages.Base && translations.TryGetValue(language, out var translated) ? translated : text;
 
     /// <summary>Counts keyed by active level ids only, in scale order; a level without questions is left out.</summary>
     private static Dictionary<string, int> QuestionCounts(IEnumerable<TopicLevelCount> counts, IReadOnlyList<Level> levels)

@@ -16,11 +16,13 @@ public class CatalogController : ControllerBase
         _handler = handler;
     }
 
-    /// <summary>Active catalog for the test setup screen (spec 5.1).</summary>
+    /// <summary>Active catalog for the test setup screen (spec 5.1), titles in the language of <c>?lang=</c>.</summary>
     [HttpGet]
-    public async Task<ActionResult<CatalogResponse>> Get(CancellationToken cancellationToken)
+    public async Task<ActionResult<CatalogResponse>> Get(
+        [FromQuery(Name = "lang")] string? language,
+        CancellationToken cancellationToken)
     {
-        var result = await _handler.Handle(new GetCatalogQuery(), cancellationToken);
+        var result = await _handler.Handle(new GetCatalogQuery(language), cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : this.BadRequestError(result.Error);
     }
 }

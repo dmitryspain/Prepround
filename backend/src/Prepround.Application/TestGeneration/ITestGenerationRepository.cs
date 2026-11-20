@@ -9,16 +9,31 @@ public interface ITestGenerationRepository
     Task<ActiveField?> GetActiveFieldAsync(string fieldId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Every question of the topics, active or not, on every level. Only ids, levels and the active flag are loaded:
-    /// the handler filters them, and the text of questions that are not picked is never read.
+    /// Every question of the topics available in <paramref name="language"/>, active or not, on every level. Only ids,
+    /// levels and the active flag are loaded: the handler filters them, and the text of questions that are not picked
+    /// is never read.
     /// </summary>
+    /// <param name="language">
+    /// A language of <see cref="Content.ContentLanguages.All"/>: the base language gives every question, a translation
+    /// language only the questions translated to it (ADR 006, section 3).
+    /// </param>
     Task<IReadOnlyList<QuestionCandidate>> GetCandidatesAsync(
         string fieldId,
         IReadOnlyCollection<string> topicIds,
+        string language,
         CancellationToken cancellationToken);
 
     /// <summary>Full data of the picked questions, untracked, in no particular order.</summary>
     Task<IReadOnlyList<Question>> GetQuestionsAsync(IReadOnlyCollection<string> questionIds, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Translations of the picked questions to a translation language, untracked, in no particular order; a question
+    /// without one is absent. Read in one go for the picked questions only, never for the whole topic.
+    /// </summary>
+    Task<IReadOnlyList<QuestionTranslation>> GetTranslationsAsync(
+        IReadOnlyCollection<string> questionIds,
+        string language,
+        CancellationToken cancellationToken);
 }
 
 /// <param name="Levels">Active levels of the field only.</param>

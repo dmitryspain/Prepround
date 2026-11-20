@@ -386,7 +386,7 @@ internal sealed class FakeTestGenerationRepository(Field field) : ITestGeneratio
     }
 
     public Task<IReadOnlyList<QuestionCandidate>> GetCandidatesAsync(
-        string fieldId, IReadOnlyCollection<string> topicIds, CancellationToken cancellationToken)
+        string fieldId, IReadOnlyCollection<string> topicIds, string language, CancellationToken cancellationToken)
     {
         Tokens.Add(cancellationToken);
         IReadOnlyList<QuestionCandidate> candidates = Questions
@@ -403,5 +403,12 @@ internal sealed class FakeTestGenerationRepository(Field field) : ITestGeneratio
         // Reverse order on purpose: the repository promises no order, so the handler must not rely on one.
         IReadOnlyList<Question> questions = Questions.Where(question => questionIds.Contains(question.Id)).Reverse().ToList();
         return Task.FromResult(questions);
+    }
+
+    public Task<IReadOnlyList<QuestionTranslation>> GetTranslationsAsync(
+        IReadOnlyCollection<string> questionIds, string language, CancellationToken cancellationToken)
+    {
+        Tokens.Add(cancellationToken);
+        return Task.FromResult<IReadOnlyList<QuestionTranslation>>([]);
     }
 }

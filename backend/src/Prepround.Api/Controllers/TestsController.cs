@@ -22,12 +22,17 @@ public class TestsController : ControllerBase
     }
 
     /// <summary>A new test by the user's settings, with correct answers and explanations (spec 5.2).</summary>
+    /// <param name="query">The body; its shape does not depend on the language.</param>
+    /// <param name="language"><c>?lang=</c>; the handler checks it before anything in the body.</param>
     [HttpPost]
     [EnableRateLimiting(RateLimitPolicies.Tests)]
     [RequestSizeLimit(MaxRequestBodySize)]
-    public async Task<ActionResult<GeneratedTestResponse>> Generate(GenerateTestQuery query, CancellationToken cancellationToken)
+    public async Task<ActionResult<GeneratedTestResponse>> Generate(
+        GenerateTestQuery query,
+        [FromQuery(Name = "lang")] string? language,
+        CancellationToken cancellationToken)
     {
-        var result = await _handler.Handle(query, cancellationToken);
+        var result = await _handler.Handle(query with { Language = language }, cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : this.BadRequestError(result.Error);
     }
 }

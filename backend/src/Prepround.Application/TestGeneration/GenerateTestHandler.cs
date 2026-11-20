@@ -1,4 +1,5 @@
 using Prepround.Application.Abstractions.Messaging;
+using Prepround.Application.Content;
 using Prepround.Domain.Catalog;
 using Prepround.Domain.Shared;
 
@@ -7,6 +8,7 @@ namespace Prepround.Application.TestGeneration;
 /// <summary>
 /// Builds a test by the rules of spec 5.2: validates the request in the order of the spec, stopping at the first
 /// violation, then picks active questions of the selected topics and levels, preferring those not seen yet.
+/// In a translation language only translated questions take part, and their texts come from the translation (ADR 006).
 /// </summary>
 public sealed class GenerateTestHandler : IQueryHandler<GenerateTestQuery, GeneratedTestResponse>
 {
@@ -25,6 +27,13 @@ public sealed class GenerateTestHandler : IQueryHandler<GenerateTestQuery, Gener
 
     public async Task<Result<GeneratedTestResponse>> Handle(GenerateTestQuery query, CancellationToken cancellationToken)
     {
+        // Before every rule of spec 5.2: the limits below are counted in this language.
+        var language = RequestLanguage.Resolve(query.Language);
+        if (language.IsFailure)
+        {
+            return Result.Failure<GeneratedTestResponse>(language.Error);
+        }
+
         var field = string.IsNullOrEmpty(query.FieldId)
             ? null
             : await _repository.GetActiveFieldAsync(query.FieldId, cancellationToken);
@@ -59,10 +68,11 @@ public sealed class GenerateTestHandler : IQueryHandler<GenerateTestQuery, Gener
                 GenerateTestErrors.TotalOutOfRange(total, MinTotalCount, MaxTotalCount));
         }
 
-        // Only active questions on the selected levels count, both for the limit and for the pick.
+        // Only active questions on the selected levels, available in the language, count for the limit and the pick.
         var candidates = await _repository.GetCandidatesAsync(
             field.Field.Id,
             topics.Value.Select(topic => topic.Topic.Id).ToList(),
+            language.Value,
             cancellationToken);
         var available = candidates
             .Where(candidate => candidate.IsActive && levels.Value.Contains(candidate.LevelId))
@@ -98,7 +108,17 @@ public sealed class GenerateTestHandler : IQueryHandler<GenerateTestQuery, Gener
         var questions = (await _repository.GetQuestionsAsync(questionIds, cancellationToken))
             .ToDictionary(question => question.Id, StringComparer.Ordinal);
 
-        return new GeneratedTestResponse(questionIds.Select(id => ToResponse(questions[id])).ToList());
+        if (language.Value == ContentLanguages.Base)
+        {
+            return new GeneratedTestResponse(questionIds.Select(id => ToResponse(questions[id], null)).ToList());
+        }
+
+        // Every picked question has a translation: only translated ones were candidates.
+        var translations = (await _repository.GetTranslationsAsync(questionIds, language.Value, cancellationToken))
+            .ToDictionary(translation => translation.QuestionId, StringComparer.Ordinal);
+
+        return new GeneratedTestResponse(
+            questionIds.Select(id => ToResponse(questions[id], translations[id])).ToList());
     }
 
     private static Result<HashSet<string>> SelectLevels(IReadOnlyList<string?>? levelIds, ActiveField field)
@@ -157,18 +177,26 @@ public sealed class GenerateTestHandler : IQueryHandler<GenerateTestQuery, Gener
         return selected;
     }
 
-    private TestQuestionResponse ToResponse(Question question) => new(
+    /// <param name="translation">
+    /// Null in the base language. Only the texts come from it; ids, level, type, code and which options are correct
+    /// stay those of the question, so a translation cannot change the answer.
+    /// </param>
+    private TestQuestionResponse ToResponse(Question question, QuestionTranslation? translation) => new(
         question.Id,
         question.TopicId,
         question.LevelId,
         // The same words as in the content files and in the database: single, multiple.
         question.Type.ToString().ToLowerInvariant(),
-        question.Text,
+        translation?.Text ?? question.Text,
         question is { CodeLang: { } lang, CodeSource: { } source } ? new QuestionCodeResponse(lang, source) : null,
         QuestionPicker.ShuffleOptionKeys(question.Options.Count, _random)
-            .Select(key => new TestOptionResponse(key, question.Options[key].Text, question.Options[key].IsCorrect))
+            .Select(key => new TestOptionResponse(
+                key,
+                // Option texts of a translation are in file order, so the key indexes them as it does the options.
+                translation?.OptionTexts[key] ?? question.Options[key].Text,
+                question.Options[key].IsCorrect))
             .ToList(),
-        question.Explanation);
+        translation?.Explanation ?? question.Explanation);
 
     private sealed record SelectedTopic(Topic Topic, int Count);
 }

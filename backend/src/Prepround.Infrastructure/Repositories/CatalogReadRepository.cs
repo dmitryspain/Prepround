@@ -13,7 +13,7 @@ public sealed class CatalogReadRepository : ICatalogReadRepository
     }
 
     /// <summary>Untracked: nothing here is written back. Ordering is left to the handler, away from database collations.</summary>
-    public async Task<ActiveCatalog> GetActiveAsync(CancellationToken cancellationToken) => new(
+    public async Task<ActiveCatalog> GetActiveAsync(string language, CancellationToken cancellationToken) => new(
         await _context.Fields.AsNoTracking().Where(field => field.IsActive).ToListAsync(cancellationToken),
         await _context.Levels.AsNoTracking().Where(level => level.IsActive).ToListAsync(cancellationToken),
         await _context.Directions.AsNoTracking().Where(direction => direction.IsActive).ToListAsync(cancellationToken),
@@ -23,6 +23,7 @@ public sealed class CatalogReadRepository : ICatalogReadRepository
         // Counted by the database: the catalog needs no question text or options.
         await _context.Questions.AsNoTracking()
             .Where(question => question.IsActive)
+            .AvailableIn(_context, language)
             .GroupBy(question => new { question.FieldId, question.TopicId, question.LevelId })
             .Select(group => new TopicLevelCount(group.Key.FieldId, group.Key.TopicId, group.Key.LevelId, group.Count()))
             .ToListAsync(cancellationToken));
