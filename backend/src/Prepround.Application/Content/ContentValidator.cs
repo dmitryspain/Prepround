@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 namespace Prepround.Application.Content;
 
 /// <summary>
-/// Rules 1–8 and 10 of ADR 002 over content that has already been read. Collects every problem instead of stopping
+/// Rules 1–8, 10 and 11 of ADR 002 over content that has already been read. Collects every problem instead of stopping
 /// at the first one, so an author fixes a whole batch of questions in one pass. Never throws on bad content.
 /// Rule 9 (unknown keys) belongs to the reader: once YAML becomes this model, unknown keys are gone.
 /// </summary>
@@ -38,6 +38,7 @@ public sealed partial class ContentValidator
 
         CheckId(field.Id, "галузі", file, fieldId, errors);
         CheckTitle(field.Title, "галузі", file, fieldId, errors);
+        CheckTitleTranslations(field.TitleTranslations, "галузі", file, fieldId, errors);
         if (field.Id.Length > 0 && field.Id != folder)
         {
             errors.Add(new ContentError(file, fieldId,
@@ -51,6 +52,7 @@ public sealed partial class ContentValidator
             var shown = Shown(level.Id, $"рівень №{i + 1}");
             CheckId(level.Id, "рівня", file, shown, errors);
             CheckTitle(level.Title, "рівня", file, shown, errors);
+            CheckTitleTranslations(level.TitleTranslations, "рівня", file, shown, errors);
             CheckUnique(levelIds, level.Id, "рівня", file, shown, errors);
         }
 
@@ -77,6 +79,7 @@ public sealed partial class ContentValidator
             var directionShown = Shown(direction.Id, $"напрям №{i + 1}");
             CheckId(direction.Id, "напряму", file, directionShown, errors);
             CheckTitle(direction.Title, "напряму", file, directionShown, errors);
+            CheckTitleTranslations(direction.TitleTranslations, "напряму", file, directionShown, errors);
             CheckUnique(directionIds, direction.Id, "напряму", file, directionShown, errors);
 
             for (var j = 0; j < direction.Stacks.Count; j++)
@@ -85,6 +88,7 @@ public sealed partial class ContentValidator
                 var shown = Shown(stack.Id, $"{directionShown}, стек №{j + 1}");
                 CheckId(stack.Id, "стеку", file, shown, errors);
                 CheckTitle(stack.Title, "стеку", file, shown, errors);
+                CheckTitleTranslations(stack.TitleTranslations, "стеку", file, shown, errors);
                 CheckUnique(stackIds, stack.Id, "стеку", file, shown, errors);
 
                 var stackTopicIds = new HashSet<string>(StringComparer.Ordinal);
@@ -122,6 +126,8 @@ public sealed partial class ContentValidator
 
         CheckId(topic.Id, "теми", file, shown, errors);
         CheckTitle(topic.Title, "теми", file, shown, errors);
+        CheckTitleTranslations(topic.TitleTranslations, "теми", file, shown, errors);
+        CheckTranslations(topic.DescriptionTranslations, "description", "Порожній опис теми", file, shown, errors);
         CheckUnique(seenTopicIds, topic.Id, "теми", file, shown, errors);
         if (topic.Id.Length > 0 && topic.Id != fileStem)
         {
@@ -256,6 +262,67 @@ public sealed partial class ContentValidator
         {
             ValidateSources(sources, file, shown, errors);
         }
+
+        foreach (var language in ContentLanguages.Translations)
+        {
+            ValidateTranslation(question, language, file, shown, errors);
+        }
+    }
+
+    /// <summary>
+    /// Rule 11 for one question and one language: all of its texts are translated or none is, so a test in that
+    /// language never mixes in base-language text. Blank and repeated texts are rejected as in rules 7 and 8.
+    /// </summary>
+    private static void ValidateTranslation(
+        QuestionDefinition question, string language, string file, string shown, List<ContentError> errors)
+    {
+        var textKey = ContentLanguages.TranslationKey("text", language);
+        var explanationKey = ContentLanguages.TranslationKey("explanation", language);
+        var missing = new List<string>();
+
+        if (!question.TextTranslations.TryGetValue(language, out var text))
+        {
+            missing.Add($"немає {textKey}");
+        }
+        else if (string.IsNullOrWhiteSpace(text))
+        {
+            errors.Add(new ContentError(file, shown, $"Порожній текст питання ({textKey})."));
+        }
+
+        if (!question.ExplanationTranslations.TryGetValue(language, out var explanation))
+        {
+            missing.Add($"немає {explanationKey}");
+        }
+        else if (string.IsNullOrWhiteSpace(explanation))
+        {
+            errors.Add(new ContentError(file, shown, $"Порожнє пояснення ({explanationKey})."));
+        }
+
+        var optionTexts = new HashSet<string>(StringComparer.Ordinal);
+        for (var i = 0; i < question.Options.Count; i++)
+        {
+            if (!question.Options[i].TextTranslations.TryGetValue(language, out var optionText))
+            {
+                missing.Add($"варіант {i + 1}: немає {textKey}");
+            }
+            else if (string.IsNullOrWhiteSpace(optionText))
+            {
+                errors.Add(new ContentError(file, shown, $"Варіант №{i + 1} порожній ({textKey})."));
+            }
+            else if (!optionTexts.Add(optionText.Trim()))
+            {
+                errors.Add(new ContentError(file, shown, $"Варіант «{optionText.Trim()}» повторюється ({textKey})."));
+            }
+        }
+
+        // Nothing missing is a full translation, everything missing is none; both are fine.
+        var keyCount = 2 + question.Options.Count;
+        if (missing.Count > 0 && missing.Count < keyCount)
+        {
+            errors.Add(new ContentError(file, shown,
+                $"Неповний переклад мовою {language}: {string.Join("; ", missing)}. " +
+                $"Потрібні {textKey}, {explanationKey} і {textKey} кожного варіанта або жодного з них."));
+        }
     }
 
     private static void ValidateSources(
@@ -313,6 +380,23 @@ public sealed partial class ContentValidator
         if (string.IsNullOrWhiteSpace(title))
         {
             errors.Add(new ContentError(file, shown, $"Не вказано назву {entity} (title)."));
+        }
+    }
+
+    /// <summary>Rule 11: a translated title is never blank, as the base one (rule 8).</summary>
+    private static void CheckTitleTranslations(
+        TranslatedTexts titles, string entity, string file, string shown, List<ContentError> errors) =>
+        CheckTranslations(titles, "title", $"Порожня назва {entity}", file, shown, errors);
+
+    private static void CheckTranslations(
+        TranslatedTexts translations, string key, string message, string file, string shown, List<ContentError> errors)
+    {
+        foreach (var language in ContentLanguages.Translations)
+        {
+            if (translations.TryGetValue(language, out var text) && string.IsNullOrWhiteSpace(text))
+            {
+                errors.Add(new ContentError(file, shown, $"{message} ({ContentLanguages.TranslationKey(key, language)})."));
+            }
         }
     }
 

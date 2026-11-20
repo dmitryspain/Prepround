@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Prepround.Domain.Catalog;
@@ -15,7 +16,7 @@ namespace Prepround.Tests.ContentTool;
 /// never take part.
 /// </summary>
 [Collection(PostgresCollection.Name)]
-public class ImportCommandTests(PostgresFixture postgres)
+public partial class ImportCommandTests(PostgresFixture postgres)
 {
     private const string FieldFile = "it/field.yaml";
     private const string SqlFile = "it/topics/sql.yaml";
@@ -286,6 +287,37 @@ public class ImportCommandTests(PostgresFixture postgres)
         Assert.Equal(before, await PostgresFixture.SnapshotAsync(db));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Content_with_an_english_translation_imports_the_same_rows_and_summary_as_without_it(bool includeDrafts)
+    {
+        // PRP-025: import ignores the translations until PRP-026, and draft_en never holds back base questions.
+        using var original = new RealContentCopy();
+        using var translated = new RealContentCopy();
+        EnglishTranslation.AddTo(translated.Root);
+        AssertEveryTextIsTranslated(translated.Root);
+        string[] flags = includeDrafts ? [IncludeDrafts] : [];
+
+        var baseDb = await postgres.CreateDatabaseAsync();
+        var translatedDb = await postgres.CreateDatabaseAsync();
+        var baseRun = await RunIsolatedAsync(baseDb, null, ["import", original.Root, .. flags]);
+        var translatedRun = await RunIsolatedAsync(translatedDb, null, ["import", translated.Root, .. flags]);
+
+        Assert.True(baseRun.ExitCode == SuccessExitCode, baseRun.Output);
+        Assert.True(translatedRun.ExitCode == SuccessExitCode, translatedRun.Output);
+        Assert.Equal(baseRun.StdoutLines, translatedRun.StdoutLines);
+        var baseRows = await PostgresFixture.SnapshotAsync(baseDb);
+        // Two imports never share the clock, so UpdatedAt is the one value that may differ between the databases.
+        Assert.Equal(WithoutUpdatedAt(baseRows), WithoutUpdatedAt(await PostgresFixture.SnapshotAsync(translatedDb)));
+
+        var over = await RunIsolatedAsync(baseDb, null, ["import", translated.Root, .. flags]);
+
+        Assert.True(over.ExitCode == SuccessExitCode, over.Output);
+        Assert.Equal(NothingChanged, over.StdoutLines);
+        Assert.Equal(baseRows, await PostgresFixture.SnapshotAsync(baseDb));
+    }
+
     [Fact]
     public async Task Stack_topics_options_and_scale_keep_the_order_of_the_files()
     {
@@ -454,6 +486,39 @@ public class ImportCommandTests(PostgresFixture postgres)
             home.Delete(recursive: true);
         }
     }
+
+    /// <summary>
+    /// The translated copy really carries a translation of everything: otherwise "the same rows" would prove nothing.
+    /// Draft flags of the base language are untouched, and every topic has draft_en.
+    /// </summary>
+    private static void AssertEveryTextIsTranslated(string root)
+    {
+        var read = new YamlContentReader().Read(root);
+        Assert.True(read.Errors.Count == 0, string.Join(Environment.NewLine, read.Errors));
+        var field = Assert.Single(read.Fields);
+
+        Assert.True(field.TitleTranslations.ContainsKey("en"));
+        Assert.All(field.Levels, level => Assert.True(level.TitleTranslations.ContainsKey("en"), level.Id));
+        Assert.All(field.Directions, direction => Assert.True(direction.TitleTranslations.ContainsKey("en"), direction.Id));
+        Assert.All(field.Directions.SelectMany(direction => direction.Stacks), stack => Assert.True(stack.TitleTranslations.ContainsKey("en"), stack.Id));
+        Assert.All(field.Topics, topic =>
+        {
+            Assert.True(topic.TitleTranslations.ContainsKey("en"), topic.Id);
+            Assert.Equal(topic.Description.Length > 0, topic.DescriptionTranslations.ContainsKey("en"));
+            Assert.Equal(["en"], topic.DraftLanguages);
+            Assert.Equal(RealDraftTopicIds().Contains(topic.Id), topic.IsDraft);
+        });
+
+        var questions = field.Topics.SelectMany(topic => topic.Questions).ToList();
+        Assert.Equal(RealQuestionCount(), questions.Count);
+        Assert.All(questions, question => Assert.True(question.IsTranslatedTo("en"), question.Id));
+    }
+
+    private static List<string> WithoutUpdatedAt(IEnumerable<string> rows) =>
+        rows.Select(row => UpdatedAtValue().Replace(row, "\"UpdatedAt\":null")).Order(StringComparer.Ordinal).ToList();
+
+    [GeneratedRegex("\"UpdatedAt\":\"[^\"]*\"")]
+    private static partial Regex UpdatedAtValue();
 
     private static async Task ImportOkAsync(string connectionString, string root, params string[] flags)
     {

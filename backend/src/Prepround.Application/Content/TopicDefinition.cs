@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace Prepround.Application.Content;
 
 /// <param name="File">Path of the topic file relative to the content root, with forward slashes; used in errors and for rule 3.</param>
@@ -11,4 +13,16 @@ public sealed record TopicDefinition(
     string Title,
     string Description,
     IReadOnlyList<QuestionDefinition> Questions,
-    bool IsDraft = false);
+    bool IsDraft = false)
+{
+    public TranslatedTexts TitleTranslations { get; init; } = TranslatedTexts.None;
+
+    public TranslatedTexts DescriptionTranslations { get; init; } = TranslatedTexts.None;
+
+    /// <summary>
+    /// Translation languages marked <c>draft_L: true</c>: the questions' translation into them has not passed
+    /// the fact check yet (ADR 006). Unlike <see cref="IsDraft"/>, it does not touch the base-language questions
+    /// or the topic's titles.
+    /// </summary>
+    public IReadOnlySet<string> DraftLanguages { get; init; } = FrozenSet<string>.Empty;
+}

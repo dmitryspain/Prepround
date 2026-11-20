@@ -61,6 +61,31 @@ public partial class ValidateCommandTests
         ["rule-10-sources-not-a-list"] = c => WithAlphaSources(c, "sources: https://www.postgresql.org/docs/18/"),
         ["draft-not-a-boolean"] = c => c.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft: maybe"),
         ["draft-not-a-scalar"] = c => c.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft: [true]"),
+        // PRP-025: translation keys (ADR 006) and rule 11.
+        ["draft-en-not-a-boolean"] = c => c.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft_en: так"),
+        ["rule-9-text-de"] = c => c.Replace(ContentFixture.AlphaFile, "    level: junior", "    level: junior\n    text_de: x"),
+        ["rule-9-title-EN"] = c => c.Replace(ContentFixture.AlphaFile, "title: Alpha", "title: Alpha\ntitle_EN: x"),
+        ["rule-9-code-source-en"] = c => c.Replace(ContentFixture.AlphaFile, "      lang: csharp", "      lang: csharp\n      source_en: x"),
+        ["rule-11-incomplete-translation"] = c =>
+        {
+            TranslatedFixture.TranslateAlphaAndItsFirstQuestion(c);
+            c.Replace(ContentFixture.AlphaFile, $"        text_en: \"{TranslatedFixture.SecondOption}\"\n", "");
+        },
+        ["rule-11-blank-text-en"] = c =>
+        {
+            TranslatedFixture.TranslateAlphaAndItsFirstQuestion(c);
+            c.Replace(ContentFixture.AlphaFile, $"text_en: {TranslatedFixture.QuestionText}", "text_en: '   '");
+        },
+        ["rule-11-repeated-option-en"] = c =>
+        {
+            TranslatedFixture.TranslateAlphaAndItsFirstQuestion(c);
+            c.Replace(ContentFixture.AlphaFile, $"text_en: \"{TranslatedFixture.SecondOption}\"", $"text_en: \" {TranslatedFixture.FirstOption} \"");
+        },
+        ["rule-11-blank-level-title-en"] = c =>
+        {
+            TranslatedFixture.TranslateField(c);
+            c.Replace(ContentFixture.FieldFile, $"title_en: {TranslatedFixture.LevelTitle}", "title_en: \"\"");
+        },
     };
 
     [Fact]
@@ -93,6 +118,52 @@ public partial class ValidateCommandTests
         Assert.Equal([$"{ContentFixture.Summary}, з них у чернетках 2"], draft.StdoutLines);
         Assert.True(notDraft.ExitCode == SuccessExitCode, notDraft.Output);
         Assert.Equal([ContentFixture.Summary], notDraft.StdoutLines);
+    }
+
+    [Fact]
+    public async Task Fully_translated_question_is_counted_in_the_summary_after_the_drafts()
+    {
+        // PRP-025: the suffix names the language and counts only complete translations of questions.
+        using var content = new ContentFixture();
+        TranslatedFixture.TranslateField(content);
+        TranslatedFixture.TranslateAlphaAndItsFirstQuestion(content);
+
+        var translated = await RunAsync("validate", content.Root);
+
+        content.Replace(ContentFixture.AlphaFile, "draft_en: true\n", "draft_en: true\ndraft: true\n");
+        var draft = await RunAsync("validate", content.Root);
+
+        Assert.True(translated.ExitCode == SuccessExitCode, translated.Output);
+        Assert.Equal([$"{ContentFixture.Summary}, перекладів en: 1"], translated.StdoutLines);
+        Assert.True(draft.ExitCode == SuccessExitCode, draft.Output);
+        Assert.Equal([$"{ContentFixture.Summary}, з них у чернетках 2, перекладів en: 1"], draft.StdoutLines);
+    }
+
+    [Fact]
+    public async Task Translated_titles_and_draft_en_without_a_translated_question_print_the_old_summary()
+    {
+        using var content = new ContentFixture();
+        TranslatedFixture.TranslateField(content);
+        content.Replace(ContentFixture.AlphaFile, "title: Alpha", "title: Alpha\ntitle_en: Alpha\ndraft_en: true");
+
+        var run = await RunAsync("validate", content.Root);
+
+        Assert.True(run.ExitCode == SuccessExitCode, run.Output);
+        Assert.Equal([ContentFixture.Summary], run.StdoutLines);
+    }
+
+    [Fact]
+    public async Task Real_content_with_a_complete_english_translation_counts_every_question_as_translated()
+    {
+        using var content = new RealContentCopy();
+        var before = await RunAsync("validate", content.Root);
+        EnglishTranslation.AddTo(content.Root);
+
+        var after = await RunAsync("validate", content.Root);
+
+        Assert.True(after.ExitCode == SuccessExitCode, after.Output);
+        var summary = Assert.Single(before.StdoutLines);
+        Assert.Equal([$"{summary}, перекладів en: {RealQuestionCount()}"], after.StdoutLines);
     }
 
     [Fact]
@@ -219,6 +290,14 @@ public partial class ValidateCommandTests
     [InlineData("rule-10-sources-not-a-list", ContentFixture.AlphaFile, "alpha-001", "«sources» у рядку 7 має бути списком")]
     [InlineData("draft-not-a-boolean", ContentFixture.AlphaFile, "alpha", "«draft» у рядку 4 має бути true або false")]
     [InlineData("draft-not-a-scalar", ContentFixture.AlphaFile, "alpha", "«draft» у рядку 4 має бути текстом")]
+    [InlineData("draft-en-not-a-boolean", ContentFixture.AlphaFile, "alpha", "«draft_en» у рядку 4 має бути true або false")]
+    [InlineData("rule-9-text-de", ContentFixture.AlphaFile, "alpha-001", "«text_de» у рядку 7")]
+    [InlineData("rule-9-title-EN", ContentFixture.AlphaFile, "alpha", "«title_EN» у рядку 3")]
+    [InlineData("rule-9-code-source-en", ContentFixture.AlphaFile, "alpha-002", "«source_en» у рядку 20")]
+    [InlineData("rule-11-incomplete-translation", ContentFixture.AlphaFile, "alpha-001", "Неповний переклад мовою en: варіант 2: немає text_en.")]
+    [InlineData("rule-11-blank-text-en", ContentFixture.AlphaFile, "alpha-001", "Порожній текст питання (text_en).")]
+    [InlineData("rule-11-repeated-option-en", ContentFixture.AlphaFile, "alpha-001", "Варіант «Yes» повторюється (text_en).")]
+    [InlineData("rule-11-blank-level-title-en", ContentFixture.FieldFile, "junior", "Порожня назва рівня (title_en).")]
     public async Task Broken_content_is_reported_as_file_id_message_on_stderr_and_exits_with_1(
         string breakage, string file, string id, string messageFragment)
     {

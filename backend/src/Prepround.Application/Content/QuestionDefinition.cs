@@ -17,4 +17,18 @@ public sealed record QuestionDefinition(
     CodeBlock? Code,
     IReadOnlyList<OptionDefinition> Options,
     string Explanation,
-    IReadOnlyList<string>? Sources);
+    IReadOnlyList<string>? Sources)
+{
+    public TranslatedTexts TextTranslations { get; init; } = TranslatedTexts.None;
+
+    public TranslatedTexts ExplanationTranslations { get; init; } = TranslatedTexts.None;
+
+    /// <summary>
+    /// Whether the question has every text in the language: its own, the explanation and each option's (rule 11).
+    /// Level, type, code and which options are correct are shared, so they need no translation.
+    /// </summary>
+    public bool IsTranslatedTo(string language) =>
+        TextTranslations.ContainsKey(language)
+        && ExplanationTranslations.ContainsKey(language)
+        && Options.All(option => option.TextTranslations.ContainsKey(language));
+}

@@ -11,4 +11,7 @@ public sealed record FieldDefinition(
     string Title,
     IReadOnlyList<LevelDefinition> Levels,
     IReadOnlyList<DirectionDefinition> Directions,
-    IReadOnlyList<TopicDefinition> Topics);
+    IReadOnlyList<TopicDefinition> Topics)
+{
+    public TranslatedTexts TitleTranslations { get; init; } = TranslatedTexts.None;
+}

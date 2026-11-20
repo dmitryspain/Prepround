@@ -94,9 +94,17 @@ static int Validate(string directory)
 
         // Shown only when there are drafts: that is how many questions a default import leaves out.
         var drafts = draftQuestionCount > 0 ? $", з них у чернетках {draftQuestionCount}" : string.Empty;
+
+        // Likewise only for languages that have fully translated questions, so untranslated content prints as before.
+        var translations = string.Concat(ContentLanguages.Translations
+            .Select(language => (Language: language, Count: field.Topics
+                .Sum(topic => topic.Questions.Count(question => question.IsTranslatedTo(language)))))
+            .Where(translated => translated.Count > 0)
+            .Select(translated => $", перекладів {translated.Language}: {translated.Count}"));
+
         Console.WriteLine(
             $"{field.Id}: рівнів {field.Levels.Count}, напрямів {field.Directions.Count}, " +
-            $"стеків {stackCount}, тем {field.Topics.Count}, питань {questionCount}{drafts}");
+            $"стеків {stackCount}, тем {field.Topics.Count}, питань {questionCount}{drafts}{translations}");
     }
 
     return SuccessExitCode;

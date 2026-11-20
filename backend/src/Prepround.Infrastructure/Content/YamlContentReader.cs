@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using Prepround.Application.Content;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -9,6 +10,8 @@ namespace Prepround.Infrastructure.Content;
 /// Walks the YAML node tree instead of using a deserializer, so every unknown key (rule 9 of ADR 002) and every
 /// malformed value becomes a <see cref="ContentError"/> with its line, and one bad file does not hide the others.
 /// Scalar values are trimmed; code keeps its indentation and loses only trailing whitespace.
+/// Translations (ADR 006) are read as <c>key_L</c> next to their base key, for every language of
+/// <see cref="ContentLanguages.Translations"/>; whether they are complete is the validator's rule 11.
 /// Any other .yaml or .yml file in the tree is an error too: skipping it silently would hide a topic from validate
 /// and let import deactivate its questions.
 /// </summary>
@@ -20,15 +23,16 @@ public sealed class YamlContentReader : IContentReader
 
     private static readonly string[] YamlExtensions = [".yaml", ".yml"];
 
-    private static readonly string[] FieldKeys = ["id", "title", "levels", "directions"];
-    private static readonly string[] LevelKeys = ["id", "title"];
-    private static readonly string[] DirectionKeys = ["id", "title", "stacks"];
-    private static readonly string[] StackKeys = ["id", "title", "topics"];
-    private static readonly string[] TopicKeys = ["id", "title", "description", "draft", "questions"];
-    private static readonly string[] QuestionKeys =
-        ["id", "level", "type", "text", "code", "options", "explanation", "sources"];
-    private static readonly string[] CodeKeys = ["lang", "source"];
-    private static readonly string[] OptionKeys = ["text", "correct"];
+    private static readonly MappingKeys FieldKeys = new(["id", "title", "levels", "directions"], translated: ["title"]);
+    private static readonly MappingKeys LevelKeys = new(["id", "title"], translated: ["title"]);
+    private static readonly MappingKeys DirectionKeys = new(["id", "title", "stacks"], translated: ["title"]);
+    private static readonly MappingKeys StackKeys = new(["id", "title", "topics"], translated: ["title"]);
+    private static readonly MappingKeys TopicKeys =
+        new(["id", "title", "description", "draft", "questions"], translated: ["title", "description", "draft"]);
+    private static readonly MappingKeys QuestionKeys = new(
+        ["id", "level", "type", "text", "code", "options", "explanation", "sources"], translated: ["text", "explanation"]);
+    private static readonly MappingKeys CodeKeys = new(["lang", "source"], translated: []);
+    private static readonly MappingKeys OptionKeys = new(["text", "correct"], translated: ["text"]);
 
     /// <param name="rootDirectory">Existing content root; a missing directory is the caller's usage error, not content.</param>
     public ContentReadResult Read(string rootDirectory)
@@ -144,13 +148,19 @@ public sealed class YamlContentReader : IContentReader
             .Select(direction => ReadDirection(direction, yaml))
             .ToList();
 
-        return new FieldDefinition(file, map.Text("id"), map.Text("title"), levels, directions, topics);
+        return new FieldDefinition(file, map.Text("id"), map.Text("title"), levels, directions, topics)
+        {
+            TitleTranslations = map.Translations("title"),
+        };
     }
 
     private static LevelDefinition ReadLevel(MappingReader map)
     {
         map.RejectUnknownKeys(LevelKeys);
-        return new LevelDefinition(map.Text("id"), map.Text("title"));
+        return new LevelDefinition(map.Text("id"), map.Text("title"))
+        {
+            TitleTranslations = map.Translations("title"),
+        };
     }
 
     private static DirectionDefinition ReadDirection(MappingReader map, YamlFile yaml)
@@ -163,7 +173,10 @@ public sealed class YamlContentReader : IContentReader
             .Select(stack => ReadStack(stack, yaml))
             .ToList();
 
-        return new DirectionDefinition(map.Text("id"), map.Text("title"), stacks);
+        return new DirectionDefinition(map.Text("id"), map.Text("title"), stacks)
+        {
+            TitleTranslations = map.Translations("title"),
+        };
     }
 
     private static StackDefinition ReadStack(MappingReader map, YamlFile yaml)
@@ -174,7 +187,10 @@ public sealed class YamlContentReader : IContentReader
             .Select(node => yaml.ItemText(node, "topics", map.Id))
             .ToList();
 
-        return new StackDefinition(map.Text("id"), map.Text("title"), topicIds);
+        return new StackDefinition(map.Text("id"), map.Text("title"), topicIds)
+        {
+            TitleTranslations = map.Translations("title"),
+        };
     }
 
     private static List<TopicDefinition> ReadTopics(string fieldDirectory, string folder, List<ContentError> errors)
@@ -207,6 +223,7 @@ public sealed class YamlContentReader : IContentReader
 
         // Read before the questions, so a bad value is reported in file order, above any question errors.
         var isDraft = map.Flag("draft");
+        var draftLanguages = map.Languages("draft");
 
         var questions = map.List("questions")
             .Select((node, index) => yaml.Item(node, "questions", map.Id, $"питання №{index + 1}"))
@@ -214,7 +231,12 @@ public sealed class YamlContentReader : IContentReader
             .Select(question => ReadQuestion(question, yaml))
             .ToList();
 
-        return new TopicDefinition(file, map.Text("id"), map.Text("title"), map.Text("description"), questions, isDraft);
+        return new TopicDefinition(file, map.Text("id"), map.Text("title"), map.Text("description"), questions, isDraft)
+        {
+            TitleTranslations = map.Translations("title"),
+            DescriptionTranslations = map.Translations("description"),
+            DraftLanguages = draftLanguages,
+        };
     }
 
     private static QuestionDefinition ReadQuestion(MappingReader map, YamlFile yaml)
@@ -254,7 +276,11 @@ public sealed class YamlContentReader : IContentReader
             code,
             options,
             map.Text("explanation"),
-            sources);
+            sources)
+        {
+            TextTranslations = map.Translations("text"),
+            ExplanationTranslations = map.Translations("explanation"),
+        };
     }
 
     private static CodeBlock ReadCode(MappingReader map)
@@ -266,10 +292,42 @@ public sealed class YamlContentReader : IContentReader
     private static OptionDefinition ReadOption(MappingReader map)
     {
         map.RejectUnknownKeys(OptionKeys);
-        return new OptionDefinition(map.Text("text"), map.Flag("correct"));
+        return new OptionDefinition(map.Text("text"), map.Flag("correct"))
+        {
+            TextTranslations = map.Translations("text"),
+        };
     }
 
     private static bool IsHidden(string path) => Path.GetFileName(path).StartsWith('.');
+
+    /// <summary>
+    /// Keys allowed in one mapping. Each translated key also comes as <c>key_L</c> for every translation language;
+    /// those are derived here rather than listed, so a new language needs no edit in the reader.
+    /// </summary>
+    private sealed class MappingKeys
+    {
+        private readonly HashSet<string> _allowed;
+
+        public MappingKeys(string[] keys, string[] translated)
+        {
+            Keys = keys;
+            Translated = translated;
+            _allowed = new HashSet<string>(keys, StringComparer.Ordinal);
+            foreach (var key in translated)
+            {
+                _allowed.UnionWith(
+                    ContentLanguages.Translations.Select(language => ContentLanguages.TranslationKey(key, language)));
+            }
+        }
+
+        /// <summary>The base keys: listing every translation key too would double each unknown-key message.</summary>
+        public string[] Keys { get; }
+
+        /// <summary>Base keys that take a language suffix.</summary>
+        public string[] Translated { get; }
+
+        public bool Allows(string key) => _allowed.Contains(key);
+    }
 
     /// <summary>One YAML file: parses it and reports problems in it.</summary>
     private sealed class YamlFile(string file, List<ContentError> errors)
@@ -383,17 +441,24 @@ public sealed class YamlContentReader : IContentReader
             ? scalar.Value.Trim()
             : _fallbackId;
 
-        public void RejectUnknownKeys(string[] allowedKeys)
+        public void RejectUnknownKeys(MappingKeys allowedKeys)
         {
             foreach (var key in _node.Children.Keys)
             {
                 var name = key is YamlScalarNode { Value: { } value } ? value : key.ToString();
-                if (!allowedKeys.Contains(name, StringComparer.Ordinal))
+                if (allowedKeys.Allows(name))
                 {
-                    _yaml.Report(Id,
-                        $"Невідомий ключ «{name}» у рядку {key.Start.Line}. " +
-                        $"Допустимі ключі: {string.Join(", ", allowedKeys)}.");
+                    continue;
                 }
+
+                // "text_de" or "title_EN": the author meant a translation, so the hint is how one is written.
+                var translated = allowedKeys.Translated
+                    .FirstOrDefault(baseKey => name.StartsWith($"{baseKey}_", StringComparison.Ordinal));
+                var hint = translated is null
+                    ? $"Допустимі ключі: {string.Join(", ", allowedKeys.Keys)}."
+                    : $"Ключ перекладу пишеться як {translated}_<мова>, мови перекладу: " +
+                      $"{string.Join(", ", ContentLanguages.Translations)}.";
+                _yaml.Report(Id, $"Невідомий ключ «{name}» у рядку {key.Start.Line}. {hint}");
             }
         }
 
@@ -420,6 +485,24 @@ public sealed class YamlContentReader : IContentReader
             _yaml.Report(Id, $"Значення ключа «{key}» у рядку {_values[key].Start.Line} має бути true або false.");
             return false;
         }
+
+        /// <summary>
+        /// The key's text in every translation language that has <c>key_L</c>. A blank value stays as an empty text,
+        /// so the validator reports it instead of the translation silently vanishing.
+        /// </summary>
+        public TranslatedTexts Translations(string key)
+        {
+            var texts = ContentLanguages.Translations
+                .Where(language => Has(ContentLanguages.TranslationKey(key, language)))
+                .ToDictionary(language => language, language => Text(ContentLanguages.TranslationKey(key, language)));
+
+            return texts.Count == 0 ? TranslatedTexts.None : new TranslatedTexts(texts);
+        }
+
+        /// <summary>Translation languages whose flag <c>key_L</c> is true; a value other than true or false is reported.</summary>
+        public IReadOnlySet<string> Languages(string key) => ContentLanguages.Translations
+            .Where(language => Flag(ContentLanguages.TranslationKey(key, language)))
+            .ToFrozenSet(StringComparer.Ordinal);
 
         public IReadOnlyList<YamlNode> List(string key)
         {
