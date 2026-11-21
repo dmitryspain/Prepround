@@ -295,7 +295,9 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         // PRP-025 made import read the translations; PRP-026 (ADR 006, section 2) stores them only in the *Translations
         // columns and QuestionTranslations, so every base value stays as without them. The copy marks every topic
         // draft_en, which holds back the question translations without the flag and never the base questions.
+        // "original" is the content before any English: the real one carries its own since PRP-030 (topic titles).
         using var original = new RealContentCopy();
+        EnglishTranslation.RemoveFrom(original.Root);
         using var translated = new RealContentCopy();
         EnglishTranslation.AddTo(translated.Root);
         AssertEveryTextIsTranslated(translated.Root);

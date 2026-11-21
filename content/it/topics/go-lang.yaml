@@ -1,6 +1,6 @@
 id: go-lang
 title: Мова Go
-title_en: The Go language
+title_en: Go language
 description: Типи, slices і maps, інтерфейси, структури, помилки, generics.
 description_en: Types, slices and maps, interfaces, structs, errors, generics.
 questions:

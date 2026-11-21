@@ -1,6 +1,6 @@
 id: java-core
 title: Java Core
-title_en: Java Core
+title_en: Core Java
 description: ООП, колекції, generics, Stream API, винятки, records, equals/hashCode.
 description_en: OOP, collections, generics, Stream API, exceptions, records, equals/hashCode.
 questions:

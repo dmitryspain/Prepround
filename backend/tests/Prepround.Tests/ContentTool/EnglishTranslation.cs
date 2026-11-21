@@ -25,14 +25,15 @@ internal static partial class EnglishTranslation
     }
 
     /// <summary>
-    /// Drops every <c>*_en</c> key (with the lines of its value) and every <c>draft_en</c>, leaving the base lines
-    /// byte for byte: what the content looked like before it had any English.
+    /// Drops every <c>*_en</c> key (with the lines of its value) and every <c>draft_en</c> from a content tree or a
+    /// single file, leaving the base lines byte for byte: what the content looked like before it had any English.
     /// </summary>
-    public static void RemoveFrom(string root)
+    public static void RemoveFrom(string path)
     {
-        foreach (var path in Directory.GetFiles(root, "*.yaml", SearchOption.AllDirectories))
+        var files = File.Exists(path) ? [path] : Directory.GetFiles(path, "*.yaml", SearchOption.AllDirectories);
+        foreach (var file in files)
         {
-            File.WriteAllText(path, Strip(File.ReadAllText(path)));
+            File.WriteAllText(file, Strip(File.ReadAllText(file)));
         }
     }
 
@@ -158,6 +159,7 @@ internal static partial class EnglishTranslation
             }
         }
 
+        output.AddRange(blanks);
         return string.Join('\n', output);
     }
 

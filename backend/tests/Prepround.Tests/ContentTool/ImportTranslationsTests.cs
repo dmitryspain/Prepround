@@ -21,7 +21,7 @@ public partial class ImportCommandTests
     public async Task One_question_translation_is_added_updated_and_removed_and_the_questions_never_change()
     {
         var db = await postgres.CreateDatabaseAsync();
-        using var content = new RealContentCopy();
+        using var content = WithUntranslatedSql();
         var original = content.Read(SqlFile);
         // A multiple-choice question: OptionTexts must keep the file order of all its options.
         var question = RealTopic("sql").Questions.First(definition => definition.Type == "multiple" && definition.Options.Count > 3);
@@ -83,7 +83,7 @@ public partial class ImportCommandTests
     public async Task Title_en_updates_only_its_catalog_entry_and_never_the_questions()
     {
         var db = await postgres.CreateDatabaseAsync();
-        using var content = new RealContentCopy();
+        using var content = WithUntranslatedSql();
         await ImportOkAsync(db, content.Root);
         var before = await UpdatedAtByIdAsync(db);
 
@@ -136,7 +136,7 @@ public partial class ImportCommandTests
     public async Task Draft_en_holds_back_the_question_translations_of_its_topic_without_the_flag_but_not_its_questions_or_titles()
     {
         var db = await postgres.CreateDatabaseAsync();
-        using var content = new RealContentCopy();
+        using var content = WithUntranslatedSql();
         var sqlCount = RealTopic("sql").Questions.Count;
         var drafts = RealDraftQuestionCount();
         var english = TranslateQuestion(content, "sql-001", "draft");
@@ -175,7 +175,7 @@ public partial class ImportCommandTests
     public async Task Draft_topic_without_the_flag_deactivates_its_questions_and_removes_their_translations()
     {
         var db = await postgres.CreateDatabaseAsync();
-        using var content = new RealContentCopy();
+        using var content = WithUntranslatedSql();
         var sqlCount = RealTopic("sql").Questions.Count;
         TranslateQuestion(content, "sql-001", "one");
         var english = TranslateQuestion(content, "sql-002", "two");
@@ -203,7 +203,7 @@ public partial class ImportCommandTests
     public async Task Question_removed_from_the_file_is_deactivated_and_loses_its_translation_until_it_returns()
     {
         var db = await postgres.CreateDatabaseAsync();
-        using var content = new RealContentCopy();
+        using var content = WithUntranslatedSql();
         var last = RealTopic("sql").Questions[^1].Id;
         var english = TranslateQuestion(content, last, "last");
         var translated = content.Read(SqlFile);
@@ -229,7 +229,7 @@ public partial class ImportCommandTests
     public async Task Database_failure_on_a_translation_insert_rolls_back_questions_translations_and_titles()
     {
         var db = await postgres.CreateDatabaseAsync();
-        using var content = new RealContentCopy();
+        using var content = WithUntranslatedSql();
         var original = content.Read(SqlFile);
         TranslateQuestion(content, "sql-001", "one");
         TranslateQuestion(content, "sql-002", "two");
@@ -263,8 +263,11 @@ public partial class ImportCommandTests
     public async Task ContentTranslations_migration_on_an_imported_database_gives_empty_translations_and_a_no_op_import()
     {
         // ADR 006, section 2: the migration only adds; rows written before it mean "no translation", as on Neon.
+        // Neon got the content before it had any English, while the real one carries its own since PRP-030.
         var db = await postgres.CreateDatabaseAsync();
-        var content = RealContentDirectory();
+        using var untranslated = new RealContentCopy();
+        EnglishTranslation.RemoveFrom(untranslated.Root);
+        var content = untranslated.Root;
         await ImportOkAsync(db, content, IncludeDrafts);
         var imported = await PostgresFixture.SnapshotAsync(db);
         var ct = TestContext.Current.CancellationToken;
@@ -298,6 +301,30 @@ public partial class ImportCommandTests
 
         Assert.True(run.ExitCode == SuccessExitCode, run.Output);
         Assert.Equal(NothingChanged, run.StdoutLines);
+
+        // Then the deploy of PRP-030 onto it: the real content's topic titles land, and no question changes.
+        var real = await RunIsolatedAsync(db, null, "import", RealContentDirectory(), IncludeDrafts);
+
+        Assert.True(real.ExitCode == SuccessExitCode, real.Output);
+        Assert.Contains(Counts("Питання", (0, 0, 0)), real.StdoutLines);
+        Assert.Contains(Counts("Теми", (0, RealTopicsWithEnglishCount(), 0)), real.StdoutLines);
+    }
+
+    /// <summary>Topics whose file has a top-level title_en or description_en, from the raw lines.</summary>
+    private static int RealTopicsWithEnglishCount() =>
+        Directory.GetFiles(Path.Combine(RealContentDirectory(), "it", "topics"), "*.yaml")
+            .Count(path => File.ReadLines(path).Any(line =>
+                line.StartsWith("title_en:", StringComparison.Ordinal) || line.StartsWith("description_en:", StringComparison.Ordinal)));
+
+    /// <summary>
+    /// A copy of the real content whose sql.yaml has no English yet, where these tests add their own: sql carries
+    /// a title_en since PRP-030, and translation waves add the rest of it.
+    /// </summary>
+    private static RealContentCopy WithUntranslatedSql()
+    {
+        var content = new RealContentCopy();
+        EnglishTranslation.RemoveFrom(Path.Combine(content.Root, SqlFile));
+        return content;
     }
 
     /// <summary>The English texts a test gave one question; the option texts are in file order.</summary>

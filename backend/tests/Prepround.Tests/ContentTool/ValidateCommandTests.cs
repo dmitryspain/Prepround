@@ -95,7 +95,11 @@ public partial class ValidateCommandTests
 
         Assert.True(run.ExitCode == SuccessExitCode, run.Output);
         Assert.Empty(run.Stderr);
-        var summary = Assert.Single(run.StdoutLines, line => SummaryLine().IsMatch(line) && line.StartsWith("it: ", StringComparison.Ordinal));
+        var line = Assert.Single(run.StdoutLines, output => output.StartsWith("it: ", StringComparison.Ordinal));
+        // PRP-025: complete question translations append ", перекладів <lang>: N" after the drafts, which translation
+        // waves will bring into the real content; translated topic titles alone (PRP-030) never do.
+        var summary = TranslationsSuffix().Replace(line, "");
+        Assert.Matches(SummaryLine(), summary);
         // PRP-023: the total and the drafts come from the raw lines of the files; the suffix appears only with drafts.
         var drafts = RealDraftQuestionCount();
         Assert.EndsWith(
@@ -155,7 +159,9 @@ public partial class ValidateCommandTests
     [Fact]
     public async Task Real_content_with_a_complete_english_translation_counts_every_question_as_translated()
     {
+        // The real content has English of its own since PRP-030; "before" is the content without any of it.
         using var content = new RealContentCopy();
+        EnglishTranslation.RemoveFrom(content.Root);
         var before = await RunAsync("validate", content.Root);
         EnglishTranslation.AddTo(content.Root);
 
@@ -352,4 +358,7 @@ public partial class ValidateCommandTests
     // The drafts suffix (PRP-023) is the only optional part, and only with a positive count.
     [GeneratedRegex(@"^[a-z0-9-]+: рівнів \d+, напрямів \d+, стеків \d+, тем \d+, питань \d+(, з них у чернетках [1-9]\d*)?$")]
     private static partial Regex SummaryLine();
+
+    [GeneratedRegex(@"(, перекладів [a-z]+: [1-9]\d*)+$")]
+    private static partial Regex TranslationsSuffix();
 }

@@ -9,11 +9,10 @@
 
 - **Пріоритет зараз — дві мови сайту** (рішення власника 2026-11-19, `backend/.claude/pm/decisions/006-languages-uk-en.md`, accepted). Перекладаються інтерфейс, назви каталогу і питання.
 - **Правки з ADR 006, розділ 9, внесено 2026-11-20:** spec 3.1, 3.5, 3.7, 5, 5.1, 5.2, 6; CLAUDE.md обох репо. Рядки «Команди» і правило «нові питання двома мовами» дописано на закритті PRP-026 і PRP-029.
-- **У роботі:** PRP-030 (етап 5, `content-author`).
+- **У роботі:** хвилі перекладу (етап 5), розділ «Хвилі перекладу». Перша група — .NET.
 - **Готово для coder зараз (по черзі, послідовно):**
   1. —
-- **Далі, після PRP-029:**
-  - PRP-030 (`content-author`) — назви 61 теми англійською, англійські коментарі в коді 18 опублікованих питань;
+- **Далі:**
   - **хвилі перекладу** (розділ «Хвилі перекладу» нижче, бриф `translation-brief.md`), без зупинки після них;
   - PRP-031 — правило 12, англійська в прод-збірці;
   - PRP-032 (власник) — деплой.
@@ -2129,7 +2128,7 @@
 **Примітка головної сесії (2026-11-21):** «Команди» і правило «дві мови» в CLAUDE.md, лапки для `Yes`/`No` і `rm -rf` перед копією бази (бриф перекладу), «`--translation-only` лише з `validate`» — внесено. Самотест лінту, ширший `FORBIDDEN_OPTION` англійською, `HTTP 000` у `--urls` → «Ідеї».
 
 ### PRP-030 · Назви тем англійською й англійські коментарі в коді
-- **Статус:** todo
+- **Статус:** done
 - **Виконавець:** content-author
 - **Пріоритет:** P1
 - **Область:** content
@@ -2163,6 +2162,19 @@
 - **Поза скоупом:** переклад питань (хвилі перекладу), коментарі в темах-чернетках (`angular-di-002`, `pinia-002`, `pinia-005`, `pinia-011`, `vue-router-008` — їх правлять автори, коли відновляться хвилі Frontend), `field.yaml`.
 
 **Примітка головної сесії (хвіст PRP-025, 2026-11-20):** PRP-030 — перша картка, що кладе `_en` у `content/` (`title_en` тем). Після неї впаде `ValidateCommandTests.Real_content_is_valid_and_summarised_per_field`: regex `SummaryLine()` і `Assert.EndsWith(...)` не допускають суфікса `, перекладів en: N`. Суфікс з'явиться лише з першим повністю перекладеним питанням, але `title_en` теж варто перевірити прогоном. Тест оновлює tester цієї картки або coder окремою приміткою до її запуску.
+
+**Результат (2026-11-21):** PASS з 1 кола; тести: total 460 / failed 0. 61 тема з `title_en`/`description_en`, коментарі в 18 питаннях; `import`: теми оновлено 61, питання 18. Tester оновив помічники тестів (`EnglishTranslation.RemoveFrom`, `WithUntranslatedSql()`), і суфікс `, перекладів en: N` у `Real_content_is_valid_and_summarised_per_field` тепер допустимий.
+**Хвости:**
+- content-author, «Помічено поза скоупом»: нічого.
+- tester, «Зауваження»:
+  - `java-concurrency` → «Multithreading in Java». З `dotnet-async` («Async and multithreading») назва узгоджена, але офіційний термін Oracle — «Concurrency»: туторіал «Lesson: Concurrency», `java.util.concurrent`. Варіант: «Concurrency in Java». Вирішує власник.
+  - `java-core` / `python-core` → «Java Core» / «Python Core». Природна англійська — «Core Java» / «Core Python». Вирішує власник.
+  - `prisma-typeorm`: «relationships». Prisma і TypeORM у документації пишуть «relations». Варіант: «Schemas, migrations, relations, transactions.»
+  - Дрібниці стилю: `jvm` `description_en` з малої «heap/stack»; `go-lang` «The Go language» — єдина назва з артиклем; `html-css` «responsiveness» (у MDN — «responsive design»); `react-data-routing` «request caching» (у TanStack — «query caching»); `docker-k8s` «compose» з малої (продукт — Compose); назви без серійної коми — послідовно, на розсуд.
+  - Кирилиця в `code.source` опублікованих тем лишилась лише в рядкових літералах і тексті розмітки (`Зберегти`, `'привіт'`, `"немає"`, `"Правка клієнта B"`, `Нових листів`, `Видалити`, `Кліків`, `Підключено`) — за карткою не чіпаємо. Коментарі в чернетках поза скоупом.
+  - Коміт `db9ec94` містив проміжну версію `EnglishTranslation.cs`; остаточні тестові файли докомічено з PRP-030.
+
+**Примітка головної сесії (2026-11-21):** усі зауваження щодо назв внесено одразу (рішення головної сесії, власник просив не зупинятись): «Core Java», «Core Python», «Concurrency in Java», «Go language», «relations», «Heap/stack», «Compose», «responsive design», «query caching». Повторно: `validate` 0, `content-lint --all --base` 0, `import` теми оновлено 9, `dotnet test` 460/0. Кириличні літерали в коді — свідомо (від них залежать вивід і варіанти); в англійському тесті вони лишаються, як у ADR 006, розділ 1.
 
 ### PRP-031 · Англійська в проді: правило 12 і `languages` у продакшн-збірці
 - **Статус:** todo
