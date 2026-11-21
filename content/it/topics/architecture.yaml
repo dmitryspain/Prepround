@@ -3,25 +3,34 @@ title: Архітектура й патерни
 title_en: Architecture and patterns
 description: SOLID, GoF-патерни, Clean Architecture, DDD, мікросервіси, system design.
 description_en: SOLID, GoF patterns, Clean Architecture, DDD, microservices, system design.
+draft_en: true
 questions:
   - id: architecture-001
     level: junior
     type: single
     text: Що стверджує принцип єдиної відповідальності (SRP)?
+    text_en: What does the single responsibility principle (SRP) state?
     options:
     - text: Клас має мати лише одну причину для змін, тобто відповідати за одну річ
+      text_en: A class should have only one reason to change, that is, be responsible for one thing
       correct: true
     - text: Клас має містити лише один публічний метод, щоб його було легко тестувати
+      text_en: A class should contain only one public method so that it is easy to test
     - text: Кожен клас має наслідувати лише один базовий клас, щоб уникнути множинного наслідування
+      text_en: Each class should inherit from only one base class to avoid multiple inheritance
     - text: Один клас має використовуватися лише в одному модулі застосунку, без повторного використання
+      text_en: One class should be used in only one module of the application, with no reuse
     explanation: |
       SRP не про кількість методів, а про причини змін: якщо клас міняється і через формат звіту, і через правила розрахунку, він робить забагато. Через це зміни в одній відповідальності не ламають іншу.
+    explanation_en: |
+      SRP is not about the number of methods but about reasons to change: if a class changes both because of the report format and because of the calculation rules, it does too much. This way, changes to one responsibility do not break another.
     sources:
     - https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles#single-responsibility
   - id: architecture-002
     level: junior
     type: single
     text: Яку проблему має цей псевдокод з погляду принципу інверсії залежностей і як її виправити?
+    text_en: What problem does this pseudocode have from the dependency inversion principle's point of view, and how can it be fixed?
     code:
       lang: text
       source: |
@@ -33,46 +42,67 @@ questions:
                 self.repo.save(order)
     options:
     - text: Сервіс жорстко привʼязаний до `SqlOrderRepository`, тож залежність слід передавати як абстракцію
+      text_en: The service is tightly coupled to `SqlOrderRepository`, so the dependency should be passed in as an abstraction
       correct: true
     - text: Сервіс не має приватних полів, тому їх треба зробити публічними для зручності тестування коду
+      text_en: The service has no private fields, so they should be made public to make the code easier to test
     - text: Метод `place` має повертати значення, щоб результат збереження можна було перевірити в тесті
+      text_en: The `place` method should return a value so that the result of saving can be checked in a test
     - text: Проблеми немає, бо створення залежності всередині класу є найпростішим і найзрозумілішим варіантом
+      text_en: There is no problem, because creating a dependency inside the class is the simplest and clearest option
     explanation: |
       Модуль вищого рівня має залежати від абстракції (наприклад, `OrderRepository`), а не від SQL-реалізації. Тоді її можна підмінити в тестах чи при зміні сховища.
+    explanation_en: |
+      A higher-level module should depend on an abstraction (for example, `OrderRepository`), not on the SQL implementation. Then it can be replaced in tests or when the storage changes.
     sources:
     - https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles#dependency-inversion
   - id: architecture-003
     level: junior
     type: single
     text: Яку задачу розв'язує патерн Observer?
+    text_en: What problem does the Observer pattern solve?
     options:
     - text: Дозволяє обʼєкту сповіщати підписників про зміну стану, не знаючи їхніх типів
+      text_en: It lets an object notify subscribers about a state change without knowing their types
       correct: true
     - text: Створює обʼєкти за описом, ховаючи від клієнта клас конкретної реалізації
+      text_en: It creates objects from a description, hiding the concrete implementation class from the client
     - text: Додає обʼєкту поведінку обгортанням в інший обʼєкт того самого інтерфейсу
+      text_en: It adds behavior to an object by wrapping it in another object with the same interface
     - text: Гарантує, що від класу існує лише один екземпляр на весь застосунок
+      text_en: It guarantees that only one instance of a class exists in the whole application
     explanation: |
       Видавець зберігає список підписників і викликає їх при зміні. Створення обʼєктів — це фабрики, обгортання — Decorator, єдиний екземпляр — Singleton.
+    explanation_en: |
+      The publisher keeps a list of subscribers and calls them when something changes. Creating objects is the job of factories, wrapping is Decorator, and a single instance is Singleton.
     sources:
     - https://learn.microsoft.com/en-us/dotnet/standard/events/observer-design-pattern
   - id: architecture-004
     level: junior
     type: single
     text: Що відрізняє мікросервісну архітектуру від монолітної?
+    text_en: What distinguishes a microservice architecture from a monolithic one?
     options:
     - text: Застосунок складається з малих слабко звʼязаних сервісів, які можна розгортати незалежно
+      text_en: Small, loosely coupled services that can be deployed independently
       correct: true
     - text: Усі сервіси зобовʼязані використовувати одну спільну базу даних
+      text_en: All services are required to use one shared database
     - text: Сервіси компілюються в один виконуваний файл, але мають різні папки
+      text_en: The services are compiled into one executable file but have different folders
     - text: Мікросервіси завжди швидші, бо мережеві виклики дешевші за виклики в памʼяті
+      text_en: Microservices are always faster, because network calls are cheaper than in-memory calls
     explanation: |
       Незалежне розгортання дає автономію команд і масштабування по частинах, але додає мережеві виклики, розподілені дані й операційну складність. Спільна БД якраз зводить автономію нанівець.
+    explanation_en: |
+      Independent deployment gives teams autonomy and scaling by parts, but adds network calls, distributed data, and operational complexity. A shared database is exactly what undermines that autonomy.
     sources:
     - https://learn.microsoft.com/en-us/azure/architecture/microservices/
   - id: architecture-005
     level: middle
     type: single
     text: Який принцип порушує цей код?
+    text_en: Which principle does this code violate?
     code:
       lang: text
       source: |
@@ -88,113 +118,168 @@ questions:
                 b.fly()
     options:
     - text: Принцип підстановки Лісков, бо `Penguin` не підставляється замість `Bird`
+      text_en: The Liskov substitution principle, because `Penguin` cannot be substituted for `Bird`
       correct: true
     - text: Принцип відкритості/закритості, бо клас `Bird` не можна розширити
+      text_en: The open/closed principle, because the `Bird` class cannot be extended
     - text: Принцип єдиної відповідальності, бо `Bird` має лише один метод
+      text_en: The single responsibility principle, because `Bird` has only one method
     - text: Порушень немає, бо виняток у перевизначеному методі є нормальною поведінкою
+      text_en: There is no violation, because an exception in an overridden method is normal behavior
     explanation: |
       Код, який працює з `Bird`, має працювати з будь-яким підтипом, а тут `migrate` падає на пінгвіні. Політ виносять в окремий інтерфейс чи підклас (`FlyingBird`), а не перевизначають метод винятком.
+    explanation_en: |
+      Code that works with `Bird` must work with any subtype, but here `migrate` fails on a penguin. Flying is moved into a separate interface or subclass (`FlyingBird`) instead of overriding the method with an exception.
     sources:
     - https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html
   - id: architecture-006
     level: middle
     type: single
     text: Що вимагає правило залежностей (dependency rule) у Clean Architecture?
+    text_en: What does the dependency rule in Clean Architecture require?
     options:
     - text: 'Залежності спрямовані всередину: домен не знає про базу даних, UI чи фреймворк'
+      text_en: '''Dependencies point inward: the domain knows nothing about the database, the UI, or the framework'''
       correct: true
     - text: Внутрішні шари викликають зовнішні напряму, щоб уникнути зайвих абстракцій і прошарків
+      text_en: Inner layers call outer ones directly, to avoid unnecessary abstractions and layers
     - text: Усі шари залежать від шару доступу до даних, бо він є основою всієї системи
+      text_en: All layers depend on the data access layer, because it is the foundation of the whole system
     - text: Шар домену має посилатися на ORM, щоб самостійно зберігати свої сутності в базі
+      text_en: The domain layer should reference the ORM so that it can save its own entities to the database
     explanation: |
       Зовнішні шари (UI, інфраструктура) залежать від внутрішніх, а не навпаки. Коли внутрішньому шару потрібне сховище, він оголошує інтерфейс, а реалізацію постачає інфраструктура.
+    explanation_en: |
+      Outer layers (UI, infrastructure) depend on inner ones, not the other way around. When an inner layer needs storage, it declares an interface, and infrastructure supplies the implementation.
     sources:
     - https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/common-web-application-architectures#clean-architecture
   - id: architecture-007
     level: middle
     type: multiple
     text: Які твердження про агрегати (aggregates) в DDD правильні?
+    text_en: Which statements about aggregates in DDD are true?
     options:
     - text: Агрегат є межею узгодженості, і рівно одна його сутність є коренем
+      text_en: An aggregate is a consistency boundary with exactly one root entity
       correct: true
     - text: На інші агрегати посилаються за ідентифікатором, а не прямим посиланням
+      text_en: Other aggregates are referenced by identifier rather than by a direct reference
       correct: true
     - text: Агрегати проєктують малими, лише з даних для однієї транзакції
+      text_en: Aggregates are kept small, holding data for one transaction
       correct: true
     - text: Кожна таблиця бази даних має відповідати одному агрегату
+      text_en: Each table in the database schema should correspond to one aggregate
     explanation: |
       Агрегат визначає транзакційну межу, а не схему таблиць. Зведення в один агрегат незалежних сутностей змушує їхні оновлення змагатися за ті самі блокування. Між агрегатами достатньо кінцевої узгодженості.
+    explanation_en: |
+      An aggregate defines a transactional boundary, not a table schema. Merging independent entities into one aggregate makes their updates compete for the same locks. Eventual consistency is enough between aggregates.
     sources:
     - https://learn.microsoft.com/en-us/azure/architecture/microservices/model/tactical-ddd
   - id: architecture-008
     level: middle
     type: single
     text: Що означає патерн CQRS?
+    text_en: What does the CQRS pattern mean?
     options:
     - text: Операції запису й читання розділяють у різні моделі, які можна оптимізувати окремо
+      text_en: Write and read operations are split into different models that can be optimized separately
       correct: true
     - text: Кожна команда обовʼязково зберігається як подія, а стан відновлюється з журналу подій
+      text_en: Every command must be stored as an event, and the state is rebuilt from the event log
     - text: Для читання й запису потрібні дві різні фізичні бази даних на різних серверах
+      text_en: Reading and writing require two different physical databases on different servers
     - text: Усі запити виконуються асинхронно через чергу повідомлень між клієнтом і сервером
+      text_en: All queries run asynchronously through a message queue between the client and the server
     explanation: |
       CQRS — це розділення моделей читання й запису, а не вимога Event Sourcing чи двох СУБД. Їх часто поєднують, але вони незалежні.
+    explanation_en: |
+      CQRS is the separation of read and write models, not a requirement for Event Sourcing or two DBMSs. They are often combined, but they are independent.
     sources:
     - https://learn.microsoft.com/en-us/azure/architecture/patterns/cqrs
   - id: architecture-009
     level: senior
     type: single
     text: У мікросервісах замовлення, склад і платежі мають власні БД. Склад уже зарезервував товар, але платіж не пройшов. Який підхід узгодженості доречний?
+    text_en: In a microservice system, orders, inventory, and payments each have their own database. Inventory has already reserved the goods, but the payment failed. Which consistency approach is appropriate?
     options:
     - text: Сага з компенсувальною транзакцією, яка скасовує резерв на складі
+      text_en: A saga with a compensating transaction that cancels the reservation
       correct: true
     - text: Одна розподілена ACID-транзакція між усіма БД, яка відкотить усе автоматично
+      text_en: One distributed ACID transaction across all databases that rolls everything back automatically
     - text: Нічого не робити, бо склад розбереться, коли хтось повторить замовлення
+      text_en: Do nothing, because inventory will sort it out when someone repeats the order
     - text: Перенести всі таблиці в одну БД, щоб обійтися без узгодження між сервісами
+      text_en: Move all tables into one database to avoid coordination between services
     explanation: |
       Сага розбиває процес на локальні транзакції, а при збої виконує компенсувальні дії, що скасовують уже виконані кроки. Розподілені транзакції між сервісами погано масштабуються й зменшують автономію, а спільна БД руйнує межі сервісів.
+    explanation_en: |
+      A saga splits the process into local transactions and, on failure, runs compensating actions that undo the steps already completed. Distributed transactions across services scale poorly and reduce autonomy, and a shared database destroys service boundaries.
     sources:
     - https://learn.microsoft.com/en-us/azure/architecture/patterns/saga
   - id: architecture-010
     level: senior
     type: multiple
     text: Які твердження про патерн Circuit Breaker правильні?
+    text_en: Which statements about the Circuit Breaker pattern are true?
     options:
     - text: У стані Open виклики одразу завершуються помилкою, не доходячи до залежності
+      text_en: In the Open state, calls fail immediately without reaching the dependency
       correct: true
     - text: У стані Half-Open пропускають обмежену кількість запитів, щоб перевірити, чи залежність відновилася
+      text_en: In the Half-Open state, a limited number of requests pass to test whether the dependency recovered
       correct: true
     - text: Він замінює Retry, тому повторні спроби після його впровадження не потрібні
+      text_en: It replaces Retry, so retries are no longer needed once the breaker is adopted in a service
     - text: У стані Open запити накопичуються в черзі й виконуються після відновлення залежності
+      text_en: In the Open state, requests pile up in a queue and are executed once the dependency recovers
     explanation: |
       Circuit Breaker зупиняє виклики, які ймовірно не вдадуться, і не дає збою каскадно поширитися. Retry вирішує іншу задачу (перечекати тимчасову помилку), тому їх поєднують, а логіка retry має припиняти спроби, коли брейкер розімкнено.
+    explanation_en: |
+      Circuit Breaker stops calls that are likely to fail and prevents the failure from spreading in a cascade. Retry solves a different problem (waiting out a transient error), so they are combined, and the retry logic should stop trying when the breaker is open.
     sources:
     - https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker
   - id: architecture-011
     level: senior
     type: multiple
     text: Сервіс масово повторює запити до перевантаженої залежності й погіршує ситуацію (retry storm). Які заходи допоможуть?
+    text_en: A service massively retries requests to an overloaded dependency and makes things worse (a retry storm). Which measures will help?
     options:
     - text: Обмежити кількість спроб і загальний час повторів
+      text_en: Limit the number of attempts and the total retry time
       correct: true
     - text: Збільшувати паузу між спробами, наприклад за експоненційним backoff
+      text_en: Increase the pause between attempts, for example with exponential backoff
       correct: true
     - text: Повторювати негайно без паузи, щоб швидше отримати відповідь
+      text_en: Retry immediately without a pause to get a response faster
     - text: Повторювати без обмеження для критичних операцій, поки не вдасться
+      text_en: Retry without a limit for critical operations until they succeed
     explanation: |
       Кожна клієнтська спроба додає навантаження на сервіс, що й так не справляється. Обмеження й зростаюча пауза дають йому час відновитися. Негайні та безмежні повтори лише поглиблюють збій.
+    explanation_en: |
+      Every client attempt adds load to a service that is already struggling. A limit and a growing pause give it time to recover. Immediate and unlimited retries only deepen the failure.
     sources:
     - https://learn.microsoft.com/en-us/azure/architecture/antipatterns/retry-storm/
   - id: architecture-012
     level: senior
     type: single
     text: У системі з Event Sourcing знайшли помилкову подію `OrderPriceSet` в уже збереженому потоці. Як правильно виправити стан?
+    text_en: In a system with Event Sourcing, an erroneous `OrderPriceSet` event was found in an already stored stream. How should the state be corrected properly?
     options:
     - text: Додати нову подію, яка виправляє або скасовує наслідки помилкової, не змінюючи історію
+      text_en: Append a new event that corrects or reverses the erroneous one, keeping history
       correct: true
     - text: Знайти й відредагувати помилкову подію безпосередньо в сховищі подій, оновивши її поля
+      text_en: Find and edit the erroneous event directly in the event store, updating its fields
     - text: Видалити всі події після помилкової й відтворити їх заново з виправленими даними
+      text_en: Delete all events after the erroneous one and replay them with the corrected data
     - text: Перезаписати поточний стан у проєкції, а журнал подій залишити без жодних змін
+      text_en: Overwrite the current state in the projection and leave the event log completely unchanged
     explanation: |
       Події є незмінним журналом фактів, тож виправлення виражають новими (компенсувальними) подіями, і історія помилки зберігається. Правка лише проєкції зникне при наступному відтворенні з журналу.
+    explanation_en: |
+      Events are an immutable log of facts, so corrections are expressed as new (compensating) events, and the history of the mistake is preserved. A fix made only to the projection will disappear on the next replay from the log.
     sources:
     - https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing

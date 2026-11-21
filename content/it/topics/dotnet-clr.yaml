@@ -3,11 +3,13 @@ title: CLR, пам'ять і GC
 title_en: CLR, memory and GC
 description: Value/reference types, stack/heap, GC і покоління, IDisposable, Span.
 description_en: Value/reference types, stack/heap, GC and generations, IDisposable, Span.
+draft_en: true
 questions:
   - id: dotnet-clr-001
     level: junior
     type: single
     text: Що виведе цей код?
+    text_en: "What does this code print?"
     code:
       lang: csharp
       source: |
@@ -25,14 +27,22 @@ questions:
         class PointClass { public int X; }
     options:
       - text: "`1 2`"
+        text_en: "`1 2`"
         correct: true
       - text: "`2 2`"
+        text_en: "`2 2`"
       - text: "`1 1`"
+        text_en: "`1 1`"
       - text: "`2 1`"
+        text_en: "`2 1`"
     explanation: >
       Присвоєння структури копіює все значення, тож `b` — окрема копія, і зміна `b.X` не торкається `a`.
       Присвоєння класу копіює лише посилання: `c` і `d` вказують на той самий об'єкт, тому зміну через `d`
       видно й через `c`.
+    explanation_en: >
+      Assigning a struct copies the whole value, so `b` is a separate copy and changing `b.X` does not
+      affect `a`. Assigning a class copies only the reference: `c` and `d` point to the same object, so a
+      change made through `d` is visible through `c` as well.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/choosing-between-class-and-struct
 
@@ -40,20 +50,31 @@ questions:
     level: junior
     type: multiple
     text: "Які твердження про `IDisposable` і `using` правильні?"
+    text_en: "Which statements about `IDisposable` and `using` are true?"
     options:
       - text: "`using` викликає `Dispose`, навіть якщо всередині блоку кинуто виняток"
+        text_en: "`using` calls `Dispose` even if an exception is thrown inside the block"
         correct: true
       - text: "Змінну з `using var file = ...;` буде звільнено в кінці області видимості"
+        text_en: "A variable from `using var file = ...;` is disposed at the end of its scope"
         correct: true
       - text: "`Dispose` звільняє файли чи з'єднання одразу, а не тоді, коли до об'єкта колись дійде GC"
+        text_en: "`Dispose` releases files or connections immediately, rather than whenever the GC eventually gets to the object"
         correct: true
       - text: "GC сам викликає `Dispose` для кожного об'єкта, перш ніж його зібрати"
+        text_en: "The GC itself calls `Dispose` on every object before collecting it"
       - text: "Після `Dispose` пам'ять, яку займає сам об'єкт у керованій купі, звільняється негайно"
+        text_en: "After `Dispose`, the memory the object itself occupies on the managed heap is freed immediately"
     explanation: >
       `using` компілюється в `try`/`finally`, тому `Dispose` викликається за будь-якого виходу з блоку, а
       `using`-оголошення звільняє ресурс у кінці своєї області видимості. Сам GC про `Dispose` нічого не знає
       і не викликає його, а пам'ять об'єкта після `Dispose` однаково звільнить лише GC, коли об'єкт стане
       недосяжним.
+    explanation_en: >
+      `using` compiles to `try`/`finally`, so `Dispose` is called however the block exits, and a `using`
+      declaration releases the resource at the end of its scope. The GC knows nothing about `Dispose` and
+      does not call it, and the object's memory is still freed only by the GC once the object becomes
+      unreachable.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/using
       - https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose#the-dispose-method
@@ -62,16 +83,26 @@ questions:
     level: junior
     type: single
     text: Які об'єкти може зібрати збирач сміття під час чергової збірки?
+    text_en: "Which objects can the garbage collector reclaim during a collection?"
     options:
       - text: "Ті, до яких немає шляху посилань від коренів: статичних полів, локальних змінних, GC-хендлів"
+        text_en: "Those with no reference path from the roots: static fields, local variables, GC handles"
         correct: true
       - text: "Лише ті, на які не посилається жоден об'єкт; два об'єкти, що посилаються один на одного, не зберуться"
+        text_en: "Only those no object references; two objects that reference each other will not be collected"
       - text: "Ті, що давно не використовувались, навіть якщо на них досі посилається статичне поле"
+        text_en: "Those that have not been used for a long time, even if a static field still references them"
       - text: "Лише ті, для яких код уже викликав `Dispose`"
+        text_en: "Only those for which the code has already called `Dispose`"
     explanation: >
       GC будує граф об'єктів, досяжних від коренів (статичні поля, локальні змінні на стеку потоків, регістри,
       GC-хендли), і все поза цим графом вважає сміттям. Тому два об'єкти, що посилаються лише один на одного,
       теж буде зібрано, якщо до них не дійти від коренів. `Dispose` і давність використання на це не впливають.
+    explanation_en: >
+      The GC builds a graph of objects reachable from the roots (static fields, local variables on thread
+      stacks, registers, GC handles) and treats everything outside that graph as garbage. So two objects
+      that reference only each other are collected too if they cannot be reached from the roots. `Dispose`
+      and how long ago an object was used have no effect on this.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals#memory-release
 
@@ -79,6 +110,7 @@ questions:
     level: junior
     type: single
     text: Що виведе цей код?
+    text_en: "What does this code print?"
     code:
       lang: csharp
       source: |
@@ -88,13 +120,21 @@ questions:
         Console.WriteLine(string.Join(",", numbers));
     options:
       - text: "`1,42,3,4,5`"
+        text_en: "`1,42,3,4,5`"
         correct: true
       - text: "`1,2,3,4,5`"
+        text_en: "`1,2,3,4,5`"
       - text: "`42,2,3,4,5`"
+        text_en: "`42,2,3,4,5`"
       - text: "`1,2,42,4,5`"
+        text_en: "`1,2,42,4,5`"
     explanation: >
       `AsSpan(1, 3)` не копіює елементи, а створює «вікно» на елементи масиву з індексами 1–3. Тому
       `middle[0]` — це той самий елемент, що й `numbers[1]`, і запис через span змінює сам масив.
+    explanation_en: >
+      `AsSpan(1, 3)` does not copy elements; it creates a "window" over the array elements at indexes 1-3.
+      So `middle[0]` is the same element as `numbers[1]`, and writing through the span changes the array
+      itself.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/
 
@@ -102,6 +142,7 @@ questions:
     level: middle
     type: single
     text: Що виведе цей код?
+    text_en: "What does this code print?"
     code:
       lang: csharp
       source: |
@@ -119,14 +160,23 @@ questions:
         }
     options:
       - text: "`0 1`"
+        text_en: "`0 1`"
         correct: true
       - text: "`1 1`"
+        text_en: "`1 1`"
       - text: "`0 0`"
+        text_en: "`0 0`"
       - text: "`1 0`"
+        text_en: "`1 0`"
     explanation: >
       Присвоєння структури змінній інтерфейсного типу — це упаковування: у купі створюється новий об'єкт
       із копією значення. `Increment` змінює саме цю копію, тож упакований лічильник дорівнює 1, а `counter`
       лишається 0. Через такі несподіванки змінювані структури, які приводять до інтерфейсів, вважають пасткою.
+    explanation_en: >
+      Assigning a struct to an interface-typed variable is boxing: a new object holding a copy of the
+      value is created on the heap. `Increment` changes that copy, so the boxed counter equals 1 while
+      `counter` stays 0. Because of such surprises, mutable structs cast to interfaces are considered a
+      trap.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing#boxing
       - https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/choosing-between-class-and-struct
@@ -135,6 +185,7 @@ questions:
     level: middle
     type: single
     text: Що виведе цей код?
+    text_en: "What does this code print?"
     code:
       lang: csharp
       source: |
@@ -147,14 +198,23 @@ questions:
         GC.KeepAlive(order);
     options:
       - text: "`012`"
+        text_en: "`012`"
         correct: true
       - text: "`000`"
+        text_en: "`000`"
       - text: "`011`"
+        text_en: "`011`"
       - text: "`022`"
+        text_en: "`022`"
     explanation: >
       Новий об'єкт потрапляє в покоління 0, а той, що пережив збірку, переходить у наступне: після першої
       `GC.Collect()` він у поколінні 1, після другої — у 2, і далі там і лишається. На цьому тримаються
       покоління: більшість об'єктів помирає молодими, тож GC здебільшого збирає лише маленьке покоління 0.
+    explanation_en: >
+      A new object lands in generation 0, and one that survives a collection moves to the next generation:
+      after the first `GC.Collect()` it is in generation 1, after the second in generation 2, and it stays
+      there. Generations rely on this: most objects die young, so the GC usually collects only the small
+      generation 0.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamentals#survival-and-promotions
 
@@ -162,16 +222,26 @@ questions:
     level: middle
     type: single
     text: "Навіщо типовий метод `Dispose()` викликає `GC.SuppressFinalize(this)`?"
+    text_en: "Why does a typical `Dispose()` method call `GC.SuppressFinalize(this)`?"
     options:
       - text: "Ресурси вже звільнено, тож GC не мусить викликати фіналізатор цього об'єкта"
+        text_en: "The resources are already released, so the GC does not need to run this object's finalizer"
         correct: true
       - text: "Щоб GC зібрав об'єкт одразу, не чекаючи наступної збірки"
+        text_en: "So the GC collects the object immediately, without waiting for the next collection"
       - text: "Щоб наступний виклик `Dispose` на тому самому об'єкті кинув виняток"
+        text_en: "So that a subsequent `Dispose` call on the same object throws an exception"
       - text: "Щоб GC не переміщав об'єкт у пам'яті під час ущільнення купи"
+        text_en: "So the GC does not move the object in memory during heap compaction"
     explanation: >
       `Dispose` уже виконав усе прибирання, тому `SuppressFinalize` повідомляє GC, що фіналізатор для цього
       об'єкта запускати не треба. Негайної збірки він не викликає і повторного `Dispose` не забороняє:
       повторний виклик метод має спокійно ігнорувати сам. Якщо фіналізатора в типу немає, виклик нічого не робить.
+    explanation_en: >
+      `Dispose` has already done all the cleanup, so `SuppressFinalize` tells the GC that the finalizer
+      for this object need not run. It does not trigger an immediate collection and does not forbid a
+      second `Dispose`: the method should simply ignore repeated calls on its own. If the type has no
+      finalizer, the call does nothing.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose#the-dispose-method
 
@@ -179,21 +249,33 @@ questions:
     level: middle
     type: multiple
     text: "Що з цього компілятор C# 14 не дозволить зробити зі `Span<byte>`?"
+    text_en: "Which of these will the C# 14 compiler not allow with a `Span<byte>`?"
     options:
       - text: "Оголосити поле `private Span<byte> _buffer;` у звичайному класі"
+        text_en: "Declare a field `private Span<byte> _buffer;` in an ordinary class"
         correct: true
       - text: "Захопити змінну типу `Span<byte>` у лямбду"
+        text_en: "Capture a `Span<byte>` variable in a lambda"
         correct: true
       - text: "Присвоїти `Span<byte>` змінній типу `object`"
+        text_en: "Assign a `Span<byte>` to a variable of type `object`"
         correct: true
       - text: "Взяти зріз `span.Slice(1, 2)` у синхронному методі"
+        text_en: "Take a slice `span.Slice(1, 2)` in a synchronous method"
       - text: "Передати `Span<byte>` параметром у синхронний метод"
+        text_en: "Pass a `Span<byte>` as a parameter to a synchronous method"
       - text: "Записати результат `stackalloc byte[16]` у змінну типу `Span<byte>`"
+        text_en: "Assign the result of `stackalloc byte[16]` to a `Span<byte>` variable"
     explanation: >
       `Span<T>` — це `ref struct`: він може вказувати на пам'ять стеку, тому компілятор не дає йому
       потрапити в керовану купу. Звідси заборони на поле класу, захоплення в лямбду й упаковування в
       `object`. Локальні змінні, параметри, зрізи й `stackalloc` у синхронному коді — звичайне використання
       span, а якщо дані треба зберегти в полі, беруть `Memory<T>`.
+    explanation_en: >
+      `Span<T>` is a `ref struct`: it can point to stack memory, so the compiler does not let it end up on
+      the managed heap. Hence the bans on class fields, lambda capture, and boxing into `object`. Locals,
+      parameters, slices, and `stackalloc` in synchronous code are ordinary span usage, and if the data
+      must be stored in a field, use `Memory<T>`.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/ref-struct
       - https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/
@@ -204,17 +286,27 @@ questions:
     text: >
       Сервіс на кожен запит створює тимчасовий `byte[]` на 1 МБ. Профайлер показує часті збірки
       покоління 2 і фрагментацію купи. Яке пояснення й виправлення правильні?
+    text_en: "A service creates a temporary 1 MB `byte[]` on every request. The profiler shows frequent generation 2 collections and heap fragmentation. Which explanation and fix are correct?"
     options:
       - text: "Масиви від 85 000 байтів ідуть у LOH, яку збирають разом із поколінням 2; буфери варто брати з `ArrayPool<byte>.Shared`"
+        text_en: "Arrays of 85,000 bytes or more go to the LOH, which is collected together with generation 2; take buffers from `ArrayPool<byte>.Shared`"
         correct: true
       - text: "Великі масиви переповнюють покоління 0, тож GC мусить збирати його частіше; допоможе регулярний виклик `GC.Collect()` після запиту"
+        text_en: "Large arrays overflow generation 0, so the GC has to collect it more often; calling `GC.Collect()` regularly after each request will help"
       - text: "Масиви `byte[]` лежать у стеку, і його переповнення змушує GC збирати покоління 2; допоможе `stackalloc`"
+        text_en: "`byte[]` arrays live on the stack, and its overflow forces the GC to collect generation 2; `stackalloc` will help"
       - text: "Купу великих об'єктів GC ущільнює на кожній збірці, і це дорого; допоможе вимкнути Server GC"
+        text_en: "The GC compacts the large object heap on every collection, which is expensive; turning off Server GC will help"
     explanation: >
       Об'єкти від 85 000 байтів GC розміщує в купі великих об'єктів (LOH), яку збирає лише під час збірки
       покоління 2 і за замовчуванням не ущільнює. Тож кожен тимчасовий мегабайтний буфер наближає дорогу
       повну збірку й фрагментує LOH. Повторне використання буферів через пул прибирає ці алокації, а ручний
       `GC.Collect()` лише додасть повних збірок.
+    explanation_en: >
+      The GC places objects of 85,000 bytes or more on the large object heap (LOH), which it collects only
+      during a generation 2 collection and by default does not compact. So each temporary megabyte buffer
+      brings an expensive full collection closer and fragments the LOH. Reusing buffers through a pool
+      removes those allocations, while a manual `GC.Collect()` would only add full collections.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/large-object-heap#loh-performance-implications
       - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/best-practices#minimize-large-object-allocations
@@ -226,21 +318,33 @@ questions:
       Команда хоче замінити клас `OrderLine` (10 полів, близько 80 байтів) на `struct`, щоб «прибрати
       алокації». Рядки часто передають у методи, зберігають у `List<OrderLine>` і приводять до інтерфейсу
       `IPriced`. Які наслідки реальні?
+    text_en: "A team wants to replace the class `OrderLine` (10 fields, about 80 bytes) with a `struct` to \"remove allocations\". The lines are often passed to methods, stored in a `List<OrderLine>`, and cast to the interface `IPriced`. Which consequences are real?"
     options:
       - text: "Кожне присвоєння й передача в метод копіюватиме всі ~80 байтів, а не одне посилання"
+        text_en: "Every assignment and method call will copy all ~80 bytes instead of a single reference"
         correct: true
       - text: "Кожне приведення до `IPriced` упаковуватиме значення, тобто створюватиме об'єкт у купі"
+        text_en: "Every cast to `IPriced` will box the value, that is, create an object on the heap"
         correct: true
       - text: "Елементи `List<OrderLine>` лежатимуть усередині масиву списку в купі, а не в стеку"
+        text_en: "The elements of `List<OrderLine>` will sit inside the list's array on the heap, not on the stack"
         correct: true
       - text: "Після переходу на `struct` ці дані взагалі не потраплятимуть у керовану купу"
+        text_en: "After switching to `struct`, this data will not end up on the managed heap at all"
       - text: "Зміна поля в копії, яку повернув метод, одразу змінить і оригінальний елемент у списку"
+        text_en: "Changing a field of a copy returned by a method will immediately change the original element in the list"
     explanation: >
       Структура копіюється цілком під час присвоєння й передачі, тож для великого типу це дорожче за
       копіювання посилання, а приведення до інтерфейсу упаковує її в об'єкт у купі. Типи-значення живуть
       або в стеку, або всередині об'єкта-власника, тож елементи списку лежать у його масиві в купі.
       Тому Framework Design Guidelines радять `struct` лише для малих (до 16 байтів), незмінних і рідко
       упаковуваних типів.
+    explanation_en: >
+      A struct is copied in full on assignment and passing, so for a large type that costs more than
+      copying a reference, and casting to an interface boxes it into a heap object. Value types live
+      either on the stack or inside their owning object, so list elements sit in its array on the heap.
+      That is why the Framework Design Guidelines recommend `struct` only for small (up to 16 bytes),
+      immutable, rarely boxed types.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/choosing-between-class-and-struct
       - https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing#performance
@@ -249,6 +353,7 @@ questions:
     level: senior
     type: single
     text: "Навіщо в цьому методі умова замість простого `stackalloc byte[data.Length]`?"
+    text_en: "Why does this method have a condition instead of a plain `stackalloc byte[data.Length]`?"
     code:
       lang: csharp
       source: |
@@ -268,16 +373,26 @@ questions:
         }
     options:
       - text: "Стек обмежений, і завеликий `stackalloc` дає фатальний `StackOverflowException`"
+        text_en: "The stack is limited, and an oversized `stackalloc` causes a fatal `StackOverflowException`"
         correct: true
       - text: "`stackalloc` приймає лише розмір, відомий під час компіляції, тому довжину замінено константою"
+        text_en: "`stackalloc` accepts only a size known at compile time, so the length is replaced with a constant"
       - text: "Пам'ять від `stackalloc` теж збирає GC, і для великих буферів це дорожче, ніж `new byte[]`"
+        text_en: "Memory from `stackalloc` is also collected by the GC, and for large buffers that costs more than `new byte[]`"
       - text: "`Span<byte>` не може вказувати на масив у купі, тому для великих даних потрібна окрема гілка"
+        text_en: "`Span<byte>` cannot point to a heap array, so large data needs a separate branch"
     explanation: >
       Обсяг стеку обмежений, а його переповнення через `stackalloc` дає `StackOverflowException`, який
       завершує процес, тож документація радить класти в стек лише буфери до консервативного порогу, а більші
       виділяти в купі. Малий буфер у стеку не навантажує GC і зникає з виходом із методу, а `Span<byte>`
       однаково працює з обома джерелами пам'яті. Розмір `stackalloc` може бути й змінною, тому варіант про
       константу хибний.
+    explanation_en: >
+      Stack space is limited, and overflowing it via `stackalloc` raises `StackOverflowException`, which
+      terminates the process, so the documentation advises placing only buffers up to a conservative
+      threshold on the stack and allocating larger ones on the heap. A small stack buffer puts no load on
+      the GC and disappears when the method returns, and `Span<byte>` works with both kinds of memory. The
+      `stackalloc` size can also be a variable, so the option about a constant is wrong.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/stackalloc
 
@@ -287,17 +402,28 @@ questions:
     text: >
       У довгоживучому сервісі пам'ять повільно росте. Дамп показує тисячі екземплярів `OrderSession`, і в кожного
       шлях до кореня GC проходить через статичну подію `PriceFeed.PriceChanged`. Що відбувається?
+    text_en: "In a long-running service, memory slowly grows. A dump shows thousands of `OrderSession` instances, and for each of them the GC root path goes through the static event `PriceFeed.PriceChanged`. What is happening?"
     options:
       - text: "Підписка `+=` зберігає в делегаті посилання на підписника, і статична подія тримає сесії досяжними"
+        text_en: "A `+=` subscription stores a reference to the subscriber in the delegate, and the static event keeps the sessions reachable"
         correct: true
       - text: "Об'єкти з обробниками подій GC збирає лише після фіналізатора, тому сесії застрягли в черзі фіналізації"
+        text_en: "The GC collects objects with event handlers only after the finalizer runs, so the sessions are stuck in the finalization queue"
       - text: "Делегати подій тримають підписників через слабкі посилання, тож витік спричиняє щось інше"
+        text_en: "Event delegates hold subscribers through weak references, so something else is causing the leak"
       - text: "Об'єкти з покоління 2 GC не збирає ніколи, тому старі сесії лишаються в пам'яті назавжди"
+        text_en: "The GC never collects generation 2 objects, so old sessions stay in memory forever"
     explanation: >
       Підписка створює сильне посилання від джерела події на слухача, тож поки живе статична `PriceChanged`,
       живуть і всі підписані сесії, навіть якщо решта коду про них забула. Це звичайна досяжність від кореня,
       а не збій GC: покоління 2 теж збирається, а слабкими посилання стають лише в окремому шаблоні weak event.
       Виправлення — відписуватися через `-=`, наприклад у `Dispose` сесії.
+    explanation_en: >
+      A subscription creates a strong reference from the event source to the listener, so as long as the
+      static `PriceChanged` lives, all subscribed sessions live too, even if the rest of the code has
+      forgotten them. This is ordinary reachability from a root, not a GC failure: generation 2 is
+      collected too, and references become weak only in the separate weak event pattern. The fix is to
+      unsubscribe with `-=`, for example in the session's `Dispose`.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/desktop/wpf/events/weak-event-patterns#why-implement-the-weak-event-pattern
       - https://learn.microsoft.com/en-us/aspnet/core/performance/memory#persistent-object-references

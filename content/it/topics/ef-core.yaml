@@ -3,58 +3,87 @@ title: Entity Framework Core
 title_en: Entity Framework Core
 description: DbContext, відстеження змін, міграції, завантаження зв'язків, N+1, продуктивність.
 description_en: DbContext, change tracking, migrations, loading related data, N+1, performance.
+draft_en: true
 questions:
   - id: ef-core-001
     level: junior
     type: single
     text: Що робить `SaveChanges()`?
+    text_en: What does `SaveChanges()` do?
     options:
       - text: Записує в базу всі відстежувані зміни, за замовчуванням в одній транзакції
+        text_en: Writes all tracked changes to the database, in a single transaction by default
         correct: true
       - text: Зберігає лише сутність, яку змінили останньою, а решту змін відкидає
+        text_en: Saves only the entity that was modified last and discards all the other changes
       - text: Перечитує з бази всі відстежувані сутності й оновлює їхні значення в пам'яті
+        text_en: Reloads all tracked entities from the database and refreshes their in-memory values
       - text: Створює міграцію за змінами моделі й застосовує її до бази даних
+        text_en: Creates a migration from the model changes and applies it to the database
     explanation: >
       `SaveChanges` бере зміни з ChangeTracker і виконує потрібні `INSERT`, `UPDATE` і `DELETE`.
       Це додані, змінені й видалені сутності. Якщо провайдер підтримує транзакції, усі зміни одного виклику йдуть в одній транзакції:
       застосуються або всі, або жодна.
+    explanation_en: >
+      `SaveChanges` takes the changes from the ChangeTracker and runs the required `INSERT`, `UPDATE`, and `DELETE` commands.
+      These cover the added, modified, and deleted entities. If the provider supports transactions, all changes from one call run in a single transaction:
+      either all of them are applied or none.
 
   - id: ef-core-002
     level: junior
     type: single
     text: З яким життєвим циклом `AddDbContext` за замовчуванням реєструє `DbContext` в ASP.NET Core?
+    text_en: With which lifetime does `AddDbContext` register the `DbContext` in ASP.NET Core by default?
     options:
       - text: Scoped — один екземпляр на HTTP-запит
+        text_en: Scoped — one instance per HTTP request
         correct: true
       - text: Singleton — один екземпляр на весь застосунок
+        text_en: Singleton — one instance for the whole application
       - text: Transient — новий екземпляр щоразу, коли його запитують із контейнера
+        text_en: Transient — a new instance every time it is requested from the container
       - text: "Ніяким: `AddDbContext` не реєструє контекст у DI"
+        text_en: "None: `AddDbContext` does not register the context in DI"
     explanation: >
       `AddDbContext` за замовчуванням реєструє контекст як scoped, тобто один екземпляр на запит.
       `DbContext` не потокобезпечний і накопичує відстежувані сутності, тому один екземпляр на весь застосунок — помилка.
+    explanation_en: >
+      By default `AddDbContext` registers the context as scoped, that is, one instance per request.
+      `DbContext` is not thread-safe and accumulates tracked entities, so a single instance for the whole application is a mistake.
 
   - id: ef-core-003
     level: junior
     type: multiple
     text: Які твердження про міграції EF Core правильні?
+    text_en: Which statements about EF Core migrations are true?
     options:
       - text: "`dotnet ef migrations add` створює клас міграції за змінами в моделі"
+        text_en: "`dotnet ef migrations add` creates a migration class from the changes in the model"
         correct: true
       - text: "`dotnet ef database update` застосовує до бази ще не застосовані міграції"
+        text_en: "`dotnet ef database update` applies the migrations not yet applied to the database"
         correct: true
       - text: Застосовані міграції EF Core записує в таблицю `__EFMigrationsHistory`
+        text_en: EF Core records applied migrations in the `__EFMigrationsHistory` table
         correct: true
       - text: "`dotnet ef migrations add` одразу змінює схему бази, без окремої команди"
+        text_en: "`dotnet ef migrations add` changes the database schema right away, with no separate command"
       - text: Останню міграцію можна прибрати лише вручну, видаливши її файли з проєкту
+        text_en: The latest migration can be removed only manually, by deleting its files from the project
     explanation: >
       `migrations add` лише генерує код міграції й оновлює знімок моделі, а схему бази змінює `database update`.
       Історію застосованих міграцій EF Core веде в `__EFMigrationsHistory`, а ще не застосовану останню міграцію
       прибирає `dotnet ef migrations remove`.
+    explanation_en: >
+      `migrations add` only generates the migration code and updates the model snapshot, while `database update` changes the database schema.
+      EF Core keeps the history of applied migrations in `__EFMigrationsHistory`, and a latest migration that
+      has not been applied yet is removed with `dotnet ef migrations remove`.
 
   - id: ef-core-004
     level: junior
     type: single
     text: Що робить `Include` у цьому запиті?
+    text_en: What does `Include` do in this query?
     code:
       lang: csharp
       source: |
@@ -63,32 +92,48 @@ questions:
             .ToListAsync();
     options:
       - text: Завантажує пости разом із блогами (eager loading)
+        text_en: Loads the posts together with the blogs (eager loading)
         correct: true
       - text: Повертає лише ті блоги, у яких є хоча б один пост
+        text_en: Returns only the blogs that have at least one post
       - text: "Вмикає lazy loading для `Posts`, тож пости підтягнуться під час першого звернення"
+        text_en: "Enables lazy loading for `Posts`, so the posts are fetched on first access"
       - text: Додає пости до відстеження контекстом без запиту до бази
+        text_en: Adds the posts to the context's tracking without querying the database
     explanation: >
       `Include` — це eager loading: пов'язані сутності завантажуються разом з основними, за замовчуванням тим самим SQL-запитом.
       Фільтром він не є: блоги без постів теж потраплять у результат, з порожньою колекцією.
+    explanation_en: >
+      `Include` is eager loading: related entities are loaded together with the main ones, by default in the same SQL query.
+      It is not a filter: blogs without posts are in the result too, with an empty collection.
 
   - id: ef-core-005
     level: middle
     type: single
     text: Що робить `AsNoTracking()` у запиті EF Core?
+    text_en: What does `AsNoTracking()` do in an EF Core query?
     options:
       - text: Вимикає відстеження змін для отриманих сутностей
+        text_en: Disables change tracking for the returned entities
         correct: true
       - text: Кешує результат запиту між викликами
+        text_en: Caches the query result in memory between calls
       - text: Автоматично завантажує пов'язані сутності
+        text_en: Automatically loads related entities for each result
       - text: Робить запит асинхронним
+        text_en: Makes the query asynchronous
     explanation: >
       Сутності не потрапляють у ChangeTracker, тож читання швидше й займає менше пам'яті.
       Але зміни в них `SaveChanges` не збереже, поки їх не приєднати через `Attach` або `Update`.
+    explanation_en: >
+      The entities are not added to the ChangeTracker, so reading is faster and uses less memory.
+      But `SaveChanges` will not save changes made to them until they are attached with `Attach` or `Update`.
 
   - id: ef-core-006
     level: middle
     type: multiple
     text: Lazy loading увімкнено (`UseLazyLoadingProxies`). Які зміни прибирають проблему N+1 у цьому коді?
+    text_en: Lazy loading is enabled (`UseLazyLoadingProxies`). Which changes remove the N+1 problem in this code?
     code:
       lang: csharp
       source: |
@@ -99,30 +144,47 @@ questions:
         }
     options:
       - text: "Додати `.Include(o => o.Customer)` перед `ToListAsync()`"
+        text_en: "Add `.Include(o => o.Customer)` before `ToListAsync()`"
         correct: true
       - text: "Вибрати в запиті лише потрібне: `.Select(o => new { o.Id, CustomerName = o.Customer.Name })`"
+        text_en: "Select only what is needed in the query: `.Select(o => new { o.Id, CustomerName = o.Customer.Name })`"
         correct: true
       - text: "Додати `.AsNoTracking()`: без відстеження lazy loading не робитиме окремих запитів"
+        text_en: "Add `.AsNoTracking()`: without tracking, lazy loading will not issue separate queries"
       - text: "Замінити `ToListAsync()` на синхронний `ToList()`, щоб запити виконувалися швидше"
+        text_en: "Replace `ToListAsync()` with the synchronous `ToList()` so the queries run faster"
       - text: Обгорнути весь цикл в одну явну транзакцію, щоб звернення до бази об'єдналися
+        text_en: Wrap the whole loop in one explicit transaction so the database calls are merged
     explanation: >
       Тут один запит отримує замовлення, а потім lazy loading для кожного замовлення робить ще один запит за клієнтом.
       `Include` і проєкція з `o.Customer.Name` дають `JOIN` в одному SQL-запиті, а відстеження,
       синхронний виклик і транзакція кількість запитів не змінюють.
+    explanation_en: >
+      Here one query gets the orders, and then lazy loading issues one more query for the customer of each order.
+      `Include` and the projection with `o.Customer.Name` produce a `JOIN` in a single SQL query, while tracking,
+      a synchronous call, and a transaction do not change the number of queries.
 
   - id: ef-core-007
     level: middle
     type: single
     text: Чим `db.Users.Find(id)` відрізняється від `db.Users.FirstOrDefault(u => u.Id == id)`?
+    text_en: How does `db.Users.Find(id)` differ from `db.Users.FirstOrDefault(u => u.Id == id)`?
     options:
       - text: "`Find` спершу шукає серед відстежуваних сутностей і йде в базу, лише якщо там її немає"
+        text_en: "`Find` first looks among the tracked entities and goes to the database only if it is not there"
         correct: true
       - text: "`Find` завжди робить запит до бази й перезаписує вже відстежувану сутність"
+        text_en: "`Find` always queries the database and overwrites the entity that is already tracked"
       - text: "`Find` шукає за будь-якою властивістю, а не лише за первинним ключем"
+        text_en: "`Find` searches by any property, not only by the primary key"
       - text: "`Find` повертає сутність без відстеження, як `AsNoTracking`"
+        text_en: "`Find` returns the entity without tracking, like `AsNoTracking`"
     explanation: >
       `Find` шукає за первинним ключем і спершу перевіряє ChangeTracker: якщо сутність уже відстежується,
       запиту до бази не буде. `FirstOrDefault` завжди виконує SQL-запит.
+    explanation_en: >
+      `Find` searches by primary key and checks the ChangeTracker first: if the entity is already tracked,
+      there is no database query. `FirstOrDefault` always runs an SQL query.
 
   - id: ef-core-008
     level: middle
@@ -130,54 +192,86 @@ questions:
     text: >
       Сутність завантажено звичайним запитом із відстеженням, потім змінено одну її властивість.
       Що зробить `SaveChanges()`?
+    text_en: >
+      An entity was loaded with a regular tracking query, and then one of its properties was changed.
+      What will `SaveChanges()` do?
     options:
       - text: "Виконає `UPDATE`, який записує лише змінену колонку"
+        text_en: "Run an `UPDATE` that writes only the changed column"
         correct: true
       - text: "Нічого не збереже: спершу обов'язково треба викликати `db.Update(entity)`"
+        text_en: "Save nothing: `db.Update(entity)` must be called first"
       - text: "Виконає `UPDATE` усіх колонок рядка"
+        text_en: "Run an `UPDATE` of all the columns of the row"
       - text: Видалить рядок і вставить його заново
+        text_en: Delete the row and insert it again
     explanation: >
       Для відстежуваних сутностей EF Core зберігає знімок початкових значень і в `SaveChanges` порівнює з ним поточні.
       Змінено одну властивість, тож `UPDATE` містить лише її. `Update()` потрібен для від'єднаних сутностей
       і позначає зміненими всі властивості.
+    explanation_en: >
+      For tracked entities, EF Core keeps a snapshot of the original values and compares the current ones with it in `SaveChanges`.
+      One property was changed, so the `UPDATE` contains only that one. `Update()` is needed for detached entities
+      and marks all properties as modified.
 
   - id: ef-core-009
     level: senior
     type: multiple
     text: Які твердження про `ExecuteUpdate` і `ExecuteDelete` правильні?
+    text_en: Which statements about `ExecuteUpdate` and `ExecuteDelete` are true?
     options:
       - text: "Виконуються в базі одразу, без завантаження сутностей і без `SaveChanges()`"
+        text_en: "They run in the database immediately, without loading entities and without `SaveChanges()`"
         correct: true
       - text: "Не оновлюють ChangeTracker: уже завантажені в контекст сутності не дізнаються про зміни"
+        text_en: "They do not update the ChangeTracker: entities already loaded into the context do not learn about the changes"
         correct: true
       - text: Спершу завантажують сутності в ChangeTracker, а потім змінюють кожну окремо
+        text_en: They first load the entities into the ChangeTracker and then modify each one separately
       - text: "Зміни потрапляють у базу лише після виклику `SaveChanges()` у цьому ж контексті"
+        text_en: "The changes reach the database only after `SaveChanges()` is called on the same context"
       - text: Працюють лише з однією сутністю, яку заздалегідь знайдено за первинним ключем
+        text_en: They work only with a single entity that has been looked up by primary key beforehand
     explanation: >
       `ExecuteUpdate` і `ExecuteDelete` (з EF Core 7) перекладаються в одну SQL-команду `UPDATE` або `DELETE`
       і виконуються одразу. ChangeTracker вони не чіпають, тож відстежувані сутності лишаються зі старими значеннями,
       і синхронізувати їх треба самостійно.
+    explanation_en: >
+      `ExecuteUpdate` and `ExecuteDelete` (since EF Core 7) are translated into a single SQL `UPDATE` or `DELETE` command
+      and run immediately. They do not touch the ChangeTracker, so tracked entities keep their old values,
+      and you have to synchronize them yourself.
 
   - id: ef-core-010
     level: senior
     type: single
     text: Навіщо в запиті з кількома `Include` колекцій викликати `AsSplitQuery()`?
+    text_en: Why call `AsSplitQuery()` in a query with several collection `Include`s?
     options:
       - text: >
           Щоб уникнути «картезіанського вибуху»: замість одного `JOIN` EF виконає запит на кожну колекцію
+        text_en: >
+          To avoid a "cartesian explosion": instead of a single `JOIN`, EF runs one query per collection
         correct: true
       - text: Щоб EF виконав частини запиту паралельно в кількох потоках і швидше зібрав результат
+        text_en: So that EF runs the parts of the query in parallel on several threads and assembles the result faster
       - text: Щоб розбити результат на сторінки й повертати його частинами за кілька викликів
+        text_en: To split the result into pages and return it in parts over several calls
       - text: Щоб усі частини запиту гарантовано бачили той самий знімок даних навіть без транзакції
+        text_en: So that all parts of the query are guaranteed to see the same data snapshot even without a transaction
     explanation: >
       Один запит з `JOIN` двох колекцій повертає добуток їхніх рядків і дублює дані батьківської сутності.
       Split-запити це прибирають ціною кількох звернень до бази, а без серіалізованої чи snapshot-транзакції
       дані між цими зверненнями можуть розійтися.
+    explanation_en: >
+      A single query with a `JOIN` of two collections returns the product of their rows and duplicates the parent entity's data.
+      Split queries remove this at the cost of several database round trips, and without a serializable or snapshot transaction
+      the data can diverge between those round trips.
 
   - id: ef-core-011
     level: senior
     type: single
     text: Що станеться під час виклику `GetVipsAsync()` в EF Core 3.0 і новіших?
+    text_en: What happens when `GetVipsAsync()` is called in EF Core 3.0 and later?
     code:
       lang: csharp
       source: |
@@ -189,27 +283,44 @@ questions:
         private static bool IsVip(Customer customer) => customer.TotalSpent > 10_000;
     options:
       - text: "Виняток `InvalidOperationException`: `IsVip` не можна перекласти в SQL"
+        text_en: "An `InvalidOperationException`: `IsVip` cannot be translated to SQL"
         correct: true
       - text: EF завантажить усіх клієнтів і відфільтрує їх у пам'яті на клієнті
+        text_en: EF will load all the customers and filter them in memory on the client
       - text: "EF проаналізує тіло `IsVip` і перекладе його в умову SQL `WHERE`"
+        text_en: "EF will analyze the body of `IsVip` and translate it into a SQL `WHERE` condition"
       - text: Запит поверне порожній список, бо умову `IsVip` не вдалося обчислити на боці бази
+        text_en: The query will return an empty list because the `IsVip` condition could not be evaluated on the database side
     explanation: >
       EF Core не бачить тіла скомпільованого методу, тож не може перекласти його в SQL.
       З версії 3.0 обчислення на клієнті дозволене лише в останньому `Select`, а неперекладний вираз
       деінде в запиті дає виняток, а не тихе завантаження всієї таблиці.
+    explanation_en: >
+      EF Core cannot see the body of a compiled method, so it cannot translate it to SQL.
+      Since version 3.0, client evaluation is allowed only in the final `Select`, and an untranslatable expression
+      anywhere else in the query throws an exception instead of silently loading the whole table.
 
   - id: ef-core-012
     level: senior
     type: multiple
     text: Які твердження про оптимістичну конкурентність в EF Core правильні?
+    text_en: Which statements about optimistic concurrency in EF Core are true?
     options:
       - text: "Токен конкурентності (`[ConcurrencyCheck]` або `IsRowVersion()`) EF додає в умову `WHERE` команд `UPDATE` і `DELETE`"
+        text_en: "EF adds the concurrency token (`[ConcurrencyCheck]` or `IsRowVersion()`) to the `WHERE` clause of `UPDATE` and `DELETE` commands"
         correct: true
       - text: "Якщо команда не змінила жодного рядка, `SaveChanges` кидає `DbUpdateConcurrencyException`"
+        text_en: "If a command affected no rows, `SaveChanges` throws `DbUpdateConcurrencyException`"
         correct: true
       - text: "Під час читання EF Core за замовчуванням блокує рядок через `SELECT … FOR UPDATE` до кінця транзакції"
+        text_en: "When reading, EF Core by default locks the row with `SELECT … FOR UPDATE` until the end of the transaction"
       - text: "Коли токен налаштовано, EF розв'язує конфлікт сам: перемагає останній запис, а виняток не кидається"
+        text_en: "Once a token is configured, EF resolves the conflict itself: the last write wins and no exception is thrown"
     explanation: >
       EF Core не блокує рядки, а перевіряє, що токен у базі досі той, який було прочитано.
       Якщо рядок тим часом змінили, `UPDATE` не знайде його за умовою, і EF кине `DbUpdateConcurrencyException`,
       а як розв'язати конфлікт, вирішує код застосунку.
+    explanation_en: >
+      EF Core does not lock rows; it checks that the token in the database is still the one that was read.
+      If the row was changed in the meantime, the `UPDATE` will not find it by the condition, and EF will throw `DbUpdateConcurrencyException`,
+      while how to resolve the conflict is up to the application code.

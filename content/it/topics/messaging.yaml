@@ -3,33 +3,48 @@ title: Брокери повідомлень
 title_en: Message brokers
 description: Kafka, RabbitMQ, гарантії доставки, outbox, ідемпотентні консюмери.
 description_en: Kafka, RabbitMQ, delivery guarantees, outbox, idempotent consumers.
+draft_en: true
 questions:
   - id: messaging-001
     level: junior
     type: single
     text: Що таке офсет (offset) у Kafka?
+    text_en: What is an offset in Kafka?
     options:
     - text: Порядковий номер запису в межах партиції, за яким споживач відстежує свою позицію
+      text_en: A sequence number of a record within a partition, which the consumer uses to track its position
       correct: true
     - text: Унікальний ідентифікатор повідомлення на весь кластер, який призначає брокер-контролер
+      text_en: A unique message identifier across the whole cluster, assigned by the controller broker
     - text: Час у мілісекундах, протягом якого запис зберігається в топіку до видалення з диска
+      text_en: Time in milliseconds a record is kept in the topic before being deleted from disk
     - text: Номер брокера, який зберігає лідерську репліку партиції в кластері під час запису
+      text_en: The number of the broker that holds the leader replica of the partition in the cluster during a write
     explanation: |
       Кожен запис у партиції має послідовний номер, і споживач запам'ятовує (комітить) наступну позицію, з якої читатиме. Офсети рахуються окремо в кожній партиції, тож на весь топік вони не унікальні.
+    explanation_en: |
+      Every record in a partition has a sequential number, and the consumer remembers (commits) the next position to read from. Offsets are counted separately in each partition, so they are not unique across the whole topic.
     sources:
     - https://kafka.apache.org/44/design/design/#consumerposition
   - id: messaging-002
     level: junior
     type: single
     text: Топік Kafka має 6 партицій, а група споживачів — 3 споживачі. Як розподіляється читання?
+    text_en: A Kafka topic has 6 partitions and a consumer group has 3 consumers. How is reading distributed?
     options:
     - text: Кожну партицію в групі читає один споживач, тобто приблизно по 2 партиції на споживача
+      text_en: Each partition in the group is read by one consumer, so about 2 partitions per consumer
       correct: true
     - text: Кожен споживач групи читає всі 6 партицій і отримує кожне повідомлення топіку окремо
+      text_en: Each consumer in the group reads all 6 partitions and receives every message of the topic separately
     - text: Три партиції лишаються без читача, бо споживачів менше, ніж партицій у топіку
+      text_en: Three partitions are left without a reader, because there are fewer consumers than partitions in the topic
     - text: Партиції ділять порівну лише при ввімкненому режимі exactly-once для транзакційних продюсерів
+      text_en: Partitions are split evenly only when exactly-once mode is enabled for transactional producers
     explanation: |
       У межах групи партиція призначається одному споживачу, і саме так навантаження масштабується. Кожна інша група споживачів окремо отримає всі повідомлення.
+    explanation_en: |
+      Within a group, a partition is assigned to a single consumer, and this is how load scales. Every other consumer group separately receives all the messages.
     sources:
     - https://kafka.apache.org/intro/
     - https://kafka.apache.org/44/design/design/#theconsumer
@@ -37,34 +52,49 @@ questions:
     level: junior
     type: single
     text: Яку роль відіграє exchange у RabbitMQ?
+    text_en: What role does an exchange play in RabbitMQ?
     options:
     - text: Приймає повідомлення від видавця й маршрутизує їх у черги за типом і привʼязками
+      text_en: Receives messages from the publisher and routes them to queues according to its type and bindings
       correct: true
     - text: Зберігає повідомлення на диску, доки їх не прочитає споживач або не мине їхній TTL
+      text_en: Stores messages on disk until a consumer reads them or their TTL expires
     - text: Розподіляє навантаження між вузлами кластера й реплікує черги на інші вузли автоматично
+      text_en: Distributes load between cluster nodes and replicates queues to other nodes automatically
     - text: Перевіряє схему повідомлення перед тим, як воно потрапить у чергу чи буде відкинуте
+      text_en: Validates the message schema before it reaches a queue or is rejected
     explanation: |
       Видавець зазвичай публікує в exchange, а не напряму в чергу, і правила маршрутизації залежать від типу exchange (direct, fanout, topic, headers). Зберігають повідомлення самі черги.
+    explanation_en: |
+      A publisher usually publishes to an exchange rather than directly to a queue, and the routing rules depend on the exchange type (direct, fanout, topic, headers). Messages themselves are stored by queues.
     sources:
     - https://www.rabbitmq.com/docs/exchanges
   - id: messaging-004
     level: junior
     type: single
     text: Що означає гарантія доставки at-least-once?
+    text_en: What does the at-least-once delivery guarantee mean?
     options:
     - text: Повідомлення не губиться, але через повторну доставку може бути оброблене повторно
+      text_en: A message is not lost, but because of redelivery it may be processed more than once
       correct: true
     - text: Повідомлення може загубитися, але ніколи не буде оброблене двічі навіть при збоях
+      text_en: A message may be lost, but it will never be processed twice even during failures
     - text: Повідомлення доставляється й обробляється рівно один раз без винятків за будь-яких збоїв
+      text_en: A message is delivered and processed exactly once, without exceptions, under any failure
     - text: Повідомлення гарантовано обробляється в тому порядку, у якому його надіслав видавець
+      text_en: A message is guaranteed to be processed in the order in which the publisher sent it
     explanation: |
       Якщо підтвердження обробки не дійшло до брокера, той надсилає повідомлення знову, тому дублікати можливі. Тому споживачі при at-least-once мають бути ідемпотентними. Варіант «може загубитися» описує at-most-once.
+    explanation_en: |
+      If the processing acknowledgement does not reach the broker, it sends the message again, so duplicates are possible. That is why consumers under at-least-once must be idempotent. The option "may be lost" describes at-most-once.
     sources:
     - https://kafka.apache.org/44/design/design/#semantics
   - id: messaging-005
     level: middle
     type: single
     text: Події одного замовлення треба читати в тому порядку, у якому їх створили. Що забезпечує такий виклик продюсера в Kafka?
+    text_en: Events of one order must be read in the order they were created. What does this producer call in Kafka ensure?
     code:
       lang: text
       source: |
@@ -75,34 +105,48 @@ questions:
         )
     options:
     - text: Події з однаковим ключем потрапляють в одну партицію й читаються в порядку запису
+      text_en: Events with the same key land in one partition and are read in the order they were written
       correct: true
     - text: Усі події топіку впорядковуються за ключем між усіма партиціями топіку глобально
+      text_en: All events of the topic are globally ordered by key across all partitions of the topic
     - text: Ключ вмикає режим, у якому брокер перевіряє порядок і відхиляє події, що запізнилися
+      text_en: The key enables a mode in which the broker checks the order and rejects late events
     - text: Ключ лише допомагає в логуванні й на розподіл подій по партиціях не впливає
+      text_en: The key only helps with logging and has no effect on how events are spread across partitions
     explanation: |
       Kafka гарантує порядок лише в межах партиції, а ключ визначає, у яку партицію піде запис. Якщо збільшити кількість партицій, ключі можуть переїхати в інші партиції, і порядок для старих і нових подій не збережеться.
+    explanation_en: |
+      Kafka guarantees order only within a partition, and the key determines which partition a record goes to. If you increase the number of partitions, keys may move to other partitions, and the order of old and new events will not be preserved.
     sources:
     - https://kafka.apache.org/intro/
   - id: messaging-006
     level: middle
     type: multiple
     text: Які твердження про підтвердження (acknowledgements) у RabbitMQ правильні?
+    text_en: Which statements about acknowledgements in RabbitMQ are true?
     options:
     - text: Після закриття каналу повідомлення без підтвердження повертаються в чергу
+      text_en: After a channel closes, unacknowledged messages are returned to the queue
       correct: true
     - text: В автоматичному режимі повідомлення при збої споживача можна втратити
+      text_en: In automatic mode, messages can be lost if the consumer fails
       correct: true
     - text: Ack споживача й publisher confirms є різними механізмами з різним напрямом
+      text_en: Consumer acks and publisher confirms are different mechanisms with different directions
       correct: true
     - text: Виклик `basic.nack` з `requeue=false` повертає повідомлення в чергу
+      text_en: Calling `basic.nack` with `requeue=false` returns the message to the queue
     explanation: |
       Ack від споживача підтверджує обробку брокеру, а publisher confirm підтверджує брокером прийняття повідомлення видавцю. Повернення в чергу робить `requeue=true`, а при `false` повідомлення відкидається або йде в dead-letter exchange.
+    explanation_en: |
+      A consumer ack confirms processing to the broker, while a publisher confirm is the broker confirming to the publisher that it accepted the message. Requeuing is done by `requeue=true`; with `false` the message is discarded or goes to a dead-letter exchange.
     sources:
     - https://www.rabbitmq.com/docs/confirms
   - id: messaging-007
     level: middle
     type: single
     text: Яку гарантію отримує споживач із цим циклом, якщо застосунок аварійно завершиться в `process`?
+    text_en: What guarantee does the consumer get with this loop if the application crashes in `process`?
     code:
       lang: text
       source: |
@@ -113,42 +157,62 @@ questions:
                 process(r)
     options:
     - text: At-most-once, бо офсети закомічено раніше, тож необроблені записи буде пропущено
+      text_en: At-most-once, because offsets were committed earlier, so unprocessed records will be skipped
       correct: true
     - text: At-least-once, бо після перезапуску споживач прочитає ці записи знову з початку
+      text_en: At-least-once, because after a restart the consumer will read these records again from the beginning
     - text: Exactly-once, бо `commitSync` виконується синхронно й блокує потік до відповіді брокера
+      text_en: Exactly-once, because `commitSync` runs synchronously and blocks the thread until the broker responds
     - text: Жодної зміни, бо Kafka сама повторить доставку записів при збої всередині `process`
+      text_en: No change, because Kafka itself will redeliver the records if a failure occurs inside `process`
     explanation: |
       Коміт офсету перед обробкою означає «записи прочитано», тож після збою споживач продовжить із закоміченої позиції. Щоб отримати at-least-once, коміт виконують після успішної обробки (ціною можливих дублікатів).
+    explanation_en: |
+      Committing the offset before processing means "the records have been read", so after a crash the consumer continues from the committed position. To get at-least-once, commit after successful processing (at the cost of possible duplicates).
     sources:
     - https://kafka.apache.org/44/design/design/#semantics
   - id: messaging-008
     level: middle
     type: multiple
     text: За яких подій RabbitMQ перенаправляє повідомлення в dead letter exchange (за умови, що він налаштований)?
+    text_en: On which events does RabbitMQ route a message to a dead letter exchange (assuming one is configured)?
     options:
     - text: Споживач відхилив повідомлення через `basic.nack` або `basic.reject` з `requeue=false`
+      text_en: The consumer rejected the message via `basic.nack` or `basic.reject` with `requeue=false`
       correct: true
     - text: Закінчився TTL самого повідомлення в черзі
+      text_en: The TTL of the message itself expired in the queue
       correct: true
     - text: Повідомлення відкинуто, бо черга досягла налаштованого ліміту довжини
+      text_en: The message was dropped because the queue reached its configured length limit
       correct: true
     - text: Закінчився TTL цілої черги, і всі її повідомлення переїхали в DLX
+      text_en: The TTL of the whole queue expired, and all its messages moved to the DLX
     explanation: |
       Dead-lettering запускають відхилення без повернення в чергу, спливання TTL повідомлення та переповнення черги (а для quorum-черг ще перевищення delivery-limit). Коли видаляється сама черга за її TTL, повідомлення в DLX не потрапляють.
+    explanation_en: |
+      Dead-lettering is triggered by rejection without requeue, message TTL expiry, and queue overflow (and, for quorum queues, exceeding the delivery limit). When a queue itself is deleted by its TTL, its messages do not go to the DLX.
     sources:
     - https://www.rabbitmq.com/docs/dlx
   - id: messaging-009
     level: senior
     type: single
     text: Сервіс зберігає замовлення в БД і публікує подію в брокер двома окремими викликами. Після збою між ними замовлення є, а події немає. Як це розв'язує патерн transactional outbox?
+    text_en: A service saves an order to the DB and publishes an event to the broker in two separate calls. After a failure between them the order exists but the event does not. How does the transactional outbox pattern solve this?
     options:
     - text: Подію пишуть в outbox тією ж транзакцією БД, а окремий процес надсилає її в брокер
+      text_en: The event is written to an outbox in the same DB transaction, and a separate process sends it to the broker
       correct: true
     - text: Спочатку публікують подію в брокер, а замовлення зберігають лише після підтвердження
+      text_en: The event is published to the broker first, and the order is saved only after confirmation
     - text: Обидва виклики загортають у блок `try/catch` і повторюють публікацію в тому ж потоці
+      text_en: Both calls are wrapped in a `try/catch` block and the publish is retried in the same thread
     - text: Брокер сам відкочує подію, якщо транзакція БД не завершилась успішно з його боку
+      text_en: The broker itself rolls the event back if the DB transaction did not complete successfully on its side
     explanation: |
       Запис у БД і в outbox атомарний, тому подія не загубиться навіть при збої. Ціна — доставка at-least-once, бо ретранслятор може надіслати подію двічі, тож споживачі мають бути ідемпотентними. Зміна порядку викликів лише переносить проблему на зворотний збій.
+    explanation_en: |
+      The write to the DB and to the outbox is atomic, so the event is not lost even on failure. The price is at-least-once delivery, since the relay may send an event twice, so consumers must be idempotent. Swapping the order of the calls only moves the problem to the reverse failure.
     sources:
     - https://microservices.io/patterns/data/transactional-outbox.html
     - https://learn.microsoft.com/en-us/azure/architecture/best-practices/transactional-outbox-cosmos
@@ -156,43 +220,64 @@ questions:
     level: senior
     type: single
     text: Брокер доставляє повідомлення at-least-once, а обробник збільшує баланс рахунку. Як зробити споживача безпечним до дублікатів?
+    text_en: The broker delivers messages at-least-once, and the handler increases an account balance. How do you make the consumer safe against duplicates?
     options:
     - text: Писати id повідомлення в таблицю оброблених тією ж транзакцією БД, що й баланс, і пропускати повтори
+      text_en: Write the message id to a processed table in the same DB transaction as the balance, and skip repeats
       correct: true
     - text: Зберігати ідентифікатори оброблених повідомлень у памʼяті процесу, у звичайному словнику
+      text_en: Keep identifiers of processed messages in process memory, in an ordinary dictionary
     - text: Підтверджувати повідомлення брокеру ще до початку обробки, щоб він не надсилав його вдруге
+      text_en: Acknowledge the message to the broker before processing starts, so it does not send it again
     - text: Збільшити таймаут підтвердження, щоб повторна доставка ніколи не траплялась навіть при збоях
+      text_en: Increase the acknowledgement timeout so redelivery never happens even during failures
     explanation: |
       Перевірка й побічний ефект мають бути атомарними, інакше збій між ними знову дасть дублікат або втрату. Памʼять процесу зникає при перезапуску, а підтвердження до обробки перетворює гарантію на at-most-once.
+    explanation_en: |
+      The check and the side effect must be atomic, otherwise a failure between them again yields a duplicate or a loss. Process memory disappears on restart, and acknowledging before processing turns the guarantee into at-most-once.
     sources:
     - https://microservices.io/patterns/communication-style/idempotent-consumer.html
   - id: messaging-011
     level: senior
     type: multiple
     text: Які твердження про семантику exactly-once у Kafka правильні?
+    text_en: Which statements about exactly-once semantics in Kafka are true?
     options:
     - text: Ідемпотентний продюсер не дає повторним спробам створити дублікати в партиції
+      text_en: An idempotent producer prevents retries from creating duplicates in a partition
       correct: true
     - text: Транзакції атомарно записують результат у кілька партицій разом з офсетами
+      text_en: Transactions atomically write the result to several partitions together with offsets
       correct: true
     - text: Споживач із `isolation.level=read_committed` не бачить перервані транзакції
+      text_en: A consumer with `isolation.level=read_committed` does not see aborted transactions
       correct: true
     - text: Гарантія exactly-once автоматично охоплює й запис у зовнішню БД
+      text_en: The exactly-once guarantee automatically extends to writes to an external DB
     explanation: |
       Exactly-once у Kafka діє для схеми «прочитати з Kafka, записати в Kafka». Зовнішню систему треба узгоджувати окремо (наприклад, зберігати офсет разом із результатом у самій БД або робити запис ідемпотентним).
+    explanation_en: |
+      Exactly-once in Kafka applies to the "read from Kafka, write to Kafka" scheme. An external system must be coordinated separately (for example, by storing the offset together with the result in the DB itself or by making the write idempotent).
     sources:
     - https://kafka.apache.org/44/design/design/#semantics
   - id: messaging-012
     level: senior
     type: single
     text: Споживач Kafka інколи обробляє пачку довше за `max.poll.interval.ms`. Що станеться?
+    text_en: A Kafka consumer sometimes processes a batch for longer than `max.poll.interval.ms`. What happens?
     options:
     - text: Споживача вважатимуть збійним, група виконає ребаланс, а незакомічені записи оброблять заново
+      text_en: The consumer is considered failed, the group rebalances, and uncommitted records are processed again
       correct: true
     - text: Kafka автоматично продовжить інтервал для цього споживача, поки він не завершить обробку
+      text_en: Kafka automatically extends the interval for this consumer until it finishes processing
     - text: Споживач лишається в групі, а брокер ставить його партиції на паузу до наступного poll
+      text_en: The consumer stays in the group, and the broker pauses its partitions until the next poll
     - text: Записи пачки буде втрачено, бо Kafka видаляє незакомічені дані після закінчення інтервалу
+      text_en: The batch records are lost, because Kafka deletes uncommitted data after the interval expires
     explanation: |
       Якщо `poll()` не викликали вчасно, споживача виключають із групи, а його партиції передають іншим. Нова позиція береться із закоміченого офсету, тож частина записів може оброблятися двічі. Лікують це меншими пачками, більшим інтервалом чи ідемпотентною обробкою.
+    explanation_en: |
+      If `poll()` is not called in time, the consumer is removed from the group and its partitions go to others. The new position is taken from the committed offset, so some records may be processed twice. This is mitigated by smaller batches, a longer interval, or idempotent processing.
     sources:
     - https://kafka.apache.org/44/configuration/consumer-configs/#consumerconfigs_max.poll.interval.ms

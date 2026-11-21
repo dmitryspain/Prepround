@@ -3,11 +3,13 @@ title: C#
 title_en: C#
 description: Типи, generics, LINQ, records, pattern matching, nullable reference types, делегати й події.
 description_en: Types, generics, LINQ, records, pattern matching, nullable reference types, delegates and events.
+draft_en: true
 questions:
   - id: csharp-001
     level: junior
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: csharp
       source: |
@@ -18,62 +20,91 @@ questions:
         public record Point(int X, int Y);
     options:
       - text: "`True`"
+        text_en: '`True`'
         correct: true
       - text: "`False`"
+        text_en: '`False`'
       - text: "Помилка компіляції: для `record` оператор `==` не визначено"
+        text_en: 'Compile error: `==` is not defined for `record`'
       - text: Виняток під час виконання
+        text_en: Runtime exception
     explanation: >
       Для `record` компілятор генерує рівність за значеннями: екземпляри одного типу рівні,
       якщо рівні всі їхні властивості. Тому `a == b` дає `True`, хоча це два різні об'єкти.
+    explanation_en: >
+      For a `record`, the compiler generates value-based equality: instances of the same type are equal if all their properties are equal. So `a == b` gives `True`, even though they are two different objects.
 
   - id: csharp-002
     level: junior
     type: multiple
     text: Які з цих типів є типами-значеннями (value types)?
+    text_en: Which of these types are value types?
     options:
       - text: "`int`"
+        text_en: '`int`'
         correct: true
       - text: "`DateTime`"
+        text_en: '`DateTime`'
         correct: true
       - text: "`string`"
+        text_en: '`string`'
       - text: "`int[]`"
+        text_en: '`int[]`'
       - text: "`object`"
+        text_en: '`object`'
     explanation: >
       `int` (`System.Int32`) і `DateTime` — структури, тобто типи-значення.
       `string`, масиви й `object` — посилальні типи, хоча `string` незмінний і порівнюється за вмістом.
+    explanation_en: >
+      `int` (`System.Int32`) and `DateTime` are structs, i.e. value types. `string`, arrays, and `object` are reference types, even though `string` is immutable and compared by content.
 
   - id: csharp-003
     level: junior
     type: single
     text: Що означає `var` в оголошенні `var count = 10;`?
+    text_en: What does `var` mean in the declaration `var count = 10;`?
     options:
       - text: Тип виводить компілятор з ініціалізатора, і далі він не змінюється
+        text_en: The compiler infers the type from the initializer, and it does not change afterward
         correct: true
       - text: "Змінна стає `dynamic`, і її тип перевіряється лише під час виконання програми"
+        text_en: The variable becomes `dynamic`, and its type is checked only at run time
       - text: "Змінна отримує тип `object`"
+        text_en: The variable gets the type `object`
       - text: Тип змінної можна змінити наступним присвоєнням значення іншого типу
+        text_en: The variable's type can be changed by a later assignment of a different type
     explanation: >
       `var` — неявна типізація: компілятор визначає тип з ініціалізатора, тут це `int`.
       Змінна так само строго типізована, ніби тип написали явно.
+    explanation_en: >
+      `var` is implicit typing: the compiler determines the type from the initializer, here `int`. The variable is just as strongly typed as if the type had been written explicitly.
 
   - id: csharp-004
     level: junior
     type: single
     text: Що означає тип `int?`?
+    text_en: What does the type `int?` mean?
     options:
       - text: "Це `Nullable<int>`: змінна містить значення `int` або `null`"
+        text_en: 'It is `Nullable<int>`: the variable holds an `int` value or `null`'
         correct: true
       - text: "Посилання на `int`, як параметр `ref int`"
+        text_en: 'A reference to an `int`, like a `ref int` parameter'
       - text: "`int`, який компілятор не дозволяє лишати неініціалізованим"
+        text_en: 'An `int` that the compiler does not allow to stay uninitialized'
       - text: "`int` без перевірки на переповнення"
+        text_en: 'An `int` without overflow checking'
     explanation: >
       Для типу-значення `T?` — це скорочення для структури `Nullable<T>`. Вона зберігає значення
       і прапорець `HasValue`, тож може позначати відсутність значення.
+    explanation_en: >
+      For a value type, `T?` is shorthand for the `Nullable<T>` struct. It stores the value and a `HasValue` flag, so it can represent the absence of a value.
 
   - id: csharp-005
     level: middle
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: csharp
       source: |
@@ -83,30 +114,44 @@ questions:
         Console.WriteLine(query.Count());
     options:
       - text: "`3`"
+        text_en: '`3`'
         correct: true
       - text: "`2`"
+        text_en: '`2`'
       - text: "`4`"
+        text_en: '`4`'
       - text: "Виняток `InvalidOperationException`: колекцію змінено"
+        text_en: '`InvalidOperationException`: the collection was modified'
     explanation: >
       `Where` виконується відкладено: запит лише описує фільтр, а колекцію проходить тоді, коли його перелічують.
       `Count()` перелічує список уже з елементом `4`, тож умову справджують 2, 3 і 4.
+    explanation_en: >
+      `Where` is deferred: the query only describes a filter and walks the collection when it is enumerated. `Count()` enumerates the list that already contains `4`, so 2, 3, and 4 satisfy the condition.
 
   - id: csharp-006
     level: middle
     type: multiple
     text: Які з цих LINQ-методів виконують запит одразу, а не відкладено?
+    text_en: Which of these LINQ methods execute the query immediately rather than deferred?
     options:
       - text: "`ToList()`"
+        text_en: '`ToList()`'
         correct: true
       - text: "`Count()`"
+        text_en: '`Count()`'
         correct: true
       - text: "`First()`"
+        text_en: '`First()`'
         correct: true
       - text: "`Where()`"
+        text_en: '`Where()`'
       - text: "`Select()`"
+        text_en: '`Select()`'
     explanation: >
       Методи, що повертають одне значення (`Count`, `First`) або матеріалізують колекцію (`ToList`),
       перелічують джерело одразу. `Where` і `Select` повертають новий запит, який виконається лише під час перелічення.
+    explanation_en: >
+      Methods that return a single value (`Count`, `First`) or materialize a collection (`ToList`) enumerate the source immediately. `Where` and `Select` return a new query that runs only when it is enumerated.
 
   - id: csharp-007
     level: middle
@@ -114,34 +159,49 @@ questions:
     text: >
       У проєкті ввімкнено `<Nullable>enable</Nullable>`, а `TreatWarningsAsErrors` вимкнено.
       Що станеться з рядком `string name = null;`?
+    text_en: The project has `<Nullable>enable</Nullable>` and `TreatWarningsAsErrors` is disabled. What happens with the line `string name = null;`?
     options:
       - text: Компілятор видасть попередження, а поведінка під час виконання не зміниться
+        text_en: The compiler issues a warning, and run-time behavior does not change
         correct: true
       - text: Помилка компіляції, і проєкт не збереться, доки рядок не виправлять
+        text_en: Compile error, and the project does not build until the line is fixed
       - text: "`NullReferenceException` одразу під час присвоєння значення `null`"
+        text_en: '`NullReferenceException` immediately when `null` is assigned'
       - text: "Під час виконання замість `null` автоматично буде підставлено `string.Empty`"
+        text_en: 'At run time `string.Empty` is substituted for `null` automatically'
     explanation: >
       Nullable reference types — це статичний аналіз: компілятор лише попереджає про можливий `null`.
       Поведінка програми під час виконання від цього не змінюється.
+    explanation_en: >
+      Nullable reference types are static analysis: the compiler only warns about a possible `null`. The program's run-time behavior does not change.
 
   - id: csharp-008
     level: middle
     type: single
     text: Чим подія (`event`) відрізняється від публічного поля-делегата?
+    text_en: How does an event (`event`) differ from a public delegate field?
     options:
       - text: Ззовні можна лише підписатися (`+=`) чи відписатися (`-=`), а викликає подію лише сам клас
+        text_en: Outside code can only subscribe (`+=`) or unsubscribe (`-=`), and only the class itself raises the event
         correct: true
       - text: Подія завжди викликає обробники асинхронно, кожен у окремому потоці з пулу
+        text_en: An event always invokes handlers asynchronously, each on its own thread-pool thread
       - text: На подію може підписатися лише один обробник, а наступна підписка замінює попередню
+        text_en: Only one handler can subscribe to an event, and a new subscription replaces the previous one
       - text: Подія не може передавати аргументи обробникам, окрім порожнього `EventArgs`
+        text_en: An event cannot pass arguments to handlers other than an empty `EventArgs`
     explanation: >
       `event` обмежує доступ до делегата: зовнішній код не може викликати подію чи присвоїти їй значення через `=`
       і так стерти чужі підписки. Обробники викликаються синхронно, по черзі, у потоці, який викликав подію.
+    explanation_en: >
+      `event` restricts access to the delegate: external code cannot raise the event or assign to it with `=` and thereby wipe out other subscribers. Handlers are invoked synchronously, one after another, on the thread that raised the event.
 
   - id: csharp-009
     level: senior
     type: multiple
     text: Які з присвоєнь у варіантах скомпілюються з такими змінними?
+    text_en: Which of the assignments in the options will compile with these variables?
     code:
       lang: csharp
       source: |
@@ -151,21 +211,29 @@ questions:
         Func<object> makeObject = () => new object();
     options:
       - text: "`IEnumerable<object> objects = strings;`"
+        text_en: '`IEnumerable<object> objects = strings;`'
         correct: true
       - text: "`Action<string> printString = printObject;`"
+        text_en: '`Action<string> printString = printObject;`'
         correct: true
       - text: "`List<object> objectList = list;`"
+        text_en: '`List<object> objectList = list;`'
       - text: "`Func<string> makeString = makeObject;`"
+        text_en: '`Func<string> makeString = makeObject;`'
       - text: "`IList<object> objectIList = list;`"
+        text_en: '`IList<object> objectIList = list;`'
     explanation: >
       `IEnumerable<out T>` коваріантний, а `Action<in T>` контраваріантний: послідовність рядків можна читати
       як послідовність `object`, а дія над `object` годиться для рядка. `List<T>` та `IList<T>` інваріантні,
       а `Func<out TResult>` дозволяє лише перехід від `Func<string>` до `Func<object>`, не навпаки.
+    explanation_en: >
+      `IEnumerable<out T>` is covariant and `Action<in T>` is contravariant: a sequence of strings can be read as a sequence of `object`, and an action on `object` fits a string. `List<T>` and `IList<T>` are invariant, and `Func<out TResult>` only allows going from `Func<string>` to `Func<object>`, not the other way.
 
   - id: csharp-010
     level: senior
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: csharp
       source: |
@@ -189,18 +257,25 @@ questions:
         }
     options:
       - text: "`0`"
+        text_en: '`0`'
         correct: true
       - text: "`1`"
+        text_en: '`1`'
       - text: "Помилка компіляції: `readonly`-поле не можна змінювати"
+        text_en: 'Compile error: a `readonly` field cannot be modified'
       - text: Виняток під час виконання
+        text_en: Runtime exception
     explanation: >
       Поле `readonly` не можна змінити поза конструктором, тому перед викликом звичайного (не `readonly`) методу
       структури компілятор робить захисну копію поля. `Increment` збільшує копію, а саме поле лишається `0`.
+    explanation_en: >
+      A `readonly` field cannot be changed outside a constructor, so before calling an ordinary (non-`readonly`) struct method the compiler makes a defensive copy of the field. `Increment` increments the copy, and the field itself stays `0`.
 
   - id: csharp-011
     level: senior
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: csharp
       source: |
@@ -216,24 +291,37 @@ questions:
         }
     options:
       - text: "`333`"
+        text_en: '`333`'
         correct: true
       - text: "`012`"
+        text_en: '`012`'
       - text: "`222`"
+        text_en: '`222`'
       - text: "Помилка компіляції: лямбда не може захоплювати змінну циклу"
+        text_en: 'Compile error: a lambda cannot capture a loop variable'
     explanation: >
       Лямбда захоплює саму змінну, а не її значення. У циклі `for` змінна `i` одна на всі ітерації, і після циклу
       вона дорівнює 3. У `foreach` з C# 5 кожна ітерація має власну змінну, тому там лямбди побачили б різні значення.
+    explanation_en: >
+      A lambda captures the variable itself, not its value. In a `for` loop, `i` is a single variable shared by all iterations, and after the loop it equals 3. In `foreach` since C# 5, each iteration has its own variable, so there the lambdas would see different values.
 
   - id: csharp-012
     level: senior
     type: single
     text: Що дають `static abstract` члени інтерфейсів, які з'явилися в C# 11?
+    text_en: What do the `static abstract` interface members introduced in C# 11 provide?
     options:
       - text: Тип мусить реалізувати статичні члени й оператори, а generic-код викликає їх як `T.Parse(...)`
+        text_en: A type must implement the static members and operators, and generic code calls them as `T.Parse(...)`
         correct: true
       - text: Статичні члени можна викликати через змінну типу інтерфейсу, як віртуальні методи екземпляра
+        text_en: Static members can be called through an interface-typed variable, like virtual instance methods
       - text: Інтерфейс задає статичну реалізацію за замовчуванням, яку типи не можуть перевизначити
+        text_en: The interface supplies a default static implementation that types cannot override
       - text: Усі методи інтерфейсу автоматично стають статичними, тож екземпляр для їх виклику не потрібен
+        text_en: All interface methods automatically become static, so no instance is needed to call them
     explanation: >
       На цьому побудовано generic math: `INumber<T>` вимагає від типу операторів і членів на кшталт `T.Zero`,
       і узагальнений метод викликає їх без екземпляра. Через екземпляр чи змінну інтерфейсу такі члени не викликаються.
+    explanation_en: >
+      Generic math is built on this: `INumber<T>` requires the type to provide operators and members such as `T.Zero`, and a generic method calls them without an instance. Such members cannot be called through an instance or an interface-typed variable.
