@@ -1,6 +1,8 @@
 id: vue-router
 title: Vue Router
+title_en: Vue Router
 description: Маршрути, guards, lazy loading, вкладені маршрути.
+description_en: Routes, guards, lazy loading, nested routes.
 draft: true
 questions:
   - id: vue-router-001

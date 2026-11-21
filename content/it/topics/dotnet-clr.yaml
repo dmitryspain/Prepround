@@ -1,6 +1,8 @@
 id: dotnet-clr
 title: CLR, пам'ять і GC
+title_en: CLR, memory and GC
 description: Value/reference types, stack/heap, GC і покоління, IDisposable, Span.
+description_en: Value/reference types, stack/heap, GC and generations, IDisposable, Span.
 questions:
   - id: dotnet-clr-001
     level: junior

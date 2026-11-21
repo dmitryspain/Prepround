@@ -1,6 +1,8 @@
 id: angular-components
 title: Компоненти й шаблони
+title_en: Components and templates
 description: Standalone, input/output, життєвий цикл, control flow, content projection.
+description_en: Standalone, input/output, lifecycle, control flow, content projection.
 questions:
   - id: angular-components-001
     level: junior
@@ -36,7 +38,7 @@ questions:
           save() { this.saved.emit('draft'); }
         }
 
-        // у шаблоні батька:
+        // in the parent's template:
         // <app-editor (saved)="onSaved($event)" />
     options:
       - text: "Рядок `'draft'`: `$event` містить значення, передане в `emit`"

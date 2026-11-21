@@ -1,6 +1,8 @@
 id: django
 title: Django і DRF
+title_en: Django and DRF
 description: Моделі, ORM, міграції, views, middleware, серіалізатори DRF.
+description_en: Models, ORM, migrations, views, middleware, DRF serializers.
 questions:
   - id: django-001
     level: junior
@@ -104,7 +106,7 @@ questions:
     code:
       lang: python
       source: |
-        # middleware A (B аналогічний, з іменем "B")
+        # middleware A (B is similar, named "B")
         def A(get_response):
             def middleware(request):
                 print("A in")
@@ -203,7 +205,7 @@ questions:
         with transaction.atomic():
             Author.objects.create(name="A")
             try:
-                Author.objects.create(name="A")   # порушення унікальності
+                Author.objects.create(name="A")   # unique constraint violation
             except IntegrityError:
                 pass
             Author.objects.create(name="B")

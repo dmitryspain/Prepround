@@ -1,6 +1,8 @@
 id: nestjs
 title: NestJS
+title_en: NestJS
 description: Модулі, провайдери, DI, guards, pipes, interceptors.
+description_en: Modules, providers, DI, guards, pipes, interceptors.
 questions:
   - id: nestjs-001
     level: junior
@@ -243,8 +245,8 @@ questions:
     code:
       lang: typescript
       source: |
-        // кожен interceptor: console.log('in X'); next.handle().pipe(tap(() => console.log('out X')))
-        // G — APP_INTERCEPTOR, C — @UseInterceptors на контролері, R — на методі
+        // each interceptor: console.log('in X'); next.handle().pipe(tap(() => console.log('out X')))
+        // G is APP_INTERCEPTOR, C is @UseInterceptors on the controller, R is on the method
         @Get() hi() { console.log('handler'); return 'x'; }
     options:
       - text: 'in G, in C, in R, handler, out R, out C, out G'

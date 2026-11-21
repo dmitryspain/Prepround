@@ -1,6 +1,8 @@
 id: nextjs
 title: Next.js
+title_en: Next.js
 description: App Router, SSR/SSG/ISR, Server Components, маршрутизація.
+description_en: App Router, SSR/SSG/ISR, Server Components, routing.
 draft: true
 questions:
   - id: nextjs-001

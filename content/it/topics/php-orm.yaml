@@ -1,6 +1,8 @@
 id: php-orm
 title: Eloquent і Doctrine
+title_en: Eloquent and Doctrine
 description: Active Record vs Data Mapper, зв'язки, міграції, N+1.
+description_en: Active Record vs Data Mapper, relationships, migrations, N+1.
 questions:
   - id: php-orm-001
     level: junior

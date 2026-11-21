@@ -1,6 +1,8 @@
 id: python-core
 title: Python Core
+title_en: Python Core
 description: Типи, mutable/immutable, генератори, декоратори, контекст-менеджери, ООП, dataclasses.
+description_en: Types, mutable/immutable, generators, decorators, context managers, OOP, dataclasses.
 questions:
   - id: python-core-001
     level: junior

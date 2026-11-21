@@ -1,5 +1,7 @@
 id: ngrx
 title: NgRx
+title_en: NgRx
 description: Store, actions, reducers, effects, selectors, SignalStore.
+description_en: Store, actions, reducers, effects, selectors, SignalStore.
 draft: true
 questions: []

@@ -1,6 +1,8 @@
 id: react-core
 title: "React: компоненти й рендер"
+title_en: 'React: components and rendering'
 description: JSX, props/state, reconciliation, keys, Virtual DOM, StrictMode.
+description_en: JSX, props/state, reconciliation, keys, Virtual DOM, StrictMode.
 questions:
   - id: react-core-001
     level: junior

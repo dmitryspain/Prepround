@@ -1,6 +1,8 @@
 id: celery
 title: Celery і фонові задачі
+title_en: Celery and background tasks
 description: брокери, воркери, ретраї, ідемпотентність, періодичні задачі.
+description_en: Brokers, workers, retries, idempotency, periodic tasks.
 questions:
   - id: celery-001
     level: junior

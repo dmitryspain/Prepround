@@ -1,6 +1,8 @@
 id: sqlalchemy
 title: SQLAlchemy
+title_en: SQLAlchemy
 description: Core vs ORM, сесії, зв'язки, завантаження, Alembic.
+description_en: Core vs ORM, sessions, relationships, loading, Alembic.
 questions:
   - id: sqlalchemy-001
     level: junior

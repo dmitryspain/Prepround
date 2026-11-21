@@ -1,6 +1,8 @@
 id: vue-composition-api
 title: Composition API
+title_en: Composition API
 description: setup, ref/reactive, computed, watch, composables, vs Options API.
+description_en: setup, ref/reactive, computed, watch, composables, vs Options API.
 questions:
   - id: vue-composition-api-001
     level: junior
@@ -202,7 +204,7 @@ questions:
       source: |
         watch(id, async (newId) => {
           const ctrl = new AbortController()
-          // тут потрібен один рядок
+          // one line is needed here
           data.value = await fetch(`/api/items/${newId}`, { signal: ctrl.signal })
             .then(r => r.json())
         })

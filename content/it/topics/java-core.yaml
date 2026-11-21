@@ -1,6 +1,8 @@
 id: java-core
 title: Java Core
+title_en: Java Core
 description: ООП, колекції, generics, Stream API, винятки, records, equals/hashCode.
+description_en: OOP, collections, generics, Stream API, exceptions, records, equals/hashCode.
 questions:
   - id: java-core-001
     level: junior
@@ -197,7 +199,7 @@ questions:
         MK k = new MK(1);
         m.put(k, "v");
         k.id = 2;
-        // m.size(), m.get(k), m.containsKey(k), перебір entrySet()
+        // m.size(), m.get(k), m.containsKey(k), iteration over entrySet()
     options:
       - text: "`size()` — 1, `get(k)` і `containsKey(k)` не знаходять, перебір запис показує"
         correct: true

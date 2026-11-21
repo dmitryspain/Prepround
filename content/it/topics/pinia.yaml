@@ -1,6 +1,8 @@
 id: pinia
 title: Pinia
+title_en: Pinia
 description: Stores, state/getters/actions, плагіни, порівняння з Vuex.
+description_en: Stores, state/getters/actions, plugins, comparison with Vuex.
 draft: true
 questions:
   - id: pinia-001

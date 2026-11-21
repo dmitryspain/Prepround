@@ -1,6 +1,8 @@
 id: java-concurrency
 title: Багатопотоковість у Java
+title_en: Multithreading in Java
 description: Thread, ExecutorService, CompletableFuture, synchronized, java.util.concurrent, virtual threads.
+description_en: Thread, ExecutorService, CompletableFuture, synchronized, java.util.concurrent, virtual threads.
 questions:
   - id: java-concurrency-001
     level: junior

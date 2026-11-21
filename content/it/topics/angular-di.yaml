@@ -1,6 +1,8 @@
 id: angular-di
 title: DI і сервіси
+title_en: DI and services
 description: Інжектори, providedIn, токени, ієрархія, inject().
+description_en: Injectors, providedIn, tokens, hierarchy, inject().
 draft: true
 questions:
   - id: angular-di-001

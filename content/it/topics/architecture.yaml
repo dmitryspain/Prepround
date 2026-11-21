@@ -1,6 +1,8 @@
 id: architecture
 title: Архітектура й патерни
+title_en: Architecture and patterns
 description: SOLID, GoF-патерни, Clean Architecture, DDD, мікросервіси, system design.
+description_en: SOLID, GoF patterns, Clean Architecture, DDD, microservices, system design.
 questions:
   - id: architecture-001
     level: junior

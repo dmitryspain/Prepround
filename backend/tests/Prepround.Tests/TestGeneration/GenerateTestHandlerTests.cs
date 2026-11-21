@@ -1,3 +1,4 @@
+using Prepround.Application.Content;
 using Prepround.Application.TestGeneration;
 using Prepround.Domain.Catalog;
 using Prepround.Domain.Shared;
@@ -293,6 +294,106 @@ public class GenerateTestHandlerTests
         Assert.Equal(0, repository.QuestionLoads);
     }
 
+    [Theory]
+    [InlineData("de")]
+    [InlineData("EN")]
+    [InlineData(" en")]
+    [InlineData("en ")]
+    [InlineData("uk-UA")]
+    public async Task Unsupported_language_fails_before_every_rule_of_spec_5_2_without_touching_the_repository(string language)
+    {
+        // The body breaks the very first rule (no field): the language must still be the error reported.
+        var repository = Repository();
+
+        var result = await Handle(Query(fieldId: null) with { Language = language }, repository);
+
+        Assert.Equal(RequestLanguage.UnsupportedCode, result.Error.Code);
+        Assert.Equal($"Мову «{language}» не підтримано. Доступні: uk, en.", result.Error.Message);
+        Assert.Empty(repository.Tokens);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("uk")]
+    public async Task Missing_empty_or_base_language_gives_the_base_test_and_never_reads_translations(string? language)
+    {
+        var repository = Repository();
+        repository.Translate("en", repository.Questions.Select(question => question.Id).ToArray());
+
+        var result = await Handle(Query() with { Language = language }, repository, seed: 5);
+        var unset = await Handle(Query(), Repository(), seed: 5);
+
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Message : null);
+        Assert.Empty(repository.TranslationLoads);
+        Assert.Equal(DescribeWithTexts(unset.Value), DescribeWithTexts(result.Value));
+        Assert.All(result.Value.Questions, question => Assert.Equal($"Text of {question.Id}", question.Text));
+    }
+
+    [Fact]
+    public async Task Translation_language_takes_only_translated_questions_with_their_texts_and_the_answers_of_the_base()
+    {
+        // alpha on the low level: 12 questions, 10 of them translated.
+        var repository = Repository();
+        var translated = Enumerable.Range(1, 10).Select(index => $"alpha-a-{index:00}").ToArray();
+        repository.Translate("en", translated);
+
+        var ten = await Handle(Query(levels: [Low], topics: [("alpha", 10)]) with { Language = "en" }, repository);
+        var eleven = await Handle(Query(levels: [Low], topics: [("alpha", 11)]) with { Language = "en" }, repository);
+        var twelveInBase = await Handle(Query(levels: [Low], topics: [("alpha", 12)]), repository);
+
+        Assert.True(ten.IsSuccess, ten.IsFailure ? ten.Error.Message : null);
+        Assert.Equal(translated.Order(), ten.Value.Questions.Select(question => question.Id).Order());
+        Assert.All(ten.Value.Questions, question =>
+        {
+            var source = repository.Questions.Single(row => row.Id == question.Id);
+            Assert.Equal($"en text of {source.Id}", question.Text);
+            Assert.Equal($"en explanation of {source.Id}", question.Explanation);
+            Assert.Equal((source.TopicId, source.LevelId), (question.TopicId, question.LevelId));
+            Assert.Equal(source.Type == QuestionType.Single ? "single" : "multiple", question.Type);
+            Assert.Equal(source.CodeLang is null ? null : new QuestionCodeResponse(source.CodeLang, source.CodeSource!), question.Code);
+            Assert.Equal(Enumerable.Range(0, source.Options.Count), question.Options.Select(option => option.Key).Order());
+            // The key picks the translated text of the same option, and correctness stays that of the base.
+            Assert.All(question.Options, option => Assert.Equal(
+                ($"en {source.Id} option {option.Key}", source.Options[option.Key].IsCorrect),
+                (option.Text, option.IsCorrect)));
+        });
+        Assert.Equal(GenerateTestErrors.NotEnoughQuestionsCode, eleven.Error.Code);
+        Assert.Contains("доступно 10", eleven.Error.Message);
+        Assert.True(twelveInBase.IsSuccess, twelveInBase.IsFailure ? twelveInBase.Error.Message : null);
+    }
+
+    [Fact]
+    public async Task Translations_are_read_once_and_only_for_the_picked_questions()
+    {
+        var repository = Repository();
+        repository.Translate("en", repository.Questions.Select(question => question.Id).ToArray());
+
+        var result = await Handle(Query(levels: [Low, High, Top], topics: [("alpha", 30), ("gamma", 40)]) with { Language = "en" }, repository);
+
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Message : null);
+        var load = Assert.Single(repository.TranslationLoads);
+        Assert.Equal("en", load.Language);
+        Assert.Equal(result.Value.Questions.Select(question => question.Id).Order(), load.Ids.Order());
+    }
+
+    [Fact]
+    public async Task Cancellation_token_reaches_every_repository_call_in_a_translation_language()
+    {
+        using var cts = new CancellationTokenSource();
+        var repository = Repository();
+        repository.Translate("en", repository.Questions.Select(question => question.Id).ToArray());
+
+        await new GenerateTestHandler(repository, new Random(1)).Handle(Query() with { Language = "en" }, cts.Token);
+
+        Assert.Equal(4, repository.Tokens.Count);
+        Assert.All(repository.Tokens, token => Assert.Equal(cts.Token, token));
+    }
+
+    private static IEnumerable<string> DescribeWithTexts(GeneratedTestResponse test) =>
+        test.Questions.Select(question =>
+            $"{question.Id}:{question.Text}:{string.Join(",", question.Options.Select(option => $"{option.Key}={option.Text}"))}");
+
     private static GenerateTestQuery Query(
         string? fieldId = FieldId,
         IReadOnlyList<string?>? levels = null,
@@ -345,6 +446,25 @@ internal sealed class FakeTestGenerationRepository(Field field) : ITestGeneratio
 
     public int QuestionLoads { get; private set; }
 
+    public List<QuestionTranslation> Translations { get; } = [];
+
+    /// <summary>Every <see cref="GetTranslationsAsync"/> call: which ids, in which language.</summary>
+    public List<(IReadOnlyList<string> Ids, string Language)> TranslationLoads { get; } = [];
+
+    /// <summary>A full translation of each question: <c>en text of …</c>, <c>en … option N</c> in file order, <c>en explanation of …</c>.</summary>
+    public void Translate(string language, params string[] ids)
+    {
+        foreach (var question in Questions.Where(question => ids.Contains(question.Id)))
+        {
+            Translations.Add(new QuestionTranslation(
+                question.Id,
+                language,
+                $"{language} text of {question.Id}",
+                question.Options.Select((_, index) => $"{language} {question.Id} option {index}").ToList(),
+                $"{language} explanation of {question.Id}"));
+        }
+    }
+
     /// <summary>Ids like alpha-b-01 (topic, last letter of the level, number); every third one has a code block.</summary>
     public void AddQuestions(string topicId, string levelId, int count)
     {
@@ -389,8 +509,11 @@ internal sealed class FakeTestGenerationRepository(Field field) : ITestGeneratio
         string fieldId, IReadOnlyCollection<string> topicIds, string language, CancellationToken cancellationToken)
     {
         Tokens.Add(cancellationToken);
+        // As the real repository: the base language has every question, a translation language only the translated ones.
         IReadOnlyList<QuestionCandidate> candidates = Questions
             .Where(question => question.FieldId == fieldId && topicIds.Contains(question.TopicId))
+            .Where(question => language == ContentLanguages.Base
+                               || Translations.Any(translation => translation.QuestionId == question.Id && translation.Language == language))
             .Select(question => new QuestionCandidate(question.Id, question.TopicId, question.LevelId, question.IsActive))
             .ToList();
         return Task.FromResult(candidates);
@@ -409,6 +532,12 @@ internal sealed class FakeTestGenerationRepository(Field field) : ITestGeneratio
         IReadOnlyCollection<string> questionIds, string language, CancellationToken cancellationToken)
     {
         Tokens.Add(cancellationToken);
-        return Task.FromResult<IReadOnlyList<QuestionTranslation>>([]);
+        TranslationLoads.Add((questionIds.ToList(), language));
+        // Reverse order, as GetQuestionsAsync: no order is promised.
+        IReadOnlyList<QuestionTranslation> translations = Translations
+            .Where(translation => translation.Language == language && questionIds.Contains(translation.QuestionId))
+            .Reverse()
+            .ToList();
+        return Task.FromResult(translations);
     }
 }

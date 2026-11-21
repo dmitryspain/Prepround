@@ -1,6 +1,8 @@
 id: laravel
 title: Laravel
+title_en: Laravel
 description: Маршрути, контролери, middleware, черги, service container.
+description_en: Routes, controllers, middleware, queues, service container.
 questions:
   - id: laravel-001
     level: junior

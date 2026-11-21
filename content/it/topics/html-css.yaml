@@ -1,5 +1,7 @@
 id: html-css
 title: HTML і CSS
+title_en: HTML and CSS
 description: Семантика, доступність, box model, flexbox, grid, каскад і специфічність, адаптивність.
+description_en: Semantics, accessibility, box model, flexbox, grid, cascade and specificity, responsiveness.
 draft: true
 questions: []

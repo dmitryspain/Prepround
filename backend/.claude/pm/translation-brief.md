@@ -45,6 +45,7 @@
 - **Терміни — як в офіційній документації теми.** Сторінки в `sources` англійські, тож за потреби звір 1–2 ключові терміни вузьким запитом: `curl -sL -A 'Mozilla/5.0' "<url>" | sed 's/<[^>]*>//g' | grep -i -m3 '<термін>'`. Приклади: change tracker, middleware, dependency injection, lifetime, isolation level, garbage collector.
 - **Англійська — американська:** «behavior», «initialize». Природні формулювання, а не калька. Наприклад, «Що виведе цей код?» → «What does this code print?», «Які твердження правильні?» → «Which statements are true?».
 - **Без «All of the above» і «None of the above».**
+- **Значення-слова `Yes`, `No`, `On`, `Off`, `True`, `False`, `null` бери в лапки** (`text_en: 'No'`): без лапок YAML читає їх як булеве чи порожнє, і лінт вважає переклад неповним.
 - **Якщо українська здається хибною, не виправляй її.** Перекладай як є, а у звіті напиши id питання і чому. Це піде у фактчек, а не в переклад.
 
 ## Довжини
@@ -95,7 +96,8 @@
 
 ## Головна сесія (довідка)
 
-- **Перед хвилею:** `cp -R ../content <scratchpad>/translation-base` — після PRP-030, один раз на хвилю.
+- **Перед хвилею:** `rm -rf <scratchpad>/translation-base && cp -R ../content <scratchpad>/translation-base` — після PRP-030, один раз на хвилю. Без `rm -rf` повторний `cp -R` вкладе нову копію в `translation-base/content`, а лінт порівнюватиме зі старим знімком.
+- **`content-lint --translation-only` — лише разом з `validate`:** лінт читає YAML 1.1 (PyYAML) і не бачить дубля ключа чи `correct: yes`, їх ловить `validate`.
 - **На групу tester** — як у конвеєрі контенту, на замороженій копії:
   - `validate` → `import <копія> --include-drafts` → `dotnet test`;
   - очікуваний підсумок імпорту: `Питання: додано 0, оновлено 0, деактивовано 0` і `Переклади питань: додано <сума питань тем групи>`.

@@ -1,6 +1,8 @@
 id: hibernate-jpa
 title: Hibernate і JPA
+title_en: Hibernate and JPA
 description: Сутності, зв'язки, lazy/eager, N+1, транзакції, кеш першого/другого рівня.
+description_en: Entities, relationships, lazy/eager, N+1, transactions, first/second-level cache.
 questions:
   - id: hibernate-jpa-001
     level: junior
@@ -34,7 +36,7 @@ questions:
         @Entity
         public class Orders {
             @Id @GeneratedValue Long id;
-            Status status;   // без @Enumerated
+            Status status;   // no @Enumerated
         }
     options:
       - text: "Число `1`: порядковий номер константи, що відлічується від нуля"
@@ -95,7 +97,7 @@ questions:
         @Entity
         public class Book {
             @Id Long id;
-            @ManyToOne Author author;   // fetch не вказано
+            @ManyToOne Author author;   // fetch not specified
         }
 
         List<Book> books = em.createQuery("select b from Book b", Book.class)
@@ -246,7 +248,7 @@ questions:
             @Version long version;
             BigDecimal price;
         }
-        // T1 і T2: p = em.find(Product.class, 1L); p.setPrice(...); commit
+        // T1 and T2: p = em.find(Product.class, 1L); p.setPrice(...); commit
     options:
       - text: "`UPDATE` з умовою на версію зачепить 0 рядків: T2 отримає `OptimisticLockException`"
         correct: true

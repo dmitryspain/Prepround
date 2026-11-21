@@ -1,6 +1,8 @@
 id: api-design
 title: API-дизайн
+title_en: API design
 description: REST, коди статусів, версіонування, ідемпотентність, gRPC і Protobuf, GraphQL, WebSocket.
+description_en: REST, status codes, versioning, idempotency, gRPC and Protobuf, GraphQL, WebSocket.
 questions:
   - id: api-design-001
     level: junior
@@ -178,7 +180,7 @@ questions:
         Content-Type: application/json
 
         {"text": "Правка клієнта B"}
-        # поточний ETag документа на сервері: "v8"
+        # current ETag of the document on the server: "v8"
     options:
       - text: "`412 Precondition Failed`: умова `If-Match` не збіглась, тож зміну не виконано"
         correct: true

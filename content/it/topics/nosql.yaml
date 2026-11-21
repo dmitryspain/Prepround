@@ -1,6 +1,8 @@
 id: nosql
 title: NoSQL і кеш
+title_en: NoSQL and caching
 description: Redis, MongoDB, моделі даних, кешування, TTL, консистентність.
+description_en: Redis, MongoDB, data models, caching, TTL, consistency.
 questions:
   - id: nosql-001
     level: junior
@@ -114,7 +116,7 @@ questions:
       lang: text
       source: |
         SET session abc EX 100
-        # ... далі виконується одна з дій
+        # ... then one of the actions runs
     options:
       - text: "`SET session new` без `KEEPTTL`"
         correct: true

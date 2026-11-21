@@ -1,6 +1,8 @@
 id: fastapi
 title: FastAPI
+title_en: FastAPI
 description: Маршрути, Pydantic, залежності, async-ендпоінти, OpenAPI.
+description_en: Routes, Pydantic, dependencies, async endpoints, OpenAPI.
 questions:
   - id: fastapi-001
     level: junior

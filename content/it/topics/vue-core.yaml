@@ -1,6 +1,8 @@
 id: vue-core
 title: "Vue: реактивність і шаблони"
+title_en: 'Vue: reactivity and templates'
 description: Реактивність, директиви, компоненти, props/emits, slots.
+description_en: Reactivity, directives, components, props/emits, slots.
 questions:
   - id: vue-core-001
     level: junior
@@ -181,7 +183,7 @@ questions:
         count.value++
         count.value++
         count.value++
-        console.log(el.textContent)   // у шаблоні: {{ count }}
+        console.log(el.textContent)   // in the template: {{ count }}
         await nextTick()
         console.log(el.textContent)
     options:
@@ -227,7 +229,7 @@ questions:
       source: |
         <Item v-for="(x, i) in items" :key="i" :label="x" />
         <!-- Item: data() { return { init: null } }, created() { this.init = this.label },
-             шаблон: <li>{{ label }}:{{ init }}</li> -->
+             template: <li>{{ label }}:{{ init }}</li> -->
     options:
       - text: 'Рядки `B:A` і `C:B`: екземпляри за індексом лишилися, змінились лише props, а знищено останній'
         correct: true

@@ -1,6 +1,8 @@
 id: aspnet-core
 title: ASP.NET Core
+title_en: ASP.NET Core
 description: Middleware, DI і lifetimes, маршрутизація, Minimal API, автентифікація, конфігурація.
+description_en: Middleware, DI and lifetimes, routing, Minimal APIs, authentication, configuration.
 questions:
   - id: aspnet-core-001
     level: junior

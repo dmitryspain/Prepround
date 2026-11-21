@@ -1,6 +1,8 @@
 id: spring-boot
 title: Spring Boot
+title_en: Spring Boot
 description: IoC/DI, біни і скоупи, автоконфігурація, Spring MVC, Spring Security, профілі.
+description_en: IoC/DI, beans and scopes, auto-configuration, Spring MVC, Spring Security, profiles.
 questions:
   - id: spring-boot-001
     level: junior
@@ -63,7 +65,7 @@ questions:
         # application-prod.properties
         server.port=9090
 
-        # запуск
+        # run
         java -jar app.jar --spring.profiles.active=prod
     options:
       - text: "`9090`: профільний файл перевизначає базовий"
@@ -121,7 +123,7 @@ questions:
             }
 
             @Cacheable("prices")
-            public BigDecimal price(String id) { /* дорогий розрахунок */ }
+            public BigDecimal price(String id) { /* expensive computation */ }
         }
     options:
       - text: "Кеш не використовується, бо виклик `this.price(...)` іде повз проксі"

@@ -1,6 +1,8 @@
 id: jvm
 title: JVM, пам'ять і GC
+title_en: JVM, memory and GC
 description: heap/stack, class loading, збирачі сміття, JIT, тюнінг.
+description_en: heap/stack, class loading, garbage collectors, JIT, tuning.
 questions:
   - id: jvm-001
     level: junior

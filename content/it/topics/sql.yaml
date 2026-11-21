@@ -1,6 +1,8 @@
 id: sql
 title: SQL і реляційні БД
+title_en: SQL and relational databases
 description: Запити, JOIN, індекси, транзакції, рівні ізоляції, нормалізація, плани виконання.
+description_en: Queries, JOIN, indexes, transactions, isolation levels, normalization, execution plans.
 questions:
   - id: sql-001
     level: junior

@@ -1,6 +1,8 @@
 id: python-async
 title: Async, GIL і конкурентність
+title_en: Async, GIL and concurrency
 description: asyncio, GIL, threading vs multiprocessing, event loop.
+description_en: asyncio, GIL, threading vs multiprocessing, event loop.
 questions:
   - id: python-async-001
     level: junior

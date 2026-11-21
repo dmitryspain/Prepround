@@ -1,5 +1,7 @@
 id: nuxt
 title: Nuxt
+title_en: Nuxt
 description: SSR/SSG, файлова маршрутизація, data fetching, модулі.
+description_en: SSR/SSG, file-based routing, data fetching, modules.
 draft: true
 questions: []

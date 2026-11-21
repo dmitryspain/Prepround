@@ -1,6 +1,8 @@
 id: go-db
 title: Робота з БД у Go
+title_en: Working with databases in Go
 description: database/sql, sqlx, GORM, пул з'єднань, транзакції.
+description_en: database/sql, sqlx, GORM, connection pool, transactions.
 questions:
   - id: go-db-001
     level: junior
@@ -97,7 +99,7 @@ questions:
       source: |
         db.SetMaxOpenConns(1)
         rows, _ := db.Query("select n from t")
-        // rows не читаємо й не закриваємо
+        // we neither read nor close rows
 
         ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
         defer cancel()
@@ -167,7 +169,7 @@ questions:
     code:
       lang: go
       source: |
-        // у БД: {Name: "Ann", Age: 30, Admin: true}
+        // in the DB: {Name: "Ann", Age: 30, Admin: true}
         db.Model(&user).Updates(User{Name: "Bob", Age: 0, Admin: false})
     options:
       - text: '`Name` стане `Bob`, а `Age` і `Admin` не зміняться'

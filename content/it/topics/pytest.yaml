@@ -1,6 +1,8 @@
 id: pytest
 title: Тестування в Python
+title_en: Testing in Python
 description: pytest, фікстури, параметризація, моки.
+description_en: pytest, fixtures, parametrization, mocks.
 questions:
   - id: pytest-001
     level: junior

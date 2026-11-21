@@ -1,6 +1,8 @@
 id: go-runtime
 title: Runtime Go
+title_en: Go runtime
 description: Scheduler (GMP), GC, escape analysis, пам'ять.
+description_en: Scheduler (GMP), GC, escape analysis, memory.
 questions:
   - id: go-runtime-001
     level: junior

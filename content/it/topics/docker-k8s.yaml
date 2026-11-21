@@ -1,6 +1,8 @@
 id: docker-k8s
 title: Docker і Kubernetes
+title_en: Docker and Kubernetes
 description: Образи, шари, compose, поди, деплойменти, сервіси, probes, ресурси.
+description_en: Images, layers, compose, pods, deployments, services, probes, resources.
 questions:
   - id: docker-k8s-001
     level: junior

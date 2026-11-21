@@ -1,6 +1,8 @@
 id: typescript
 title: TypeScript
+title_en: TypeScript
 description: Типи й інтерфейси, generics, union/intersection, narrowing, utility types, strict.
+description_en: Types and interfaces, generics, union/intersection, narrowing, utility types, strict.
 questions:
   - id: typescript-001
     level: junior

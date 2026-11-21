@@ -1,6 +1,8 @@
 id: symfony
 title: Symfony
+title_en: Symfony
 description: Бандли, DI-контейнер, події, форми, конфігурація.
+description_en: Bundles, DI container, events, forms, configuration.
 questions:
   - id: symfony-001
     level: junior
@@ -73,7 +75,7 @@ questions:
         $form = $this->createForm(TaskType::class, $task);
         $form->handleRequest($request);
 
-        // тут перевірка
+        // check goes here
     options:
       - text: '`if ($form->isSubmitted() && $form->isValid())`'
         correct: true
