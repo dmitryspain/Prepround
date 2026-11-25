@@ -3,7 +3,6 @@ title: Async, GIL і конкурентність
 title_en: Async, GIL and concurrency
 description: asyncio, GIL, threading vs multiprocessing, event loop.
 description_en: asyncio, GIL, threading vs multiprocessing, event loop.
-draft_en: true
 questions:
   - id: python-async-001
     level: junior
@@ -260,7 +259,7 @@ questions:
       За замовчуванням (`return_exceptions=False`) перший виняток одразу летить у того, хто чекає `gather`, але решта задач не скасовується й виконується далі.
       Тому `ok` встигає надрукувати своє, поки `main` спить. Для скасування решти використовують `TaskGroup`.
     explanation_en: >
-      By default (`return_exceptions=False`) the first exception immediately propagates to the one awaiting `gather`, but the remaining tasks are not cancelled and keep running.
+      By default (`return_exceptions=False`) the first exception immediately propagates to the task awaiting `gather`, but the remaining tasks are not cancelled and keep running.
       So `ok` manages to print its line while `main` sleeps. To cancel the rest, use `TaskGroup`.
     sources:
       - https://docs.python.org/3/library/asyncio-task.html#asyncio.gather
@@ -335,7 +334,7 @@ questions:
       PEP 779 зробив free-threaded збірку офіційно підтримуваною в 3.14, проте стандартні дистрибутиви лишаються зі GIL, а несумісні розширення вмикають його назад.
       Прибрання GIL не робить складені операції на кшталт `counter += 1` атомарними, тому спільний стан усе одно потребує `Lock`; GIL повертають через `PYTHON_GIL=1` або `-X gil=1`.
     explanation_en: >
-      PEP 779 made the free-threaded build officially supported in 3.14, but standard distributions remain with the GIL, and incompatible extensions turn it back on.
+      PEP 779 made the free-threaded build officially supported in 3.14, but standard distributions still ship with the GIL, and incompatible extensions turn it back on.
       Removing the GIL does not make compound operations such as `counter += 1` atomic, so shared state still needs a `Lock`; the GIL is restored with `PYTHON_GIL=1` or `-X gil=1`.
     sources:
       - https://docs.python.org/3/howto/free-threading-python.html

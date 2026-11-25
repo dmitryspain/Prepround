@@ -3,27 +3,35 @@ title: Celery і фонові задачі
 title_en: Celery and background tasks
 description: брокери, воркери, ретраї, ідемпотентність, періодичні задачі.
 description_en: Brokers, workers, retries, idempotency, periodic tasks.
-draft_en: true
 questions:
   - id: celery-001
     level: junior
     type: single
     text: Яку роль у Celery відіграє брокер повідомлень?
+    text_en: What role does the message broker play in Celery?
     options:
       - text: Приймає від застосунку повідомлення про задачі й віддає їх воркерам
+        text_en: Accepts task messages from the application and hands them to workers
         correct: true
       - text: Сам виконує код задач, а воркери лише стежать за його роботою
+        text_en: Runs the task code itself, while workers only monitor how it goes
       - text: Зберігає виключно результати задач, а самі задачі йдуть напряму воркерам
+        text_en: Stores only task results, while the tasks go straight to workers
       - text: Запускає задачі за розкладом, тому окремий планувальник не потрібен
+        text_en: Runs tasks on a schedule, so no separate scheduler is needed
     explanation: >
       Застосунок відправляє повідомлення в брокер (наприклад, RabbitMQ чи Redis), а воркери беруть їх звідти й виконують код задач.
       Результати кладуть окремо в result backend, а розклад веде `celery beat`.
+    explanation_en: >
+      The application sends a message to the broker (for example, RabbitMQ or Redis), and workers take messages from there and run the task code.
+      Results are stored separately in the result backend, and the schedule is handled by `celery beat`.
     sources:
       - https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/index.html
   - id: celery-002
     level: junior
     type: single
     text: Що повертає виклик `add.delay(2, 3)`?
+    text_en: What does the call `add.delay(2, 3)` return?
     code:
       lang: python
       source: |
@@ -35,65 +43,96 @@ questions:
         print(type(result).__name__)
     options:
       - text: "`AsyncResult`: посилання на задачу, виклик не чекає її завершення"
+        text_en: "`AsyncResult`, a task handle; the call does not wait for it"
         correct: true
       - text: "`int` зі значенням `5`, бо `delay` дочекається виконання"
+        text_en: "`int` with the value `5`, because `delay` waits for execution"
       - text: "`NoneType`, бо `delay` лише кладе задачу в чергу"
+        text_en: "`NoneType`, because `delay` only puts the task in the queue"
       - text: "`Task`, тобто сама задача, яку можна викликати ще раз"
+        text_en: "`Task`, that is, the task itself, which can be called again"
     explanation: >
       `delay` лише надсилає повідомлення в брокер і одразу повертає `AsyncResult`, через який потім можна дізнатися стан чи отримати значення.
       Значення `5` з'явиться, коли воркер виконає задачу, а `.get()` працює лише за налаштованого result backend.
+    explanation_en: >
+      `delay` only sends a message to the broker and immediately returns an `AsyncResult`, which you can later use to check the state or get the value.
+      The value `5` appears once a worker runs the task, and `.get()` works only when a result backend is configured.
     sources:
       - https://docs.celeryq.dev/en/stable/getting-started/first-steps-with-celery.html
   - id: celery-003
     level: junior
     type: single
     text: Яка команда запускає воркер для застосунку Celery з модуля `proj`?
+    text_en: Which command starts a worker for a Celery application in the `proj` module?
     options:
       - text: "`celery -A proj worker --loglevel=INFO`"
+        text_en: "`celery -A proj worker --loglevel=INFO`"
         correct: true
       - text: "`celery -A proj start --loglevel=INFO`"
+        text_en: "`celery -A proj start --loglevel=INFO`"
       - text: "`celery worker proj --run --loglevel=INFO`"
+        text_en: "`celery worker proj --run --loglevel=INFO`"
       - text: "`python -m celery run proj --loglevel=INFO`"
+        text_en: "`python -m celery run proj --loglevel=INFO`"
     explanation: >
       Воркер стартує підкомандою `worker` із прапорцем `-A` (застосунок), як у посібнику «First steps». Інших підкоманд на кшталт `start` чи `run` для цього немає.
+    explanation_en: >
+      A worker is started with the `worker` subcommand and the `-A` flag (the application), as in the "First steps" guide. There are no subcommands like `start` or `run` for this.
     sources:
       - https://docs.celeryq.dev/en/stable/getting-started/first-steps-with-celery.html
   - id: celery-004
     level: junior
     type: multiple
     text: Які брокери мають у документації Celery 5.7 статус Stable?
+    text_en: Which brokers have Stable status in the Celery 5.7 documentation?
     options:
       - text: RabbitMQ (AMQP)
+        text_en: RabbitMQ (AMQP)
         correct: true
       - text: Redis (у пам'яті)
+        text_en: Redis (in-memory)
         correct: true
       - text: Amazon SQS (AWS)
+        text_en: Amazon SQS (AWS)
         correct: true
       - text: Apache Kafka
+        text_en: Apache Kafka
       - text: Google Pub/Sub (GCP)
+        text_en: Google Pub/Sub (GCP)
     explanation: >
       У таблиці брокерів стабільними названо RabbitMQ, Redis і Amazon SQS. Kafka й Google Pub/Sub мають статус Experimental: вони можуть працювати, але не мають окремих супровідників.
+    explanation_en: >
+      The broker table lists RabbitMQ, Redis, and Amazon SQS as stable. Kafka and Google Pub/Sub have Experimental status: they may work, but they have no dedicated maintainers.
     sources:
       - https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/index.html#broker-overview
   - id: celery-005
     level: middle
     type: single
     text: Що станеться із задачею за налаштуваннями за замовчуванням, якщо процес воркера аварійно завершився посеред її виконання?
+    text_en: With default settings, what happens to a task if the worker process crashes in the middle of running it?
     options:
       - text: Повідомлення підтверджене до старту, тож задачу не доставлять знову, і вона втратиться
+        text_en: The message was acknowledged before the start, so the task will not be delivered again and is lost
         correct: true
       - text: Брокер доставить повідомлення іншому воркеру, бо воркер не підтвердив результат роботи
+        text_en: The broker delivers the message to another worker, because the worker did not acknowledge the result
       - text: Задача лишиться в черзі й виконається з початку після відновлення цього самого воркера
+        text_en: The task stays in the queue and runs from the beginning once this same worker recovers
       - text: Celery сам повторить задачу за налаштованим розкладом, і вона отримає стан `RETRY`
+        text_en: Celery retries the task itself on a configured schedule, and it gets the `RETRY` state
     explanation: >
       За замовчуванням воркер підтверджує повідомлення прямо перед виконанням, щоб уже розпочату задачу ніколи не запускали вдруге.
       Повторну доставку після аварії дає `acks_late=True`, але тоді задача має бути ідемпотентною.
+    explanation_en: >
+      By default, the worker acknowledges the message right before running it, so that a task that has already started is never run a second time.
+      Redelivery after a crash is provided by `acks_late=True`, but then the task must be idempotent.
     sources:
       - https://docs.celeryq.dev/en/stable/userguide/tasks.html#Task.acks_late
   - id: celery-006
     level: middle
     type: multiple
     text: Що правильно про цю задачу (Celery 5.7, значення за замовчуванням не змінювали)?
+    text_en: Which statements about this task are true (Celery 5.7, default values unchanged)?
     code:
       lang: python
       source: |
@@ -105,16 +144,24 @@ questions:
                 raise self.retry(exc=exc)
     options:
       - text: "`bind=True` потрібен, щоб задача отримала `self` і могла викликати `self.retry`"
+        text_en: "`bind=True` is needed so the task gets `self` and can call `self.retry`"
         correct: true
       - text: Повтор запланується приблизно через 60 секунд, а не відразу
+        text_en: The retry will be scheduled in about 60 seconds, not immediately
         correct: true
       - text: Після трьох невдалих повторів буде піднято початковий виняток `ConnectionError`
+        text_en: After three failed retries, the original `ConnectionError` is raised
         correct: true
       - text: Повтор виконується в тому самому виклику, без нового повідомлення в брокері
+        text_en: The retry runs within the same call, with no new message in the broker
       - text: Якщо `max_retries` не задано, задача повторюється нескінченно
+        text_en: If `max_retries` is not set, the task retries forever
     explanation: >
       `retry` надсилає нове повідомлення з затримкою `default_retry_delay`, а `max_retries` типово дорівнює 3. Коли ліміт вичерпано й передано `exc`, піднімається саме він.
       Нескінченні повтори вмикає лише `max_retries=None`.
+    explanation_en: >
+      `retry` sends a new message with the `default_retry_delay` delay, and `max_retries` defaults to 3. When the limit is exhausted and `exc` was passed, that exception is raised.
+      Infinite retries are enabled only by `max_retries=None`.
     sources:
       - https://docs.celeryq.dev/en/stable/userguide/tasks.html#retrying
       - https://docs.celeryq.dev/en/stable/userguide/tasks.html#Task.max_retries
@@ -122,19 +169,27 @@ questions:
     level: middle
     type: single
     text: Задачі відправляють без явного маршруту, але жодна не виконується. Чому?
+    text_en: Tasks are sent without an explicit route, but none of them run. Why?
     code:
       lang: bash
       source: |
         celery -A proj worker --loglevel=INFO -Q emails
     options:
       - text: Без маршруту задачі йдуть у чергу за замовчуванням `celery`, а цей воркер слухає лише `emails`
+        text_en: Without a route, tasks go to the default queue `celery`, and this worker listens only to `emails`
         correct: true
       - text: "`-Q` змушує воркер брати лише задачі, імена яких починаються з `emails`"
+        text_en: "`-Q` makes the worker take only tasks whose names start with `emails`"
       - text: Задачі без маршруту Celery розподіляє між усіма воркерами, навіть якщо в них є `-Q`
+        text_en: Celery distributes tasks without a route among all workers, even if they have `-Q`
       - text: "`-Q` задає лише порядок пріоритету черг, а обмеженням не є"
+        text_en: "`-Q` sets only the priority order of queues and is not a restriction"
     explanation: >
       Опція `-Q` перелічує черги, з яких воркер споживає. Якщо маршрутів немає, повідомлення потрапляє у типову чергу `celery`, і воркер без неї його не побачить.
       Виправлення: додати маршрут (`task_routes`, `queue=`) або включити `celery` у `-Q`.
+    explanation_en: >
+      The `-Q` option lists the queues the worker consumes from. If there are no routes, the message lands in the default queue `celery`, and a worker without it will not see the message.
+      The fix: add a route (`task_routes`, `queue=`) or include `celery` in `-Q`.
     sources:
       - https://docs.celeryq.dev/en/stable/userguide/workers.html#queues
       - https://docs.celeryq.dev/en/stable/userguide/routing.html
@@ -142,54 +197,80 @@ questions:
     level: middle
     type: multiple
     text: Що правильно про `celery beat`?
+    text_en: Which statements about `celery beat` are true?
     options:
       - text: Він лише надсилає задачі в брокер за розкладом, а виконують їх воркери
+        text_en: It only sends tasks to the broker on a schedule, and workers run them
         correct: true
       - text: Для одного розкладу має працювати лише один екземпляр beat, інакше задачі дублюватимуться
+        text_en: Only one beat instance should run for a given schedule, otherwise tasks will be duplicated
         correct: true
       - text: За замовчуванням записи розкладу беруться з налаштування `beat_schedule`
+        text_en: By default, schedule entries are taken from the `beat_schedule` setting
         correct: true
       - text: Beat виконує задачі у власному процесі, тому воркер для них не потрібен
+        text_en: Beat runs tasks in its own process, so no worker is needed for them
       - text: Для надійності розклад варто вести кількома екземплярами beat на різних вузлах
+        text_en: For reliability, the schedule should be run by several beat instances on different nodes
     explanation: >
       Beat є планувальником: «будить» задачу в потрібний момент, а далі її виконує будь-який вільний воркер. Два екземпляри з одним розкладом надішлють кожну задачу двічі.
+    explanation_en: >
+      Beat is a scheduler: it "wakes" a task at the right moment, and then any free worker runs it. Two instances with the same schedule will send each task twice.
     sources:
       - https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html#introduction
   - id: celery-009
     level: senior
     type: single
     text: Платіжна задача має `acks_late=True`. Воркер зник після списання коштів, але до підтвердження повідомлення. Що буде далі й що з цим робити?
+    text_en: A payment task has `acks_late=True`. The worker disappeared after charging the money but before acknowledging the message. What happens next, and what should be done about it?
     options:
       - text: Повідомлення прийде знову, списання може повторитися, тож потрібна ідемпотентність, наприклад ключ операції
+        text_en: The message will arrive again, the charge may be repeated, so idempotency is needed, for example an operation key
         correct: true
       - text: Повідомлення пропаде, бо підтвердження не надійшло, тож досить додати ще один ретрай задачі
+        text_en: The message will be lost, because no acknowledgment arrived, so it is enough to add one more retry to the task
       - text: Celery гарантує виконання рівно один раз, тому нічого додатково робити не потрібно
+        text_en: Celery guarantees exactly-once execution, so nothing extra needs to be done
       - text: Брокер збереже стан задачі й продовжить її з місця аварії на іншому вільному воркері
+        text_en: The broker will save the task state and continue it from the crash point on another free worker
     explanation: >
       Із пізнім підтвердженням гарантія така: задача виконається щонайменше раз, а не рівно раз. Після збою воркера вона повернеться в чергу й може виконатися повторно.
       Тому побічні ефекти захищають ключем ідемпотентності чи перевіркою стану перед дією.
       Повторна доставка гарантована, коли зник увесь воркер чи вузол; якщо помирає лише дочірній процес пулу, повідомлення підтверджується і без `task_reject_on_worker_lost` задачу знову не доставлять.
+    explanation_en: >
+      With late acknowledgment, the guarantee is that the task runs at least once, not exactly once. After a worker failure it returns to the queue and may run again.
+      That is why side effects are protected with an idempotency key or a state check before the action.
+      Redelivery is guaranteed when the entire worker or node is gone; if only a pool child process dies, the message is acknowledged and without `task_reject_on_worker_lost` the task is not delivered again.
     sources:
       - https://docs.celeryq.dev/en/stable/userguide/tasks.html#Task.acks_late
   - id: celery-010
     level: senior
     type: single
     text: Із Redis-брокером задачі з `countdown` у кілька годин виконуються по кілька разів. Яка причина?
+    text_en: With a Redis broker, tasks with a `countdown` of several hours run multiple times. What is the cause?
     options:
       - text: Відкладена задача непідтверджена довше за `visibility_timeout` (типово 1 година), тож Redis вертає її в чергу
+        text_en: The delayed task stays unacknowledged longer than `visibility_timeout` (1 hour by default), so Redis returns it to the queue
         correct: true
       - text: Redis не підтримує відкладені задачі, тому `countdown` ігнорується, а задача запускається одразу ж після відправлення
+        text_en: Redis does not support delayed tasks, so `countdown` is ignored and the task runs immediately after being sent
       - text: Через `countdown` воркер вимикає підтвердження, і кожне перезавантаження воркера знову повторює задачу
+        text_en: Because of `countdown`, the worker turns off acknowledgment, and every worker restart repeats the task again
       - text: Redis видаляє повідомлення після години без читання й створює копію з тим самим id
+        text_en: Redis deletes a message after an hour without being read and creates a copy with the same id
     explanation: >
       Для транспорту Redis непідтверджене повідомлення повертається в чергу після `visibility_timeout`, а воркер тримає ETA-задачу непідтвердженою до запуску.
       Тому задача з ETA довшим за таймаут виконується знову й знову. Лікують збільшенням таймауту, а для віддаленого майбутнього беруть періодичні задачі.
+    explanation_en: >
+      For the Redis transport, an unacknowledged message returns to the queue after `visibility_timeout`, and the worker keeps an ETA task unacknowledged until it starts.
+      So a task with an ETA longer than the timeout runs again and again. The fix is to increase the timeout, and for the distant future use periodic tasks.
     sources:
       - https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html#visibility-timeout
   - id: celery-011
     level: senior
     type: single
     text: Яку проблему несе такий дизайн задач?
+    text_en: What problem does this task design have?
     code:
       lang: python
       source: |
@@ -199,31 +280,48 @@ questions:
             return parse_page.delay(page).get()
     options:
       - text: Задача займає слот пулу, чекаючи інші, і це може дати deadlock; краще `chain` чи колбеки
+        text_en: The task occupies a pool slot while waiting for others, which can cause a deadlock; prefer `chain` or callbacks
         correct: true
       - text: Метод `.get()` усередині задачі завжди повертає `None`, бо воркер не бачить результатів інших задач
+        text_en: The `.get()` method inside a task always returns `None`, because the worker cannot see the results of other tasks
       - text: Підзадачі виконаються лише тоді, коли `update_page` викликана синхронно, а не через `delay` чи `apply_async`
+        text_en: The subtasks will run only if `update_page` is called synchronously, not via `delay` or `apply_async`
       - text: "`delay` усередині задачі заборонений, тому Celery мовчки пропустить обидва виклики без будь-якої помилки"
+        text_en: "`delay` inside a task is forbidden, so Celery silently skips both calls without any error"
     explanation: >
       Задача, що блокується на результаті іншої, неефективна: якщо всі процеси пулу так чекають, для підзадач не лишається вільного слота, і виникає deadlock.
       Документація радить будувати асинхронний потік через `chain` чи колбеки.
       У Celery 5.7 `.get()` усередині задачі за замовчуванням одразу піднімає `RuntimeError` (`disable_sync_subtasks=True`), а deadlock можливий лише з `disable_sync_subtasks=False`.
+    explanation_en: >
+      A task that blocks on the result of another is inefficient: if all pool processes wait like this, no free slot is left for the subtasks, and a deadlock occurs.
+      The documentation recommends building an asynchronous flow with `chain` or callbacks.
+      In Celery 5.7, `.get()` inside a task raises `RuntimeError` immediately by default (`disable_sync_subtasks=True`), and a deadlock is possible only with `disable_sync_subtasks=False`.
     sources:
       - https://docs.celeryq.dev/en/stable/userguide/tasks.html#avoid-launching-synchronous-subtasks
   - id: celery-012
     level: senior
     type: multiple
     text: Що правильно про prefetch у воркері Celery 5.7?
+    text_en: Which statements about prefetch in a Celery 5.7 worker are true?
     options:
       - text: Типово резервується `worker_prefetch_multiplier` × кількість слотів конкурентності
+        text_en: By default, `worker_prefetch_multiplier` × the number of concurrency slots is reserved
         correct: true
       - text: Для багатьох довгих задач документація радить множник 1
+        text_en: For many long tasks, the documentation recommends a multiplier of 1
         correct: true
       - text: З `task_acks_late` і множником 1 резерв дорівнює кількості слотів виконання
+        text_en: With `task_acks_late` and a multiplier of 1, the reserve equals the number of execution slots
         correct: true
       - text: Prefetch задає кількість задач, які воркер виконує одночасно
+        text_en: Prefetch sets how many tasks the worker runs at the same time
       - text: Prefetch кешує результати попередніх задач, щоб `get()` повертав їх швидше
+        text_en: Prefetch caches the results of previous tasks so that `get()` returns them faster
     explanation: >
       Prefetch обмежує, скільки повідомлень воркер резервує наперед, а одночасність виконання задає окремо `concurrency`. Великий резерв за довгих задач тримає повідомлення
       у «чужому» воркері, поки інші простоюють. Множник 1 разом із пізнім підтвердженням зводить резерв до кількості слотів.
+    explanation_en: >
+      Prefetch limits how many messages a worker reserves in advance, while the execution concurrency is set separately by `concurrency`. A large reserve with long tasks keeps messages
+      in the "wrong" worker while others sit idle. A multiplier of 1 together with late acknowledgment reduces the reserve to the number of slots.
     sources:
       - https://docs.celeryq.dev/en/stable/userguide/optimizing.html#prefetch-limits

@@ -3,12 +3,12 @@ title: SQLAlchemy
 title_en: SQLAlchemy
 description: Core vs ORM, сесії, зв'язки, завантаження, Alembic.
 description_en: Core vs ORM, sessions, relationships, loading, Alembic.
-draft_en: true
 questions:
   - id: sqlalchemy-001
     level: junior
     type: single
     text: Що надрукує цей код SQLAlchemy ORM (звичайна `Session`, автоінкрементний `id`)?
+    text_en: What does this SQLAlchemy ORM code print (regular `Session`, auto-increment `id`)?
     code:
       lang: python
       source: |
@@ -17,13 +17,20 @@ questions:
         print(user.id)
     options:
       - text: "`None`: об'єкт лише в черзі, INSERT з'явиться під час flush або commit"
+        text_en: '`None`: the object is only queued, the INSERT happens on flush or commit'
         correct: true
       - text: "`1`: `add()` одразу виконує INSERT і читає згенерований `id` з БД до будь-якого flush"
+        text_en: '`1`: `add()` runs the INSERT right away and reads the generated `id` from the DB before any flush'
       - text: "`0`, доки транзакцію не буде підтверджено"
+        text_en: '`0` until the transaction is committed'
       - text: Виняток, бо `id` недоступний до виклику `commit()`
+        text_en: An exception, because `id` is unavailable before `commit()` is called
     explanation: >
       `add()` лише ставить об'єкт у сесії в стан pending. SQL надсилається під час flush, який настає при `commit()`, `flush()` або перед запитом,
       і тільки тоді БД видає `id`. Читання атрибута самого flush не запускає.
+    explanation_en: >
+      `add()` only puts the object into the pending state in the session. SQL is sent during a flush, which happens on `commit()`, `flush()`, or
+      before a query, and only then does the database issue the `id`. Reading the attribute does not trigger a flush by itself.
     sources:
       - https://docs.sqlalchemy.org/en/21/orm/session_basics.html#adding-new-or-existing-items
 
@@ -31,15 +38,23 @@ questions:
     level: junior
     type: single
     text: Що повертає `session.scalars(select(User)).all()` і чим це відрізняється від `session.execute(select(User)).all()`?
+    text_en: What does `session.scalars(select(User)).all()` return, and how does it differ from `session.execute(select(User)).all()`?
     options:
       - text: Перший список об'єктів `User`, другий список рядків `Row`, у кожному по одному `User`
+        text_en: The first is a list of `User` objects, the second is a list of `Row` objects, each holding one `User`
         correct: true
       - text: Перший список рядків `Row`, другий список об'єктів `User`, бо `scalars` повертає кортежі
+        text_en: The first is a list of `Row` objects, the second is a list of `User` objects, because `scalars` returns tuples
       - text: Обидва повертають списки `User`, а `scalars` лише ліниво завантажує зв'язки
+        text_en: Both return lists of `User`, and `scalars` only lazy-loads relationships
       - text: Перший повертає тільки перший стовпець таблиці, другий усі стовпці як словники
+        text_en: The first returns only the first column of the table, the second returns all columns as dictionaries
     explanation: >
       `execute()` віддає результат у вигляді рядків, навіть якщо в запиті лише одна сутність. `scalars()` бере перший елемент кожного рядка,
       тому для `select(User)` одразу виходять самі об'єкти.
+    explanation_en: >
+      `execute()` returns results as rows, even when the query has a single entity. `scalars()` takes the first element of each row, so for
+      `select(User)` you get the objects themselves.
     sources:
       - https://docs.sqlalchemy.org/en/21/orm/queryguide/select.html#selecting-orm-entities-and-attributes
 
@@ -47,18 +62,27 @@ questions:
     level: junior
     type: multiple
     text: Що SQLAlchemy ORM додає поверх Core?
+    text_en: What does SQLAlchemy ORM add on top of Core?
     options:
       - text: Зіставлення класів Python із таблицями бази даних
+        text_en: Mapping of Python classes to database tables
         correct: true
       - text: Сесію з identity map та unit of work для відстеження змін
+        text_en: A session with an identity map and unit of work for tracking changes
         correct: true
       - text: Навігацію зв'язками між об'єктами через `relationship()`
+        text_en: Navigating between objects through `relationship()`
         correct: true
       - text: Пул з'єднань і керування з'єднаннями на рівні `Engine`
+        text_en: A connection pool managed at the `Engine` level
       - text: Конструкції `select()` та `insert()` для побудови SQL-виразів
+        text_en: The `select()` and `insert()` SQL expression constructs
     explanation: >
       Core — це `Engine`, пул з'єднань і мова SQL-виразів (`select()`, `insert()`), яку ORM також використовує. ORM додає мапінг класів,
       `Session` з відстеженням змін і зв'язки між об'єктами.
+    explanation_en: >
+      Core is the `Engine`, the connection pool and the SQL expression language (`select()`, `insert()`), which the ORM uses too. The ORM adds
+      class mapping, a `Session` with change tracking, and relationships between objects.
     sources:
       - https://docs.sqlalchemy.org/en/21/tutorial/index.html
 
@@ -66,6 +90,7 @@ questions:
     level: junior
     type: single
     text: Яка різниця між `ForeignKey` і `relationship()` у моделях SQLAlchemy?
+    text_en: What is the difference between `ForeignKey` and `relationship()` in SQLAlchemy models?
     code:
       lang: python
       source: |
@@ -76,13 +101,20 @@ questions:
             user: Mapped["User"] = relationship(back_populates="addresses")
     options:
       - text: "`ForeignKey` задає обмеження в схемі БД, а `relationship()` дає доступ до пов'язаних об'єктів у Python"
+        text_en: '`ForeignKey` defines a constraint in the DB schema, while `relationship()` gives access to related objects in Python'
         correct: true
       - text: "`ForeignKey` завантажує пов'язаний об'єкт, а `relationship()` лише додає стовпець у таблицю"
+        text_en: '`ForeignKey` loads the related object, while `relationship()` only adds a column to the table'
       - text: "`relationship()` створює зовнішній ключ у БД, а `ForeignKey` потрібен лише для документації моделі"
+        text_en: '`relationship()` creates the foreign key in the DB, while `ForeignKey` is only for model documentation'
       - text: "Це два записи того самого: достатньо одного з них"
+        text_en: 'They are two ways of writing the same thing: one of them is enough'
     explanation: >
       `ForeignKey` описує стовпець і обмеження цілісності в таблиці, а `relationship()` на рівні ORM підказує, як перейти від об'єкта до пов'язаних.
       Без `ForeignKey` ORM не знає, за яким стовпцем з'єднувати таблиці.
+    explanation_en: >
+      `ForeignKey` describes a column and an integrity constraint in the table, while `relationship()` tells the ORM how to navigate from an
+      object to related ones. Without `ForeignKey`, the ORM does not know which column to join the tables on.
     sources:
       - https://docs.sqlalchemy.org/en/21/orm/basic_relationships.html
 
@@ -90,6 +122,7 @@ questions:
     level: middle
     type: single
     text: Скільки SELECT виконає цей цикл для 100 користувачів із лінивим зв'язком `addresses` і як це виправити?
+    text_en: How many SELECT statements will this loop run for 100 users with a lazy `addresses` relationship, and how do you fix it?
     code:
       lang: python
       source: |
@@ -98,13 +131,20 @@ questions:
             print(len(u.addresses))
     options:
       - text: 101 запит; `selectinload(User.addresses)` зменшить їх до двох
+        text_en: 101 queries; `selectinload(User.addresses)` reduces them to two
         correct: true
       - text: 1 запит, бо `scalars()` одразу завантажує всі зв'язки
+        text_en: 1 query, because `scalars()` loads all relationships right away
       - text: 2 запити, бо SQLAlchemy сама пакетує ліниві завантаження за замовчуванням
+        text_en: 2 queries, because SQLAlchemy batches lazy loads by default
       - text: 101 запит, і виправити можна лише переписавши цикл на ручний JOIN
+        text_en: 101 queries, and the only fix is rewriting the loop with a manual JOIN
     explanation: >
       Один запит бере користувачів, а кожне перше звернення до `u.addresses` виконує ще один SELECT (проблема N+1). Опція `selectinload`
       замість цього робить один додатковий запит із `IN` за ключами всіх завантажених користувачів.
+    explanation_en: >
+      One query fetches the users, and each first access to `u.addresses` runs another SELECT (the N+1 problem). The `selectinload` option instead
+      issues one extra query with `IN` over the keys of all loaded users.
     sources:
       - https://docs.sqlalchemy.org/en/21/orm/queryguide/relationships.html#select-in-loading
 
@@ -112,6 +152,7 @@ questions:
     level: middle
     type: single
     text: Чи побачить запит об'єкт, доданий у цій самій транзакції без `commit()`, за налаштувань `Session` за замовчуванням?
+    text_en: Will a query see an object added in the same transaction without `commit()`, with default `Session` settings?
     code:
       lang: python
       source: |
@@ -120,13 +161,20 @@ questions:
         print(found is not None)
     options:
       - text: "Так, `True`: autoflush перед запитом надсилає INSERT у поточній транзакції"
+        text_en: 'Yes, `True`: autoflush sends the INSERT in the current transaction before the query'
         correct: true
       - text: "Ні, `False`: рядка в БД немає, поки транзакцію не підтверджено викликом `commit()`"
+        text_en: 'No, `False`: the row is not in the DB until the transaction is committed with `commit()`'
       - text: Так, `True`, але лише якщо перед запитом явно викликати `session.expire_all()` або `flush()`
+        text_en: Yes, `True`, but only if you explicitly call `session.expire_all()` or `flush()` before the query
       - text: "Ні, `False`: `select()` працює лише з даними, які вже зафіксовано іншими з'єднаннями"
+        text_en: 'No, `False`: `select()` only works with data already committed by other connections'
     explanation: >
       Autoflush перед виконанням запиту записує накопичені зміни в БД, але не фіксує транзакцію, тож запит бачить рядок у межах тієї самої транзакції.
       Інші з'єднання його не побачать до `commit()`, а при `rollback()` рядок зникне.
+    explanation_en: >
+      Autoflush writes the accumulated changes to the DB before executing a query but does not commit the transaction, so the query sees the row
+      within the same transaction. Other connections will not see it until `commit()`, and after `rollback()` the row disappears.
     sources:
       - https://docs.sqlalchemy.org/en/21/orm/session_basics.html#flushing
 
@@ -134,6 +182,7 @@ questions:
     level: middle
     type: single
     text: Що станеться під час останнього рядка за налаштувань `Session` за замовчуванням?
+    text_en: What happens on the last line with default `Session` settings?
     code:
       lang: python
       source: |
@@ -143,13 +192,21 @@ questions:
         print(user.name)
     options:
       - text: "`DetachedInstanceError`: після `commit()` атрибути протухли, а сесії для перезавантаження немає"
+        text_en: '`DetachedInstanceError`: after `commit()` the attributes are expired, and there is no session to reload them'
         correct: true
       - text: Надрукується ім'я, бо `close()` зберігає значення всіх завантажених атрибутів об'єкта
+        text_en: The name is printed, because `close()` keeps the values of all loaded attributes of the object
       - text: Надрукується ім'я, але після нового прихованого SELECT, який SQLAlchemy виконає сама без жодних помилок
+        text_en: The name is printed, but after a new hidden SELECT that SQLAlchemy runs itself without any errors
       - text: "`None`, бо після закриття сесії значення атрибутів об'єкта очищаються"
+        text_en: '`None`, because after the session is closed the attribute values of the object are cleared'
     explanation: >
       `expire_on_commit=True` позначає всі завантажені атрибути застарілими, і наступне звернення мало б перечитати їх із БД. Об'єкт відкріплено від
       закритої сесії, тож перечитати нічим. Виправляють це `expire_on_commit=False` або читанням даних до закриття.
+    explanation_en: >
+      `expire_on_commit=True` marks all loaded attributes as expired, so the next access would have to reload them from the DB. The object is
+      detached from the closed session, so there is nothing to reload with. The fix is `expire_on_commit=False` or reading the data before
+      closing.
     sources:
       - https://docs.sqlalchemy.org/en/21/orm/session_basics.html#committing
 
@@ -157,16 +214,24 @@ questions:
     level: middle
     type: multiple
     text: "Які зміни моделей `alembic revision --autogenerate` розпізнає неправильно або взагалі не розпізнає?"
+    text_en: Which model changes does `alembic revision --autogenerate` detect incorrectly or not at all?
     options:
       - text: "Перейменування стовпця: виходить `drop_column` і `add_column`"
+        text_en: 'Renaming a column: it yields `drop_column` and `add_column`'
         correct: true
       - text: Обмеження без явної назви, яких не порівняти з БД
+        text_en: Constraints without an explicit name, which cannot be compared with the DB
         correct: true
       - text: Додавання нового стовпця до наявної таблиці в моделі
+        text_en: Adding a new column to an already existing table in the models
       - text: Видалення таблиці, якої більше немає в метаданих моделей
+        text_en: Dropping a table that is no longer present in the model metadata
     explanation: >
       Autogenerate порівнює метадані з реальною схемою й не знає про наміри: перейменування він бачить як видалення зі створенням, тож дані втрачаються,
       якщо міграцію не відредагувати вручну. Додавання стовпців і видалення таблиць він виявляє без проблем.
+    explanation_en: >
+      Autogenerate compares the metadata with the actual schema and knows nothing about intent: it sees a rename as a drop plus a create, so data
+      is lost unless you edit the migration by hand. It detects added columns and dropped tables without problems.
     sources:
       - https://alembic.sqlalchemy.org/en/latest/autogenerate.html#what-does-autogenerate-detect-and-what-does-it-not-detect
 
@@ -176,6 +241,7 @@ questions:
     text: >
       `AsyncSession` (SQLAlchemy 2.1, asyncpg). Модель успадковує `AsyncAttrs`. Звернення `order.items` до ліниво завантажуваного зв'язку падає з `MissingGreenlet`.
       Що з цим робити?
+    text_en: '`AsyncSession` (SQLAlchemy 2.1, asyncpg). The model inherits `AsyncAttrs`. Accessing the lazily loaded relationship `order.items` fails with `MissingGreenlet`. What should you do?'
     code:
       lang: python
       source: |
@@ -183,13 +249,21 @@ questions:
         print(order.items)
     options:
       - text: Завантажити зв'язок заздалегідь через `selectinload` або чекати його через `await order.awaitable_attrs.items`
+        text_en: Load the relationship up front with `selectinload`, or await it via `await order.awaitable_attrs.items`
         correct: true
       - text: Замінити `AsyncSession` на звичайну `Session`, бо `asyncpg` не підтримує ліниве завантаження в принципі
+        text_en: Replace `AsyncSession` with a regular `Session`, because `asyncpg` does not support lazy loading at all
       - text: Обгорнути звернення до `order.items` у `try`/`except` і повторити, викликавши `session.refresh(order)` без `await`
+        text_en: Wrap the `order.items` access in `try`/`except` and retry after calling `session.refresh(order)` without `await`
       - text: Додати до `create_async_engine` параметр, що вмикає неявне ліниве завантаження в `async`
+        text_en: Add a parameter to `create_async_engine` that enables implicit lazy loading in `async`
     explanation: >
       Ліниве завантаження — це неявний синхронний IO під час доступу до атрибута, а в async-режимі IO можливий лише в `await`. Тому зв'язки завантажують
       наперед (`selectinload`, `joinedload`) або явно очікують через `AsyncAttrs.awaitable_attrs`, а `lazy="raise"` робить помилку передбачуваною.
+    explanation_en: >
+      Lazy loading is implicit synchronous IO on attribute access, and in async mode IO is only possible inside `await`. So relationships are
+      loaded ahead of time (`selectinload`, `joinedload`) or awaited explicitly through `AsyncAttrs.awaitable_attrs`, and `lazy="raise"` makes the
+      error predictable.
     sources:
       - https://docs.sqlalchemy.org/en/21/orm/extensions/asyncio.html#preventing-implicit-io-when-using-asyncsession
       - https://docs.sqlalchemy.org/en/21/errors.html#missinggreenlet
@@ -200,15 +274,24 @@ questions:
     text: >
       У async-застосунку одну глобальну `AsyncSession` створено на старті й передано всім обробникам, які паралельно виконують запити.
       Яка головна проблема?
+    text_en: In an async application, a single global `AsyncSession` is created at startup and passed to all handlers that run queries concurrently. What is the main problem?
     options:
       - text: Сесія є змінним об'єктом зі станом, тож паралельні задачі псують транзакцію одна одній
+        text_en: The session is a mutable stateful object, so concurrent tasks corrupt each other's transaction
         correct: true
       - text: Сесія автоматично закривається після першого `commit()` і далі не працює
+        text_en: The session closes automatically after the first `commit()` and stops working
       - text: Пул з'єднань створює по одному з'єднанню на кожен виклик `execute()`
+        text_en: The connection pool creates one connection per `execute()` call
       - text: Identity map стає завеликою, бо кеш сесії не очищується між запитами
+        text_en: The identity map grows too large because the session cache is not cleared between requests
     explanation: >
       `Session` і `AsyncSession` не синхронізовані й представляють одну транзакцію. Їх не можна ділити між потоками чи asyncio-задачами, тож
       створюють сесію на запит або задачу (`async_sessionmaker`, залежність у веб-фреймворку). Це правило діє навіть для чисто читальних сценаріїв.
+    explanation_en: >
+      `Session` and `AsyncSession` are not synchronized and represent a single transaction. They must not be shared between threads or asyncio
+      tasks, so you create a session per request or task (`async_sessionmaker`, a dependency in the web framework). This rule holds even for
+      purely read-only scenarios.
     sources:
       - https://docs.sqlalchemy.org/en/21/orm/session_basics.html#is-the-session-thread-safe-is-asyncsession-safe-to-share-in-concurrent-tasks
 
@@ -217,15 +300,24 @@ questions:
     type: single
     text: >
       Треба вставити 100 000 рядків. Чим `session.execute(insert(User), rows)` (`rows` — список словників) відрізняється від циклу `session.add(User(**r))`?
+    text_en: You need to insert 100,000 rows. How does `session.execute(insert(User), rows)` (`rows` is a list of dicts) differ from a loop of `session.add(User(**r))`?
     options:
       - text: "Це пакетний режим: SQL вставляє рядки партіями без створення й відстеження об'єктів у сесії"
+        text_en: 'It is bulk mode: the SQL inserts rows in batches without creating or tracking objects in the session'
         correct: true
       - text: Обидва варіанти працюють однаково, бо `session.execute()` усередині викликає `session.add()`
+        text_en: Both work the same, because `session.execute()` calls `session.add()` internally
       - text: Пакетний режим виконує один великий INSERT для всіх рядків, тож не залежить від ліміту параметрів
+        text_en: Bulk mode runs one big INSERT for all rows, so it does not depend on the parameter limit
       - text: У пакетному режимі кожен об'єкт одразу потрапляє в identity map з уже відомим `id`
+        text_en: In bulk mode each object immediately lands in the identity map with a known `id`
     explanation: >
       ORM bulk INSERT оптимізовано під багато рядків: він не пропускає дані через unit of work і не створює екземплярів. Якщо потрібні об'єкти,
       додають `.returning(User)` для бекендів із RETURNING. Є й ціна: немає об'єктів у сесії та подій на рівні об'єктів, а великі набори SQLAlchemy сама ділить на пачки.
+    explanation_en: >
+      ORM bulk INSERT is optimized for many rows: it does not pass the data through the unit of work and does not create instances. If you need
+      the objects, add `.returning(User)` for backends with RETURNING. There is a cost: no objects in the session and no object-level events, and
+      SQLAlchemy splits large sets into batches itself.
     sources:
       - https://docs.sqlalchemy.org/en/21/orm/queryguide/dml.html#orm-bulk-insert-statements
       - https://docs.sqlalchemy.org/en/21/orm/queryguide/dml.html#getting-new-objects-with-returning
@@ -234,18 +326,28 @@ questions:
     level: senior
     type: multiple
     text: Які твердження про стратегії завантаження зв'язків у SQLAlchemy 2.x правильні?
+    text_en: Which statements about relationship loading strategies in SQLAlchemy 2.x are true?
     options:
       - text: Для `joinedload` колекції в 2.0-стилі результат треба викликати з `.unique()`
+        text_en: For `joinedload` of a collection in 2.0 style, the result must be called with `.unique()`
         correct: true
       - text: "`selectinload` робить додатковий SELECT з `IN` за ключами завантажених батьківських об'єктів"
+        text_en: '`selectinload` issues an extra SELECT with `IN` over the keys of the loaded parent objects'
         correct: true
       - text: "`lazy=\"raise\"` замість тихого ледачого запиту кидає виняток при зверненні до зв'язку"
+        text_en: '`lazy="raise"` throws an exception on relationship access instead of a silent lazy query'
         correct: true
       - text: "`selectinload` виконує окремий SELECT для кожного батьківського об'єкта"
+        text_en: '`selectinload` runs a separate SELECT for each parent object'
       - text: "`joinedload` для колекції не змінює кількість рядків у результаті SQL порівняно зі звичайним `select()`"
+        text_en: '`joinedload` for a collection does not change the number of rows in the SQL result compared with a plain `select()`'
     explanation: >
       JOIN із колекцією повторює батьківський рядок для кожного дочірнього, тож SQLAlchemy вимагає явного `unique()`. `selectinload` не множить рядки й
       не дає N+1, бо збирає ключі в один `IN`. `lazy="raise"` корисний у async-коді та там, де N+1 недопустимий.
+    explanation_en: >
+      A JOIN with a collection repeats the parent row for each child, so SQLAlchemy requires an explicit `unique()`. `selectinload` does not
+      multiply rows and avoids N+1 because it collects the keys into a single `IN`. `lazy="raise"` is useful in async code and wherever N+1 is
+      unacceptable.
     sources:
       - https://docs.sqlalchemy.org/en/21/orm/queryguide/relationships.html#joined-eager-loading
       - https://docs.sqlalchemy.org/en/21/orm/queryguide/relationships.html#select-in-loading

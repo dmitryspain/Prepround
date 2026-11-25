@@ -3,7 +3,6 @@ title: FastAPI
 title_en: FastAPI
 description: Маршрути, Pydantic, залежності, async-ендпоінти, OpenAPI.
 description_en: Routes, Pydantic, dependencies, async endpoints, OpenAPI.
-draft_en: true
 questions:
   - id: fastapi-001
     level: junior
@@ -50,20 +49,20 @@ questions:
             ...
     options:
       - text: "`q`, бо має простий тип і відсутній у шляху"
-        text_en: "`q`, as a simple type absent from the path"
+        text_en: "`q`, because it has a singular type and is not in the path"
         correct: true
       - text: "`limit`, бо має простий тип і типове значення"
-        text_en: "`limit`, as a simple type with a default value"
+        text_en: "`limit`, because it has a singular type and a default value"
         correct: true
       - text: "`user_id`, бо його оголошено в шляху"
         text_en: "`user_id`, because it is declared in the path"
       - text: "`item`, бо він не має типового значення"
-        text_en: "`item`, because it has no default value"
+        text_en: "`item`, because it is declared without a default value"
     explanation: >
       Параметр, якого немає в шляху й тип якого простий (`str`, `int` тощо), стає query-параметром. `user_id` береться зі шляху, а `item`
       є моделлю Pydantic, тому читається з тіла запиту.
     explanation_en: >
-      A parameter that is not in the path and has a simple type (`str`, `int`, etc.) becomes a query parameter. `user_id` comes from the path, while `item` is a Pydantic model, so it is read from the request body.
+      A parameter that is not in the path and has a singular type (`str`, `int`, etc.) becomes a query parameter. `user_id` comes from the path, while `item` is a Pydantic model, so it is read from the request body.
     sources:
       - https://fastapi.tiangolo.com/tutorial/query-params/
       - https://fastapi.tiangolo.com/tutorial/body-multiple-params/
@@ -134,7 +133,7 @@ questions:
             return {"ok": True}
     options:
       - text: Цикл подій заблоковано на 5 секунд, тож інші запити цього воркера чекають
-        text_en: The event loop is blocked for 5 seconds, so other requests of this worker wait
+        text_en: The event loop is blocked for 5 seconds, so other requests on this worker wait
         correct: true
       - text: Нічого, бо FastAPI сам запускає `async def` обробники в окремому потоці
         text_en: Nothing, because FastAPI itself runs `async def` handlers in a separate thread
@@ -146,7 +145,7 @@ questions:
       `async def` виконується прямо в циклі подій, а `time.sleep` синхронний і нічого не віддає назад. Через `def` FastAPI запускав би обробник
       у пулі потоків; в `async def` блокувальні виклики треба замінювати на `await asyncio.sleep` чи `await` для асинхронних бібліотек.
     explanation_en: >
-      An `async def` handler runs directly in the event loop, and `time.sleep` is synchronous and yields nothing back. With a plain `def`, FastAPI would run the handler in a thread pool; in `async def`, blocking calls must be replaced with `await asyncio.sleep` or `await` on async libraries.
+      An `async def` handler runs directly in the event loop, and `time.sleep` is synchronous and does not yield control back. With a plain `def`, FastAPI would run the handler in a thread pool; in `async def`, blocking calls must be replaced with `await asyncio.sleep` or `await` on async libraries.
     sources:
       - https://fastapi.tiangolo.com/async/#path-operation-functions
 

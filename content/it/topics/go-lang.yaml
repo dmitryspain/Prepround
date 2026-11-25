@@ -9,6 +9,7 @@ questions:
     level: junior
     type: single
     text: Що виведе цей код (Go 1.27)?
+    text_en: What does this code print (Go 1.27)?
     code:
       lang: go
       source: |
@@ -18,18 +19,25 @@ questions:
         fmt.Println(a)
     options:
       - text: '`[99 2 3 4]`'
+        text_en: '`[99 2 3 4]`'
         correct: true
       - text: '`[1 2 3 4]`'
+        text_en: '`[1 2 3 4]`'
       - text: '`[99 2]`'
+        text_en: '`[99 2]`'
       - text: Код не скомпілюється, бо зрізати слайс можна лише через `copy`
+        text_en: The code does not compile, because a slice can be sliced only via `copy`
     explanation: >
       Зріз `a[:2]` не копіює елементи, а вказує на той самий базовий масив, тому запис через `b` видно й у `a`. Копія з'являється лише після `copy` або `append` з перевиділенням пам'яті.
+    explanation_en: >
+      The slice `a[:2]` does not copy elements; it points to the same backing array, so a write through `b` is visible in `a` too. A copy appears only after `copy` or an `append` that reallocates memory.
     sources:
       - https://go.dev/ref/spec#Slice_expressions
   - id: go-lang-002
     level: junior
     type: single
     text: Що станеться під час виконання цього коду (Go 1.27)?
+    text_en: What happens when this code runs (Go 1.27)?
     code:
       lang: go
       source: |
@@ -38,12 +46,18 @@ questions:
         m["x"] = 1
     options:
       - text: 'Виведе `0 0`, а запис `m["x"] = 1` спричинить panic'
+        text_en: 'Prints `0 0`, and the write `m["x"] = 1` causes a panic'
         correct: true
       - text: Уже перший рядок виведення спричинить panic через `nil` map
+        text_en: The very first print line already causes a panic because of the `nil` map
       - text: 'Виведе `0 0`, а запис створить мапу автоматично'
+        text_en: 'Prints `0 0`, and the write creates the map automatically'
       - text: Код не скомпілюється, бо мапу не ініціалізовано
+        text_en: The code does not compile, because the map is not initialized
     explanation: >
       Читання з `nil` map безпечне й повертає нульове значення, а `len` дорівнює 0. Запис у `nil` map завершується panic «assignment to entry in nil map», тому мапу треба створити через `make` або літерал.
+    explanation_en: >
+      Reading from a `nil` map is safe and returns the zero value, and `len` is 0. Writing to a `nil` map ends with the panic "assignment to entry in nil map", so the map must be created with `make` or a literal.
     sources:
       - https://go.dev/ref/spec#Map_types
       - https://go.dev/ref/spec#Index_expressions
@@ -51,6 +65,7 @@ questions:
     level: junior
     type: single
     text: Що виведе цей код (Go 1.27)?
+    text_en: What does this code print (Go 1.27)?
     code:
       lang: go
       source: |
@@ -67,12 +82,18 @@ questions:
         }
     options:
       - text: '`1`'
+        text_en: '`1`'
         correct: true
       - text: '`2`'
+        text_en: '`2`'
       - text: '`0`'
+        text_en: '`0`'
       - text: Код не скомпілюється, бо методи з різними приймачами не можна змішувати
+        text_en: The code does not compile, because methods with different receivers cannot be mixed
     explanation: >
       Метод зі значенням-приймачем працює з копією структури, тому `IncVal` не змінює `c`. `IncPtr` отримує адресу `c` (компілятор бере її автоматично, бо `c` addressable) і збільшує справжнє поле.
+    explanation_en: >
+      A method with a value receiver works on a copy of the struct, so `IncVal` does not change `c`. `IncPtr` receives the address of `c` (the compiler takes it automatically because `c` is addressable) and increments the real field.
     sources:
       - https://go.dev/ref/spec#Method_declarations
       - https://go.dev/ref/spec#Calls
@@ -80,17 +101,25 @@ questions:
     level: junior
     type: multiple
     text: 'Які твердження про масиви й слайси в Go правильні? (Go 1.27)'
+    text_en: 'Which statements about arrays and slices in Go are true? (Go 1.27)'
     options:
       - text: Довжина є частиною типу масиву, тому `[3]int` і `[4]int` — різні типи
+        text_en: The length is part of an array type, so `[3]int` and `[4]int` are different types
         correct: true
       - text: Присвоєння масиву іншій змінній копіює всі його елементи
+        text_en: Assigning an array to another variable copies all of its elements
         correct: true
       - text: Слайс має довжину й ємність, які можна дізнатися через `len` і `cap`
+        text_en: A slice has a length and a capacity, available through `len` and `cap`
         correct: true
       - text: Присвоєння слайса іншій змінній копіює всі його елементи в новий масив
+        text_en: Assigning a slice to another variable copies all of its elements into a new array
       - text: Значення `[]int` можна порівнювати через `==` з іншим слайсом того ж типу
+        text_en: A `[]int` value can be compared with `==` to another slice of the same type
     explanation: >
       Масив — значення, його довжина входить у тип, а присвоєння копіює вміст. Слайс — це маленький заголовок (вказівник, довжина, ємність), тому присвоєння копіює лише його, а не елементи. Слайси порівнюються через `==` лише з `nil`.
+    explanation_en: >
+      An array is a value, its length is part of the type, and assignment copies the contents. A slice is a small header (pointer, length, capacity), so assignment copies only it, not the elements. Slices can be compared with `==` only to `nil`.
     sources:
       - https://go.dev/ref/spec#Array_types
       - https://go.dev/ref/spec#Slice_types
@@ -99,6 +128,7 @@ questions:
     level: middle
     type: single
     text: Що виведе цей код (Go 1.27)?
+    text_en: What does this code print (Go 1.27)?
     code:
       lang: go
       source: |
@@ -116,12 +146,18 @@ questions:
         }
     options:
       - text: '`false`'
+        text_en: '`false`'
         correct: true
       - text: '`true`'
+        text_en: '`true`'
       - text: Panic через виклик методу на `nil`-вказівнику
+        text_en: Panic from calling a method on a `nil` pointer
       - text: Код не скомпілюється, бо `*MyErr` не можна повернути як `error`
+        text_en: The code does not compile, because `*MyErr` cannot be returned as `error`
     explanation: >
       Інтерфейсне значення дорівнює `nil` лише тоді, коли порожні і динамічний тип, і значення. Тут тип `*MyErr` відомий, хоч вказівник `nil`, тож `err != nil` істинне. Тому функції, що повертають `error`, мають повертати літерал `nil`, а не типізований `nil`-вказівник.
+    explanation_en: >
+      An interface value equals `nil` only when both the dynamic type and the value are empty. Here the type `*MyErr` is known even though the pointer is `nil`, so `err != nil` is true. Therefore functions that return `error` should return the literal `nil`, not a typed `nil` pointer.
     sources:
       - https://go.dev/ref/spec#Comparison_operators
       - https://go.dev/doc/faq#nil_error
@@ -129,6 +165,7 @@ questions:
     level: middle
     type: single
     text: Що виведе цей код (Go 1.27)?
+    text_en: What does this code print (Go 1.27)?
     code:
       lang: go
       source: |
@@ -138,12 +175,18 @@ questions:
         fmt.Println(x[3], y[3], len(s))
     options:
       - text: '`2 2 3`'
+        text_en: '`2 2 3`'
         correct: true
       - text: '`1 2 3`'
+        text_en: '`1 2 3`'
       - text: '`1 2 4`'
+        text_en: '`1 2 4`'
       - text: '`2 2 4`'
+        text_en: '`2 2 4`'
     explanation: >
       Ємності 4 вистачає для обох `append`, тож вони не виділяють нову пам'ять і пишуть в один і той самий четвертий елемент базового масиву. Другий запис перетирає перший, тому `x[3]` теж дорівнює 2. Довжина `s` не змінюється, бо `append` повертає новий заголовок.
+    explanation_en: >
+      A capacity of 4 is enough for both `append` calls, so they do not allocate new memory and write to the same fourth element of the backing array. The second write overwrites the first, so `x[3]` is also 2. The length of `s` does not change, because `append` returns a new header.
     sources:
       - https://go.dev/ref/spec#Appending_and_copying_slices
       - https://go.dev/blog/slices-intro
@@ -151,6 +194,7 @@ questions:
     level: middle
     type: single
     text: Що виведе цей код (Go 1.27)?
+    text_en: What does this code print (Go 1.27)?
     code:
       lang: go
       source: |
@@ -161,12 +205,18 @@ questions:
         fmt.Println(errors.Is(e1, ErrNF), errors.Is(e2, ErrNF), e1 == ErrNF)
     options:
       - text: '`true false false`'
+        text_en: '`true false false`'
         correct: true
       - text: '`true true false`'
+        text_en: '`true true false`'
       - text: '`true false true`'
+        text_en: '`true false true`'
       - text: '`true true true`'
+        text_en: '`true true true`'
     explanation: >
       Дієслово `%w` зберігає помилку в ланцюжку обгорток, і `errors.Is` її знаходить. `%v` лише підставляє текст, тож ланцюжок обривається. Пряме `==` порівнює саму обгортку, а не вкладену помилку, тому воно хибне навіть для `%w`.
+    explanation_en: >
+      The `%w` verb keeps the error in the chain of wrappers, and `errors.Is` finds it. `%v` only substitutes the text, so the chain is broken. A direct `==` compares the wrapper itself, not the wrapped error, so it is false even for `%w`.
     sources:
       - https://pkg.go.dev/fmt#Errorf
       - https://pkg.go.dev/errors#Is
@@ -174,17 +224,25 @@ questions:
     level: middle
     type: multiple
     text: 'Які твердження про `map` у Go правильні? (Go 1.27)'
+    text_en: 'Which statements about `map` in Go are true? (Go 1.27)'
     options:
       - text: Порядок обходу через `range` не визначений специфікацією
+        text_en: The iteration order of `range` is not defined by the specification
         correct: true
       - text: Видаляти елементи через `delete` під час `range` по цій самій мапі дозволено
+        text_en: Deleting elements with `delete` during a `range` over the same map is allowed
         correct: true
       - text: Слайс не може бути ключем, бо його тип не підтримує порівняння `==`
+        text_en: A slice cannot be a key, because its type does not support `==` comparison
         correct: true
       - text: Для `map[string]Point` запис `m["a"].X = 1` компілюється й змінює поле
+        text_en: For `map[string]Point`, the statement `m["a"].X = 1` compiles and changes the field
       - text: '`range` по мапі завжди йде в порядку вставлення ключів'
+        text_en: '`range` over a map always goes in key insertion order'
     explanation: >
       Специфікація не гарантує порядок обходу, а видалення під час обходу прямо дозволене. Ключем може бути лише порівнюваний тип, тож слайс не підходить. Елемент мапи не addressable, тому поле структури в ньому змінити не вийде: треба прочитати значення, змінити копію й записати назад.
+    explanation_en: >
+      The specification does not guarantee iteration order, and deletion during iteration is explicitly allowed. A key must be of a comparable type, so a slice does not fit. A map element is not addressable, so a struct field in it cannot be changed: read the value, modify the copy, and write it back.
     sources:
       - https://go.dev/ref/spec#For_range
       - https://go.dev/ref/spec#Map_types
@@ -193,6 +251,7 @@ questions:
     level: senior
     type: single
     text: Що станеться під час виконання цього коду (Go 1.27)?
+    text_en: What happens when this code runs (Go 1.27)?
     code:
       lang: go
       source: |
@@ -211,12 +270,18 @@ questions:
         }
     options:
       - text: 'Виведе `1`, а другий виклик закінчиться panic під час порівняння'
+        text_en: 'Prints `1`, and the second call ends with a panic during comparison'
         correct: true
       - text: Код не скомпілюється, бо `any` не задовольняє `comparable`
+        text_en: The code does not compile, because `any` does not satisfy `comparable`
       - text: 'Виведе `1` і `-1`, бо слайси в `any` просто не рівні'
+        text_en: 'Prints `1` and `-1`, because slices inside `any` are simply not equal'
       - text: 'Виведе `1` і `0`, бо порівнюються адреси слайсів'
+        text_en: 'Prints `1` and `0`, because slice addresses are compared'
     explanation: >
       Починаючи з Go 1.20 інтерфейсні типи задовольняють `comparable`, тож код компілюється. Але `==` на інтерфейсах порівнює динамічні значення, а для непорівнюваного типу `[]int` це дає runtime panic «comparing uncomparable type». Тобто `comparable` у generics не гарантує, що порівняння не впаде.
+    explanation_en: >
+      Since Go 1.20, interface types satisfy `comparable`, so the code compiles. But `==` on interfaces compares dynamic values, and for the uncomparable type `[]int` this causes a runtime panic "comparing uncomparable type". So `comparable` in generics does not guarantee that a comparison cannot fail.
     sources:
       - https://go.dev/ref/spec#Type_constraints
       - https://go.dev/ref/spec#Comparison_operators
@@ -225,6 +290,8 @@ questions:
     type: multiple
     text: >
       Сервіс зберігає `head := big[:2]`, де `big` — слайс на 1000 елементів; нижче окремий код із зрізами `p` і `q` (Go 1.27). Які твердження правильні?
+    text_en: >
+      A service stores `head := big[:2]`, where `big` is a slice of 1000 elements; below is separate code with slices `p` and `q` (Go 1.27). Which statements are true?
     code:
       lang: go
       source: |
@@ -236,15 +303,22 @@ questions:
         fmt.Println(big[2] == 7)
     options:
       - text: Поки живий `head`, увесь масив із 1000 елементів лишається в пам'яті
+        text_en: While `head` is alive, the whole array of 1000 elements stays in memory
         correct: true
       - text: '`slices.Clone(big[:2])` створює окремий масив, і `big` можна буде звільнити'
+        text_en: '`slices.Clone(big[:2])` creates a separate array, and `big` can then be freed'
         correct: true
       - text: 'Код виведе `true`: `p` пише в `big`, а `q` перевиділяє пам''ять'
+        text_en: 'The code prints `true`: `p` writes into `big`, while `q` reallocates memory'
         correct: true
       - text: Запис `head = head[:0]` одразу звільняє решту базового масиву для збирача сміття
+        text_en: Assigning `head = head[:0]` immediately frees the rest of the array for the garbage collector
       - text: Повний зріз `big[:2:2]` одразу копіює два елементи в новий окремий масив
+        text_en: The full slice `big[:2:2]` immediately copies two elements into a new separate array
     explanation: >
       Слайс тримає посилання на весь базовий масив, тож малий зріз утримує великий буфер. Копія через `slices.Clone` розриває цей зв'язок. Третє число в `big[:2:2]` лише обмежує ємність: пам'ять копіюється пізніше, при першому `append`. Зменшення довжини масив не звільняє.
+    explanation_en: >
+      A slice holds a reference to the whole backing array, so a small slice keeps a large buffer alive. A copy via `slices.Clone` breaks that link. The third number in `big[:2:2]` only limits the capacity: memory is copied later, on the first `append`. Reducing the length does not free the array.
     sources:
       - https://go.dev/ref/spec#Slice_expressions
       - https://pkg.go.dev/slices#Clone
@@ -253,6 +327,8 @@ questions:
     type: single
     text: >
       Проєкт мігрує на Go 1.27, але в `go.mod` лишився рядок `go 1.21`. Що виведе цей код?
+    text_en: >
+      A project is migrating to Go 1.27, but `go.mod` still has the line `go 1.21`. What does this code print?
     code:
       lang: go
       source: |
@@ -265,12 +341,18 @@ questions:
         }
     options:
       - text: '`3 3 3`: семантику циклу визначає версія в `go.mod`, а не версія компілятора'
+        text_en: '`3 3 3`: loop semantics follow the `go.mod` version, not the compiler version'
         correct: true
       - text: '`0 1 2`: новий компілятор завжди створює змінну на кожну ітерацію'
+        text_en: '`0 1 2`: the new compiler always creates a variable for each iteration'
       - text: '`0 1 2`, а з `go 1.21` у `go.mod` збірка завершиться помилкою'
+        text_en: '`0 1 2`, but with `go 1.21` in `go.mod` the build fails with an error'
       - text: '`3 3 3`, бо замикання завжди захоплюють змінну циклу за значенням'
+        text_en: '`3 3 3`, because closures always capture the loop variable by value'
     explanation: >
       Із Go 1.22 кожна ітерація має власну змінну, але лише для модулів, де директива `go` у `go.mod` не нижча за 1.22. Старий модуль на новому компіляторі збирається зі старою семантикою, тож усі замикання бачать одну змінну зі значенням 3.
+    explanation_en: >
+      Since Go 1.22 each iteration has its own variable, but only for modules where the `go` directive in `go.mod` is not lower than 1.22. An old module on a new compiler is built with the old semantics, so all closures see one variable with the value 3.
     sources:
       - https://go.dev/blog/loopvar-preview
       - https://go.dev/ref/spec#For_statements
@@ -278,6 +360,7 @@ questions:
     level: senior
     type: single
     text: Чому цей код не компілюється (Go 1.27) і як це виправити?
+    text_en: Why does this code not compile (Go 1.27), and how can it be fixed?
     code:
       lang: go
       source: |
@@ -295,12 +378,18 @@ questions:
         }
     options:
       - text: '`Celsius` — окремий тип, а не `float64`; обмеження має бути `~int | ~float64`'
+        text_en: '`Celsius` is a distinct type, not `float64`; the constraint must be `~int | ~float64`'
         correct: true
       - text: 'Оператор `>` недоступний у generics; потрібне обмеження `comparable`'
+        text_en: 'The `>` operator is unavailable in generics; the `comparable` constraint is needed'
       - text: Потрібно явно писати `Max[float64](...)`, бо вивести `T` для іменованого типу неможливо
+        text_en: You must write `Max[float64](...)` explicitly, because `T` cannot be inferred for a named type
       - text: Union-обмеження не можна використовувати в параметрі типу, лише в інтерфейсі `any`
+        text_en: A union constraint cannot be used for a type parameter, only in the `any` interface
     explanation: >
       Елемент `float64` у type set означає саме цей тип, а `Celsius` має лише той самий базовий тип. Тильда `~float64` включає всі типи з базовим `float64`. `comparable` не дає `>`: для впорядкування потрібні обмеження на кшталт `cmp.Ordered`.
+    explanation_en: >
+      The `float64` element in the type set means exactly that type, while `Celsius` only has the same underlying type. The tilde `~float64` includes all types whose underlying type is `float64`. `comparable` does not provide `>`: ordering requires constraints such as `cmp.Ordered`.
     sources:
       - https://go.dev/ref/spec#Underlying_types
       - https://go.dev/ref/spec#General_interfaces

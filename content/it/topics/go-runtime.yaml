@@ -9,6 +9,7 @@ questions:
     level: junior
     type: single
     text: Що станеться під час виконання цього коду (Go 1.27)?
+    text_en: What happens when this code runs (Go 1.27)?
     code:
       lang: go
       source: |
@@ -22,40 +23,60 @@ questions:
         }
     options:
       - text: Виведе `42`, бо `x` буде перенесено в купу й вказівник лишиться валідним
+        text_en: Prints `42`, because `x` is moved to the heap and the pointer stays valid
         correct: true
       - text: Виведе випадкове число, бо `x` лежав у стеку завершеної функції, і вказівник став висячим
+        text_en: Prints a random number, because `x` lived on the stack of the finished function and the pointer became dangling
       - text: Код не скомпілюється, бо повертати адресу локальної змінної в Go заборонено
+        text_en: The code does not compile, because returning the address of a local variable is forbidden in Go
       - text: Виникне panic під час виконання, бо `x` знищується разом зі стековим кадром `newInt`
+        text_en: A panic occurs at run time, because `x` is destroyed together with the stack frame of `newInt`
     explanation: >
       Компілятор бачить, що адреса `x` переживає виклик функції, і розміщує змінну в купі, тому висячих вказівників у Go не буває. Адреса локальної змінної є звичайним значенням, і повернути її дозволено.
+    explanation_en: >
+      The compiler sees that the address of `x` outlives the function call and places the variable on the heap, so Go has no dangling pointers. The address of a local variable is an ordinary value, and returning it is allowed.
     sources:
       - https://go.dev/doc/faq#stack_or_heap
   - id: go-runtime-002
     level: junior
     type: single
     text: Що обмежує змінна `GOMAXPROCS` (Go 1.27)?
+    text_en: What does the `GOMAXPROCS` variable limit (Go 1.27)?
     options:
       - text: Кількість потоків ОС, що одночасно виконують Go-код (кількість `P`)
+        text_en: The number of OS threads that execute Go code simultaneously (the number of `P`s)
         correct: true
       - text: Максимальну кількість горутин, які програма може створити, перш ніж `go` почне блокуватися
+        text_en: The maximum number of goroutines a program can create before `go` starts blocking
       - text: Загальну кількість потоків ОС у процесі, зокрема тих, що заблоковані в системних викликах
+        text_en: The total number of OS threads in the process, including those blocked in system calls
       - text: Максимальну кількість ядер процесора, на яких GC має право запускати фазу маркування
+        text_en: The maximum number of processor cores on which the GC is allowed to run the mark phase
     explanation: >
       `GOMAXPROCS` задає, скільки потоків одночасно виконують Go-код, а горутин може бути на порядки більше. Потоки, заблоковані в системних викликах, у цей ліміт не входять.
+    explanation_en: >
+      `GOMAXPROCS` sets how many threads execute Go code at the same time, while there can be orders of magnitude more goroutines. Threads blocked in system calls do not count toward this limit.
     sources:
       - https://pkg.go.dev/runtime#hdr-Environment_Variables
   - id: go-runtime-003
     level: junior
     type: single
     text: Що означає значення `GOGC=100` (Go 1.27)?
+    text_en: What does the value `GOGC=100` mean (Go 1.27)?
     options:
       - text: Наступний GC стартує, коли приріст купи зрівняється з живими даними після попереднього циклу
+        text_en: The next GC starts when the heap growth equals the live data left after the previous cycle
         correct: true
       - text: GC запускається щоразу, коли програма виділила 100 нових об'єктів
+        text_en: GC runs every time the program has allocated 100 new objects
       - text: GC запускається, щойно розмір купи досягає 100 МіБ, незалежно від обсягу живих даних
+        text_en: GC runs as soon as the heap size reaches 100 MiB, regardless of the amount of live data
       - text: Збирач сміття може використовувати до 100 % процесорного часу під час маркування
+        text_en: The garbage collector may use up to 100% of CPU time during marking
     explanation: >
       `GOGC` — це відсоток зростання відносно живої купи: за 50 МіБ живих даних і `GOGC=100` наступний цикл починається приблизно при 100 МіБ. Фіксованого абсолютного порога чи лічильника об'єктів немає.
+    explanation_en: >
+      `GOGC` is a percentage of growth relative to the live heap: with 50 MiB of live data and `GOGC=100`, the next cycle starts at about 100 MiB. There is no fixed absolute threshold or object counter.
     sources:
       - https://go.dev/doc/gc-guide#GOGC
       - https://pkg.go.dev/runtime#hdr-Environment_Variables
@@ -63,22 +84,31 @@ questions:
     level: junior
     type: multiple
     text: 'Які твердження про горутини й планувальник Go правильні? (Go 1.27)'
+    text_en: 'Which statements about goroutines and the Go scheduler are true? (Go 1.27)'
     options:
       - text: Планувальник мультиплексує багато горутин на меншу кількість потоків ОС
+        text_en: The scheduler multiplexes many goroutines onto a smaller number of OS threads
         correct: true
       - text: Стек горутини починається невеликим і динамічно росте в міру потреби
+        text_en: A goroutine's stack starts small and grows dynamically as needed
         correct: true
       - text: Кожна горутина — це окремий потік ОС із власним стеком фіксованого розміру
+        text_en: Each goroutine is a separate OS thread with its own fixed-size stack
       - text: Горутину неможливо перервати, доки вона сама не викличе блокувальну операцію
+        text_en: A goroutine cannot be interrupted until it calls a blocking operation itself
       - text: Горутини розподіляються по потоках ОС за схемою «один потік на один P», без перенесення між ними
+        text_en: Goroutines are distributed across OS threads using a "one thread per P" scheme, with no moving between them
     explanation: >
       Горутини легкі саме тому, що це не потоки ОС: вони мультиплексуються на потоки, а стек стартує малим і росте. Кожна горутина не отримує власного потоку ОС із фіксованим стеком, а виконання можна перервати й без блокувальної операції.
+    explanation_en: >
+      Goroutines are lightweight precisely because they are not OS threads: they are multiplexed onto threads, and the stack starts small and grows. A goroutine does not get its own OS thread with a fixed stack, and execution can be interrupted even without a blocking operation.
     sources:
       - https://go.dev/doc/faq#goroutines
   - id: go-runtime-005
     level: middle
     type: multiple
     text: Які локальні змінні компілятор перенесе в купу під час `go build -gcflags=-m` (Go 1.27)?
+    text_en: Which local variables will the compiler move to the heap under `go build -gcflags=-m` (Go 1.27)?
     code:
       lang: go
       source: |
@@ -94,13 +124,19 @@ questions:
         func d() int { buf := make([]byte, 1024); buf[0] = 1; return int(buf[0]) }
     options:
       - text: '`x` у функції `a`, бо її адреса виходить за межі функції'
+        text_en: '`x` in function `a`, because its address escapes the function'
         correct: true
       - text: '`n` у функції `c`, бо її захоплює замикання, що переживає виклик'
+        text_en: '`n` in function `c`, because it is captured by a closure that outlives the call'
         correct: true
       - text: '`y` у функції `b`, бо від неї береться адреса оператором `&`'
+        text_en: '`y` in function `b`, because its address is taken with the `&` operator'
       - text: '`buf` у функції `d`, бо `make` завжди виділяє пам''ять у купі'
+        text_en: '`buf` in function `d`, because `make` always allocates memory on the heap'
     explanation: >
       У купу переходить те, що може пережити функцію: повернений вказівник на `x` і змінна `n`, захоплена замиканням. Сама наявність `&` для `y` нічого не змінює, бо вказівник не виходить із `b`, а `make` із малою сталою довжиною лишається в стеку. Це підтверджує `-gcflags=-m`.
+    explanation_en: >
+      What moves to the heap is what can outlive the function: the returned pointer to `x` and the variable `n` captured by the closure. The mere presence of `&` for `y` changes nothing, since the pointer does not leave `b`, and `make` with a small constant length stays on the stack. `-gcflags=-m` confirms this.
     sources:
       - https://go.dev/doc/faq#stack_or_heap
   - id: go-runtime-006
@@ -108,20 +144,29 @@ questions:
     type: single
     text: >
       Програму запущено з `GOMAXPROCS=2`, і 10 її горутин одночасно заблоковані в довгих системних викликах (читання файлів). Що станеться з іншими готовими до виконання горутинами (Go 1.27)?
+    text_en: >
+      A program is started with `GOMAXPROCS=2`, and 10 of its goroutines are simultaneously blocked in long system calls (file reads). What happens to the other goroutines that are ready to run (Go 1.27)?
     options:
       - text: Вони виконуються далі, бо потоки в системних викликах не рахуються в ліміт `GOMAXPROCS`
+        text_en: They keep running, because threads in system calls do not count toward the `GOMAXPROCS` limit
         correct: true
       - text: Вони чекатимуть, бо 10 заблокованих горутин займають усі 2 слоти `GOMAXPROCS`
+        text_en: They will wait, because the 10 blocked goroutines occupy all 2 `GOMAXPROCS` slots
       - text: Вони виконуватимуться лише після завершення хоча б 8 системних викликів, бо ліміт тимчасово зменшується
+        text_en: They will run only after at least 8 system calls complete, because the limit is temporarily reduced
       - text: Рантайм завершить програму з fatal error, бо кількість заблокованих горутин перевищила `GOMAXPROCS`
+        text_en: The runtime will terminate the program with a fatal error, because the number of blocked goroutines exceeded `GOMAXPROCS`
     explanation: >
       Коли горутина застрягає в системному виклику, її `P` передається іншому потоку, і решта горутин працює далі. Кількість потоків, заблокованих у системних викликах, документація прямо виключає з ліміту.
+    explanation_en: >
+      When a goroutine gets stuck in a system call, its `P` is handed to another thread, and the remaining goroutines keep working. The documentation explicitly excludes threads blocked in system calls from the limit.
     sources:
       - https://pkg.go.dev/runtime#hdr-Environment_Variables
   - id: go-runtime-007
     level: middle
     type: single
     text: Що виведе цей код (Go 1.27)?
+    text_en: What does this code print (Go 1.27)?
     code:
       lang: go
       source: |
@@ -136,27 +181,40 @@ questions:
         }
     options:
       - text: '`done`, бо рантайм витісняє горутину з нескінченним циклом сигналом, і `main` прокидається'
+        text_en: '`done`, because the runtime preempts the infinite-loop goroutine with a signal, and `main` wakes up'
         correct: true
       - text: Програма зависне, бо горутина з порожнім циклом ніколи не віддасть єдиний `P`
+        text_en: The program hangs, because the goroutine with the empty loop never gives up the only `P`
       - text: 'Програма завершиться з `fatal error: all goroutines are asleep - deadlock!`'
+        text_en: 'The program ends with `fatal error: all goroutines are asleep - deadlock!`'
       - text: Код не скомпілюється, бо порожній нескінченний цикл у горутині заборонений
+        text_en: The code does not compile, because an empty infinite loop in a goroutine is forbidden
     explanation: >
       Від Go 1.14 планувальник має асинхронне витіснення: довго працюючу горутину зупиняють сигналом навіть без викликів функцій у циклі. До цієї версії такий код справді зависав би, але тепер `main` прокидається після `Sleep`.
+    explanation_en: >
+      Since Go 1.14 the scheduler has asynchronous preemption: a long-running goroutine is stopped by a signal even without function calls in the loop. Before that version such code would indeed hang, but now `main` wakes up after `Sleep`.
     sources:
       - https://go.dev/doc/go1.14#runtime
   - id: go-runtime-008
     level: middle
     type: multiple
     text: 'Які твердження про `GOMEMLIMIT` (`debug.SetMemoryLimit`) правильні? (Go 1.27)'
+    text_en: 'Which statements about `GOMEMLIMIT` (`debug.SetMemoryLimit`) are true? (Go 1.27)'
     options:
       - text: Це м'який ліміт, тож рантайм не завершує програму панікою, якщо пам'яті потрібно більше
+        text_en: It is a soft limit, so the runtime does not terminate the program with a panic if more memory is needed
         correct: true
       - text: Ліміт охоплює всю пам'ять, якою керує рантайм Go, а не лише об'єкти в купі
+        text_en: The limit covers all memory managed by the Go runtime, not just heap objects
         correct: true
       - text: 'Перевищення ліміту спричиняє `panic: out of memory`, і програма негайно завершується'
+        text_en: 'Exceeding the limit causes `panic: out of memory`, and the program exits immediately'
       - text: Після встановлення ліміту `GOGC` ігнорується, і GC запускається лише біля цього ліміту
+        text_en: After the limit is set, `GOGC` is ignored, and GC runs only near this limit
     explanation: >
       Ліміт лише змушує GC працювати частіше, коли загальна пам'ять наближається до нього, і не гарантує нічого про виділення. `GOGC` і ліміт діють разом, і GC запускається за тим порогом, який настає раніше.
+    explanation_en: >
+      The limit only makes the GC run more often as total memory approaches it, and it guarantees nothing about allocation. `GOGC` and the limit work together, and the GC runs at whichever threshold is reached first.
     sources:
       - https://go.dev/doc/gc-guide#Memory_limit
       - https://pkg.go.dev/runtime/debug#SetMemoryLimit
@@ -165,14 +223,22 @@ questions:
     type: single
     text: >
       Сервіс у контейнері з 1 ГіБ має живу купу близько 950 МіБ і `GOMEMLIMIT=1GiB`. Після зростання навантаження латентність різко зросла, а `GODEBUG=gctrace=1` показує майже безперервні цикли GC. Що відбувається і що робити (Go 1.27)?
+    text_en: >
+      A service in a 1 GiB container has a live heap of about 950 MiB and `GOMEMLIMIT=1GiB`. After the load grew, latency rose sharply, and `GODEBUG=gctrace=1` shows almost continuous GC cycles. What is happening and what should be done (Go 1.27)?
     options:
       - text: Ліміт замалий для живих даних, тож GC майже не зупиняється, тому збільшити ліміт чи зменшити живу купу
+        text_en: The limit is too small for the live data, so the GC almost never stops; raise the limit or shrink the live heap
         correct: true
       - text: Це витік горутин, бо кожен новий цикл GC означає, що з'явилося більше вільних горутин
+        text_en: It is a goroutine leak, because each new GC cycle means more free goroutines have appeared
       - text: Достатньо встановити `GOGC=off`, бо тоді GC перестане запускатися і зникне навантаження на процесор
+        text_en: It is enough to set `GOGC=off`, because then the GC stops running and the CPU load disappears
       - text: Ліміт пам'яті не впливає на GC, тож причина лише в надто малому `GOMAXPROCS`
+        text_en: The memory limit does not affect the GC, so the cause is only a `GOMAXPROCS` that is too small
     explanation: >
       Коли живих даних майже стільки, скільки дозволяє ліміт, збирач змушений працювати майже постійно. Рантайм обмежує його частку CPU, щоб програма не зависла, але пропускна здатність усе одно падає. `GOGC=off` не допоможе, бо ліміт лишиться, а причину усуває лише більше пам'яті чи менша жива купа.
+    explanation_en: >
+      When the live data is almost as large as the limit allows, the collector has to work nearly constantly. The runtime caps its share of CPU so the program does not freeze, but throughput still drops. `GOGC=off` will not help, because the limit remains, and the cause is removed only by more memory or a smaller live heap.
     sources:
       - https://go.dev/doc/gc-guide#Memory_limit
   - id: go-runtime-010
@@ -180,14 +246,22 @@ questions:
     type: single
     text: >
       Кеш на 50 млн записів реалізовано як `map[string]*Entry`, і фаза маркування GC забирає багато CPU при великій купі. Що найбільше зменшить вартість GC без зміни GOGC (Go 1.27)?
+    text_en: >
+      A cache of 50 million entries is implemented as `map[string]*Entry`, and the GC mark phase takes a lot of CPU with a large heap. What will reduce the GC cost the most without changing GOGC (Go 1.27)?
     options:
       - text: Скоротити кількість вказівників у купі, наприклад `map[uint64]Entry` без вказівників усередині
+        text_en: Reduce the number of pointers in the heap, for example `map[uint64]Entry` with no pointers inside
         correct: true
       - text: Збільшити `GOMAXPROCS`, бо кожне додаткове ядро скорочує обсяг роботи маркування і знижує пікове навантаження
+        text_en: Increase `GOMAXPROCS`, because each additional core reduces the amount of marking work and lowers the peak load
       - text: Викликати `runtime.GC()` після кожних 1000 вставок, щоб купа не встигала вирости
+        text_en: Call `runtime.GC()` after every 1000 insertions so the heap does not have time to grow
       - text: Замінити `*Entry` на `interface{}`, бо GC не обходить значення, що лежать в інтерфейсах
+        text_en: Replace `*Entry` with `interface{}`, because the GC does not traverse values stored in interfaces
     explanation: >
       GC знаходить живі об'єкти, обходячи граф за вказівниками, тож вартість маркування зростає з обсягом живої купи, а об'єкти без вказівників не ведуть до інших об'єктів. Додаткові ядра розподіляють ту саму роботу, а не зменшують її, і не знімають витрат на сканування.
+    explanation_en: >
+      The GC finds live objects by traversing the graph along pointers, so marking cost grows with the amount of live heap, and objects without pointers do not lead to other objects. Extra cores spread the same work rather than reducing it, and do not remove the scanning cost.
     sources:
       - https://go.dev/doc/gc-guide#Implementation-specific_optimizations
   - id: go-runtime-011
@@ -195,14 +269,22 @@ questions:
     type: single
     text: >
       У профілі CPU домінують `runtime.mallocgc` і `gcBgMarkWorker`, але жива купа мала й стабільна. Який профіль допоможе знайти код, що створює навантаження на GC (Go 1.27)?
+    text_en: >
+      In the CPU profile `runtime.mallocgc` and `gcBgMarkWorker` dominate, but the live heap is small and stable. Which profile will help find the code that creates the GC load (Go 1.27)?
     options:
       - text: Профіль купи з вибіркою `alloc_space` чи `alloc_objects`, бо він показує всі виділення, а не лише живі об'єкти
+        text_en: A heap profile with the `alloc_space` or `alloc_objects` sample, because it shows all allocations, not just live objects
         correct: true
       - text: Профіль купи з вибіркою `inuse_space`, бо він показує всі виділення за весь час роботи програми
+        text_en: A heap profile with the `inuse_space` sample, because it shows all allocations over the program's whole run
       - text: Профіль горутин `goroutine`, бо кожне виділення пам'яті створює окрему горутину
+        text_en: The `goroutine` profile, because every memory allocation creates a separate goroutine
       - text: Профіль блокувань `block`, бо тривалі паузи GC відображаються як очікування на м'ютексах
+        text_en: The `block` profile, because long GC pauses show up as waiting on mutexes
     explanation: >
       Тиск на GC створює швидкість виділення, а не розмір живих даних, тому потрібні кумулятивні `alloc_*`. `inuse_space` показує лише об'єкти, що були живі на момент останнього завершеного GC, і тут майже порожній.
+    explanation_en: >
+      GC pressure comes from the allocation rate, not the size of live data, so the cumulative `alloc_*` samples are needed. `inuse_space` shows only objects that were live at the last completed GC, and here it is almost empty.
     sources:
       - https://pkg.go.dev/runtime/pprof#Profile
       - https://go.dev/doc/diagnostics
@@ -211,6 +293,8 @@ questions:
     type: single
     text: >
       Чому за `go build -gcflags=-m` змінна `w` у `iface` переміщується в купу, а `v` у `conc` лишається в стеку (Go 1.27, без PGO)?
+    text_en: >
+      Why, under `go build -gcflags=-m`, is the variable `w` in `iface` moved to the heap while `v` in `conc` stays on the stack (Go 1.27, no PGO)?
     code:
       lang: go
       source: |
@@ -225,11 +309,17 @@ questions:
         func conc(n N)     { v := 42; n.Put(&v) }
     options:
       - text: Виклик через інтерфейс динамічний, тож компілятор не знає, чи метод збереже вказівник, і вважає, що той витікає
+        text_en: A call through an interface is dynamic, so the compiler does not know whether the method will store the pointer and assumes it escapes
         correct: true
       - text: Інтерфейсні значення завжди розміщуються в купі, тому все, на що вказує аргумент, теж потрапляє туди
+        text_en: Interface values are always placed on the heap, so everything the argument points to ends up there too
       - text: Оператор `&` завжди переносить змінну в купу, а в `conc` аналіз пропускає це через менший розмір `N`
+        text_en: The `&` operator always moves a variable to the heap, and in `conc` the analysis skips this because `N` is smaller
       - text: Метод `Put` у `conc` має значеннєвий отримувач, а це забороняє компілятору виділяти пам'ять у купі
+        text_en: The `Put` method in `conc` has a value receiver, which forbids the compiler from allocating on the heap
     explanation: >
       Для конкретного методу аналіз бачить тіло `Put` і знає, що `p` не витікає. Для виклику через інтерфейс callee невідомий, тож аргумент вважається таким, що може бути збережений. `-gcflags=-m` друкує `moved to heap: w`, а для `v` такого рядка немає.
+    explanation_en: >
+      For a concrete method the analysis sees the body of `Put` and knows `p` does not escape. For a call through an interface the callee is unknown, so the argument is assumed to possibly be stored. `-gcflags=-m` prints `moved to heap: w`, and there is no such line for `v`.
     sources:
       - https://go.dev/doc/faq#stack_or_heap
