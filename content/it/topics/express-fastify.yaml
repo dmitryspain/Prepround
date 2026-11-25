@@ -3,7 +3,6 @@ title: Express і Fastify
 title_en: Express and Fastify
 description: Маршрути, middleware, обробка помилок, валідація.
 description_en: Routes, middleware, error handling, validation.
-draft_en: true
 questions:
   - id: express-fastify-001
     level: junior
@@ -164,7 +163,7 @@ questions:
       - text: "Відповідь `404`: після middleware без `next()` Express вважає, що маршрут не знайдено"
         text_en: 'A `404` response: after a middleware without `next()`, Express assumes the route was not found'
       - text: "Відповідь `500`: middleware без `next` у списку параметрів вважається помилковим"
-        text_en: 'A `500` response: a middleware without `next` in its parameter list is treated as an error handler'
+        text_en: 'A `500` response: a middleware without `next` in its parameter list is considered invalid'
     explanation: >
       Middleware має або завершити відповідь, або передати керування викликом `next()`. Express не викликає його за вас, а таймаут за замовчуванням відсутній,
       тому з'єднання лишається відкритим. Перевірено: у консолі з'явився `log`, а відповіді не було.

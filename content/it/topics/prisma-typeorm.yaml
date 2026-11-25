@@ -3,7 +3,6 @@ title: Prisma і TypeORM
 title_en: Prisma and TypeORM
 description: Схеми, міграції, зв'язки, транзакції.
 description_en: Schemas, migrations, relations, transactions.
-draft_en: true
 questions:
   - id: prisma-typeorm-001
     level: junior
@@ -237,7 +236,7 @@ questions:
     text_en: Prisma 7, PostgreSQL. In an interactive transaction `prisma.$transaction(async (tx) => …)`, an external payment API call that sometimes responds in 8 seconds runs between two writes. Transaction errors appear in the logs. What is the right fix?
     options:
       - text: Винести виклик API за межі транзакції, а в транзакції лишити короткі записи
-        text_en: Move the API call outside the transaction and keep only short writes inside it
+        text_en: Move the API call outside the transaction and keep short writes inside it
         correct: true
       - text: Підняти `maxWait` до 10 секунд, бо саме він обмежує тривалість виконання транзакції
         text_en: Raise `maxWait` to 10 seconds, because it is what limits how long the transaction may run

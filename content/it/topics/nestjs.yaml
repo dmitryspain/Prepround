@@ -81,7 +81,7 @@ questions:
         }
     options:
       - text: 'Відповідь 400 Bad Request, тіло `findOne` не виконується'
-        text_en: 'A 400 Bad Request response, the body of `findOne` does not run'
+        text_en: 'A 400 Bad Request response; the body of `findOne` does not run'
         correct: true
       - text: 'Відповідь 200, а `id` усередині методу дорівнює `NaN`'
         text_en: 'A 200 response, and `id` inside the method is `NaN`'
@@ -262,7 +262,7 @@ questions:
     text: >
       Провайдер `DB` оголошено з асинхронною `useFactory`, що підключається до бази кілька секунд.
       `UsersService` ін'єктує `DB`. Що отримає `UsersService` і коли його створить Nest?
-    text_en: 'The `DB` provider is declared with an asynchronous `useFactory` that connects to a database for a few seconds. `UsersService` injects `DB`. What does `UsersService` receive, and when does Nest create it?'
+    text_en: 'The `DB` provider is declared with an asynchronous `useFactory` that takes a few seconds to connect to a database. `UsersService` injects `DB`. What does `UsersService` receive, and when does Nest create it?'
     code:
       lang: typescript
       source: |
@@ -314,7 +314,7 @@ questions:
       Request scope «підіймається» вгору ланцюжком залежностей: усі, хто залежить від такого провайдера, теж створюються на кожен запит,
       що додає накладні витрати. Залежності, яким цей сервіс не потрібен, лишаються singleton.
     explanation_en: >
-      Request scope "bubbles up" the dependency chain: everything that depends on such a provider is also created for every request, which adds overhead. Dependencies that this service does not need stay singletons.
+      Request scope "bubbles up" the dependency chain: everything that depends on such a provider is also created for every request, which adds overhead. Dependencies that do not need this service stay singletons.
     sources:
       - https://docs.nestjs.com/fundamentals/injection-scopes#scope-hierarchy
   - id: nestjs-012
@@ -344,6 +344,6 @@ questions:
       Вхід іде в порядку глобальний, контролер, маршрут, а відповідь повертається у зворотному, бо Observable розв'язуються за принципом «перший увійшов, останній вийшов».
       Порядок підтверджено запуском застосунку з трьома interceptors.
     explanation_en: >
-      Entry goes in the order global, controller, route, and the response comes back in reverse, because the Observables are resolved on a last-in, first-out basis. The order was confirmed by running an application with three interceptors.
+      Entry goes in the order global, controller, route, and the response comes back in reverse, because the Observables are resolved in a first-in, last-out manner. The order was confirmed by running an application with three interceptors.
     sources:
       - https://docs.nestjs.com/faq/request-lifecycle#interceptors

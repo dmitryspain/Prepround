@@ -3,7 +3,6 @@ title: Node.js runtime
 title_en: Node.js runtime
 description: Event loop і фази, libuv, streams, buffers, worker threads, модулі.
 description_en: Event loop and phases, libuv, streams, buffers, worker threads, modules.
-draft_en: true
 questions:
   - id: nodejs-runtime-001
     level: junior
@@ -202,7 +201,7 @@ questions:
       - text: "`pipeline()` швидший за `.pipe()`, бо читає дані великими блоками в обхід внутрішнього буфера потоку"
         text_en: "`pipeline()` is faster than `.pipe()` because it reads data in large chunks, bypassing the stream's internal buffer"
       - text: "Лише `pipeline()` підтримує зворотний тиск: `.pipe()` читає дані без урахування швидкості приймача даних"
-        text_en: "Only `pipeline()` supports backpressure: `.pipe()` reads data regardless of the receiver's speed"
+        text_en: "Only `pipeline()` supports backpressure: `.pipe()` reads data regardless of the destination's speed"
       - text: "`.pipe()` застарів і видаляється у новіших версіях, тому `pipeline()` — його єдина заміна"
         text_en: "`.pipe()` is deprecated and removed in newer versions, so `pipeline()` is its only replacement"
     explanation: >
@@ -281,7 +280,7 @@ questions:
         setTimeout(() => console.log('still alive'), 100);
     options:
       - text: "Необроблене відхилення стає винятком: процес завершується з ненульовим кодом, `still alive` не виведеться"
-        text_en: "It becomes an exception: the process exits with a non-zero code, and `still alive` is not printed"
+        text_en: "The unhandled rejection becomes an exception: the process exits with a non-zero code, and `still alive` is not printed"
         correct: true
       - text: "Процес лише виведе попередження в `stderr`, продовжить роботу й виведе `still alive` через 100 мс"
         text_en: "The process only prints a warning to `stderr`, keeps running, and prints `still alive` after 100 ms"

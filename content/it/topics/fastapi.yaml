@@ -9,6 +9,7 @@ questions:
     level: junior
     type: single
     text: Що поверне FastAPI на запит `GET /items/abc`, якщо обробник оголошено так?
+    text_en: What does FastAPI return for `GET /items/abc` if the handler is declared like this?
     code:
       lang: python
       source: |
@@ -17,13 +18,19 @@ questions:
             return {"item_id": item_id}
     options:
       - text: Відповідь 422 з описом помилки валідації, обробник не викликається
+        text_en: A 422 response describing the validation error; the handler is not called
         correct: true
       - text: Відповідь 404, бо маршрут `/items/abc` не збігається зі шляхом
+        text_en: A 404 response, because the route `/items/abc` does not match the path
       - text: Відповідь 200, де `item_id` дорівнює `0`
+        text_en: A 200 response where `item_id` equals `0`
       - text: Відповідь 500, бо перетворення `"abc"` на `int` кидає `ValueError`
+        text_en: A 500 response, because converting `"abc"` to `int` raises `ValueError`
     explanation: >
       Анотація `int` у параметрі шляху змушує FastAPI перевіряти значення через Pydantic. Якщо перетворити рядок не вдалося, клієнт одразу отримує
       422 із полем `detail`, а ваш код не виконується.
+    explanation_en: >
+      The `int` annotation on the path parameter makes FastAPI validate the value with Pydantic. If the string cannot be converted, the client immediately gets 422 with a `detail` field, and your code does not run.
     sources:
       - https://fastapi.tiangolo.com/tutorial/path-params/#data-validation
 
@@ -31,6 +38,7 @@ questions:
     level: junior
     type: multiple
     text: Які параметри функції FastAPI сприйме як query-параметри, а не як частину шляху чи тіла?
+    text_en: Which function parameters will FastAPI treat as query parameters, rather than part of the path or body?
     code:
       lang: python
       source: |
@@ -42,14 +50,20 @@ questions:
             ...
     options:
       - text: "`q`, бо має простий тип і відсутній у шляху"
+        text_en: "`q`, as a simple type absent from the path"
         correct: true
       - text: "`limit`, бо має простий тип і типове значення"
+        text_en: "`limit`, as a simple type with a default value"
         correct: true
       - text: "`user_id`, бо його оголошено в шляху"
+        text_en: "`user_id`, because it is declared in the path"
       - text: "`item`, бо він не має типового значення"
+        text_en: "`item`, because it has no default value"
     explanation: >
       Параметр, якого немає в шляху й тип якого простий (`str`, `int` тощо), стає query-параметром. `user_id` береться зі шляху, а `item`
       є моделлю Pydantic, тому читається з тіла запиту.
+    explanation_en: >
+      A parameter that is not in the path and has a simple type (`str`, `int`, etc.) becomes a query parameter. `user_id` comes from the path, while `item` is a Pydantic model, so it is read from the request body.
     sources:
       - https://fastapi.tiangolo.com/tutorial/query-params/
       - https://fastapi.tiangolo.com/tutorial/body-multiple-params/
@@ -58,14 +72,21 @@ questions:
     level: junior
     type: single
     text: Де за замовчуванням FastAPI віддає автоматично згенеровану схему OpenAPI?
+    text_en: Where does FastAPI serve the automatically generated OpenAPI schema by default?
     options:
       - text: За адресою `/openapi.json`, а інтерактивна документація лежить на `/docs` і `/redoc`
+        text_en: At `/openapi.json`, while the interactive documentation is at `/docs` and `/redoc`
         correct: true
       - text: За адресою `/swagger.json`, а Swagger UI відкривається на `/swagger`
+        text_en: At `/swagger.json`, while Swagger UI opens at `/swagger`
       - text: За адресою `/docs/schema`, а ReDoc підключається окремим пакетом
+        text_en: At `/docs/schema`, while ReDoc is plugged in as a separate package
       - text: Схема з'являється лише після виклику `app.openapi_export()` під час запуску
+        text_en: The schema appears only after calling `app.openapi_export()` at startup
     explanation: >
       FastAPI будує схему з оголошених маршрутів і моделей та віддає її як JSON. Swagger UI і ReDoc читають саме цей файл.
+    explanation_en: >
+      FastAPI builds the schema from the declared routes and models and serves it as JSON. Swagger UI and ReDoc read exactly this file.
     sources:
       - https://fastapi.tiangolo.com/tutorial/first-steps/#openapi
       - https://fastapi.tiangolo.com/tutorial/metadata/#docs-urls
@@ -74,6 +95,7 @@ questions:
     level: junior
     type: single
     text: Що робить `Depends(get_db)` у параметрі обробника?
+    text_en: What does `Depends(get_db)` do in a handler parameter?
     code:
       lang: python
       source: |
@@ -82,13 +104,19 @@ questions:
             return db.query(User).all()
     options:
       - text: Викликає `get_db` для кожного запиту й передає в обробник її результат
+        text_en: Calls `get_db` for each request and passes its result to the handler
         correct: true
       - text: Один раз під час старту застосунку створює `db` і передає той самий об'єкт у кожен запит
+        text_en: Creates `db` once at application startup and passes the same object to every request
       - text: Додає `get_db` до OpenAPI як окремий маршрут, який можна викликати напряму
+        text_en: Adds `get_db` to OpenAPI as a separate route that can be called directly
       - text: Імпортує `get_db` із модуля й підставляє саму функцію без її виклику
+        text_en: Imports `get_db` from the module and substitutes the function itself without calling it
     explanation: >
       `Depends` — це система впровадження залежностей FastAPI: перед обробником фреймворк сам викликає вказану функцію (з власними параметрами)
       й підставляє те, що вона повернула. Так виносять спільну логіку, наприклад сесію БД чи перевірку токена.
+    explanation_en: >
+      `Depends` is FastAPI's dependency injection system: before the handler, the framework itself calls the given function (with its own parameters) and injects what it returned. This is how shared logic is factored out, such as a DB session or a token check.
     sources:
       - https://fastapi.tiangolo.com/tutorial/dependencies/
 
@@ -96,6 +124,7 @@ questions:
     level: middle
     type: single
     text: Що станеться з іншими запитами, поки виконується цей ендпоінт у одному воркері Uvicorn?
+    text_en: What happens to other requests while this endpoint runs in a single Uvicorn worker?
     code:
       lang: python
       source: |
@@ -105,13 +134,19 @@ questions:
             return {"ok": True}
     options:
       - text: Цикл подій заблоковано на 5 секунд, тож інші запити цього воркера чекають
+        text_en: The event loop is blocked for 5 seconds, so other requests of this worker wait
         correct: true
       - text: Нічого, бо FastAPI сам запускає `async def` обробники в окремому потоці
+        text_en: Nothing, because FastAPI itself runs `async def` handlers in a separate thread
       - text: Нічого, бо `time.sleep` усередині `async def` автоматично стає неблокувальним
+        text_en: Nothing, because `time.sleep` inside `async def` automatically becomes non-blocking
       - text: Тільки запити до `/report` чекатимуть, а решта маршрутів обслуговується паралельно
+        text_en: Only requests to `/report` wait, while the other routes are served in parallel
     explanation: >
       `async def` виконується прямо в циклі подій, а `time.sleep` синхронний і нічого не віддає назад. Через `def` FastAPI запускав би обробник
       у пулі потоків; в `async def` блокувальні виклики треба замінювати на `await asyncio.sleep` чи `await` для асинхронних бібліотек.
+    explanation_en: >
+      An `async def` handler runs directly in the event loop, and `time.sleep` is synchronous and yields nothing back. With a plain `def`, FastAPI would run the handler in a thread pool; in `async def`, blocking calls must be replaced with `await asyncio.sleep` or `await` on async libraries.
     sources:
       - https://fastapi.tiangolo.com/async/#path-operation-functions
 
@@ -119,6 +154,7 @@ questions:
     level: middle
     type: single
     text: Що відбудеться з полем `password` у відповіді цього ендпоінта?
+    text_en: What happens to the `password` field in this endpoint's response?
     code:
       lang: python
       source: |
@@ -134,13 +170,19 @@ questions:
             return user
     options:
       - text: "Його не буде: FastAPI відфільтрує відповідь за `UserOut`"
+        text_en: "It will not be there: FastAPI filters the response by `UserOut`"
         correct: true
       - text: Воно потрапить у відповідь, бо повернуто об'єкт `UserIn`
+        text_en: It will be in the response, because a `UserIn` object is returned
       - text: Воно потрапить у відповідь, але лише якщо додати `response_model_exclude_unset=True`
+        text_en: It will be in the response, but only if `response_model_exclude_unset=True` is added
       - text: FastAPI поверне 500, бо тип значення, що повертається, не збігається з `UserOut`
+        text_en: FastAPI will return 500, because the returned value type does not match `UserOut`
     explanation: >
       Із `response_model` FastAPI валідує повернуте значення за цією моделлю й серіалізує лише її поля, тому зайві дані не витікають.
       Помилка виникла б, лише якби не вистачало обов'язкових полів `UserOut`.
+    explanation_en: >
+      With `response_model`, FastAPI validates the returned value against that model and serializes only its fields, so extra data does not leak. An error would occur only if required `UserOut` fields were missing.
     sources:
       - https://fastapi.tiangolo.com/tutorial/response-model/#add-an-output-model
 
@@ -148,6 +190,7 @@ questions:
     level: middle
     type: single
     text: Скільки разів за один запит буде викликано `get_settings`?
+    text_en: How many times will `get_settings` be called during one request?
     code:
       lang: python
       source: |
@@ -161,13 +204,19 @@ questions:
         def root(a = Depends(get_a), b = Depends(get_b)): ...
     options:
       - text: "Один раз: результат кешується в межах запиту й передається обом залежностям"
+        text_en: "Once: the result is cached within the request and passed to both dependencies"
         correct: true
       - text: Двічі, бо кожне `Depends` викликає функцію окремо
+        text_en: Twice, because each `Depends` calls the function separately
       - text: Один раз за весь час роботи застосунку, далі береться значення з кешу процесу
+        text_en: Once for the whole lifetime of the application, then the value comes from a process cache
       - text: Тричі, бо `Depends(get_settings)` викликається ще й в обробнику `root`
+        text_en: Three times, because `Depends(get_settings)` is also called in the `root` handler
     explanation: >
       Якщо та сама залежність потрібна кільком іншим залежностям в одному запиті, FastAPI викликає її лише раз і повторно використовує значення.
       Кешування вимикає `Depends(get_settings, use_cache=False)`. Між запитами кешу немає.
+    explanation_en: >
+      If the same dependency is needed by several other dependencies in one request, FastAPI calls it only once and reuses the value. `Depends(get_settings, use_cache=False)` disables caching. There is no cache between requests.
     sources:
       - https://fastapi.tiangolo.com/tutorial/dependencies/sub-dependencies/#using-the-same-dependency-multiple-times
 
@@ -175,16 +224,23 @@ questions:
     level: middle
     type: multiple
     text: Що відбувається, коли тіло запиту не проходить валідацію за моделлю Pydantic в обробнику FastAPI?
+    text_en: What happens when the request body fails validation against a Pydantic model in a FastAPI handler?
     options:
       - text: Клієнт отримує відповідь 422 із `detail`
+        text_en: The client receives a 422 response with `detail`
         correct: true
       - text: Код обробника не виконується
+        text_en: The handler code does not run
         correct: true
       - text: Клієнт отримує статус 400
+        text_en: The client receives a 400 status
       - text: Обробник викликається, а поля стають `None`
+        text_en: The handler is called, and the fields become `None`
     explanation: >
       Під час розбору запиту FastAPI кидає `RequestValidationError`, який типовий обробник перетворює на відповідь 422 зі списком помилок у `detail`.
       До коду обробника справа не доходить, а статус можна змінити лише власним обробником винятку.
+    explanation_en: >
+      While parsing the request, FastAPI raises `RequestValidationError`, which the default handler turns into a 422 response with a list of errors in `detail`. The handler code is never reached, and the status can be changed only by a custom exception handler.
     sources:
       - https://fastapi.tiangolo.com/tutorial/handling-errors/#override-request-validation-exceptions
 
@@ -194,6 +250,8 @@ questions:
     text: >
       FastAPI 0.163, Pydantic 2.14. Ту саму модель `Item` використано і як тіло запиту, і як `response_model`, а в OpenAPI з'явилися дві схеми, `Item-Input` та `Item-Output`.
       Що їх породжує?
+    text_en: >
+      FastAPI 0.163, Pydantic 2.14. The same `Item` model is used both as the request body and as the `response_model`, and two schemas, `Item-Input` and `Item-Output`, appeared in OpenAPI. What produces them?
     code:
       lang: python
       source: |
@@ -203,13 +261,19 @@ questions:
             description: str | None = None
     options:
       - text: "Налаштування моделі: у вихідній схемі поле з типовим значенням стає обов'язковим, а у вхідній ні"
+        text_en: "A model setting: in the output schema a field with a default becomes required, while in the input schema it does not"
         correct: true
       - text: FastAPI завжди ділить схему моделі, яку використано і на вході, і на виході, незалежно від налаштувань
+        text_en: FastAPI always splits the schema of a model used both for input and output, regardless of settings
       - text: "Тип `str | None` у `description`: кожне поле з `None` дає окремі вхідну й вихідну схеми"
+        text_en: "The `str | None` type in `description`: every field with `None` produces separate input and output schemas"
       - text: Параметр `separate_input_output_schemas=True` у `FastAPI(...)`, який типово вимкнено
+        text_en: The `separate_input_output_schemas=True` parameter in `FastAPI(...)`, which is off by default
     explanation: >
       Без цього налаштування схема лишається одна, `Item`, і `description` необов'язкове.
       Із ним виходить `Item-Output`, де типове поле обов'язкове, бо у відповіді воно завжди є. `separate_input_output_schemas=False` повертає одну схему.
+    explanation_en: >
+      Without this setting the schema stays single, `Item`, and `description` is optional. With it you get `Item-Output`, where the field with a default is required, because it is always present in the response. `separate_input_output_schemas=False` brings back a single schema.
     sources:
       - https://docs.pydantic.dev/latest/api/config/#pydantic.config.ConfigDict.json_schema_serialization_defaults_required
       - https://fastapi.tiangolo.com/how-to/separate-openapi-schemas/
@@ -218,6 +282,7 @@ questions:
     level: senior
     type: single
     text: Як у FastAPI поводяться події запуску, якщо в застосунку одночасно задано `lifespan` і обробник `@app.on_event("startup")`?
+    text_en: How does FastAPI behave with startup events if both `lifespan` and an `@app.on_event("startup")` handler are set in the application?
     code:
       lang: python
       source: |
@@ -234,13 +299,19 @@ questions:
             print("startup event")
     options:
       - text: Виконується лише `lifespan`, а `on_event`-обробник ігнорується
+        text_en: Only `lifespan` runs, and the `on_event` handler is ignored
         correct: true
       - text: Спершу виконується `startup event`, потім `lifespan start`
+        text_en: "`startup event` runs first, then `lifespan start`"
       - text: Виконуються обидва, у порядку оголошення в коді
+        text_en: Both run, in the order they are declared in the code
       - text: Запуск завершується помилкою, бо два механізми не можна поєднувати
+        text_en: Startup fails with an error, because the two mechanisms cannot be combined
     explanation: >
       Якщо передано `lifespan`, обробники `startup` і `shutdown` не викликаються: використовують або одне, або інше. Рекомендований спосіб — `lifespan`,
       де код до `yield` виконується при старті, а після нього при зупинці.
+    explanation_en: >
+      If `lifespan` is passed, the `startup` and `shutdown` handlers are not called: you use one or the other. The recommended way is `lifespan`, where the code before `yield` runs at startup and the code after it at shutdown.
     sources:
       - https://fastapi.tiangolo.com/advanced/events/#alternative-events-deprecated
 
@@ -248,15 +319,22 @@ questions:
     level: senior
     type: single
     text: Чому на `BackgroundTasks` у FastAPI не варто покладатися, якщо задачу не можна втратити?
+    text_en: Why should you not rely on `BackgroundTasks` in FastAPI if the task must not be lost?
     options:
       - text: Задача живе в процесі запиту, тож перезапуск воркера втрачає її без повторів
+        text_en: The task lives in the request process, so a worker restart loses it without retries
         correct: true
       - text: Вона починає виконуватися до відправлення відповіді й затримує її клієнтові
+        text_en: It starts running before the response is sent and delays it for the client
       - text: Вона не може бути `async def`, лише звичайною `def`
+        text_en: It cannot be `async def`, only a plain `def`
       - text: Вона не має доступу до параметрів запиту, які були в обробнику
+        text_en: It has no access to the request parameters that were in the handler
     explanation: >
       Фонові задачі запускаються після відправки відповіді в тому ж процесі, без черги, збереження стану й повторів. Для важких чи критичних завдань
       документація радить окремі інструменти на кшталт Celery, а `BackgroundTasks` лишає для невеликих справ, як-от лист-сповіщення.
+    explanation_en: >
+      Background tasks run after the response is sent, in the same process, with no queue, state persistence, or retries. For heavy or critical jobs the documentation recommends separate tools such as Celery, and leaves `BackgroundTasks` for small things like a notification email.
     sources:
       - https://fastapi.tiangolo.com/tutorial/background-tasks/#caveat
 
@@ -264,6 +342,7 @@ questions:
     level: senior
     type: multiple
     text: Які твердження про залежності з `yield` у сучасному FastAPI правильні?
+    text_en: Which statements about dependencies with `yield` in modern FastAPI are true?
     code:
       lang: python
       source: |
@@ -275,15 +354,22 @@ questions:
                 session.close()
     options:
       - text: Типово код після `yield` виконується вже після відправлення відповіді клієнтові
+        text_en: By default, the code after `yield` runs after the response has been sent to the client
         correct: true
       - text: "`scope=\"function\"` закриває ресурс після обробника, але до відправлення відповіді"
+        text_en: "`scope=\"function\"` closes the resource after the handler, but before the response is sent"
         correct: true
       - text: Якщо залежність B залежить від A, то завершальний код B виконується раніше, ніж A
+        text_en: If dependency B depends on A, B's exit code runs before A's
         correct: true
       - text: Без `try`/`finally` код після `yield` виконається, навіть коли обробник кинув виняток
+        text_en: Without `try`/`finally`, the code after `yield` runs even when the handler raised an exception
       - text: Код після `yield` може змінити статус відповіді, яку вже відправлено
+        text_en: The code after `yield` can change the status of a response that has already been sent
     explanation: >
       Завершальний код іде після відправлення відповіді, якщо не задати `scope="function"`, а залежності закриваються у зворотному порядку.
       Виняток обробника повертається у `yield` як виняток, тож без `try`/`finally` прибирання не гарантоване, а відправлену відповідь вже не змінити.
+    explanation_en: >
+      The exit code runs after the response is sent unless `scope="function"` is set, and dependencies are closed in reverse order. A handler exception is re-raised at the `yield`, so without `try`/`finally` cleanup is not guaranteed, and a response that was already sent cannot be changed.
     sources:
       - https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/

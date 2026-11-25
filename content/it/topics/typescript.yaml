@@ -3,7 +3,6 @@ title: TypeScript
 title_en: TypeScript
 description: Типи й інтерфейси, generics, union/intersection, narrowing, utility types, strict.
 description_en: Types and interfaces, generics, union/intersection, narrowing, utility types, strict.
-draft_en: true
 questions:
   - id: typescript-001
     level: junior
@@ -169,7 +168,7 @@ questions:
         text_en: "`type` can name a union such as `string | number`, while `interface` cannot"
         correct: true
       - text: "Клас може виконувати `implements` і для інтерфейсу, і для псевдоніма об'єктного типу"
-        text_en: "A class can `implements` both an interface and an alias of an object type"
+        text_en: "A class can use `implements` with both an interface and an object type alias"
         correct: true
       - text: "Повторне оголошення `type` з тим самим іменем теж зливається з першим"
         text_en: "Redeclaring a `type` with the same name also merges it with the first one"
@@ -251,9 +250,9 @@ questions:
       - text: "Обидва скомпілюються: `K` просто виводиться як `string`, а `ok` має тип `string | number`"
         text_en: "Both compile: `K` is simply inferred as `string`, and `ok` has type `string | number`"
       - text: "Не скомпілюється `get(user, 'name')`: літерал `'name'` не можна передати як `string`"
-        text_en: "`get(user, 'name')` fails: the literal `'name'` cannot be passed as `string`"
+        text_en: "`get(user, 'name')` fails to compile: the literal `'name'` cannot be passed as `string`"
       - text: "Не скомпілюється `get(user, 'nme')`, а `ok` отримає тип `string | number`, як значення будь-якого поля"
-        text_en: "`get(user, 'nme')` fails, and `ok` gets type `string | number`, like the value of any field"
+        text_en: "`get(user, 'nme')` fails to compile, and `ok` gets type `string | number`, like the value of any field"
     explanation: >
       Обмеження `K extends keyof T` дозволяє лише ключі, що є в `T`. Тип результату `T[K]` залежить від конкретного ключа, тому для `'name'` це `string`,
       а не об'єднання типів усіх полів.
@@ -317,7 +316,7 @@ questions:
       - text: "`as T` перевіряє значення під час виконання й кидає виняток, якщо воно не відповідає `T`"
         text_en: "`as T` checks the value at run time and throws if it does not match `T`"
       - text: "Типи `as` дозволяють довільне приведення: `5 as string` компілюється без помилок"
-        text_en: "`as` types allow arbitrary casts: `5 as string` compiles without errors"
+        text_en: "Type assertions with `as` allow arbitrary casts: `5 as string` compiles without errors"
     explanation: >
       Усі ці конструкції діють лише на рівні типів і перевірок не генерують. `satisfies` на відміну від `as` зберігає точніший вивідний тип
       (наприклад, `number[]` замість об'єднання). `as` не пропускає типи без перетину: `5 as string` дає помилку, потрібен проміжний `unknown`.
