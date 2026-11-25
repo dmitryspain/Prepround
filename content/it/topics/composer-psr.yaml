@@ -3,7 +3,6 @@ title: Composer і PSR
 title_en: Composer and PSR
 description: Автозавантаження, версії залежностей, PSR-4/7/12/15.
 description_en: Autoloading, dependency versions, PSR-4/7/12/15.
-draft_en: true
 questions:
   - id: composer-psr-001
     level: junior
@@ -212,15 +211,15 @@ questions:
         text_en: Packages from the `require-dev` section do not end up in the `vendor/` directory
         correct: true
       - text: Правила `autoload-dev` кореневого пакета не потрапляють у згенерований автозавантажувач
-        text_en: The root package's `autoload-dev` rules do not end up in the generated autoloader file
+        text_en: The root package's `autoload-dev` rules do not end up in the generated autoloader
         correct: true
       - text: Секція `packages-dev` у `composer.lock` лишається без змін
-        text_en: The `packages-dev` section in `composer.lock` stays exactly unchanged
+        text_en: The `packages-dev` section in `composer.lock` stays unchanged
         correct: true
       - text: Записи `require-dev` видаляються з `composer.json`, щоб їх не поставили випадково
-        text_en: The `require-dev` entries are removed from `composer.json` to avoid accidents
+        text_en: The `require-dev` entries are removed from `composer.json` to avoid accidental installs
       - text: Класи з `autoload-dev` лишаються доступними, бо їх уже зберіг classmap
-        text_en: Classes from `autoload-dev` remain available, the classmap saved them
+        text_en: Classes from `autoload-dev` remain available, as the classmap already saved them
     explanation: >
       Прапорець `--no-dev` впливає лише на те, що ставиться у `vendor/` і що потрапляє в автозавантажувач, тому тестові класи з `autoload-dev` у такому середовищі не завантажуються. Файли `composer.json` і `composer.lock` команда `install` не змінює, тож наступний `install` без прапорця знову поставить dev-пакети.
     explanation_en: >

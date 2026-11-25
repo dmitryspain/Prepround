@@ -3,7 +3,6 @@ title: Тестування в PHP
 title_en: Testing in PHP
 description: PHPUnit, моки, data providers.
 description_en: PHPUnit, mocks, data providers.
-draft_en: true
 questions:
   - id: phpunit-001
     level: junior
@@ -239,10 +238,10 @@ questions:
       In PHPUnit 13.4, `testA` fails on `assertTrue(false)`, and `testB` has `#[Depends('testA')]`. What status will `testB` get?
     options:
       - text: Його пропустять без запуску, бо залежність не пройшла
-        text_en: It is skipped unrun, as its dependency did not pass
+        text_en: It is skipped without running, as its dependency did not pass
         correct: true
       - text: Він запуститься й пройде, якщо в ньому самому все гаразд
-        text_en: It runs and passes if everything in it is fine
+        text_en: It runs and passes if everything in the test itself is fine
       - text: Він упаде з тією самою помилкою, що й `testA`
         text_en: It fails with the same error as `testA`
       - text: Він запуститься, але буде позначений як risky
@@ -264,7 +263,7 @@ questions:
       The `Limiter` interface has the method `rate(string $key): int`. In PHPUnit 13.4 the stub is configured as `$stub->method('rate')->willReturnMap([['a', 5], ['b', 7]])`. What happens on `$stub->rate('zzz')`?
     options:
       - text: Для невідомого ключа повернеться `null`, а оскільки тип результату `int`, виникне `TypeError`
-        text_en: For an unknown key `null` is returned, so the `int` return type raises a `TypeError`
+        text_en: For an unknown key `null` is returned, and since the return type is `int`, a `TypeError` occurs
         correct: true
       - text: Повернеться `0`, бо PHPUnit підставить значення за замовчуванням для типу `int`
         text_en: "`0` is returned, because PHPUnit substitutes the default value for the `int` type"

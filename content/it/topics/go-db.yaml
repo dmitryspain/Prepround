@@ -3,7 +3,6 @@ title: Робота з БД у Go
 title_en: Working with databases in Go
 description: database/sql, sqlx, GORM, пул з'єднань, транзакції.
 description_en: database/sql, sqlx, GORM, connection pool, transactions.
-draft_en: true
 questions:
   - id: go-db-001
     level: junior
@@ -29,7 +28,7 @@ questions:
     explanation: >
       `sql.Open` лише перевіряє аргументи й готує пул, а підключення відкладає до першого запиту. Тому помилки немає, а недоступність сервера виявить `Ping`.
     explanation_en: >
-      `sql.Open` only validates its arguments and sets up the pool; it defers connecting until the first query. So there is no error, and an unreachable server is only detected by `Ping`.
+      `sql.Open` only validates its arguments and sets up the pool; it defers connecting until the first query. So there is no error, and an unreachable server is detected by `Ping`.
     sources:
       - https://pkg.go.dev/database/sql#Open
   - id: go-db-002

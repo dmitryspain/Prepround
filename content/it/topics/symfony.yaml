@@ -3,7 +3,6 @@ title: Symfony
 title_en: Symfony
 description: Бандли, DI-контейнер, події, форми, конфігурація.
 description_en: Bundles, DI container, events, forms, configuration.
-draft_en: true
 questions:
   - id: symfony-001
     level: junior
@@ -109,7 +108,7 @@ questions:
       - text: '`if ($form->isSubmitted())`, бо відправлена форма вже пройшла валідацію'
         text_en: '`if ($form->isSubmitted())`, because a submitted form has already passed validation'
       - text: '`if ($request->isMethod(''POST''))`, бо форма сама визначає дані за методом'
-        text_en: '`if ($request->isMethod(''POST''))`, because the form determines the data by the method itself'
+        text_en: '`if ($request->isMethod(''POST''))`, because the form itself determines the data by the method'
     explanation: >
       Спершу треба впевнитись, що форму відправлено, і лише потім питати про валідність. Виклик `isValid()` на невідправленій формі в сучасних версіях кидає `LogicException`, а не повертає `false`.
     explanation_en: >
@@ -217,7 +216,7 @@ questions:
     level: senior
     type: single
     text: 'Слухач події `kernel.request` у Symfony 8.1 пише рядок аудиту на кожен запит. Після того як у шаблоні з''явився `{{ render(controller(''App\\Controller\\Widget::box'')) }}`, на одне відкриття сторінки з''являється два рядки. Що це і як виправити?'
-    text_en: 'A `kernel.request` event listener in Symfony 8.1 writes an audit line for every request. After `{{ render(controller(''App\\Controller\\Widget::box'')) }}` appeared in a template, two lines appear per page open. What is this and how do you fix it?'
+    text_en: 'A `kernel.request` event listener in Symfony 8.1 writes an audit line for every request. After `{{ render(controller(''App\\Controller\\Widget::box'')) }}` appeared in a template, two lines appear per page load. What is this and how do you fix it?'
     options:
       - text: '`render(controller())` виконує підзапит, який теж диспетчеризує `kernel.request`, тож слухач має вийти за `!$event->isMainRequest()`'
         text_en: '`render(controller())` runs a sub-request that also dispatches `kernel.request`, so the listener must return early on `!$event->isMainRequest()`'

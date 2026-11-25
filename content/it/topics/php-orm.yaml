@@ -3,7 +3,6 @@ title: Eloquent і Doctrine
 title_en: Eloquent and Doctrine
 description: Active Record vs Data Mapper, зв'язки, міграції, N+1.
 description_en: Active Record vs Data Mapper, relationships, migrations, N+1.
-draft_en: true
 questions:
   - id: php-orm-001
     level: junior
@@ -54,7 +53,7 @@ questions:
     explanation: >
       Eloquent поєднує дані й збереження в одному об'єкті (Active Record), а Doctrine відокремлює сутність від збереження (Data Mapper): сутність нічого не знає про базу, а мапінг і запити виконує `EntityManager`. Базового класу сутності Doctrine не вимагає, мапінг задають атрибутами, а Eloquent не потребує репозиторіїв.
     explanation_en: >
-      Eloquent combines data and persistence in one object (Active Record), while Doctrine separates the entity from persistence (Data Mapper): the entity knows nothing about the database, and the `EntityManager` performs mapping and queries. Doctrine does not require an entity base class, since mapping is defined with attributes, and Eloquent does not need repositories.
+      Eloquent combines data and persistence in one object (Active Record), while Doctrine separates the entity from persistence (Data Mapper): the entity knows nothing about the database, and the `EntityManager` performs mapping and queries. Doctrine does not require an entity base class, mapping is defined with attributes, and Eloquent does not need repositories.
     sources:
       - https://laravel.com/docs/13.x/eloquent#introduction
       - https://www.doctrine-project.org/projects/doctrine-orm/en/3.8/tutorials/getting-started.html
@@ -234,7 +233,7 @@ questions:
     level: senior
     type: single
     text: 'Команда Laravel 13 позначає прочитаними 100 000 записів. Після запуску частина лишилася з `read = false`. У чому причина і як виправити?'
-    text_en: A Laravel 13 team marks 100,000 records as read. After the run, some are still `read = false`. What is the cause and how do you fix it?
+    text_en: A Laravel 13 command marks 100,000 records as read. After the run, some still have `read = false`. What is the cause and how do you fix it?
     code:
       lang: php
       source: |
@@ -246,7 +245,7 @@ questions:
         });
     options:
       - text: '`chunk` бере сторінки через offset, а оброблені рядки випадають з умови, тож замінити на `chunkById`'
-        text_en: '`chunk` pages by offset, and processed rows leave the condition, so use `chunkById`'
+        text_en: '`chunk` pages by offset, and processed rows no longer match the condition, so use `chunkById`'
         correct: true
       - text: Моделі кешуються між чанками, тож перед кожним циклом потрібно викликати `fresh()`
         text_en: Models are cached between chunks, so call `fresh()` before each loop

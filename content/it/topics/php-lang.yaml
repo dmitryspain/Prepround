@@ -3,7 +3,6 @@ title: PHP 8
 title_en: PHP 8
 description: Типи, ООП, traits, enums, readonly, match, винятки.
 description_en: Types, OOP, traits, enums, readonly, match, exceptions.
-draft_en: true
 questions:
   - id: php-lang-001
     level: junior
@@ -17,7 +16,7 @@ questions:
         var_dump("abc" == 0);
     options:
       - text: '`bool(false)`, бо число зводиться до рядка і порівнюється як рядки'
-        text_en: '`bool(false)`, because the number becomes a string, compared as strings'
+        text_en: '`bool(false)`, because the number is cast to a string for comparison'
         correct: true
       - text: '`bool(true)`, бо нечисловий рядок перетворюється на `0`'
         text_en: '`bool(true)`, because a non-numeric string is converted to `0`'
@@ -83,7 +82,7 @@ questions:
     level: junior
     type: multiple
     text: 'Який із викликів кидає `TypeError` у PHP 8.5? (позначте всі)'
-    text_en: 'Which call throws `TypeError` in PHP 8.5? (select all)'
+    text_en: 'Which calls throw `TypeError` in PHP 8.5? (select all)'
     code:
       lang: php
       source: |
@@ -180,7 +179,7 @@ questions:
     explanation: >
       Кожен клас, що підключає trait, отримує власну копію статичної властивості, тому `A` і `B` лічать окремо. Підклас `C` успадковує статику від `A` і ділить її з ним, тож три виклики `inc()` для `A` і `C` дають `3`, а для `B` — `1`.
     explanation_en: >
-      Each class that uses a trait gets its own copy of the static property, so `A` and `B` count separately. Subclass `C` inherits the static from `A` and shares it, so three calls of `inc()` on `A` and `C` give `3`, while `B` gives `1`.
+      Each class that uses a trait gets its own copy of the static property, so `A` and `B` count separately. Subclass `C` inherits the static property from `A` and shares it, so three calls of `inc()` on `A` and `C` give `3`, while `B` gives `1`.
     sources:
       - https://www.php.net/manual/en/language.oop5.traits.php#language.oop5.traits.static
   - id: php-lang-007
@@ -205,7 +204,7 @@ questions:
     explanation: >
       `match` порівнює суворо, повертає значення і не має провалювання між гілками, тому `break` не потрібен. Відсутність збігу без `default` дає `UnhandledMatchError`. Провалювання й нестроге порівняння — риси `switch`.
     explanation_en: >
-      `match` compares strictly, returns a value and has no fall-through between arms, so `break` is not needed. No match without `default` gives `UnhandledMatchError`. Fall-through and loose comparison are traits of `switch`.
+      `match` compares strictly, returns a value and has no fall-through between arms, so `break` is not needed. No match without `default` gives `UnhandledMatchError`. Fall-through and loose comparison are characteristic of `switch`.
     sources:
       - https://www.php.net/manual/en/control-structures.match.php
   - id: php-lang-008
@@ -248,7 +247,7 @@ questions:
     text_en: 'Which statements about property hooks (PHP 8.4+) are true? (select all)'
     options:
       - text: "Властивість з одним `get`-хуком, що не звертається до себе, віртуальна: сховища в об'єкті немає, а присвоєння кидає `Error`"
-        text_en: "A property with a single `get` hook that does not reference itself is virtual: the object has no storage, and assignment throws `Error`"
+        text_en: "A property with a single `get` hook that does not reference itself is virtual: it has no backing value, and assignment throws `Error`"
         correct: true
       - text: Інтерфейс може оголосити властивість з вимогою `{ get; }`, а клас виконує її хуком
         text_en: An interface can declare a property requiring `{ get; }`, and a class satisfies it with a hook
