@@ -9,14 +9,21 @@ questions:
     level: junior
     type: single
     text: Що означає обмеження версії `^3.2.1` у розділі `require` файла `composer.json`?
+    text_en: What does the version constraint `^3.2.1` mean in the `require` section of the `composer.json` file?
     options:
       - text: 'Будь-яка версія від `3.2.1` до, але не включно з, `4.0.0`'
+        text_en: 'Any version from `3.2.1` up to, but not including, `4.0.0`'
         correct: true
       - text: 'Будь-яка версія від `3.2.1` до, але не включно з, `3.3.0`'
+        text_en: 'Any version from `3.2.1` up to, but not including, `3.3.0`'
       - text: 'Будь-яка версія від `3.2.1` і вище, включно з `4.x` та `5.x`'
+        text_en: 'Any version from `3.2.1` and above, including `4.x` and `5.x`'
       - text: 'Лише рівно `3.2.1`, бо `^` фіксує всі три цифри версії'
+        text_en: 'Exactly `3.2.1` only, because `^` pins all three digits of the version'
     explanation: >
       Знак `^` дозволяє оновлення, які за семантичним версіонуванням не ламають сумісність, тобто все до наступної мажорної версії. Варіант із `<3.3.0` описує обмеження `~3.2.1`, а не `^`.
+    explanation_en: >
+      The `^` sign allows updates that, under semantic versioning, do not break compatibility, that is, everything up to the next major version. The option with `<3.3.0` describes the constraint `~3.2.1`, not `^`.
     sources:
       - https://getcomposer.org/doc/articles/versions.md#caret-version-range-
   - id: composer-psr-002
@@ -24,14 +31,22 @@ questions:
     type: single
     text: >
       У репозиторії закомічено `composer.lock`. Відтоді вийшов новий патч-реліз залежності, який підпадає під обмеження в `composer.json`. Колега клонує репозиторій і виконує `composer install`. Що станеться?
+    text_en: >
+      A `composer.lock` is committed to the repository. Since then, a new patch release of a dependency has come out that falls within the constraint in `composer.json`. A colleague clones the repository and runs `composer install`. What happens?
     options:
       - text: Composer встановить саме ті версії, що записані в `composer.lock`, нового патча серед них не буде
+        text_en: Composer installs exactly the versions recorded in `composer.lock`, and the new patch is not among them
         correct: true
       - text: Composer встановить найновіші версії, які дозволяє `composer.json`, і перепише `composer.lock`
+        text_en: Composer installs the newest versions that `composer.json` allows and rewrites `composer.lock`
       - text: Composer зупиниться з помилкою, бо lock-файл старіший за останній реліз залежності
+        text_en: Composer stops with an error because the lock file is older than the latest release of the dependency
       - text: Composer встановить нову версію залежності, але лише для пакетів із розділу `require-dev`
+        text_en: Composer installs the new version of the dependency, but only for packages in the `require-dev` section
     explanation: >
       Коли lock-файл є, `install` читає з нього точні версії, тож у всіх розробників і на сервері набір пакетів однаковий. Нові версії підтягує лише `composer update`, який і оновлює lock-файл.
+    explanation_en: >
+      When a lock file exists, `install` reads the exact versions from it, so every developer and the server get the same set of packages. Only `composer update` pulls in new versions, and it also updates the lock file.
     sources:
       - https://getcomposer.org/doc/01-basic-usage.md#commit-your-composer-lock-file-to-version-control
   - id: composer-psr-003
@@ -39,6 +54,8 @@ questions:
     type: single
     text: >
       У `composer.json` задано автозавантаження, показане нижче. У якому файлі Composer шукатиме клас `App\Http\Kernel`?
+    text_en: >
+      `composer.json` defines the autoloading shown below. In which file will Composer look for the class `App\Http\Kernel`?
     code:
       lang: json
       source: |
@@ -49,12 +66,18 @@ questions:
         }
     options:
       - text: '`src/Http/Kernel.php`'
+        text_en: '`src/Http/Kernel.php`'
         correct: true
       - text: '`src/App/Http/Kernel.php`'
+        text_en: '`src/App/Http/Kernel.php`'
       - text: '`src/Http_Kernel.php`'
+        text_en: '`src/Http_Kernel.php`'
       - text: '`src/http/kernel.php`'
+        text_en: '`src/http/kernel.php`'
     explanation: >
       За PSR-4 префікс простору імен `App\` замінюється на теку `src/`, решта простору імен стає підтеками, а ім'я класу — ім'ям файла з `.php`. Префікс у шляху не повторюється, а підкреслення в іменах (як у PSR-0) не мають значення.
+    explanation_en: >
+      Under PSR-4, the namespace prefix `App\` is replaced with the `src/` directory, the rest of the namespace becomes subdirectories, and the class name becomes the file name with `.php`. The prefix is not repeated in the path, and underscores in names (as in PSR-0) have no special meaning.
     sources:
       - https://www.php-fig.org/psr/psr-4/
       - https://getcomposer.org/doc/04-schema.md#psr-4
@@ -62,6 +85,7 @@ questions:
     level: junior
     type: single
     text: Що в цьому класі порушує стиль коду PSR-12?
+    text_en: What in this class violates the PSR-12 coding style?
     code:
       lang: php
       source: |
@@ -81,26 +105,39 @@ questions:
         }
     options:
       - text: Відкриваюча дужка класу стоїть на одному рядку з `class Report`, а має бути на наступному
+        text_en: The opening brace of the class is on the same line as `class Report`, but it must be on the next line
         correct: true
       - text: Відкриваюча дужка `if` стоїть на одному рядку з умовою, а має бути на наступному
+        text_en: The opening brace of `if` is on the same line as the condition, but it must be on the next line
       - text: Відступи зроблено пробілами, а PSR-12 вимагає табуляцію
+        text_en: Indentation is done with spaces, but PSR-12 requires tabs
       - text: Між `namespace` і `class` бракує `declare(strict_types=1);`
+        text_en: '`declare(strict_types=1);` is missing between `namespace` and `class`'
     explanation: >
       PSR-12 вимагає ставити відкриваючу дужку класів і методів на новий рядок, а для керівних конструкцій на кшталт `if` лишати її на тому ж рядку. Відступ має бути 4 пробіли, а `declare(strict_types=1)` стандарт не вимагає.
+    explanation_en: >
+      PSR-12 requires the opening brace of classes and methods to go on a new line, while for control structures such as `if` it stays on the same line. Indentation must be 4 spaces, and the standard does not require `declare(strict_types=1)`.
     sources:
       - https://www.php-fig.org/psr/psr-12/
   - id: composer-psr-005
     level: middle
     type: single
     text: Які з версій задовольняють обмеження `^0.3.2` у Composer 2?
+    text_en: Which versions satisfy the constraint `^0.3.2` in Composer 2?
     options:
       - text: '`0.3.9` підходить, а `0.4.0` ні'
+        text_en: '`0.3.9` matches, but `0.4.0` does not'
         correct: true
       - text: '`0.3.9` і `0.4.0` підходять, а `1.0.0` ні'
+        text_en: '`0.3.9` and `0.4.0` match, but `1.0.0` does not'
       - text: '`0.3.9`, `0.4.0` і `0.9.0` підходять, а `1.0.0` ні'
+        text_en: '`0.3.9`, `0.4.0` and `0.9.0` match, but `1.0.0` does not'
       - text: 'Підходить лише `0.3.2`, бо нульова мажорна версія вважається нестабільною'
+        text_en: 'Only `0.3.2` matches, because a zero major version is considered unstable'
     explanation: >
       Для версій `0.x` Composer трактує `^` суворіше: `^0.3.2` означає `>=0.3.2 <0.4.0`, бо в `0.x` зміна мінорної цифри може ламати сумісність. Тому `^0.3.2` приймає будь-які патчі `0.3.x`, але не `0.4.0`.
+    explanation_en: >
+      For `0.x` versions, Composer treats `^` more strictly: `^0.3.2` means `>=0.3.2 <0.4.0`, because in `0.x` a change of the minor digit may break compatibility. So `^0.3.2` accepts any `0.3.x` patch, but not `0.4.0`.
     sources:
       - https://getcomposer.org/doc/articles/versions.md#caret-version-range-
   - id: composer-psr-006
@@ -108,6 +145,8 @@ questions:
     type: single
     text: >
       Що виведе цей код (PSR-7, реалізація `nyholm/psr7`, PHP 8.5)?
+    text_en: >
+      What does this code print (PSR-7, the `nyholm/psr7` implementation, PHP 8.5)?
     code:
       lang: php
       source: |
@@ -125,12 +164,18 @@ questions:
         );
     options:
       - text: '`false`, `true`, `false`'
+        text_en: '`false`, `true`, `false`'
         correct: true
       - text: '`true`, `true`, `true`'
+        text_en: '`true`, `true`, `true`'
       - text: '`true`, `true`, `false`'
+        text_en: '`true`, `true`, `false`'
       - text: '`false`, `false`, `false`'
+        text_en: '`false`, `false`, `false`'
     explanation: >
       Повідомлення PSR-7 незмінні: кожен `with*()` повертає новий об'єкт, а оригінал лишається як був. Результат першого виклику `withHeader` ніде не збережено, тож заголовок `X-Trace` загубився. Другий об'єкт містить `X-Id`, але не `X-Trace`, бо будувався з оригіналу.
+    explanation_en: >
+      PSR-7 messages are immutable: every `with*()` returns a new object, and the original stays as it was. The result of the first `withHeader` call is not stored anywhere, so the `X-Trace` header is lost. The second object contains `X-Id` but not `X-Trace`, because it was built from the original.
     sources:
       - https://www.php-fig.org/psr/psr-7/#11-messages
       - https://www.php-fig.org/psr/psr-7/#31-psrhttpmessagemessageinterface
@@ -139,31 +184,47 @@ questions:
     type: single
     text: >
       Проєкт використовує `"autoload": {"psr-4": {"App\\": "src/"}}`. Клас `App\Models\User` лежить у `src/models/User.php`. На macOS розробника все працює, а в CI на Linux падає з `Class "App\Models\User" not found`. Чому?
+    text_en: >
+      A project uses `"autoload": {"psr-4": {"App\\": "src/"}}`. The class `App\Models\User` lives in `src/models/User.php`. On the developer's macOS everything works, but in CI on Linux it fails with `Class "App\Models\User" not found`. Why?
     options:
       - text: PSR-4 враховує регістр у шляху, а файлова система Linux його розрізняє, тому теку треба назвати `Models`
+        text_en: PSR-4 is case-sensitive in the path, and the Linux file system distinguishes case, so the directory must be named `Models`
         correct: true
       - text: На Linux Composer не підтримує PSR-4 для вкладених просторів імен, тож кожен вкладений простір треба оголошувати окремим записом
+        text_en: On Linux, Composer does not support PSR-4 for nested namespaces, so each nested namespace must be declared as a separate entry
       - text: Файли з малої літери в шляху Composer пропускає лише тоді, коли в `composer.json` не вказано `classmap`
+        text_en: Composer skips lowercase file paths only when `classmap` is not specified in `composer.json`
       - text: Кеш автозавантажувача в CI застарів, і виправить усе `composer dump-autoload` без змін у файлах
+        text_en: The autoloader cache in CI is stale, and `composer dump-autoload` fixes everything without changing any files
     explanation: >
       Автозавантажувач будує шлях `src/Models/User.php` із простору імен буква в букву. Файлова система macOS за замовчуванням нечутлива до регістру, тож `src/models/` знаходиться, а на Linux такого файла немає. `dump-autoload` не допоможе: шлях і далі не збігається.
+    explanation_en: >
+      The autoloader builds the path `src/Models/User.php` from the namespace letter for letter. The macOS file system is case-insensitive by default, so `src/models/` is found, while on Linux there is no such file. `dump-autoload` will not help: the path still does not match.
     sources:
       - https://www.php-fig.org/psr/psr-4/
   - id: composer-psr-008
     level: middle
     type: multiple
     text: 'Які твердження про `composer install --no-dev` для проєкту з `composer.lock` правильні? (позначте всі)'
+    text_en: 'Which statements about `composer install --no-dev` for a project with `composer.lock` are true? (select all that apply)'
     options:
       - text: Пакети з розділу `require-dev` не потрапляють у `vendor/`
+        text_en: Packages from the `require-dev` section do not end up in the `vendor/` directory
         correct: true
       - text: Правила `autoload-dev` кореневого пакета не потрапляють у згенерований автозавантажувач
+        text_en: The root package's `autoload-dev` rules do not end up in the generated autoloader file
         correct: true
       - text: Секція `packages-dev` у `composer.lock` лишається без змін
+        text_en: The `packages-dev` section in `composer.lock` stays exactly unchanged
         correct: true
       - text: Записи `require-dev` видаляються з `composer.json`, щоб їх не поставили випадково
+        text_en: The `require-dev` entries are removed from `composer.json` to avoid accidents
       - text: Класи з `autoload-dev` лишаються доступними, бо їх уже зберіг classmap
+        text_en: Classes from `autoload-dev` remain available, the classmap saved them
     explanation: >
       Прапорець `--no-dev` впливає лише на те, що ставиться у `vendor/` і що потрапляє в автозавантажувач, тому тестові класи з `autoload-dev` у такому середовищі не завантажуються. Файли `composer.json` і `composer.lock` команда `install` не змінює, тож наступний `install` без прапорця знову поставить dev-пакети.
+    explanation_en: >
+      The `--no-dev` flag affects only what is installed into `vendor/` and what goes into the autoloader, so test classes from `autoload-dev` are not loaded in such an environment. The `install` command changes neither `composer.json` nor `composer.lock`, so the next `install` without the flag installs the dev packages again.
     sources:
       - https://getcomposer.org/doc/03-cli.md#install-i
       - https://getcomposer.org/doc/04-schema.md#autoload-dev
@@ -172,14 +233,22 @@ questions:
     type: single
     text: >
       Під час деплою виконали `composer install --no-dev --classmap-authoritative`. Застосунок на першому запиті генерує клас-проксі у файл `var/proxies/Foo.php`, а тека `var/proxies` зареєстрована в `composer.json` як PSR-4 префікс. Що станеться при зверненні до цього класу?
+    text_en: >
+      During deployment, `composer install --no-dev --classmap-authoritative` was run. On the first request, the application generates a proxy class into the file `var/proxies/Foo.php`, and the `var/proxies` directory is registered in `composer.json` as a PSR-4 prefix. What happens when this class is used?
     options:
       - text: Клас не буде знайдено, бо в режимі authoritative автозавантажувач не шукає класи на диску поза classmap
+        text_en: The class will not be found, because in authoritative mode the autoloader does not look for classes on disk outside the classmap
         correct: true
       - text: Клас знайдеться через PSR-4, але повільніше, бо Composer перевірить диск після промаху в classmap
+        text_en: The class will be found through PSR-4, but more slowly, because Composer checks the disk after a classmap miss
       - text: Клас знайдеться, лише якщо ввімкнено APCu-кеш автозавантажувача
+        text_en: The class will be found only if the APCu autoloader cache is enabled
       - text: Composer під час виконання перегенерує classmap і додасть туди новий файл
+        text_en: Composer regenerates the classmap at runtime and adds the new file to it
     explanation: >
       Прапорець `--classmap-authoritative` (`-a`) вважає classmap повним і не звертається до файлової системи, коли класу там немає. Тому він швидший, але несумісний із класами, що з'являються після збірки. Рішення: згенерувати проксі до `dump-autoload` або підключати їх без Composer.
+    explanation_en: >
+      The `--classmap-authoritative` (`-a`) flag treats the classmap as complete and does not touch the file system when a class is missing from it. That makes it faster but incompatible with classes that appear after the build. The fix: generate the proxies before `dump-autoload`, or load them without Composer.
     sources:
       - https://getcomposer.org/doc/articles/autoloader-optimization.md#optimization-level-2-a-authoritative-class-maps
   - id: composer-psr-010
@@ -187,14 +256,22 @@ questions:
     type: single
     text: >
       CI збирає артефакт на PHP 8.5 командою `composer install --no-dev`. Одна із залежностей у `composer.lock` вимагає `php >=8.4`. Артефакт розгортають на сервері з PHP 8.3, налаштування `platform-check` за замовчуванням. Що станеться?
+    text_en: >
+      CI builds an artifact on PHP 8.5 with `composer install --no-dev`. One of the dependencies in `composer.lock` requires `php >=8.4`. The artifact is deployed to a server running PHP 8.3, with the `platform-check` setting at its default. What happens?
     options:
       - text: Застосунок впаде одразу при підключенні `vendor/autoload.php` з винятком про невідповідну версію PHP
+        text_en: The application crashes at once on including `vendor/autoload.php`, with an exception about an incompatible PHP version
         correct: true
       - text: Застосунок працюватиме, а помилка з'явиться лише тоді, коли код вперше звернеться до класів цієї залежності
+        text_en: The application works, and the error appears only when the code first uses classes of this dependency
       - text: Composer лише запише попередження в лог і дасть запустити застосунок
+        text_en: Composer only writes a warning to the log and lets the application start
       - text: Нічого, бо вимоги до PHP Composer перевіряє лише під час `composer update`
+        text_en: Nothing, because Composer checks PHP requirements only during `composer update`
     explanation: >
       Під час install Composer генерує `vendor/composer/platform_check.php` із вимог усіх пакетів, а `vendor/autoload.php` підключає його. На сервері він порівнює реальну версію PHP з вимогами й кидає `RuntimeException` ще до коду застосунку. Так проблему видно одразу, а не в рідкісній гілці коду.
+    explanation_en: >
+      During install, Composer generates `vendor/composer/platform_check.php` from the requirements of all packages, and `vendor/autoload.php` includes it. On the server it compares the real PHP version with the requirements and throws a `RuntimeException` before any application code runs. This way the problem shows up at once, not in a rarely executed branch of code.
     sources:
       - https://getcomposer.org/doc/07-runtime.md#platform-check
       - https://getcomposer.org/doc/06-config.md#platform-check
@@ -203,6 +280,8 @@ questions:
     type: multiple
     text: >
       Middleware логування читає тіло запиту, а потім передає запит далі. Нижче наведено його фрагмент, у якому `$request` має тип PSR-7 `ServerRequestInterface`. Які твердження про поведінку правильні? (позначте всі)
+    text_en: >
+      A logging middleware reads the request body and then passes the request on. Its fragment is shown below, where `$request` is of the PSR-7 type `ServerRequestInterface`. Which statements about the behavior are true? (select all that apply)
     code:
       lang: php
       source: |
@@ -214,15 +293,22 @@ questions:
         $again = $request->getBody()->getContents();
     options:
       - text: Змінна `$again` дорівнюватиме порожньому рядку, бо `getContents()` читає від поточної позиції потоку
+        text_en: The variable `$again` will equal an empty string, because `getContents()` reads from the current position of the stream
         correct: true
       - text: Виклик `$body->rewind()` перед читанням у контролері поверне весь вміст, якщо потік підтримує перемотування
+        text_en: Calling `$body->rewind()` before reading in the controller returns the whole content if the stream supports rewinding
         correct: true
       - text: Приведення `(string) $request->getBody()` поверне все тіло, бо `__toString()` читає потік з початку
+        text_en: Casting `(string) $request->getBody()` returns the whole body, because `__toString()` reads the stream from the start
         correct: true
       - text: Після першого `getContents()` потік автоматично закривається, тому наступне читання кидає виняток
+        text_en: After the first `getContents()`, the stream is closed automatically, so the next read throws an exception
       - text: Читання із `$body` змінює сам об'єкт запиту, тож іншого запиту із тим самим тілом отримати не вдасться
+        text_en: Reading from `$body` changes the request object itself, so another request with the same body cannot be obtained
     explanation: >
       Потік PSR-7 має позицію: `getContents()` повертає лише залишок, а `__toString()` спершу перемотує на початок. Читання не закриває потік і не змінює запит, тож перемотування або `(string)` дають повне тіло. Якщо потік не підтримує `seek`, `rewind()` кине виняток.
+    explanation_en: >
+      A PSR-7 stream has a position: `getContents()` returns only the remainder, and `__toString()` first rewinds to the start. Reading neither closes the stream nor changes the request, so rewinding or `(string)` gives the full body. If the stream does not support `seek`, `rewind()` throws an exception.
     sources:
       - https://www.php-fig.org/psr/psr-7/#13-streams
       - https://www.php-fig.org/psr/psr-7/#34-psrhttpmessagestreaminterface
@@ -230,17 +316,26 @@ questions:
     level: senior
     type: multiple
     text: 'Які твердження про middleware за стандартом PSR-15 правильні? (позначте всі)'
+    text_en: 'Which statements about middleware under the PSR-15 standard are true? (select all that apply)'
     options:
       - text: Middleware може повернути відповідь, не викликаючи `$handler->handle()`, і тоді решта ланцюжка не виконається
+        text_en: A middleware can return a response without calling `$handler->handle()`, and then the rest of the chain does not run
         correct: true
       - text: Зовнішній middleware отримує відповідь, яку повернув `$handler->handle()`, і може замінити її перед поверненням
+        text_en: An outer middleware receives the response returned by `$handler->handle()` and can replace it before returning
         correct: true
       - text: Щоб передати внутрішнім ланкам нові дані, middleware викликає `handle()` із запитом, отриманим через `withAttribute()`
+        text_en: To pass new data to the inner layers, a middleware calls `handle()` with the request obtained through `withAttribute()`
         correct: true
       - text: Якщо middleware змінив атрибут через `withAttribute()` без передачі результату далі, зміна однаково видна наступним ланкам
+        text_en: If a middleware changed an attribute through `withAttribute()` without passing the result on, the change is still visible to the next layers
       - text: Метод `handle()` повертає `null`, коли наступного middleware в ланцюжку немає
+        text_en: The `handle()` method returns `null` when there is no next middleware in the chain
     explanation: >
       Інтерфейс `MiddlewareInterface::process()` отримує запит і наступний handler та повертає `ResponseInterface`. Запит у PSR-7 незмінний, тому нові дані доходять лише через об'єкт, який передано в `handle()`. Відповідь повертається назад по ланцюжку, а `handle()` завжди повертає `ResponseInterface`.
+    explanation_en: >
+      The `MiddlewareInterface::process()` interface receives the request and the next handler and returns a `ResponseInterface`. The request in PSR-7 is immutable, so new data reaches the next layers only through the object passed to `handle()`. The response travels back up the chain, and `handle()` always returns a `ResponseInterface`.
+
     sources:
       - https://www.php-fig.org/psr/psr-15/#2-interfaces
       - https://www.php-fig.org/psr/psr-15/#22-psrhttpservermiddlewareinterface

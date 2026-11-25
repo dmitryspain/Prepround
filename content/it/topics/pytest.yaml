@@ -3,7 +3,6 @@ title: Тестування в Python
 title_en: Testing in Python
 description: pytest, фікстури, параметризація, моки.
 description_en: pytest, fixtures, parametrization, mocks.
-draft_en: true
 questions:
   - id: pytest-001
     level: junior
@@ -324,7 +323,7 @@ questions:
         text_en: The default `strict` value for the whole project can be changed with the `xfail_strict` option in the configuration
         correct: true
       - text: Тест із `xfail` не виконується, pytest одразу позначає його як очікувано впалий
-        text_en: A test marked `xfail` is not executed, and pytest immediately marks it as expected to fail
+        text_en: A test marked `xfail` is not executed, and pytest immediately reports it as an expected failure
       - text: Очікуваний провал такого тесту рахується в підсумку як `failed`
         text_en: The expected failure of such a test is counted in the summary as `failed`
     explanation: >
@@ -332,7 +331,7 @@ questions:
       Строгий режим перетворює `xpassed` на помилку, щоб виправлену помилку не забули зняти з позначки.
       Починаючи з pytest 9.0 опція називається `strict_xfail`, а `xfail_strict` лишається її аліасом.
     explanation_en: >
-      `xfail` runs the test and compares the result with the expectation: a failure gives `xfailed`, a pass gives `xpassed`. Strict mode turns `xpassed` into an error so that a fixed bug does not stay marked by mistake. Starting with pytest 9.0 the option is called `strict_xfail`, and `xfail_strict` remains its alias.
+      `xfail` runs the test and compares the result with the expectation: a failure gives `xfailed`, a pass gives `xpassed`. Strict mode turns `xpassed` into a failure so that nobody forgets to remove the marker once the bug is fixed. Starting with pytest 9.0 the option is called `strict_xfail`, and `xfail_strict` remains its alias.
     sources:
       - https://docs.pytest.org/en/stable/how-to/skipping.html#strict-parameter
   - id: pytest-012

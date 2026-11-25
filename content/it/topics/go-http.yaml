@@ -3,7 +3,6 @@ title: net/http і фреймворки
 title_en: net/http and frameworks
 description: net/http, middleware, Gin/Echo, graceful shutdown.
 description_en: net/http, middleware, Gin/Echo, graceful shutdown.
-draft_en: true
 questions:
   - id: go-http-001
     level: junior
@@ -33,7 +32,7 @@ questions:
     explanation: >
       Починаючи з Go 1.22 `ServeMux` приймає в шаблоні метод і змінні сегменти, а значення сегмента повертає `r.PathValue`. Запит `GET /items/42` збігається з шаблоном, тому код відповіді 200, а `id` дорівнює `42`.
     explanation_en: >
-      Since Go 1.22, `ServeMux` accepts a method and variable segments in a pattern, and `r.PathValue` returns the segment value. The request `GET /items/42` matches the pattern, so the response code is 200 and `id` equals `42`.
+      Since Go 1.22, `ServeMux` accepts a method and wildcard segments in a pattern, and `r.PathValue` returns the segment value. The request `GET /items/42` matches the pattern, so the response code is 200 and `id` equals `42`.
     sources:
       - https://go.dev/doc/go1.22#enhanced_routing_patterns
       - https://pkg.go.dev/net/http#hdr-Patterns-ServeMux
@@ -116,7 +115,7 @@ questions:
       - text: '`200 user :id`'
         text_en: '`200 user :id`'
       - text: '`404`, бо параметри шляху в Echo задаються лише через `{id}`'
-        text_en: '`404`, because path parameters in Echo are set only via `{id}`'
+        text_en: '`404`, because path parameters in Echo are specified only via `{id}`'
       - text: '`200 user ` з порожнім значенням, бо `Param` читає query-рядок'
         text_en: '`200 user ` with an empty value, because `Param` reads the query string'
     explanation: >
@@ -178,7 +177,7 @@ questions:
       - text: '`http.Get` поверне помилку через 30 секунд, бо `DefaultClient` має такий таймаут'
         text_en: '`http.Get` returns an error after 30 seconds, because `DefaultClient` has that timeout'
       - text: '`http.Get` повернеться з `resp` зі статусом 504, бо клієнт сам вирішить, що сервер недоступний'
-        text_en: '`http.Get` returns with a `resp` with status 504, because the client decides on its own that the server is unavailable'
+        text_en: '`http.Get` returns a `resp` with status 504, because the client decides on its own that the server is unavailable'
       - text: Запит перерветься, щойно завершиться горутина, яка його викликала
         text_en: The request is aborted as soon as the goroutine that called it finishes
     explanation: >
@@ -276,7 +275,7 @@ questions:
         text_en: If `IdleTimeout` is zero, the `ReadTimeout` value is used for connections in keep-alive mode
         correct: true
       - text: Сервер без таймаутів безпечний, бо сам закриває будь-яке з'єднання, що простоює понад 30 секунд
-        text_en: A server without timeouts is safe, because it closes any connection idle for over 30 seconds itself
+        text_en: A server without timeouts is safe, because it automatically closes any connection idle for over 30 seconds
       - text: '`WriteTimeout` скидається після кожного виклику `Write`, тож обмежує паузу між частинами відповіді'
         text_en: '`WriteTimeout` is reset after every `Write` call, so it limits the pause between response parts'
     explanation: >

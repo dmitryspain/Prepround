@@ -3,7 +3,6 @@ title: Runtime Go
 title_en: Go runtime
 description: Scheduler (GMP), GC, escape analysis, пам'ять.
 description_en: Scheduler (GMP), GC, escape analysis, memory.
-draft_en: true
 questions:
   - id: go-runtime-001
     level: junior
@@ -97,7 +96,7 @@ questions:
       - text: Горутину неможливо перервати, доки вона сама не викличе блокувальну операцію
         text_en: A goroutine cannot be interrupted until it calls a blocking operation itself
       - text: Горутини розподіляються по потоках ОС за схемою «один потік на один P», без перенесення між ними
-        text_en: Goroutines are distributed across OS threads using a "one thread per P" scheme, with no moving between them
+        text_en: Goroutines are distributed across OS threads using a "one thread per P" scheme and never move between them
     explanation: >
       Горутини легкі саме тому, що це не потоки ОС: вони мультиплексуються на потоки, а стек стартує малим і росте. Кожна горутина не отримує власного потоку ОС із фіксованим стеком, а виконання можна перервати й без блокувальної операції.
     explanation_en: >
@@ -151,7 +150,7 @@ questions:
         text_en: They keep running, because threads in system calls do not count toward the `GOMAXPROCS` limit
         correct: true
       - text: Вони чекатимуть, бо 10 заблокованих горутин займають усі 2 слоти `GOMAXPROCS`
-        text_en: They will wait, because the 10 blocked goroutines occupy all 2 `GOMAXPROCS` slots
+        text_en: They will wait, because the 10 blocked goroutines occupy both `GOMAXPROCS` slots
       - text: Вони виконуватимуться лише після завершення хоча б 8 системних викликів, бо ліміт тимчасово зменшується
         text_en: They will run only after at least 8 system calls complete, because the limit is temporarily reduced
       - text: Рантайм завершить програму з fatal error, бо кількість заблокованих горутин перевищила `GOMAXPROCS`
@@ -320,6 +319,6 @@ questions:
     explanation: >
       Для конкретного методу аналіз бачить тіло `Put` і знає, що `p` не витікає. Для виклику через інтерфейс callee невідомий, тож аргумент вважається таким, що може бути збережений. `-gcflags=-m` друкує `moved to heap: w`, а для `v` такого рядка немає.
     explanation_en: >
-      For a concrete method the analysis sees the body of `Put` and knows `p` does not escape. For a call through an interface the callee is unknown, so the argument is assumed to possibly be stored. `-gcflags=-m` prints `moved to heap: w`, and there is no such line for `v`.
+      For a concrete method the analysis sees the body of `Put` and knows `p` does not escape. For a call through an interface the callee is unknown, so the compiler assumes the argument may be stored. `-gcflags=-m` prints `moved to heap: w`, and there is no such line for `v`.
     sources:
       - https://go.dev/doc/faq#stack_or_heap

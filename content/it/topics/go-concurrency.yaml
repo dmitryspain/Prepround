@@ -3,7 +3,6 @@ title: Горутини й канали
 title_en: Goroutines and channels
 description: Goroutines, channels, select, sync, context, data race.
 description_en: Goroutines, channels, select, sync, context, data race.
-draft_en: true
 questions:
   - id: go-concurrency-001
     level: junior
@@ -55,7 +54,7 @@ questions:
     explanation: >
       Закритий канал віддає решту буфера, потім нульові значення з `ok == false`; надсилати в нього й закривати його вдруге не можна, обидва випадки дають panic. Закривати канал для звільнення пам'яті не потрібно: його забирає збирач сміття, а `close` лише сигналізує отримувачам, що значень більше не буде, і не блокується.
     explanation_en: >
-      A closed channel yields the rest of its buffer, then zero values with `ok == false`; sending to it and closing it a second time are both not allowed and cause a panic. You do not need to close a channel to free memory: the garbage collector reclaims it, and `close` only signals receivers that no more values will come, without blocking.
+      A closed channel yields the rest of its buffer, then zero values with `ok == false`; neither sending to it nor closing it a second time is allowed, and both cause a panic. You do not need to close a channel to free memory: the garbage collector reclaims it, and `close` only signals receivers that no more values will come, without blocking.
     sources:
       - https://go.dev/ref/spec#Close
       - https://go.dev/ref/spec#Receive_operator
@@ -241,7 +240,7 @@ questions:
         text_en: Unlocking a mutex that is not locked is a fatal error
         correct: true
       - text: Горутина, що вже тримає м'ютекс, може викликати `Lock` повторно, лічильник захоплень зростає
-        text_en: A goroutine holding the mutex can call `Lock` again, and a counter grows
+        text_en: A goroutine holding the mutex can call `Lock` again, and its lock count grows
       - text: Вільний `Mutex` у Go без ініціалізації не готовий до роботи й потребує `sync.NewMutex()`
         text_en: An uninitialized `Mutex` is not ready for use and needs `sync.NewMutex()`
     explanation: >

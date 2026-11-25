@@ -9,6 +9,7 @@ questions:
     level: junior
     type: single
     text: Що виведе цей код у PHP 8.5?
+    text_en: What does this code print in PHP 8.5?
     code:
       lang: php
       source: |
@@ -16,18 +17,25 @@ questions:
         var_dump("abc" == 0);
     options:
       - text: '`bool(false)`, бо число зводиться до рядка і порівнюється як рядки'
+        text_en: '`bool(false)`, because the number becomes a string, compared as strings'
         correct: true
       - text: '`bool(true)`, бо нечисловий рядок перетворюється на `0`'
+        text_en: '`bool(true)`, because a non-numeric string is converted to `0`'
       - text: '`int(0)`'
+        text_en: '`int(0)`'
       - text: '`TypeError` через різні типи операндів'
+        text_en: '`TypeError` because the operands have different types'
     explanation: >
       Починаючи з PHP 8 нечисловий рядок не перетворюється на число при порівнянні з числом: натомість число стає рядком `"0"`, і `"abc" == "0"` дає `false`. У PHP 7 результат був `true`. `TypeError` оператор `==` не кидає.
+    explanation_en: >
+      Starting with PHP 8, a non-numeric string is not converted to a number when compared with a number: instead the number becomes the string `"0"`, and `"abc" == "0"` gives `false`. In PHP 7 the result was `true`. The `==` operator does not throw `TypeError`.
     sources:
       - https://www.php.net/manual/en/language.operators.comparison.php
   - id: php-lang-002
     level: junior
     type: single
     text: Що виведе цей код у PHP 8.5?
+    text_en: What does this code print in PHP 8.5?
     code:
       lang: php
       source: |
@@ -36,32 +44,46 @@ questions:
         var_dump($user?->name);
     options:
       - text: '`NULL`, без помилок і попереджень'
+        text_en: '`NULL`, with no errors or warnings'
         correct: true
       - text: '`NULL` разом із попередженням про читання властивості в `null`'
+        text_en: '`NULL` along with a warning about reading a property on `null`'
       - text: '`Error: Attempt to read property "name" on null`'
+        text_en: '`Error: Attempt to read property "name" on null`'
       - text: '`string(0) ""`'
+        text_en: '`string(0) ""`'
     explanation: >
       Оператор nullsafe `?->` зупиняє обчислення ланцюжка, коли ліва частина дорівнює `null`, і весь вираз повертає `null`. Звичайний `->` на `null` дав би попередження, а не виняток.
+    explanation_en: >
+      The nullsafe operator `?->` short-circuits the chain when its left side is `null`, and the whole expression returns `null`. A plain `->` on `null` would produce a warning, not an exception.
     sources:
       - https://www.php.net/manual/en/language.oop5.basic.php#language.oop5.basic.nullsafe
   - id: php-lang-003
     level: junior
     type: single
     text: "Що робить `Status::tryFrom('x')` для enum `Status: string`, якщо значення `'x'` немає серед його `case`?"
+    text_en: "What does `Status::tryFrom('x')` do for an enum `Status: string` if the value `'x'` is not among its `case`s?"
     options:
       - text: Повертає `null`, без винятків і попереджень
+        text_en: Returns `null`, with no exceptions or warnings
         correct: true
       - text: Кидає `ValueError` із текстом про недійсне значення
+        text_en: Throws `ValueError` with a message about an invalid value
       - text: Повертає перший `case` енума
+        text_en: Returns the first `case` of the enum
       - text: Кидає `UnhandledMatchError`
+        text_en: Throws `UnhandledMatchError`
     explanation: >
       `tryFrom()` у backed enum повертає `null` для невідомого значення, а `from()` у цьому випадку кидає `ValueError`. Тому `tryFrom` зручний для необов'язкового вводу, а `from` — коли невідоме значення є помилкою.
+    explanation_en: >
+      `tryFrom()` on a backed enum returns `null` for an unknown value, while `from()` throws `ValueError` in this case. So `tryFrom` suits optional input, and `from` suits cases where an unknown value is an error.
     sources:
       - https://www.php.net/manual/en/backedenum.tryfrom.php
   - id: php-lang-004
     level: junior
     type: multiple
     text: 'Який із викликів кидає `TypeError` у PHP 8.5? (позначте всі)'
+    text_en: 'Which call throws `TypeError` in PHP 8.5? (select all)'
     code:
       lang: php
       source: |
@@ -76,20 +98,27 @@ questions:
         half(true);   // D
     options:
       - text: 'A: `half("10")`'
+        text_en: 'A: `half("10")`'
         correct: true
       - text: 'B: `half(10.5)`'
+        text_en: 'B: `half(10.5)`'
         correct: true
       - text: 'D: `half(true)`'
+        text_en: 'D: `half(true)`'
         correct: true
       - text: 'C: `half(10)`'
+        text_en: 'C: `half(10)`'
     explanation: >
       У режимі `strict_types=1` значення не приводяться до типу параметра: рядок, `float` і `bool` для `int` дають `TypeError`. Єдиний виняток — `int` для параметра `float`. Виклик `half(10)` точно відповідає типу.
+    explanation_en: >
+      Under `strict_types=1`, values are not coerced to the parameter type: a string, a `float` and a `bool` passed for `int` give `TypeError`. The only exception is `int` for a `float` parameter. The call `half(10)` matches the type exactly.
     sources:
       - https://www.php.net/manual/en/language.types.declarations.php#language.types.declarations.strict
   - id: php-lang-005
     level: middle
     type: single
     text: Що станеться під час виконання цього коду в PHP 8.5?
+    text_en: What happens when this code runs in PHP 8.5?
     code:
       lang: php
       source: |
@@ -103,18 +132,25 @@ questions:
         $box->items[] = 2;
     options:
       - text: '`Error`: не можна непрямо змінити readonly-властивість `Box::$items`'
+        text_en: '`Error`: cannot indirectly modify the readonly property `Box::$items`'
         correct: true
       - text: Масив отримає другий елемент, бо `readonly` захищає лише від присвоєння всього масиву
+        text_en: The array gets a second element, because `readonly` only protects against assigning the whole array
       - text: Кине `TypeError`, бо `[]=` не можна застосувати до типу `array`
+        text_en: Throws `TypeError`, because `[]=` cannot be applied to the `array` type
       - text: Створиться копія масиву, а об'єкт `$box` залишиться без змін
+        text_en: A copy of the array is created, and the `$box` object stays unchanged
     explanation: >
       Readonly-властивість можна один раз ініціалізувати, а далі будь-яка зміна, зокрема й додавання елемента масиву, кидає `Error`. Захист поверхневий лише щодо об'єктів усередині: змінити можна їхній стан, але не саму властивість.
+    explanation_en: >
+      A readonly property can be initialized once, and after that any modification, including appending an array element, throws `Error`. The protection is shallow only with regard to objects inside: their state can be changed, but not the property itself.
     sources:
       - https://www.php.net/manual/en/language.oop5.properties.php#language.oop5.properties.readonly-properties
   - id: php-lang-006
     level: middle
     type: single
     text: Що виведе цей код у PHP 8.5?
+    text_en: What does this code print in PHP 8.5?
     code:
       lang: php
       source: |
@@ -133,35 +169,50 @@ questions:
         echo A::$n, B::$n, C::$n;
     options:
       - text: '`313`'
+        text_en: '`313`'
         correct: true
       - text: '`111`'
+        text_en: '`111`'
       - text: '`311`'
+        text_en: '`311`'
       - text: '`333`'
+        text_en: '`333`'
     explanation: >
       Кожен клас, що підключає trait, отримує власну копію статичної властивості, тому `A` і `B` лічать окремо. Підклас `C` успадковує статику від `A` і ділить її з ним, тож три виклики `inc()` для `A` і `C` дають `3`, а для `B` — `1`.
+    explanation_en: >
+      Each class that uses a trait gets its own copy of the static property, so `A` and `B` count separately. Subclass `C` inherits the static from `A` and shares it, so three calls of `inc()` on `A` and `C` give `3`, while `B` gives `1`.
     sources:
       - https://www.php.net/manual/en/language.oop5.traits.php#language.oop5.traits.static
   - id: php-lang-007
     level: middle
     type: multiple
     text: 'Які твердження про вираз `match` у PHP 8.5 правильні? (позначте всі)'
+    text_en: 'Which statements about the `match` expression in PHP 8.5 are true? (select all)'
     options:
       - text: Значення порівнюється суворо, як через `===`
+        text_en: The value is compared strictly, as with `===`
         correct: true
       - text: Якщо жодна гілка не підійшла й немає `default`, кидається `UnhandledMatchError`
+        text_en: If no arm matches and there is no `default`, `UnhandledMatchError` is thrown
         correct: true
       - text: '`match` є виразом: його результат можна присвоїти змінній або повернути'
+        text_en: '`match` is an expression: its result can be assigned to a variable or returned'
         correct: true
       - text: Після виконання гілки без `break` керування провалюється в наступну гілку
+        text_en: After an arm without `break` executes, control falls through to the next arm
       - text: Значення порівнюється нестрого, як через `==`, тому `"1"` збігається з `1`
+        text_en: The value is compared loosely, as with `==`, so `"1"` matches `1`
     explanation: >
       `match` порівнює суворо, повертає значення і не має провалювання між гілками, тому `break` не потрібен. Відсутність збігу без `default` дає `UnhandledMatchError`. Провалювання й нестроге порівняння — риси `switch`.
+    explanation_en: >
+      `match` compares strictly, returns a value and has no fall-through between arms, so `break` is not needed. No match without `default` gives `UnhandledMatchError`. Fall-through and loose comparison are traits of `switch`.
     sources:
       - https://www.php.net/manual/en/control-structures.match.php
   - id: php-lang-008
     level: middle
     type: single
     text: Що виведе цей код у PHP 8.5?
+    text_en: What does this code print in PHP 8.5?
     code:
       lang: php
       source: |
@@ -176,29 +227,43 @@ questions:
         echo get_class(Q::viaStatic()), get_class(Q::viaSelf());
     options:
       - text: '`QP`'
+        text_en: '`QP`'
         correct: true
       - text: '`QQ`'
+        text_en: '`QQ`'
       - text: '`PP`'
+        text_en: '`PP`'
       - text: '`PQ`'
+        text_en: '`PQ`'
     explanation: >
       `static` у пізньому статичному зв'язуванні вказує на клас, через який зроблено виклик (`Q`), а `self` завжди дорівнює класу, у якому записано код (`P`). Тому фабрика з `new self` не повертає підклас.
+    explanation_en: >
+      `static` in late static binding refers to the class the call was made through (`Q`), while `self` always equals the class in which the code is written (`P`). So a factory with `new self` does not return the subclass.
     sources:
       - https://www.php.net/manual/en/language.oop5.late-static-bindings.php
   - id: php-lang-009
     level: senior
     type: multiple
     text: 'Які твердження про property hooks (PHP 8.4+) правильні? (позначте всі)'
+    text_en: 'Which statements about property hooks (PHP 8.4+) are true? (select all)'
     options:
       - text: "Властивість з одним `get`-хуком, що не звертається до себе, віртуальна: сховища в об'єкті немає, а присвоєння кидає `Error`"
+        text_en: "A property with a single `get` hook that does not reference itself is virtual: the object has no storage, and assignment throws `Error`"
         correct: true
       - text: Інтерфейс може оголосити властивість з вимогою `{ get; }`, а клас виконує її хуком
+        text_en: An interface can declare a property requiring `{ get; }`, and a class satisfies it with a hook
         correct: true
       - text: Властивість із хуками не можна оголосити як `readonly`, це фатальна помилка компіляції
+        text_en: A property with hooks cannot be `readonly`; this is a compile-time fatal error
         correct: true
       - text: Хуки дозволені й для `static`-властивостей, якщо тіло хука не використовує `$this`
+        text_en: Hooks are allowed for `static` properties too, if the hook body does not use `$this`
       - text: Присвоєння віртуальній властивості без `set`-хука зберігається в прихованому полі
+        text_en: Assigning to a virtual property without a `set` hook stores the value in a hidden field
     explanation: >
       Hooked-властивість без звернення до `$this->prop` у хуках не має backing-значення, тому читання йде через `get`, а запис без `set` неможливий. Інтерфейси можуть вимагати такі властивості. Хуки несумісні з `readonly` і `static`: обидві комбінації дають фатальну помилку.
+    explanation_en: >
+      A hooked property whose hooks do not reference `$this->prop` has no backing value, so reads go through `get`, and writing without `set` is impossible. Interfaces can require such properties. Hooks are incompatible with `readonly` and `static`: both combinations produce a fatal error.
     sources:
       - https://www.php.net/manual/en/language.oop5.property-hooks.php
       - https://www.php.net/manual/en/language.oop5.interfaces.php
@@ -206,34 +271,49 @@ questions:
     level: senior
     type: single
     text: 'Value object `Pt` має readonly-властивості `$x` і `$y`. Яке тіло методу `withX(int $x): static` коректно повертає копію зі зміненим `$x` у PHP 8.5, не вдаючись до Reflection?'
+    text_en: 'A value object `Pt` has readonly properties `$x` and `$y`. Which body of the method `withX(int $x): static` correctly returns a copy with a changed `$x` in PHP 8.5, without resorting to Reflection?'
     options:
       - text: '`return clone($this, [''x'' => $x]);`'
+        text_en: '`return clone($this, [''x'' => $x]);`'
         correct: true
       - text: '`$c = clone $this; $c->x = $x; return $c;`'
+        text_en: '`$c = clone $this; $c->x = $x; return $c;`'
       - text: '`return clone $this with ($x);`'
+        text_en: '`return clone $this with ($x);`'
       - text: '`$c = clone $this; $c->__set(''x'', $x); return $c;`'
+        text_en: '`$c = clone $this; $c->__set(''x'', $x); return $c;`'
     explanation: >
       У PHP 8.5 `clone` приймає другим аргументом масив нових значень властивостей, тож readonly-властивості можна «замінити» під час клонування. Присвоєння після `clone` кидає `Error`, бо властивість уже ініціалізована, а метода `__set` у класі немає, тож явний виклик дає `Error`.
+    explanation_en: >
+      In PHP 8.5, `clone` accepts an array of new property values as its second argument, so readonly properties can be "replaced" during cloning. Assignment after `clone` throws `Error`, because the property is already initialized, and the class has no `__set` method, so an explicit call gives `Error`.
     sources:
       - https://www.php.net/manual/en/language.oop5.cloning.php
   - id: php-lang-012
     level: senior
     type: single
     text: 'Є класи `Animal`, `Dog extends Animal`, `Puppy extends Dog` і метод батька `P::h(Dog $d): Animal`. Яке перевизначення в підкласі дозволено в PHP 8.5?'
+    text_en: 'There are classes `Animal`, `Dog extends Animal`, `Puppy extends Dog` and a parent method `P::h(Dog $d): Animal`. Which override in a subclass is allowed in PHP 8.5?'
     options:
       - text: '`h(Animal $a): Dog`'
+        text_en: '`h(Animal $a): Dog`'
         correct: true
       - text: '`h(Puppy $a): Animal`'
+        text_en: '`h(Puppy $a): Animal`'
       - text: '`h(Dog $a): ?Animal`, якщо метод завжди повертає `Dog`'
+        text_en: '`h(Dog $a): ?Animal`, if the method always returns `Dog`'
       - text: '`h(Puppy $a): Puppy`'
+        text_en: '`h(Puppy $a): Puppy`'
     explanation: >
       Параметри підкласу можуть лише розширюватися (контраваріантність), а типи повернення — звужуватися (коваріантність). Тому `Animal` замість `Dog` у параметрі й `Dog` замість `Animal` у поверненні сумісні. Інші варіанти звужують параметр або розширюють повернення (зокрема, `?Animal` ширший за `Animal`), і PHP видає фатальну помилку сумісності.
+    explanation_en: >
+      Subclass parameters may only be widened (contravariance), and return types may only be narrowed (covariance). So `Animal` instead of `Dog` in the parameter and `Dog` instead of `Animal` in the return are compatible. The other options narrow the parameter or widen the return type (in particular, `?Animal` is wider than `Animal`), and PHP raises a fatal compatibility error.
     sources:
       - https://www.php.net/manual/en/language.oop5.variance.php
   - id: php-lang-013
     level: senior
     type: single
     text: Що виведе цей код у PHP 8.5?
+    text_en: What does this code print in PHP 8.5?
     code:
       lang: php
       source: |
@@ -255,11 +335,17 @@ questions:
         echo count($storage);
     options:
       - text: '`101`: запис у `WeakMap` зникає після знищення останнього посилання на ключ, а `SplObjectStorage` тримає об''єкт'
+        text_en: '`101`: the `WeakMap` entry disappears after the last reference to the key is destroyed, while `SplObjectStorage` keeps the object'
         correct: true
       - text: '`100`: `SplObjectStorage` теж прибирає запис, щойно в коді не лишається жодної змінної з цим ключем'
+        text_en: '`100`: `SplObjectStorage` also removes the entry as soon as no variable with that key remains in the code'
       - text: '`001`: `WeakMap` вважає ключ втраченим уже після `unset($a)`, бо саме змінна `$a` створила запис'
+        text_en: '`001`: `WeakMap` considers the key lost already after `unset($a)`, because the variable `$a` created the entry'
       - text: '`111`: `WeakMap` тримає ключ сильним посиланням, як і `SplObjectStorage`, до кінця роботи скрипта'
+        text_en: '`111`: `WeakMap` holds the key by a strong reference, just like `SplObjectStorage`, until the script ends'
     explanation: >
       Ключ `WeakMap` не збільшує лічильник посилань: коли зникають усі інші посилання (`$a` і `$b`), об'єкт знищується, а запис видаляється. Після `unset($a)` ще лишається `$b`, тому спершу `1`, потім `0`. `SplObjectStorage` утримує ключ сильно, тож `unset($o)` запис не прибирає і лічильник лишається `1`.
+    explanation_en: >
+      A `WeakMap` key does not increase the reference count: when all other references (`$a` and `$b`) are gone, the object is destroyed and the entry is removed. After `unset($a)`, `$b` still remains, so first `1`, then `0`. `SplObjectStorage` holds the key strongly, so `unset($o)` does not remove the entry and the count stays `1`.
     sources:
       - https://www.php.net/manual/en/class.weakmap.php

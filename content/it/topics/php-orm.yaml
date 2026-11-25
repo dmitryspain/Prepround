@@ -9,6 +9,7 @@ questions:
     level: junior
     type: single
     text: Що буде після цього коду в Laravel 13 (у таблиці `posts` є булева колонка `is_admin` зі значенням за замовчуванням `false`)?
+    text_en: What happens after this code in Laravel 13 (the `posts` table has a boolean `is_admin` column with a default value of `false`)?
     code:
       lang: php
       source: |
@@ -20,27 +21,40 @@ questions:
         $post = Post::create(['title' => 'Hi', 'is_admin' => true]);
     options:
       - text: Запис створиться, `is_admin` лишиться `false`, винятку не буде
+        text_en: The record is created, `is_admin` stays `false`, and no exception is thrown
         correct: true
       - text: Буде кинуто `MassAssignmentException` через `is_admin`
+        text_en: '`MassAssignmentException` is thrown because of `is_admin`'
       - text: Запис створиться з `is_admin = true`, бо `create` обходить `$fillable`
+        text_en: The record is created with `is_admin = true`, because `create` bypasses `$fillable`
       - text: Запис не створиться, а `create` поверне `null`
+        text_en: The record is not created, and `create` returns `null`
     explanation: >
       Атрибути поза `$fillable` під час масового присвоєння мовчки відкидаються, тому `is_admin` не потрапляє в INSERT. Виняток кидатиметься лише після виклику `Model::preventSilentlyDiscardingAttributes()`, а за замовчуванням його немає.
+    explanation_en: >
+      Attributes outside `$fillable` are silently discarded during mass assignment, so `is_admin` does not make it into the INSERT. An exception is thrown only after calling `Model::preventSilentlyDiscardingAttributes()`, which is not enabled by default.
     sources:
       - https://laravel.com/docs/13.x/eloquent#mass-assignment
   - id: php-orm-002
     level: junior
     type: multiple
     text: 'Які твердження про Eloquent (Laravel 13) і Doctrine ORM 3.8 правильні? (позначте всі)'
+    text_en: Which statements about Eloquent (Laravel 13) and Doctrine ORM 3.8 are true? (select all)
     options:
       - text: Модель Eloquent реалізує Active Record, тож сама вміє зберегти себе викликом `$model->save()`
+        text_en: An Eloquent model implements Active Record, so it can save itself by calling `$model->save()`
         correct: true
       - text: Сутність Doctrine є звичайним PHP-об'єктом, а зберігає її окремий `EntityManager`
+        text_en: A Doctrine entity is a plain PHP object, and a separate `EntityManager` persists it
         correct: true
       - text: Сутність Doctrine має успадковувати спільний базовий клас пакета, щоб бути відстежуваною
+        text_en: A Doctrine entity must extend a common base class from the package to be tracked
       - text: У Eloquent виклик `save()` неможливий без окремого класу репозиторію для кожної моделі
+        text_en: In Eloquent, calling `save()` is impossible without a separate repository class for each model
     explanation: >
       Eloquent поєднує дані й збереження в одному об'єкті (Active Record), а Doctrine відокремлює сутність від збереження (Data Mapper): сутність нічого не знає про базу, а мапінг і запити виконує `EntityManager`. Базового класу сутності Doctrine не вимагає, мапінг задають атрибутами, а Eloquent не потребує репозиторіїв.
+    explanation_en: >
+      Eloquent combines data and persistence in one object (Active Record), while Doctrine separates the entity from persistence (Data Mapper): the entity knows nothing about the database, and the `EntityManager` performs mapping and queries. Doctrine does not require an entity base class, since mapping is defined with attributes, and Eloquent does not need repositories.
     sources:
       - https://laravel.com/docs/13.x/eloquent#introduction
       - https://www.doctrine-project.org/projects/doctrine-orm/en/3.8/tutorials/getting-started.html
@@ -48,20 +62,28 @@ questions:
     level: junior
     type: single
     text: 'Модель `Author` у Laravel 13 має зв''язок `posts()`, що повертає `$this->hasMany(Post::class)`. Що повертають `$author->posts` і `$author->posts()`?'
+    text_en: In Laravel 13, the `Author` model has a `posts()` relationship that returns `$this->hasMany(Post::class)`. What do `$author->posts` and `$author->posts()` return?
     options:
       - text: Перше — колекцію постів з БД, друге — об'єкт зв'язку для додаткових умов
+        text_en: The former returns a collection of posts from the DB, the latter returns a relationship object for additional constraints
         correct: true
       - text: Обидва вирази повертають колекцію постів, але друге щоразу робить новий запит до БД
+        text_en: Both expressions return a collection of posts, but the latter makes a new DB query each time
       - text: Перше — об'єкт зв'язку `HasMany`, друге — колекція постів, завантажена з БД
+        text_en: The former returns a `HasMany` relationship object, the latter returns a collection of posts loaded from the DB
       - text: Обидва вирази повертають об'єкт зв'язку, а `get()` потрібен у кожному разі
+        text_en: Both expressions return a relationship object, and `get()` is needed in every case
     explanation: >
       Звернення до властивості вмикає динамічну властивість зв'язку: Eloquent виконує запит і повертає `Collection` (результат кешується в моделі). Виклик методу дає об'єкт `HasMany`, до якого можна додати `where`, `orderBy` тощо й закінчити `get()`.
+    explanation_en: >
+      Accessing the property triggers the dynamic relationship property: Eloquent runs the query and returns a `Collection` (the result is cached on the model). Calling the method returns a `HasMany` object, to which you can add `where`, `orderBy`, and so on, and finish with `get()`.
     sources:
       - https://laravel.com/docs/13.x/eloquent-relationships#querying-relations
   - id: php-orm-004
     level: junior
     type: single
     text: Коли Doctrine ORM 3.8 виконає SQL INSERT для нового `$user` у цьому коді?
+    text_en: When will Doctrine ORM 3.8 execute the SQL INSERT for the new `$user` in this code?
     code:
       lang: php
       source: |
@@ -74,18 +96,25 @@ questions:
         echo 'B';
     options:
       - text: Під час `flush()`, між виведенням `A` і `B`
+        text_en: During `flush()`, between the output of `A` and `B`
         correct: true
       - text: Одразу в `persist()`, ще до виведення `A`
+        text_en: Immediately in `persist()`, before `A` is printed
       - text: Під час виклику `setName()`, бо сутність змінюється
+        text_en: When `setName()` is called, because the entity changes
       - text: Лише наприкінці запиту, коли `EntityManager` буде знищено
+        text_en: Only at the end of the request, when the `EntityManager` is destroyed
     explanation: >
       `persist()` лише ставить сутність під керування Unit of Work, а SQL відкладається («transactional write-behind») до `flush()`. Тому INSERT з'явиться між `A` і `B`.
+    explanation_en: >
+      `persist()` only places the entity under Unit of Work management, and the SQL is deferred ("transactional write-behind") until `flush()`. So the INSERT appears between `A` and `B`.
     sources:
       - https://www.doctrine-project.org/projects/doctrine-orm/en/3.8/reference/working-with-objects.html#persisting-entities
   - id: php-orm-005
     level: middle
     type: single
     text: У таблиці 3 пости від трьох різних авторів. Скільки SQL-запитів виконає кожен варіант у Laravel 13 (Post має зв'язок `author()` типу `belongsTo`)?
+    text_en: The table has 3 posts by three different authors. How many SQL queries does each variant run in Laravel 13 (Post has a `belongsTo` relationship `author()`)?
     code:
       lang: php
       source: |
@@ -100,18 +129,25 @@ questions:
         }
     options:
       - text: A — 4 запити, B — 2 запити
+        text_en: 'A: 4 queries, B: 2 queries'
         correct: true
       - text: A — 3 запити, B — 1 запит
+        text_en: 'A: 3 queries, B: 1 query'
       - text: A — 4 запити, B — 4 запити
+        text_en: 'A: 4 queries, B: 4 queries'
       - text: A — 1 запит, B — 2 запити
+        text_en: 'A: 1 query, B: 2 queries'
     explanation: >
       У варіанті A один запит за постами й по запиту за автором кожного поста (N+1 = 4). `with('author')` робить один запит за постами й один `where id in (…)` за всіма авторами одразу, разом 2.
+    explanation_en: >
+      In variant A there is one query for the posts and one query per post for its author (N+1 = 4). `with('author')` runs one query for the posts and one `where id in (…)` for all the authors at once, 2 in total.
     sources:
       - https://laravel.com/docs/13.x/eloquent-relationships#eager-loading
   - id: php-orm-006
     level: middle
     type: single
     text: 'Скільки разів спрацює слухач `updated` у Laravel 13 після виконання цього коду (запис із `id = 1` існує, `title` є в `$fillable`)?'
+    text_en: How many times does the `updated` listener fire in Laravel 13 after this code runs (a record with `id = 1` exists, `title` is in `$fillable`)?
     code:
       lang: php
       source: |
@@ -126,12 +162,18 @@ questions:
         $post->saveQuietly();
     options:
       - text: Один раз, лише для `Post::find(1)->update(...)`
+        text_en: Once, only for `Post::find(1)->update(...)`
         correct: true
       - text: Три рази, бо всі три виклики змінюють запис
+        text_en: Three times, because all three calls modify the record
       - text: Два рази, бо `saveQuietly` пропускає лише подію `saving`
+        text_en: Twice, because `saveQuietly` skips only the `saving` event
       - text: Жодного разу, бо слухач потрібно реєструвати в `EventServiceProvider`
+        text_en: Never, because the listener must be registered in `EventServiceProvider`
     explanation: >
       Масове `update()` на білдері запитів виконує один UPDATE без завантаження моделей, тож подій моделі нема. `saveQuietly()` свідомо зберігає без жодних подій, а `update()` на екземплярі моделі проходить повний цикл `saving/updating/updated`.
+    explanation_en: >
+      A mass `update()` on the query builder runs a single UPDATE without loading models, so no model events fire. `saveQuietly()` deliberately saves without any events, while `update()` on a model instance goes through the full `saving/updating/updated` cycle.
     sources:
       - https://laravel.com/docs/13.x/eloquent#mass-updates
       - https://laravel.com/docs/13.x/eloquent#saving-a-single-model-without-events
@@ -139,6 +181,7 @@ questions:
     level: middle
     type: single
     text: 'У Doctrine ORM 3.8 `Author` (OneToMany `posts`, `mappedBy: ''author''`) уже збережений, а `Post::$author` — ManyToOne з `inversedBy: ''posts''`. Що буде в колонці `post.author_id` після `flush()`?'
+    text_en: 'In Doctrine ORM 3.8, `Author` (OneToMany `posts`, `mappedBy: ''author''`) is already saved, and `Post::$author` is ManyToOne with `inversedBy: ''posts''`. What will be in the `post.author_id` column after `flush()`?'
     code:
       lang: php
       source: |
@@ -151,33 +194,47 @@ questions:
         $em->flush();
     options:
       - text: '`NULL`: зв''язок записується за owning side (`Post::$author`), а її не встановлено'
+        text_en: '`NULL`: the association is written from the owning side (`Post::$author`), and it is not set'
         correct: true
       - text: Ідентифікатор `$author`, бо Doctrine бачить пост у його колекції `posts`
+        text_en: The `$author` identifier, because Doctrine sees the post in its `posts` collection
       - text: Doctrine кине виняток про незбережений зв'язок до виконання `flush`
+        text_en: Doctrine throws an exception about an unsaved association before running `flush`
       - text: "Ідентифікатор `$author`, але лише якщо в `posts` вказати `cascade: ['persist']`"
+        text_en: 'The `$author` identifier, but only if `cascade: [''persist'']` is specified on `posts`'
     explanation: >
       Зовнішній ключ належить стороні ManyToOne (`Post::$author`), це owning side. Зміни лише на inverse side (колекція `posts`) Doctrine ігнорує, тож пост збережеться з `NULL`. Каскад стосується збереження сутностей, а не заповнення ключа.
+    explanation_en: >
+      The foreign key belongs to the ManyToOne side (`Post::$author`), which is the owning side. Doctrine ignores changes made only on the inverse side (the `posts` collection), so the post is saved with `NULL`. Cascade concerns persisting entities, not filling in the key.
     sources:
       - https://www.doctrine-project.org/projects/doctrine-orm/en/3.8/reference/unitofwork-associations.html
   - id: php-orm-008
     level: middle
     type: multiple
     text: 'Які твердження про `EntityManager` у Doctrine ORM 3.8 правильні? (позначте всі)'
+    text_en: Which statements about `EntityManager` in Doctrine ORM 3.8 are true? (select all)
     options:
       - text: Змінену властивість уже керованої сутності `flush()` збереже й без повторного `persist()`
+        text_en: '`flush()` saves a changed property of an already managed entity without another `persist()`'
         correct: true
       - text: Два `find()` того самого id в одному `EntityManager` повертають один об'єкт, а другий запит до БД не робиться
+        text_en: Two `find()` calls for one id in the same `EntityManager` return one object without a second query
         correct: true
       - text: Метод `persist()` одразу виконує INSERT, щоб отримати згенерований ідентифікатор
+        text_en: The `persist()` method runs the INSERT immediately to obtain the generated identifier
       - text: Сутність після `clear()` лишається керованою, тож наступний `flush()` збереже її зміни
+        text_en: After `clear()` an entity stays managed, so the next `flush()` saves its changes
     explanation: >
       Unit of Work відстежує керовані сутності, порівнює їх зі знімком під час `flush()` і веде identity map, тому повторний `find()` не звертається до БД. `persist()` лише планує вставку, а SQL іде під час `flush()`. Після `clear()` сутності від'єднані, і їхні зміни втрачаються.
+    explanation_en: >
+      The Unit of Work tracks managed entities, compares them to a snapshot during `flush()`, and maintains an identity map, so a repeated `find()` does not hit the DB. `persist()` only schedules the insert, and the SQL runs during `flush()`. After `clear()` entities are detached, and their changes are lost.
     sources:
       - https://www.doctrine-project.org/projects/doctrine-orm/en/3.8/reference/working-with-objects.html
   - id: php-orm-009
     level: senior
     type: single
     text: 'Команда Laravel 13 позначає прочитаними 100 000 записів. Після запуску частина лишилася з `read = false`. У чому причина і як виправити?'
+    text_en: A Laravel 13 team marks 100,000 records as read. After the run, some are still `read = false`. What is the cause and how do you fix it?
     code:
       lang: php
       source: |
@@ -189,55 +246,82 @@ questions:
         });
     options:
       - text: '`chunk` бере сторінки через offset, а оброблені рядки випадають з умови, тож замінити на `chunkById`'
+        text_en: '`chunk` pages by offset, and processed rows leave the condition, so use `chunkById`'
         correct: true
       - text: Моделі кешуються між чанками, тож перед кожним циклом потрібно викликати `fresh()`
+        text_en: Models are cached between chunks, so call `fresh()` before each loop
       - text: '`save()` усередині `chunk` викликає події, що ламають вибірку, тож узяти `saveQuietly()`'
+        text_en: '`save()` inside `chunk` fires events that break the selection, so use `saveQuietly()`'
       - text: Розмір чанка завеликий, тож достатньо зменшити його до 100 і лишити `chunk` як є
+        text_en: The chunk size is too large, so reducing it to 100 and keeping `chunk` is enough
     explanation: >
       Кожен наступний чанк береться через `offset`, а вже оновлені рядки перестали відповідати `where('read', false)`. Вибірка скорочується, і offset перестрибує через непрочитані записи. `chunkById` рухається за `id > останній` і від цього не залежить.
+    explanation_en: >
+      Each next chunk is fetched using `offset`, but the already updated rows no longer match `where('read', false)`. The result set shrinks, and the offset skips over unread records. `chunkById` moves by `id > last` and does not depend on this.
     sources:
       - https://laravel.com/docs/13.x/eloquent#chunking-results
   - id: php-orm-010
     level: senior
     type: single
     text: Імпорт 500 000 рядків у Doctrine ORM 3.8 викликає `persist()` для кожного, `flush()` лише раз в кінці, і процес вичерпує пам'ять. Яка правка вирішує проблему?
+    text_en: A Doctrine ORM 3.8 import of 500,000 rows calls `persist()` for each one, calls `flush()` only once at the end, and the process runs out of memory. Which change fixes the problem?
     options:
       - text: Викликати `flush()` і `clear()` кожні кілька сотень рядків, бо UoW тримає всі сутності
+        text_en: Call `flush()` and `clear()` every few hundred rows, because the UoW holds all the entities
         correct: true
       - text: Викликати лише `flush()` після кожного рядка, тоді сутності одразу звільняться з пам'яті
+        text_en: Call only `flush()` after each row, and then entities are freed from memory immediately
       - text: Викликати `gc_collect_cycles()` після кожного `persist()`, бо пам'ять тримають цикли
+        text_en: Call `gc_collect_cycles()` after each `persist()`, because cycles hold the memory
       - text: Вимкнути identity map через `setAutoCommit(false)`, бо без неї сутності не накопичуються
+        text_en: Disable the identity map via `setAutoCommit(false)`, because without it entities do not accumulate
     explanation: >
       Кожна сутність, зареєстрована в `persist()`, лишається керованою і після `flush()`, тож UoW та identity map ростуть до кінця роботи. `clear()` відокремлює їх і звільняє пам'ять, а `flush()` перед ним потрібен, щоб не втратити незбережене. Збирач сміття не допоможе, бо посилання тримає сам `EntityManager`.
+    explanation_en: >
+      Every entity registered by `persist()` stays managed even after `flush()`, so the UoW and identity map grow until the end. `clear()` detaches them and frees memory, and `flush()` before it is needed so that unsaved changes are not lost. The garbage collector will not help, because the `EntityManager` itself holds the references.
     sources:
       - https://www.doctrine-project.org/projects/doctrine-orm/en/3.8/reference/batch-processing.html
   - id: php-orm-011
     level: senior
     type: single
     text: 'Профайлер показує 101 запит на сторінці, що виводить 100 постів у Doctrine ORM 3.8. Запит DQL: `SELECT p FROM Post p`, а в шаблоні — `$post->getAuthor()->getName()` (ManyToOne, ліниве завантаження). Яка правка прибере N+1?'
+    text_en: The profiler shows 101 queries on a page that lists 100 posts in Doctrine ORM 3.8. The DQL query is `SELECT p FROM Post p`, and the template uses `$post->getAuthor()->getName()` (ManyToOne, lazy loading). Which change removes the N+1?
     options:
       - text: 'Переписати DQL на `SELECT p, a FROM Post p JOIN p.author a`'
+        text_en: Rewrite the DQL as `SELECT p, a FROM Post p JOIN p.author a`
         correct: true
       - text: Викликати `$em->clear()` перед циклом, щоб проксі завантажилися пакетом
+        text_en: Call `$em->clear()` before the loop so proxies load in a batch
       - text: Замінити `getResult()` на `toIterable()`, бо потік читає зв'язки наперед
+        text_en: Replace `getResult()` with `toIterable()`, because the stream reads associations ahead
       - text: "Додати `fetch: 'EXTRA_LAZY'` до ManyToOne `author`, щоб автор завантажувався разом із постом"
+        text_en: 'Add `fetch: ''EXTRA_LAZY''` to the ManyToOne `author` so the author loads together with the post'
     explanation: >
       Ліниві ManyToOne-посилання ініціалізуються окремим SELECT на кожного автора. Fetch join у DQL (`JOIN` з автором у `SELECT`) гідратує пости разом з авторами одним запитом. `clear()` і `toIterable()` на ліниве завантаження не впливають, а `EXTRA_LAZY` стосується колекцій.
+    explanation_en: >
+      Lazy ManyToOne references are initialized by a separate SELECT for each author. A fetch join in DQL (`JOIN` with the author in `SELECT`) hydrates posts together with authors in one query. `clear()` and `toIterable()` do not affect lazy loading, and `EXTRA_LAZY` applies to collections.
     sources:
       - https://www.doctrine-project.org/projects/doctrine-orm/en/3.8/reference/dql-doctrine-query-language.html#joins
   - id: php-orm-012
     level: senior
     type: multiple
     text: 'У Laravel 13 два запити паралельно додають голос до одного допису (PostgreSQL). Які підходи не губитимуть оновлень? (позначте всі)'
+    text_en: In Laravel 13, two requests concurrently add a vote to the same post (PostgreSQL). Which approaches will not lose updates? (select all)
     options:
       - text: '`$post->increment(''votes'')`, що виконує атомарний `UPDATE … SET votes = votes + 1`'
+        text_en: '`$post->increment(''votes'')`, an atomic `UPDATE … SET votes = votes + 1`'
         correct: true
       - text: Транзакція з `Post::lockForUpdate()->find($id)`, потім зміна й `save()`
+        text_en: A transaction with `Post::lockForUpdate()->find($id)`, then change and `save()`
         correct: true
       - text: '`$post->votes++; $post->save();` на моделі, прочитаній раніше'
+        text_en: '`$post->votes++; $post->save();` on a model that was read earlier'
       - text: '`$post->votes = $post->votes + 1;`, якщо перед цим викликано `refresh()`'
+        text_en: '`$post->votes = $post->votes + 1;`, if `refresh()` was called beforehand'
     explanation: >
       `increment` лишає арифметику на стороні БД, а `lockForUpdate` у транзакції змушує другий запит чекати на коміт першого. Зміна в PHP зберігається абсолютним значенням, тож два процеси, які прочитали 0, обидва запишуть 1. `refresh()` лише зменшує вікно гонки, але не усуває його.
+    explanation_en: >
+      `increment` keeps the arithmetic on the DB side, and `lockForUpdate` in a transaction makes the second request wait for the first to commit. A change made in PHP is saved as an absolute value, so two processes that both read 0 will both write 1. `refresh()` only narrows the race window but does not eliminate it.
     sources:
       - https://laravel.com/docs/13.x/queries#pessimistic-locking
       - https://laravel.com/docs/13.x/queries#increment-and-decrement

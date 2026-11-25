@@ -3,7 +3,6 @@ title: Мова Go
 title_en: Go language
 description: Типи, slices і maps, інтерфейси, структури, помилки, generics.
 description_en: Types, slices and maps, interfaces, structs, errors, generics.
-draft_en: true
 questions:
   - id: go-lang-001
     level: junior
@@ -30,7 +29,7 @@ questions:
     explanation: >
       Зріз `a[:2]` не копіює елементи, а вказує на той самий базовий масив, тому запис через `b` видно й у `a`. Копія з'являється лише після `copy` або `append` з перевиділенням пам'яті.
     explanation_en: >
-      The slice `a[:2]` does not copy elements; it points to the same backing array, so a write through `b` is visible in `a` too. A copy appears only after `copy` or an `append` that reallocates memory.
+      The slice `a[:2]` does not copy elements; it points to the same underlying array, so a write through `b` is visible in `a` too. A copy appears only after `copy` or an `append` that reallocates memory.
     sources:
       - https://go.dev/ref/spec#Slice_expressions
   - id: go-lang-002
@@ -186,7 +185,7 @@ questions:
     explanation: >
       Ємності 4 вистачає для обох `append`, тож вони не виділяють нову пам'ять і пишуть в один і той самий четвертий елемент базового масиву. Другий запис перетирає перший, тому `x[3]` теж дорівнює 2. Довжина `s` не змінюється, бо `append` повертає новий заголовок.
     explanation_en: >
-      A capacity of 4 is enough for both `append` calls, so they do not allocate new memory and write to the same fourth element of the backing array. The second write overwrites the first, so `x[3]` is also 2. The length of `s` does not change, because `append` returns a new header.
+      A capacity of 4 is enough for both `append` calls, so they do not allocate new memory and write to the same fourth element of the underlying array. The second write overwrites the first, so `x[3]` is also 2. The length of `s` does not change, because `append` returns a new header.
     sources:
       - https://go.dev/ref/spec#Appending_and_copying_slices
       - https://go.dev/blog/slices-intro
@@ -318,7 +317,7 @@ questions:
     explanation: >
       Слайс тримає посилання на весь базовий масив, тож малий зріз утримує великий буфер. Копія через `slices.Clone` розриває цей зв'язок. Третє число в `big[:2:2]` лише обмежує ємність: пам'ять копіюється пізніше, при першому `append`. Зменшення довжини масив не звільняє.
     explanation_en: >
-      A slice holds a reference to the whole backing array, so a small slice keeps a large buffer alive. A copy via `slices.Clone` breaks that link. The third number in `big[:2:2]` only limits the capacity: memory is copied later, on the first `append`. Reducing the length does not free the array.
+      A slice holds a reference to the whole underlying array, so a small slice keeps a large buffer alive. A copy via `slices.Clone` breaks that link. The third number in `big[:2:2]` only limits the capacity: memory is copied later, on the first `append`. Reducing the length does not free the array.
     sources:
       - https://go.dev/ref/spec#Slice_expressions
       - https://pkg.go.dev/slices#Clone
