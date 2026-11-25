@@ -3,7 +3,6 @@ title: C#
 title_en: C#
 description: Типи, generics, LINQ, records, pattern matching, nullable reference types, делегати й події.
 description_en: Types, generics, LINQ, records, pattern matching, nullable reference types, delegates and events.
-draft_en: true
 questions:
   - id: csharp-001
     level: junior

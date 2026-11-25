@@ -3,7 +3,6 @@ title: CLR, пам'ять і GC
 title_en: CLR, memory and GC
 description: Value/reference types, stack/heap, GC і покоління, IDisposable, Span.
 description_en: Value/reference types, stack/heap, GC and generations, IDisposable, Span.
-draft_en: true
 questions:
   - id: dotnet-clr-001
     level: junior
@@ -73,7 +72,7 @@ questions:
     explanation_en: >
       `using` compiles to `try`/`finally`, so `Dispose` is called however the block exits, and a `using`
       declaration releases the resource at the end of its scope. The GC knows nothing about `Dispose` and
-      does not call it, and the object's memory is still freed only by the GC once the object becomes
+      does not call it, and the object's memory after `Dispose` is still freed only by the GC once the object becomes
       unreachable.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/using
@@ -89,7 +88,7 @@ questions:
         text_en: "Those with no reference path from the roots: static fields, local variables, GC handles"
         correct: true
       - text: "Лише ті, на які не посилається жоден об'єкт; два об'єкти, що посилаються один на одного, не зберуться"
-        text_en: "Only those no object references; two objects that reference each other will not be collected"
+        text_en: "Only those that no object references; two objects that reference each other will not be collected"
       - text: "Ті, що давно не використовувались, навіть якщо на них досі посилається статичне поле"
         text_en: "Those that have not been used for a long time, even if a static field still references them"
       - text: "Лише ті, для яких код уже викликав `Dispose`"
@@ -321,7 +320,7 @@ questions:
     text_en: "A team wants to replace the class `OrderLine` (10 fields, about 80 bytes) with a `struct` to \"remove allocations\". The lines are often passed to methods, stored in a `List<OrderLine>`, and cast to the interface `IPriced`. Which consequences are real?"
     options:
       - text: "Кожне присвоєння й передача в метод копіюватиме всі ~80 байтів, а не одне посилання"
-        text_en: "Every assignment and method call will copy all ~80 bytes instead of a single reference"
+        text_en: "Every assignment and every pass to a method will copy all ~80 bytes instead of a single reference"
         correct: true
       - text: "Кожне приведення до `IPriced` упаковуватиме значення, тобто створюватиме об'єкт у купі"
         text_en: "Every cast to `IPriced` will box the value, that is, create an object on the heap"

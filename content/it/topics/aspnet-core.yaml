@@ -3,7 +3,6 @@ title: ASP.NET Core
 title_en: ASP.NET Core
 description: Middleware, DI і lifetimes, маршрутизація, Minimal API, автентифікація, конфігурація.
 description_en: Middleware, DI and lifetimes, routing, Minimal APIs, authentication, configuration.
-draft_en: true
 questions:
   - id: aspnet-core-001
     level: junior
@@ -74,7 +73,7 @@ questions:
       will the container create?
     options:
       - text: "Два: transient створюється на кожне звернення до контейнера"
-        text_en: "Two: a transient is created on every request to the container"
+        text_en: "Two: a transient is created each time it is requested from the container"
         correct: true
       - text: "Один: transient-сервіс створюється один раз на HTTP-запит і спільний у його межах"
         text_en: "One: a transient service is created once per HTTP request and shared within it"
@@ -86,8 +85,8 @@ questions:
       Transient означає новий екземпляр на кожне звернення до контейнера, тож ендпоінт і сервіс отримають
       різні об'єкти. Один екземпляр на запит дає scoped, а один на весь застосунок — singleton.
     explanation_en: >
-      Transient means a new instance on every request to the container, so the endpoint and the service get
-      different objects. One instance per request is scoped, and one for the whole application is singleton.
+      Transient means a new instance each time it is requested from the container, so the endpoint and the service get
+      different objects. One instance per HTTP request is scoped, and one for the whole application is singleton.
     sources:
       - https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection/service-lifetimes#transient
 
@@ -108,12 +107,12 @@ questions:
         text_en: "In `Production`, `appsettings.Production.json` values override `appsettings.json`"
         correct: true
       - text: "Вкладений ключ `ConnectionStrings:Default` у змінній середовища записують як `ConnectionStrings__Default`"
-        text_en: "Nested key `ConnectionStrings:Default` is written as `ConnectionStrings__Default` in environment variables"
+        text_en: "A nested key `ConnectionStrings:Default` is written as `ConnectionStrings__Default` in environment variables"
         correct: true
       - text: "`appsettings.json` має найвищий пріоритет і перекриває навіть аргументи командного рядка"
         text_en: "`appsettings.json` has the highest priority and overrides even command-line arguments"
       - text: "User secrets завантажуються в будь-якому середовищі, зокрема в `Production`"
-        text_en: "User secrets are loaded in any environment, including `Production`, with no exceptions"
+        text_en: "User secrets are loaded in any environment, including `Production`, in any configuration"
     explanation: >
       Джерела читаються по черзі, і пізніше перекриває раніше: `appsettings.json`, потім
       `appsettings.{Environment}.json`, user secrets (лише в `Development`), змінні середовища й, з найвищим
@@ -221,7 +220,7 @@ questions:
         app.Run();
     options:
       - text: "Тіло вже почало писатися, заголовки відправлено, і їх зміна кидає `InvalidOperationException`"
-        text_en: "The body has already started, the headers have been sent, and changing them throws `InvalidOperationException`"
+        text_en: "Writing the body has already started, the headers have been sent, and changing them throws `InvalidOperationException`"
         correct: true
       - text: "Заголовки з префіксом `X-` Kestrel відкидає, якщо їх явно не дозволено в політиці CORS застосунку"
         text_en: "Kestrel drops headers with the `X-` prefix unless they are explicitly allowed in the app CORS policy"
@@ -247,7 +246,7 @@ questions:
     level: middle
     type: single
     text: "Звідки Minimal API візьме значення параметрів для запиту `POST /customers/42/orders?page=3` з JSON-тілом?"
-    text_en: "Where will Minimal API get the parameter values for a `POST /customers/42/orders?page=3` request with a JSON body?"
+    text_en: "Where will Minimal APIs get the parameter values for a `POST /customers/42/orders?page=3` request with a JSON body?"
     code:
       lang: csharp
       source: |
@@ -289,7 +288,7 @@ questions:
       запиту. Атрибути `[FromBody]` чи `[FromServices]` потрібні лише тоді, коли це правило треба перевизначити.
       Без `?page=3` обов'язковий `page` дав би відповідь 400.
     explanation_en: >
-      Without attributes, Minimal API determines the source itself: a parameter whose name is in the route template
+      Without attributes, Minimal APIs determine the source itself: a parameter whose name is in the route template
       is taken from the route, a simple type outside the route comes from the query string, a type registered in DI
       comes from the container, and the rest comes from the request body. The `[FromBody]` or `[FromServices]`
       attributes are needed only when this rule has to be overridden. Without `?page=3`, the required `page` would

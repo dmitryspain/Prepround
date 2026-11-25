@@ -3,7 +3,6 @@ title: Hibernate і JPA
 title_en: Hibernate and JPA
 description: Сутності, зв'язки, lazy/eager, N+1, транзакції, кеш першого/другого рівня.
 description_en: Entities, relationships, lazy/eager, N+1, transactions, first/second-level cache.
-draft_en: true
 questions:
   - id: hibernate-jpa-001
     level: junior
@@ -106,7 +105,7 @@ questions:
       - text: "Hibernate створить окрему таблицю зв'язку з назвою `order`"
         text_en: "Hibernate will create a separate join table named `order` for the relationship"
       - text: "Операції з батьком каскадно застосовуватимуться до всіх елементів колекції"
-        text_en: "Operations on the parent will cascade to all elements of the collection automatically"
+        text_en: "Operations on the parent will be cascaded to all elements of the collection"
       - text: "Колекція завантажуватиметься лише тоді, коли до неї звернуться"
         text_en: "The collection will be loaded only when it is accessed, not with the parent"
     explanation: >
@@ -186,7 +185,7 @@ questions:
     text: >
       Що станеться, якщо у керованого замовлення з `@OneToMany(mappedBy = "order", orphanRemoval = true)`
       видалити позицію з колекції `items` і зробити `flush`?
-    text_en: 'What happens if, for a managed order with `@OneToMany(mappedBy = "order", orphanRemoval = true)`, an item is removed from the `items` collection and `flush` is done?'
+    text_en: 'What happens if, for a managed order with `@OneToMany(mappedBy = "order", orphanRemoval = true)`, an item is removed from the `items` collection and `flush` is called?'
     options:
       - text: "Рядок позиції буде видалено з бази командою `DELETE`"
         text_en: "The item's row is deleted from the database with a `DELETE` command"
@@ -251,7 +250,7 @@ questions:
       Починаючи з 7.4 ліміт іде в SQL-підзапит, а стару поведінку повертає hint `org.hibernate.limitInMemory`.
       Типове рішення для старіших версій: спершу вибрати сторінку ідентифікаторів, а потім довантажити книжки другим запитом.
     explanation_en: >
-      Result rows are duplicated per book, so a SQL limit would truncate the collections, and Hibernate applies it in memory (with the warning `HHH90003004`). Starting with 7.4 the limit goes into an SQL subquery, and the old behavior is restored by the hint `org.hibernate.limitInMemory`. The typical solution for older versions: first select a page of identifiers, then load the books with a second query.
+      Result rows are duplicated per book, so an SQL limit would truncate the collections, and Hibernate applies it in memory (with the warning `HHH90003004`). Starting with 7.4 the limit goes into an SQL subquery, and the old behavior is restored by the hint `org.hibernate.limitInMemory`. The typical solution for older versions: first select a page of identifiers, then load the books with a second query.
     sources:
       - https://docs.jboss.org/hibernate/orm/7.0/querylanguage/html_single/Hibernate_Query_Language.html
       - https://docs.hibernate.org/orm/7.4/migration-guide/migration-guide.html

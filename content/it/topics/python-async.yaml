@@ -201,10 +201,10 @@ questions:
     text_en: What allows heavy pure-Python code to run in parallel on several cores in the standard Python 3.14 build with the GIL?
     options:
       - text: "`ProcessPoolExecutor`: воркери є окремими процесами"
-        text_en: '`ProcessPoolExecutor`: the workers are separate processes'
+        text_en: '`ProcessPoolExecutor`: workers are separate processes'
         correct: true
       - text: "`InterpreterPoolExecutor`: воркери мають власні інтерпретатори"
-        text_en: '`InterpreterPoolExecutor`: the workers have their own interpreters'
+        text_en: '`InterpreterPoolExecutor`: own interpreter per worker'
         correct: true
       - text: "`ThreadPoolExecutor` із вісьмома воркерами-потоками"
         text_en: '`ThreadPoolExecutor` with eight worker threads'

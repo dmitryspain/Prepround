@@ -3,7 +3,6 @@ title: Spring Boot
 title_en: Spring Boot
 description: IoC/DI, біни і скоупи, автоконфігурація, Spring MVC, Spring Security, профілі.
 description_en: IoC/DI, beans and scopes, auto-configuration, Spring MVC, Spring Security, profiles.
-draft_en: true
 questions:
   - id: spring-boot-001
     level: junior
@@ -254,14 +253,14 @@ questions:
       - text: Запит пройде, бо специфічніший шаблон `/api/public/**` має пріоритет
         text_en: "The request will pass, because the more specific pattern `/api/public/**` takes precedence"
       - text: Запит пройде, бо `permitAll` перемагає `authenticated`, коли правила збігаються
-        text_en: "The request will pass, because `permitAll` wins over `authenticated` when rules match"
+        text_en: "The request will pass, because `permitAll` wins over `authenticated` when both rules match"
       - text: Застосунок не стартує, бо шаблони перекриваються
         text_en: "The application will not start, because the patterns overlap"
     explanation: >
       `AuthorizationFilter` проходить правила в порядку оголошення і застосовує лише перший збіг, тому специфічні винятки треба ставити перед загальними. Правильно: спершу `/api/public/**`, потім `/api/**`.
       Перекриття шаблонів не є помилкою конфігурації.
     explanation_en: >
-      `AuthorizationFilter` goes through the rules in declaration order and applies only the first match, so specific exceptions must come before general ones. Correct: first `/api/public/**`, then `/api/**`. Overlapping patterns are not a configuration error.
+      `AuthorizationFilter` goes through the rules in declaration order and applies only the first match, so specific exceptions must come before general ones. The correct order is `/api/public/**` first, then `/api/**`. Overlapping patterns are not a configuration error.
     sources:
       - https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html
   - id: spring-boot-010
