@@ -100,6 +100,9 @@ public partial class ValidateCommandTests
         // waves will bring into the real content; translated topic titles alone (PRP-030) never do.
         var summary = TranslationsSuffix().Replace(line, "");
         Assert.Matches(SummaryLine(), summary);
+        // validate counts every complete translation, drafts included; the raw lines of the files say how many.
+        var translated = QuestionTranslationCount(RealContentDirectory(), includeDrafts: true);
+        Assert.Equal(translated > 0 ? $", перекладів en: {translated}" : "", line[summary.Length..]);
         // PRP-023: the total and the drafts come from the raw lines of the files; the suffix appears only with drafts.
         var drafts = RealDraftQuestionCount();
         Assert.EndsWith(

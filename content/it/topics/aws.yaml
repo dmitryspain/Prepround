@@ -8,15 +8,23 @@ questions:
     level: junior
     type: single
     text: Як найправильніше дати застосунку на EC2-інстансі доступ до S3, не зберігаючи ключі в коді чи конфігурації?
+    text_en: "How can an application on an EC2 instance best get access to S3 without storing keys in code or configuration?"
     options:
       - text: "Прикріпити до інстансу IAM-роль (instance profile): SDK сам отримає тимчасові облікові дані"
+        text_en: "Attach an IAM role (instance profile) to the instance: the SDK obtains temporary credentials itself"
         correct: true
       - text: "Створити IAM-користувача й передати його ключі доступу застосунку через змінні середовища"
+        text_en: "Create an IAM user and pass its access keys to the application through environment variables"
       - text: "Зробити бакет публічним, щоб застосунку не потрібна була автентифікація"
+        text_en: "Make the bucket public so the application does not need authentication"
       - text: "Використати ключі кореневого акаунта, бо вони мають усі потрібні права"
+        text_en: "Use the root account keys, because they have all the permissions needed"
     explanation: >
       Роль не має довгострокових ключів: той, хто її приймає, отримує тимчасові облікові дані, які оновлюються самі. Ключі користувача у змінних
       середовища теж працюють, але це довгострокові секрети, що можуть витекти.
+    explanation_en: >
+      A role has no long-term keys: whoever assumes it receives temporary credentials that refresh automatically. User keys in
+      environment variables also work, but they are long-term secrets that can leak.
     sources:
       - https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html
   - id: aws-002
@@ -24,33 +32,50 @@ questions:
     type: single
     text: >
       У security group інстансу дозволено вхідний трафік на порт 443, а вихідних правил для відповіді немає. Що буде з відповідями на ці запити?
+    text_en: "A security group of an instance allows inbound traffic on port 443, and there are no outbound rules for the response. What happens to the responses to these requests?"
     options:
       - text: "Відповіді дозволені автоматично: security group запам'ятовує стан з'єднання (stateful)"
+        text_en: "Responses are allowed automatically: a security group tracks connection state (stateful)"
         correct: true
       - text: "Відповіді блокуються, доки не додати вихідне правило на тимчасові порти клієнта"
+        text_en: "Responses are blocked until an outbound rule for the client's ephemeral ports is added"
       - text: "Відповіді проходять лише якщо в мережевому ACL підмережі є таке саме правило"
+        text_en: "Responses pass only if the subnet's network ACL has the same rule"
       - text: "Відповіді дозволені лише для адрес, які вже є у вхідному правилі, і лише першу хвилину"
+        text_en: "Responses are allowed only for addresses already in the inbound rule, and only for the first minute"
     explanation: >
       Security group відстежує з'єднання, тому відповідь на дозволений запит проходить незалежно від вихідних правил. Мережеві ACL, навпаки,
       не зберігають стану, і для них правила потрібні в обидва боки.
+    explanation_en: >
+      A security group tracks connections, so a response to an allowed request passes regardless of outbound rules. Network ACLs, by
+      contrast, are stateless, and they need rules in both directions.
     sources:
       - https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html
   - id: aws-003
     level: junior
     type: multiple
     text: Які твердження про Amazon S3 (general purpose бакети) правильні?
+    text_en: "Which statements about Amazon S3 (general purpose buckets) are true?"
     options:
       - text: "Ім'я бакета має бути унікальним серед усіх акаунтів і регіонів партиції"
+        text_en: "A bucket name must be globally unique across all accounts and Regions of a partition"
         correct: true
       - text: "S3 забезпечує сильну консистентність читання після запису (read-after-write) для PUT і DELETE об'єктів"
+        text_en: "S3 provides strong read-after-write consistency for PUT and DELETE of objects"
         correct: true
       - text: "У бакеті з версіюванням звичайний `DELETE` додає маркер видалення, а попередні версії лишаються"
+        text_en: "In a versioned bucket, a plain `DELETE` adds a delete marker, and earlier versions remain"
         correct: true
       - text: "Папки в бакеті є справжніми каталогами, і їх потрібно створити, перш ніж класти в них об'єкти"
+        text_en: "Folders in a bucket are real directories that must be created before objects go in them"
       - text: "Перезапис наявного об'єкта має лише кінцеву консистентність: читач може деякий час бачити стару версію"
+        text_en: "Overwriting an object is only eventually consistent: readers may briefly see the old version"
     explanation: >
       Простір імен бакетів глобальний, а S3 уже давно дає сильну консистентність, зокрема й для перезапису. Структура бакета пласка: «папка» —
       це лише спільний префікс ключів, тому нічого створювати наперед не треба.
+    explanation_en: >
+      The bucket namespace is global, and S3 has long provided strong consistency, including for overwrites. A bucket's structure is
+      flat: a "folder" is just a shared key prefix, so nothing needs to be created in advance.
     sources:
       - https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
       - https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html
@@ -60,21 +85,30 @@ questions:
     type: single
     text: >
       Подія «замовлення створено» має одночасно дійти до трьох незалежних сервісів. Що найприродніше використати в AWS?
+    text_en: "An \"order created\" event must reach three independent services at the same time. What is the most natural thing to use in AWS?"
     options:
       - text: "Тему SNS, на яку підписані три сервіси (часто через власні черги SQS)"
+        text_en: "An SNS topic that the three services subscribe to (often through their own SQS queues)"
         correct: true
       - text: "Одну чергу SQS, з якої читають усі три сервіси одночасно, не заважаючи одне одному"
+        text_en: "A single SQS queue that all three services read from at once without interfering with each other"
       - text: "Один інстанс EC2, який по черзі викликає кожен сервіс"
+        text_en: "A single EC2 instance that calls each service in turn"
       - text: "Бакет S3, куди кожен сервіс записує свій екземпляр події"
+        text_en: "An S3 bucket where each service writes its own copy of the event"
     explanation: >
       SNS розсилає повідомлення всім підписникам (fanout). У звичайній черзі SQS кожне повідомлення після обробки одним споживачем
       зникає, тож інші двоє його не побачать.
+    explanation_en: >
+      SNS delivers a message to all subscribers (fanout). In a standard SQS queue, each message disappears once one consumer has
+      processed it, so the other two will not see it.
     sources:
       - https://docs.aws.amazon.com/sns/latest/dg/welcome.html
   - id: aws-005
     level: middle
     type: single
     text: Чи зможе користувач з цією політикою видалити об'єкт `reports/a.csv`?
+    text_en: "Can a user with this policy delete the object `reports/a.csv`?"
     code:
       lang: json
       source: |
@@ -89,13 +123,20 @@ questions:
         }
     options:
       - text: "Ні: явна заборона (`Deny`) перекриває будь-який дозвіл"
+        text_en: "No: an explicit `Deny` overrides any allow"
         correct: true
       - text: "Так: `s3:*` охоплює `DeleteObject`, а оскільки він ширший, то має пріоритет"
+        text_en: "Yes: `s3:*` covers `DeleteObject`, and because it is broader, it takes precedence"
       - text: "Так: застосовується останній за порядком вираз, а це `Deny`, тому результат залежить від порядку"
+        text_en: "Yes: the last statement in order applies, and that is `Deny`, so the result depends on order"
       - text: "Ні, але лише тому, що `Deny` стоїть пізніше за `Allow`"
+        text_en: "No, but only because `Deny` comes after `Allow`"
     explanation: >
       Під час оцінювання явний `Deny` завжди перемагає `Allow`, незалежно від порядку виразів і ширини дії. Порядок у політиці
       на результат не впливає.
+    explanation_en: >
+      During evaluation, an explicit `Deny` always wins over `Allow`, regardless of statement order or the breadth of the action. The
+      order in the policy does not affect the result.
     sources:
       - https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html
   - id: aws-006
@@ -103,15 +144,24 @@ questions:
     type: single
     text: >
       Інстанси в приватній підмережі мають завантажувати оновлення з інтернету, але не приймати вхідні підключення зовні. Що налаштувати?
+    text_en: "Instances in a private subnet must download updates from the internet but not accept inbound connections from outside. What should you set up?"
     options:
       - text: "NAT gateway у публічній підмережі й маршрут `0.0.0.0/0` на нього з приватної підмережі"
+        text_en: "A NAT gateway in a public subnet and a `0.0.0.0/0` route to it from the private subnet"
         correct: true
       - text: "Internet gateway і маршрут `0.0.0.0/0` на нього в таблиці маршрутів приватної підмережі"
+        text_en: "An internet gateway and a `0.0.0.0/0` route to it in the private subnet's route table"
       - text: "NAT gateway у самій приватній підмережі, бо йому не потрібен маршрут до інтернету"
+        text_en: "A NAT gateway in the private subnet itself, because it does not need a route to the internet"
       - text: "Elastic IP на кожному інстансі з security group, що забороняє вхідний трафік"
+        text_en: "An Elastic IP on each instance with a security group that denies inbound traffic"
     explanation: >
       NAT gateway пропускає вихідні з'єднання, але не дає зовнішнім хостам ініціювати власні. Він сам має виходити в інтернет через
       internet gateway, тому його розміщують у публічній підмережі. Маршрут на internet gateway з приватної підмережі зробив би її публічною.
+    explanation_en: >
+      A NAT gateway lets outbound connections through but does not let external hosts initiate their own. It must itself reach the
+      internet through an internet gateway, so it is placed in a public subnet. A route to an internet gateway from a private subnet
+      would make it public.
     sources:
       - https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html
   - id: aws-007
@@ -119,33 +169,50 @@ questions:
     type: single
     text: >
       RDS працює як Multi-AZ DB instance deployment з одним резервним (standby) інстансом, а читання перевантажують основну БД. Що вірно?
+    text_en: "RDS runs as a Multi-AZ DB instance deployment with one standby instance, and reads are overloading the primary database. What is true?"
     options:
       - text: "Standby лише для failover і читання не обслуговує, тож розвантажують read replicas"
+        text_en: "The standby is only for failover and does not serve reads, so you offload with read replicas"
         correct: true
       - text: "Standby обслуговує читання, тож достатньо спрямувати `SELECT` на його endpoint"
+        text_en: "The standby serves reads, so it is enough to direct `SELECT` to its endpoint"
       - text: "Multi-AZ автоматично розподіляє читання між основним і резервним інстансами"
+        text_en: "Multi-AZ automatically spreads reads between the primary and standby instances"
       - text: "Читання масштабується додаванням нових standby-інстансів у межах Multi-AZ DB instance deployment"
+        text_en: "Reads scale by adding more standby instances within the Multi-AZ DB instance deployment"
     explanation: >
       У цій конфігурації резервний інстанс лише чекає на failover. Масштабувати читання треба окремими read replicas. Щоб резервні
       інстанси ще й читали, потрібен інший тип розгортання, Multi-AZ DB cluster.
+    explanation_en: >
+      In this configuration the standby instance only waits for a failover. Reads must be scaled with separate read replicas. For
+      standby instances to also serve reads, you need a different deployment type, a Multi-AZ DB cluster.
     sources:
       - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html
   - id: aws-008
     level: middle
     type: multiple
     text: Які твердження про стандартну чергу Amazon SQS правильні?
+    text_en: "Which statements about a standard Amazon SQS queue are true?"
     options:
       - text: "Повідомлення може прийти двічі, тому обробка має бути ідемпотентною"
+        text_en: "A message may arrive twice, so processing must be idempotent"
         correct: true
       - text: "Невидалене повідомлення знову з'являється в черзі після visibility timeout"
+        text_en: "An undeleted message reappears in the queue after the visibility timeout"
         correct: true
       - text: "Порядок доставки лише best-effort і може порушуватися"
+        text_en: "Delivery order is only best-effort and can be violated"
         correct: true
       - text: "Черга гарантує строгий порядок FIFO в межах усієї черги"
+        text_en: "The queue guarantees strict FIFO order across the whole queue"
       - text: "Повідомлення видаляється з черги автоматично одразу після `ReceiveMessage`"
+        text_en: "A message is deleted from the queue automatically right after `ReceiveMessage`"
     explanation: >
       Стандартна черга гарантує доставку принаймні один раз, але не відсутність дублів і не порядок. Повідомлення видаляє споживач після успішної обробки,
       а до цього воно лише тимчасово невидиме. Строгий порядок дає лише FIFO-черга.
+    explanation_en: >
+      A standard queue guarantees at-least-once delivery, but not the absence of duplicates or ordering. The consumer deletes the
+      message after successful processing, and until then it is only temporarily invisible. Only a FIFO queue gives strict ordering.
     sources:
       - https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues.html
       - https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html
@@ -154,15 +221,23 @@ questions:
     type: single
     text: >
       Подія S3 асинхронно викликає Lambda, в якої `reserved concurrency` дорівнює 2. За хвилину завантажили 1000 файлів. Що станеться з подіями, на які не вистачило конкурентності?
+    text_en: "An S3 event asynchronously invokes a Lambda function whose `reserved concurrency` is 2. Within a minute, 1000 files are uploaded. What happens to the events that did not get enough concurrency?"
     options:
       - text: "Їх буде обмежено (throttled), але Lambda повторює спроби до 6 годин за замовчуванням"
+        text_en: "They are throttled, but Lambda retries for up to 6 hours by default"
         correct: true
       - text: "Вони безповоротно губляться, бо асинхронні виклики Lambda ніколи не повторюються"
+        text_en: "They are lost permanently, because asynchronous Lambda invocations are never retried"
       - text: "Lambda тимчасово збільшить `reserved concurrency` і обробить усі події одразу"
+        text_en: "Lambda temporarily raises `reserved concurrency` and processes all events at once"
       - text: "Завантаження файлів у S3 завершиться помилкою, бо Lambda не прийняла подію"
+        text_en: "The upload to S3 fails with an error, because Lambda did not accept the event"
     explanation: >
       Для асинхронних викликів перевищення конкурентності дає помилку 429 усередині служби, але подія не віддається відправнику: Lambda тримає її в черзі й
       повторює з наростаючою паузою. Reserved concurrency діє водночас як верхня межа масштабування.
+    explanation_en: >
+      For asynchronous invocations, exceeding concurrency produces a 429 error inside the service, but the event is not returned to the
+      sender: Lambda keeps it in a queue and retries with an increasing delay. Reserved concurrency also acts as an upper scaling limit.
     sources:
       - https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-error-handling.html
       - https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html
@@ -171,32 +246,49 @@ questions:
     type: single
     text: >
       Застосунок на EC2 з IAM-роллю генерує presigned URL для S3 із терміном 7 днів. Через кілька годин клієнти скаржаться, що посилання перестали працювати. Найімовірніша причина?
+    text_en: "An application on EC2 with an IAM role generates an S3 presigned URL with a 7-day expiry. A few hours later, clients complain that the links stopped working. What is the most likely cause?"
     options:
       - text: "URL підписано тимчасовими обліковими даними ролі, тож він спливає разом із сесією ролі"
+        text_en: "The URL is signed with the role's temporary credentials, so it expires with the role session"
         correct: true
       - text: "Максимальний термін presigned URL в S3 становить кілька годин, тому 7 днів нереальні"
+        text_en: "The maximum presigned URL lifetime in S3 is a few hours, so 7 days is unrealistic"
       - text: "Presigned URL діє лише для одного завантаження, після чого S3 його відкликає"
+        text_en: "A presigned URL works for a single download only, after which S3 revokes it"
       - text: "S3 вимагає перегенерувати presigned URL після кожної зміни об'єкта"
+        text_en: "S3 requires regenerating the presigned URL after every change to the object"
     explanation: >
       URL успадковує дозволи й час життя облікових даних, якими його підписано. Семиденний термін можливий лише для довгострокових ключів IAM-користувача,
       а для ролі посилання діє не довше за сесію (зазвичай кілька годин).
+    explanation_en: >
+      A URL inherits the permissions and lifetime of the credentials that signed it. A seven-day expiry is possible only with an IAM
+      user's long-term keys, while for a role the link is valid no longer than the session (usually a few hours).
     sources:
       - https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html
   - id: aws-011
     level: senior
     type: multiple
     text: Які заходи справді скорочують затримку холодного старту Lambda-функції?
+    text_en: "Which measures actually reduce the cold start latency of a Lambda function?"
     options:
       - text: "Provisioned concurrency: заздалегідь ініціалізовані середовища виконання"
+        text_en: "Provisioned concurrency: execution environments initialized in advance"
         correct: true
       - text: "SnapStart: старт зі знімка вже ініціалізованого середовища (Java та інші)"
+        text_en: "SnapStart: starting from a snapshot of an already initialized environment (Java and others)"
         correct: true
       - text: "Reserved concurrency: функція отримує попередньо розігріті середовища"
+        text_en: "Reserved concurrency: the function gets pre-warmed environments"
       - text: "Збільшення тайм-ауту функції, щоб ініціалізація встигала завершитися"
+        text_en: "Increasing the function timeout so that initialization has time to finish"
       - text: "Асинхронний виклик замість синхронного: тоді холодного старту немає"
+        text_en: "Asynchronous invocation instead of synchronous: then there is no cold start"
     explanation: >
       Provisioned concurrency і SnapStart прибирають або скорочують ініціалізацію. Reserved concurrency лише резервує й обмежує ємність і нічого не розігріває.
       Тайм-аут і спосіб виклику на тривалість старту не впливають.
+    explanation_en: >
+      Provisioned concurrency and SnapStart remove or shorten initialization. Reserved concurrency only reserves and limits capacity and
+      warms nothing up. The timeout and the invocation method do not affect startup time.
     sources:
       - https://docs.aws.amazon.com/lambda/latest/dg/provisioned-concurrency.html
       - https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html
@@ -205,14 +297,22 @@ questions:
     type: single
     text: >
       Інстанси в приватних підмережах генерують терабайти трафіку до S3 через NAT gateway, і рахунок за обробку даних зростає. Яке рішення прибирає NAT із цього шляху?
+    text_en: "Instances in private subnets generate terabytes of traffic to S3 through a NAT gateway, and the data processing bill keeps growing. Which solution takes NAT out of this path?"
     options:
       - text: "Gateway VPC endpoint для S3 з маршрутом у таблицях маршрутів підмереж"
+        text_en: "A gateway VPC endpoint for S3 with a route in the subnets' route tables"
         correct: true
       - text: "Інший NAT gateway у кожній зоні доступності для розподілу навантаження"
+        text_en: "Another NAT gateway in each Availability Zone to spread the load"
       - text: "Internet gateway для приватних підмереж і публічні IP на інстансах"
+        text_en: "An internet gateway for the private subnets and public IPs on the instances"
       - text: "Elastic IP, прив'язаний до NAT gateway, бо трафік тоді тарифікується менше"
+        text_en: "An Elastic IP attached to the NAT gateway, because traffic is then billed less"
     explanation: >
       Gateway endpoint для S3 (і DynamoDB) направляє трафік усередині мережі AWS без internet gateway і NAT, а сам endpoint безкоштовний. Додаткові
       NAT gateway лише збільшать витрати, а внутрішні маршрути до S3 вони не змінюють.
+    explanation_en: >
+      A gateway endpoint for S3 (and DynamoDB) routes traffic inside the AWS network without an internet gateway or NAT, and the
+      endpoint itself is free. Extra NAT gateways would only increase costs, and they do not change internal routes to S3.
     sources:
       - https://docs.aws.amazon.com/vpc/latest/privatelink/gateway-endpoints.html

@@ -8,6 +8,7 @@ questions:
     level: junior
     type: single
     text: Що повернуть дві останні команди Redis?
+    text_en: What do the last two Redis commands return?
     code:
       lang: text
       source: |
@@ -16,64 +17,92 @@ questions:
         TTL missing
     options:
       - text: "`-1` для ключа без терміну життя й `-2` для неіснуючого ключа"
+        text_en: "`-1` for a key with no expiration and `-2` for a nonexistent key"
         correct: true
       - text: "`0` для ключа без терміну життя й `-1` для неіснуючого ключа"
+        text_en: "`0` for a key with no expiration and `-1` for a nonexistent key"
       - text: "`-1` для обох: у кожного з них термін життя не встановлено"
+        text_en: "`-1` for both: neither of them has an expiration set"
       - text: "`-2` для ключа без терміну життя й `-1` для неіснуючого ключа"
+        text_en: "`-2` for a key with no expiration and `-1` for a nonexistent key"
     explanation: >
       `TTL` повертає `-1`, якщо ключ існує, але без терміну життя, і `-2`, якщо ключа немає. Невід'ємне число означає, скільки секунд лишилося.
+    explanation_en: >
+      `TTL` returns `-1` if the key exists but has no expiration, and `-2` if the key does not exist. A non-negative number is the number of seconds remaining.
     sources:
       - https://redis.io/docs/latest/commands/ttl/
   - id: nosql-002
     level: junior
     type: single
     text: Яка структура даних Redis найкраще підходить для таблиці лідерів, де потрібно швидко отримати топ-10 гравців за очками?
+    text_en: Which Redis data structure is best suited for a leaderboard where you need to quickly get the top 10 players by score?
     options:
       - text: "Sorted set: `ZADD` додає очки, а діапазонні команди повертають гравців за рейтингом"
+        text_en: "Sorted set: `ZADD` adds scores, and range commands return players by rank"
         correct: true
       - text: "Список (list): `LPUSH` додає гравця, а `LRANGE` повертає перших десять елементів"
+        text_en: "List: `LPUSH` adds a player, and `LRANGE` returns the first ten elements"
       - text: "Хеш (hash): поля містять очки гравців, а `HGETALL` повертає їх відсортованими"
+        text_en: "Hash: fields hold player scores, and `HGETALL` returns them sorted"
       - text: "Множина (set): `SADD` зберігає гравців, а `SMEMBERS` віддає їх за очками"
+        text_en: "Set: `SADD` stores players, and `SMEMBERS` returns them ordered by score"
     explanation: >
       У sorted set кожен елемент має числову оцінку, і Redis тримає елементи впорядкованими за нею, тому топ вибирається без сортування на клієнті.
       Hash і set порядку не гарантують, а list упорядкований за часом додавання.
+    explanation_en: >
+      In a sorted set every element has a numeric score and Redis keeps the elements ordered by it, so the top is selected without sorting on the client. Hash and set do not guarantee order, and a list is ordered by insertion time.
     sources:
       - https://redis.io/docs/latest/develop/data-types/sorted-sets/
   - id: nosql-003
     level: junior
     type: single
     text: Що станеться, якщо в MongoDB вставити документ без поля `_id`?
+    text_en: What happens if you insert a document without the `_id` field in MongoDB?
     code:
       lang: javascript
       source: |
         db.users.insertOne({ name: "Anna" })
     options:
       - text: "MongoDB додасть унікальний `_id` типу `ObjectId` і поверне його"
+        text_en: "MongoDB adds a unique `_id` of type `ObjectId` and returns it"
         correct: true
       - text: "Вставка завершиться помилкою: `_id` обов'язково задає клієнт"
+        text_en: "The insert fails with an error: the client must always supply `_id`"
       - text: "Документ збережеться без `_id`, але його не можна буде оновити"
+        text_en: "The document is stored without `_id`, but it cannot be updated later"
       - text: "`_id` стане послідовним цілим числом `1, 2, 3…`, як автоінкремент"
+        text_en: "`_id` becomes a sequential integer `1, 2, 3…`, like an auto-increment"
     explanation: >
       Кожен документ має унікальний первинний ключ `_id`. Якщо його не передано, його генерує драйвер або сервер, зазвичай як `ObjectId`.
       Автоінкременту в MongoDB немає, і на колекції автоматично є унікальний індекс по `_id`.
+    explanation_en: >
+      Every document has a unique primary key `_id`. If it is not supplied, the driver or the server generates it, usually as an `ObjectId`. MongoDB has no auto-increment, and a unique index on `_id` exists on the collection automatically.
     sources:
       - https://www.mongodb.com/docs/manual/core/document/#the-_id-field
   - id: nosql-004
     level: junior
     type: multiple
     text: Які твердження про шаблон cache-aside правильні?
+    text_en: Which statements about the cache-aside pattern are true?
     options:
       - text: "Застосунок сам перевіряє кеш і за промаху читає дані з бази"
+        text_en: "The application itself checks the cache and reads data from the database on a miss"
         correct: true
       - text: "Після читання з бази застосунок кладе значення в кеш для наступних запитів"
+        text_en: "After reading from the database, the application puts the value into the cache for later requests"
         correct: true
       - text: "Значення в кеші може бути застарілим щодо бази, тому потрібні термін життя або інвалідація"
+        text_en: "A cached value can be stale relative to the database, so a TTL or invalidation is needed"
         correct: true
       - text: "Кеш сам завантажує дані з бази за промаху, а застосунок знає лише про кеш"
+        text_en: "The cache itself loads data from the database on a miss, and the application only knows about the cache"
       - text: "Кожен запис у кеш автоматично й синхронно потрапляє в базу"
+        text_en: "Every write to the cache is automatically and synchronously propagated to the database"
     explanation: >
       У cache-aside логіку кешування веде застосунок. Варіанти, коли сам кеш підтягує дані з сховища (read-through) або транслює записи в базу
       (write-through), — це інші шаблони.
+    explanation_en: >
+      In cache-aside the application drives the caching logic. Variants where the cache itself pulls data from the store (read-through) or forwards writes to the database (write-through) are different patterns.
     sources:
       - https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside
   - id: nosql-005
@@ -81,15 +110,23 @@ questions:
     type: single
     text: >
       У блозі до кожної статті ще є до 20 коментарів, які майже завжди читають разом зі статтею й не потрібні окремо. Як це краще змоделювати в MongoDB?
+    text_en: >
+      Each blog article also has up to 20 comments that are almost always read together with the article and are not needed on their own. How is it best to model this in MongoDB?
     options:
       - text: "Вкласти коментарі масивом у документ статті: один запит повертає все"
+        text_en: "Embed the comments as an array in the article document: one query returns everything"
         correct: true
       - text: "Зберігати коментарі в окремій колекції й завжди з'єднувати через `$lookup`"
+        text_en: "Keep comments in a separate collection and always join them with `$lookup`"
       - text: "Зробити окрему колекцію для кожної статті, щоб коментарі не змішувалися"
+        text_en: "Create a separate collection for each article so comments don't get mixed up"
       - text: "Зберігати в статті лише лічильник, а тексти коментарів тримати в Redis"
+        text_en: "Store only a counter in the article and keep the comment texts in Redis"
     explanation: >
       Коли пов'язані дані невеликі, обмежені за розміром і завжди читаються разом, вкладення спрощує читання й дає атомарне оновлення одного документа.
       Окрема колекція виправдана, якщо вкладений масив необмежено росте або дані потрібні самостійно.
+    explanation_en: >
+      When related data is small, bounded in size, and always read together, embedding simplifies reads and gives atomic updates of a single document. A separate collection is justified if the embedded array grows without bound or the data is needed on its own.
     sources:
       - https://www.mongodb.com/docs/manual/data-modeling/embedding/
   - id: nosql-006
@@ -97,21 +134,30 @@ questions:
     type: single
     text: >
       Сервер Redis (політику `maxmemory-policy` не змінювали) досяг ліміту `maxmemory`. Що відбувається з новими записами?
+    text_en: >
+      A Redis server (the `maxmemory-policy` has not been changed) has reached its `maxmemory` limit. What happens to new writes?
     options:
       - text: "Команди, що потребують нової пам'яті, відхиляються з помилкою OOM; читання працюють"
+        text_en: "Commands that need more memory are rejected with an OOM error; reads still work"
         correct: true
       - text: "Redis видаляє найдавніше використані ключі, щоб звільнити місце"
+        text_en: "Redis evicts the least recently used keys to free up space"
       - text: "Redis видаляє найстаріші ключі з терміном життя, а решту лишає"
+        text_en: "Redis evicts the oldest keys that have an expiration and keeps the rest"
       - text: "Redis вмикає своп на диск і продовжує приймати записи без помилок, але повільніше"
+        text_en: "Redis enables swapping to disk and keeps accepting writes without errors, but more slowly"
     explanation: >
       Типова політика `noeviction` нічого не видаляє й повертає помилку на команди, які збільшують пам'ять. Для кешу зазвичай обирають політику
       на кшталт `allkeys-lru`, а `noeviction` лишають для сховища, де втрата ключів неприпустима.
+    explanation_en: >
+      The default policy `noeviction` removes nothing and returns an error for commands that would increase memory use. For a cache you usually pick a policy such as `allkeys-lru`, and keep `noeviction` for a store where losing keys is unacceptable.
     sources:
       - https://redis.io/docs/latest/develop/reference/eviction/
   - id: nosql-007
     level: middle
     type: multiple
     text: Які дії у Redis скидають термін життя ключа `session`, зробивши його постійним?
+    text_en: Which Redis actions clear (remove) the TTL of the `session` key, making it persistent?
     code:
       lang: text
       source: |
@@ -119,15 +165,22 @@ questions:
         # ... then one of the actions runs
     options:
       - text: "`SET session new` без `KEEPTTL`"
+        text_en: "`SET session new` without `KEEPTTL`"
         correct: true
       - text: "`PERSIST session`"
+        text_en: "`PERSIST session`"
         correct: true
       - text: "`APPEND session xyz`"
+        text_en: "`APPEND session xyz`"
       - text: "`SETRANGE session 0 Z`"
+        text_en: "`SETRANGE session 0 Z`"
       - text: "`SET session new KEEPTTL`"
+        text_en: "`SET session new KEEPTTL`"
     explanation: >
       Перезапис ключа командою `SET` стирає термін життя, якщо не вказати `KEEPTTL`, а `PERSIST` робить це явно. Команди, що лише змінюють значення
       (`APPEND`, `SETRANGE`), термін життя зберігають. Це перевірено запуском на Redis 8.
+    explanation_en: >
+      Overwriting a key with `SET` clears its TTL unless `KEEPTTL` is given, and `PERSIST` does it explicitly. Commands that only modify the value (`APPEND`, `SETRANGE`) preserve the TTL. This was verified by running it on Redis 8.
     sources:
       - https://redis.io/docs/latest/commands/expire/
       - https://redis.io/docs/latest/commands/persist/
@@ -135,6 +188,7 @@ questions:
     level: middle
     type: single
     text: Що буде з ключами `a` і `b` після виконання транзакції?
+    text_en: What happens to keys `a` and `b` after the transaction runs?
     code:
       lang: text
       source: |
@@ -146,13 +200,19 @@ questions:
         EXEC
     options:
       - text: "`LPUSH` поверне помилку `WRONGTYPE`, але `a` і `b` будуть встановлені: відкату немає"
+        text_en: "`LPUSH` returns a `WRONGTYPE` error, but `a` and `b` are set: there is no rollback"
         correct: true
       - text: "Транзакцію буде відкочено повністю, тож `a` і `b` не існуватимуть"
+        text_en: "The transaction is rolled back entirely, so `a` and `b` do not exist"
       - text: "Виконається лише `SET a 1`, а все після помилки відкинеться"
+        text_en: "Only `SET a 1` runs, and everything after the error is discarded"
       - text: "`EXEC` не виконається взагалі, бо `LPUSH` не пройшов перевірку під час постановки в чергу"
+        text_en: "`EXEC` does not run at all, because `LPUSH` failed validation while being queued"
     explanation: >
       Помилка типу виникає лише під час виконання, коли команди вже в черзі. Redis не відкочує транзакцію: усі решта команд виконуються,
       і `a` та `b` отримують значення. Перевірено запуском: `GET a` повернуло `1`, `GET b` — `2`.
+    explanation_en: >
+      The type error occurs only at execution time, when the commands are already queued. Redis does not roll back the transaction: all the remaining commands run, and `a` and `b` get their values. Verified by running it: `GET a` returned `1`, `GET b` returned `2`.
     sources:
       - https://redis.io/docs/latest/develop/using-commands/transactions/
   - id: nosql-009
@@ -160,15 +220,23 @@ questions:
     type: single
     text: >
       У MongoDB replica set клієнт записав документ із `w: 1` і отримав підтвердження. Primary одразу впав, поки запис не дійшов до жодної secondary, і обрали нового primary. Що найімовірніше станеться із записом?
+    text_en: >
+      In a MongoDB replica set, a client wrote a document with `w: 1` and got an acknowledgment. The primary immediately went down before the write reached any secondary, and a new primary was elected. What is most likely to happen to the write?
     options:
       - text: "Запис буде відкочено на колишньому primary, коли той повернеться до набору"
+        text_en: "It will be rolled back on the former primary when it rejoins the set"
         correct: true
       - text: "Запис збережеться, бо підтвердження від primary гарантує, що його побачать усі члени набору"
+        text_en: "It is preserved, because the primary's acknowledgment guarantees all members of the set will see it"
       - text: "Новий primary дочекається синхронізації й відновить запис із журналу старого"
+        text_en: "The new primary will wait for synchronization and restore the write from the old one's journal"
       - text: "Клієнт отримає виняток при наступному читанні й повторить запис автоматично"
+        text_en: "The client will get an exception on the next read and retry the write automatically"
     explanation: >
       `w: 1` підтверджує лише запис на primary. Якщо він не встиг реплікуватися на іншого члена, при поверненні старого primary такі операції відкочуються.
       Щоб підтверджені записи не відкочувалися, використовують `w: "majority"`.
+    explanation_en: >
+      `w: 1` acknowledges only the write on the primary. If it was not replicated to another member, such operations are rolled back when the old primary returns. To keep acknowledged writes from being rolled back, use `w: "majority"`.
     sources:
       - https://www.mongodb.com/docs/manual/core/replica-set-rollbacks/
   - id: nosql-010
@@ -176,15 +244,23 @@ questions:
     type: single
     text: >
       У схемі cache-aside два сервіси майже одночасно оновлюють один запис. Чому при запису краще видаляти ключ кешу (інвалідувати), а не записувати в кеш нове значення?
+    text_en: >
+      In cache-aside, two services update the same record almost simultaneously. Why is it better to delete the cache key (invalidate) on write rather than write the new value to the cache?
     options:
       - text: "Паралельні записи в кеш можуть лягти в іншому порядку, ніж у базі, а після видалення читання бере актуальні дані з бази"
+        text_en: "Concurrent cache writes can land in a different order than in the database, and after deletion a read takes current data from the database"
         correct: true
       - text: "Видалення ключа атомарно записує нове значення і в базу, і в кеш, тож вони завжди синхронні"
+        text_en: "Deleting the key atomically writes the new value to both the database and the cache, so they are always in sync"
       - text: "Redis не дозволяє перезаписати ключ, який уже має значення, без попереднього видалення"
+        text_en: "Redis does not allow overwriting a key that already has a value without deleting it first"
       - text: "Запис нового значення в кеш завжди повільніший за видалення ключа, а в усьому іншому, зокрема в консистентності, підходи рівноцінні"
+        text_en: "Writing a new value to the cache is always slower than deleting the key, while in everything else, including consistency, the approaches are equivalent"
     explanation: >
       Описаний підхід: спершу змінити базу, потім інвалідувати запис у кеші. Це не усуває застарілість повністю (читач може покласти старе значення
       між операціями), але зменшує вікно неузгодженості, а термін життя ключа обмежує його довжину.
+    explanation_en: >
+      The approach described: first change the database, then invalidate the entry in the cache. This does not remove staleness completely (a reader can put an old value in between the operations), but it narrows the inconsistency window, and the key's TTL limits its length.
     sources:
       - https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside
   - id: nosql-011
@@ -192,32 +268,48 @@ questions:
     type: single
     text: >
       У Redis Cluster команда `MGET user:1 user:2` завершується помилкою, хоча кожен ключ окремо читається нормально. Що це означає і як виправити?
+    text_en: >
+      In Redis Cluster the `MGET user:1 user:2` command fails, although each key can be read separately without problems. What does this mean and how do you fix it?
     options:
       - text: "Ключі в різних слотах кластера; їх зводять в один слот hash tag, наприклад `{user}:1` і `{user}:2`"
+        text_en: "The keys are in different slots; group them into one slot with a hash tag like `{user}:1` and `{user}:2`"
         correct: true
       - text: "Ключі належать різним базам даних, тож перед командою потрібно викликати `SELECT`"
+        text_en: "The keys belong to different databases, so `SELECT` must be called before the command"
       - text: "`MGET` у кластері не підтримується, його слід замінити циклом окремих команд `GET`"
+        text_en: "`MGET` is not supported in a cluster, so replace it with a loop of separate `GET` commands"
       - text: "Один із ключів прострочений, тож `MGET` відхиляє весь запит"
+        text_en: "One of the keys has expired, so `MGET` rejects the entire request"
     explanation: >
       У кластері команда з кількома ключами працює лише тоді, коли всі вони в одному слоті з 16384. Hash tag у фігурних дужках визначає частину ключа,
       яка хешується, тому ключі з однаковим тегом потрапляють в один слот.
+    explanation_en: >
+      In a cluster, a multi-key command works only when all the keys are in the same slot out of 16384. A hash tag in curly braces defines the part of the key that is hashed, so keys with the same tag land in the same slot.
     sources:
       - https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/
   - id: nosql-012
     level: senior
     type: multiple
     text: Які твердження про вибір ключа шардування (shard key) у MongoDB правильні?
+    text_en: Which statements about choosing a shard key in MongoDB are true?
     options:
       - text: "Монотонно зростаючий ключ спрямовує всі нові вставки в один чанк"
+        text_en: "A monotonically increasing key sends all new inserts to a single chunk"
         correct: true
       - text: "Низька кардинальність обмежує кількість чанків, на які можна розбити дані"
+        text_en: "Low cardinality limits the number of chunks the data can be split into"
         correct: true
       - text: "Запити без ключа шардування розсилаються на всі шарди (scatter-gather)"
+        text_en: "Queries without the shard key are broadcast to all shards (scatter-gather)"
         correct: true
       - text: "`ObjectId` як ключ ідеально розподіляє вставки, бо його значення завжди унікальні"
+        text_en: "`ObjectId` as a key distributes inserts perfectly, because its values are always unique"
       - text: "Хешований ключ зберігає діапазонні запити по ньому на одному шарді"
+        text_en: "A hashed key keeps range queries on it on a single shard"
     explanation: >
       Унікальність не гарантує рівного розподілу: `ObjectId` зростає з часом, тож вставки йдуть в останній чанк. Хешування рівномірно розподіляє записи,
       але діапазонні запити по ключу розсіюються по шардах.
+    explanation_en: >
+      Uniqueness does not guarantee even distribution: `ObjectId` grows over time, so inserts go to the last chunk. Hashing distributes writes evenly, but range queries on the key are scattered across shards.
     sources:
       - https://www.mongodb.com/docs/manual/core/sharding-choose-a-shard-key/

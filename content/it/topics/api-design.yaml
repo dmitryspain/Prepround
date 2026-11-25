@@ -8,24 +8,34 @@ questions:
     level: junior
     type: multiple
     text: Які HTTP-методи за RFC 9110 є ідемпотентними?
+    text_en: Which HTTP methods are idempotent according to RFC 9110?
     options:
       - text: "`GET`"
+        text_en: '`GET`'
         correct: true
       - text: "`PUT`"
+        text_en: '`PUT`'
         correct: true
       - text: "`DELETE`"
+        text_en: '`DELETE`'
         correct: true
       - text: "`POST`"
+        text_en: '`POST`'
       - text: "`PATCH`"
+        text_en: '`PATCH`'
     explanation: >
       Ідемпотентний метод має однаковий ефект при одному й кількох однакових запитах. RFC 9110 відносить до таких `PUT`, `DELETE` і всі безпечні методи, зокрема `GET`.
       `POST` і `PATCH` цього не гарантують: повторний `POST` може створити ще один ресурс.
+    explanation_en: >
+      An idempotent method has the same effect whether the request is sent once or several identical times. RFC 9110 lists `PUT`, `DELETE`, and all safe
+      methods, including `GET`, as idempotent. `POST` and `PATCH` do not guarantee this: repeating a `POST` can create another resource.
     sources:
       - https://www.rfc-editor.org/rfc/rfc9110.html#name-idempotent-methods
   - id: api-design-002
     level: junior
     type: single
     text: Яка відповідь найточніше відображає успішне створення ресурсу цим запитом?
+    text_en: Which response best reflects successful creation of a resource by this request?
     code:
       lang: http
       source: |
@@ -35,13 +45,20 @@ questions:
         {"item": 123, "quantity": 2}
     options:
       - text: "`201 Created` із заголовком `Location: /orders/42`"
+        text_en: '`201 Created` with a `Location: /orders/42` header'
         correct: true
       - text: "`202 Accepted`, бо замовлення вже збережено, але відповідь пізніше"
+        text_en: '`202 Accepted`, because the order is already saved but the response comes later'
       - text: "`204 No Content` без тіла й заголовків: клієнт сам знайде нове замовлення"
+        text_en: '`204 No Content` with no body or headers: the client finds the new order on its own'
       - text: "`302 Found` із переадресацією на `/orders`"
+        text_en: '`302 Found` redirecting to `/orders`'
     explanation: >
       `201` означає, що ресурс створено, а `Location` вказує його адресу. `202` описує прийнятий, але ще не виконаний запит, а `204` не повідомляє клієнту,
       де шукати створений ресурс.
+    explanation_en: >
+      `201` means the resource was created, and `Location` gives its address. `202` describes a request that was accepted but not yet carried out, and `204`
+      does not tell the client where to find the created resource.
     sources:
       - https://www.rfc-editor.org/rfc/rfc9110.html#name-201-created
   - id: api-design-003
@@ -49,15 +66,23 @@ questions:
     type: single
     text: >
       Клієнт надіслав валідний токен, але користувач не має права видаляти чужий ресурс. Сервер не приховує існування ресурсу. Який статус доречний?
+    text_en: The client sent a valid token, but the user has no permission to delete someone else's resource. The server does not hide the resource's existence. Which status fits?
     options:
       - text: "`403 Forbidden`: сервер розуміє запит, але відмовляє в доступі"
+        text_en: '`403 Forbidden`: the server understands the request but refuses access'
         correct: true
       - text: "`401 Unauthorized`: токен є, але прав недостатньо для видалення"
+        text_en: '`401 Unauthorized`: a token is present, but permissions are insufficient for deletion'
       - text: "`400 Bad Request`: клієнт надіслав помилковий запит"
+        text_en: '`400 Bad Request`: the client sent a malformed request'
       - text: "`405 Method Not Allowed`: видаляти не можна нікому"
+        text_en: '`405 Method Not Allowed`: nobody is allowed to delete'
     explanation: >
       `401` вживають, коли автентифікація відсутня або недійсна, і разом із ним сервер передає виклик `WWW-Authenticate`. Коли облікові дані прийнято, але їх недостатньо
       для доступу, потрібен `403`.
+    explanation_en: >
+      `401` is used when authentication is missing or invalid, and along with it the server sends a `WWW-Authenticate` challenge. When the credentials are
+      accepted but insufficient for access, `403` is required.
     sources:
       - https://www.rfc-editor.org/rfc/rfc9110.html#name-403-forbidden
       - https://www.rfc-editor.org/rfc/rfc9110.html#name-challenge-and-response
@@ -65,15 +90,23 @@ questions:
     level: junior
     type: single
     text: Для чого призначений документ OpenAPI?
+    text_en: What is an OpenAPI document for?
     options:
       - text: "Мовно-незалежний опис HTTP API: шляхи, операції, схеми"
+        text_en: 'A language-agnostic description of an HTTP API: paths, operations, schemas'
         correct: true
       - text: "Бібліотека, що автоматично реалізує серверну логіку API за замовчуванням"
+        text_en: A library that automatically implements the API's server logic by default
       - text: "Протокол обміну повідомленнями поверх TCP, альтернативний HTTP"
+        text_en: A messaging protocol over TCP, an alternative to HTTP
       - text: "Формат, що замінює JSON при передачі даних між клієнтом і сервером"
+        text_en: A format that replaces JSON for data exchange between client and server
     explanation: >
       OpenAPI лише описує інтерфейс. З такого опису можна згенерувати документацію, клієнтський код або заготовки серверу, але сам документ нічого не виконує
       і транспорт не змінює.
+    explanation_en: >
+      OpenAPI only describes the interface. Documentation, client code, or server stubs can be generated from such a description, but the document itself
+      executes nothing and does not change the transport.
     sources:
       - https://spec.openapis.org/oas/latest.html
   - id: api-design-005
@@ -81,15 +114,24 @@ questions:
     type: single
     text: >
       Запит `POST /payments` завершився тайм-аутом, і клієнт не знає, чи списано гроші. Як безпечно повторити операцію?
+    text_en: A `POST /payments` request timed out, and the client does not know whether the money was charged. How can the operation be retried safely?
     options:
       - text: "Повторити запит із тим самим `Idempotency-Key`: сервер поверне результат першої спроби"
+        text_en: 'Retry the request with the same `Idempotency-Key`: the server returns the result of the first attempt'
         correct: true
       - text: "Просто повторити `POST` без додаткових заголовків: сервер сам визначить дублікат за тілом запиту"
+        text_en: 'Simply retry the `POST` with no extra headers: the server detects the duplicate from the request body'
       - text: "Перейти на `GET /payments`, бо безпечний метод можна повторювати без наслідків"
+        text_en: Switch to `GET /payments`, because a safe method can be repeated without consequences
       - text: "Щоразу генерувати новий `Idempotency-Key`, щоб сервер не відхилив повтор"
+        text_en: Generate a new `Idempotency-Key` each time so the server does not reject the retry
     explanation: >
       `POST` не ідемпотентний, і RFC 9110 радить не повторювати такі запити автоматично без способу виявити дублікат. Ключ ідемпотентності, однаковий для всіх спроб
       однієї логічної операції, дає серверу такий спосіб. Заголовок описано в чернетці IETF, а не в завершеному RFC.
+    explanation_en: >
+      `POST` is not idempotent, and RFC 9110 advises against automatically retrying such requests without a way to detect duplicates. An idempotency key
+      that is the same for all attempts of one logical operation gives the server such a way. The header is described in an IETF draft, not in a finished
+      RFC.
     sources:
       - https://www.rfc-editor.org/rfc/rfc9110.html#name-idempotent-methods
       - https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/
@@ -98,6 +140,7 @@ questions:
     type: single
     text: >
       У користувача `7` є поля `name` і `phone`. Яка семантика цього запиту за RFC 9110 і як змінити лише ім'я?
+    text_en: User `7` has the fields `name` and `phone`. What are the semantics of this request under RFC 9110, and how do you change only the name?
     code:
       lang: http
       source: |
@@ -107,19 +150,27 @@ questions:
         {"name": "Anna"}
     options:
       - text: "`PUT` замінює стан ресурсу переданим представленням; для часткової зміни є `PATCH`"
+        text_en: '`PUT` replaces the state with the sent representation; `PATCH` is for partial changes'
         correct: true
       - text: "`PUT` оновлює лише передані поля й лишає `phone` без змін"
+        text_en: '`PUT` updates only the supplied fields and leaves `phone` unchanged'
       - text: "`PUT` можна застосовувати лише для створення нових ресурсів, а для змін призначено `POST`"
+        text_en: '`PUT` can only be used to create new resources, and `POST` is meant for changes'
       - text: "`PUT` змінює тільки поля, які не вказані в запиті, а решту лишає"
+        text_en: '`PUT` changes only the fields not specified in the request and keeps the rest'
     explanation: >
       `PUT` створює ресурс або замінює його стан представленням із запиту, тож відсутнє поле має зникнути або скинутися. Для часткового оновлення існує `PATCH`.
       Сервер може трактувати відсутні поля по-своєму, але тоді він порушує семантику методу.
+    explanation_en: >
+      `PUT` creates the resource or replaces its state with the representation in the request, so a missing field must disappear or be reset. `PATCH` exists
+      for partial updates. A server may treat missing fields in its own way, but then it violates the method's semantics.
     sources:
       - https://www.rfc-editor.org/rfc/rfc9110.html#name-put
   - id: api-design-007
     level: middle
     type: single
     text: Що має зробити сервер, якщо ресурс із цим `ETag` не змінювався?
+    text_en: What should the server do if the resource with this `ETag` has not changed?
     code:
       lang: http
       source: |
@@ -127,19 +178,27 @@ questions:
         If-None-Match: "v12"
     options:
       - text: "Відповісти `304 Not Modified` без тіла: клієнт використає свою збережену копію"
+        text_en: 'Respond with `304 Not Modified` and no body: the client uses its stored copy'
         correct: true
       - text: "Відповісти `200 OK` і повне тіло, щоб клієнт переконався в актуальності"
+        text_en: Respond with `200 OK` and the full body so the client can confirm freshness
       - text: "Відповісти `412 Precondition Failed`, бо умова `If-None-Match` виконана"
+        text_en: Respond with `412 Precondition Failed`, because the `If-None-Match` condition is met
       - text: "Відповісти `204 No Content`, що означає відсутність змін"
+        text_en: Respond with `204 No Content`, which means there are no changes
     explanation: >
       Для умовного `GET` збіг валідатора означає, що клієнт уже має актуальне представлення, тому сервер повертає `304` без передачі тіла. Це економить трафік.
       `412` застосовують до умов, які для небезпечних методів не виконались.
+    explanation_en: >
+      For a conditional `GET`, a validator match means the client already has the current representation, so the server returns `304` without sending a
+      body. This saves traffic. `412` is used for conditions that failed for unsafe methods.
     sources:
       - https://www.rfc-editor.org/rfc/rfc9110.html#name-304-not-modified
   - id: api-design-008
     level: middle
     type: multiple
     text: Які з цих членів визначає RFC 9457 для тіла помилки з типом `application/problem+json`?
+    text_en: Which of these members does RFC 9457 define for an `application/problem+json` error body?
     code:
       lang: http
       source: |
@@ -155,16 +214,24 @@ questions:
         }
     options:
       - text: "`type`: URI, що ідентифікує вид проблеми"
+        text_en: '`type`: URI of the problem type'
         correct: true
       - text: "`title`: короткий опис виду проблеми"
+        text_en: '`title`: short summary of the problem type'
         correct: true
       - text: "`instance`: URI конкретного випадку проблеми"
+        text_en: '`instance`: URI of the specific occurrence'
         correct: true
       - text: "`errorCode`: числовий код помилки"
+        text_en: '`errorCode`: a numeric error code'
       - text: "`message`: текст помилки для користувача"
+        text_en: '`message`: error text for the user'
     explanation: >
       RFC 9457 визначає члени `type`, `status`, `title`, `detail` та `instance`. Додаткові поля на кшталт `errorCode` дозволені як розширення,
       але стандартом не задані, а замість `message` для опису конкретного випадку існує `detail`.
+    explanation_en: >
+      RFC 9457 defines the members `type`, `status`, `title`, `detail`, and `instance`. Extra fields such as `errorCode` are allowed as extensions but are
+      not defined by the standard, and `detail` exists to describe the specific occurrence instead of `message`.
     sources:
       - https://www.rfc-editor.org/rfc/rfc9457.html#name-members-of-a-problem-details
   - id: api-design-009
@@ -172,6 +239,7 @@ questions:
     type: single
     text: >
       Два клієнти редагують один документ. Клієнт B надсилає запит із застарілим тегом, бо клієнт A уже встиг зберегти зміни. Яку відповідь має дати сервер, щоб не втратити оновлення A?
+    text_en: Two clients edit the same document. Client B sends a request with a stale tag because client A has already saved its changes. What response should the server give so A's update is not lost?
     code:
       lang: http
       source: |
@@ -183,13 +251,20 @@ questions:
         # current ETag of the document on the server: "v8"
     options:
       - text: "`412 Precondition Failed`: умова `If-Match` не збіглась, тож зміну не виконано"
+        text_en: '`412 Precondition Failed`: the `If-Match` condition did not match, so the change was not applied'
         correct: true
       - text: "`200 OK`: сервер перезаписує документ, бо останній запит завжди має пріоритет"
+        text_en: '`200 OK`: the server overwrites the document, because the latest request always wins'
       - text: "`304 Not Modified`: клієнт B має відновити свою збережену копію"
+        text_en: '`304 Not Modified`: client B should restore its stored copy'
       - text: "`428 Precondition Required`: тег застарів, тому запит потрібно зробити умовним"
+        text_en: '`428 Precondition Required`: the tag is stale, so the request must be made conditional'
     explanation: >
       Запит із `If-Match` не повинен виконуватись, якщо тег не збігається з поточним: сервер відповідає `412`, а клієнт перечитує документ і повторює правку.
       `428` призначено для випадку, коли умовного заголовка немає взагалі, а сервер його вимагає.
+    explanation_en: >
+      A request with `If-Match` must not be performed if the tag does not match the current one: the server responds `412`, and the client rereads the
+      document and repeats its edit. `428` is intended for when the conditional header is missing entirely and the server requires it.
     sources:
       - https://www.rfc-editor.org/rfc/rfc9110.html#name-if-match
       - https://www.rfc-editor.org/rfc/rfc6585.html#section-3
@@ -197,18 +272,28 @@ questions:
     level: senior
     type: multiple
     text: Які зміни схеми Protobuf не порушують двійкову сумісність зі старими клієнтами та серверами?
+    text_en: Which Protobuf schema changes do not break binary compatibility with old clients and servers?
     options:
       - text: "Додати нове поле з раніше не використаним номером"
+        text_en: Add a new field with a never-used number
         correct: true
       - text: "Видалити поле й позначити його номер як `reserved`"
+        text_en: Remove a field and mark its number `reserved`
         correct: true
       - text: "Додати нове значення в `enum`"
+        text_en: Add a new value to an `enum`
         correct: true
       - text: "Перенумерувати поля для порядку"
+        text_en: Renumber fields for tidiness
       - text: "Повторно використати номер видаленого поля"
+        text_en: Reuse the number of a deleted field
     explanation: >
       У двійковому форматі поле ідентифікує номер, тому старий код ігнорує невідомі поля (зберігає їх як unknown fields), і додавання безпечне. Зміна або повторне
       використання номера дорівнює видаленню поля й створенню нового з тим самим номером, що веде до помилок розбору чи пошкоджених даних.
+    explanation_en: >
+      In the binary format a field is identified by its number, so old code ignores unknown fields (but retains them), and adding is safe.
+      Changing or reusing a number is equivalent to deleting the field and creating a new one with the same number, which leads to parse errors or corrupted
+      data.
     sources:
       - https://protobuf.dev/programming-guides/proto3/#updating
       - https://protobuf.dev/programming-guides/proto3/#consequences
@@ -217,15 +302,24 @@ questions:
     type: single
     text: >
       GraphQL-запит коректний, але resolver одного поля кинув виняток, а решта полів обчислилась. Що за специфікацією GraphQL over HTTP (чернетка) для `application/graphql-response+json` має повернути сервер?
+    text_en: A GraphQL request is valid, but one field's resolver threw an exception while the other fields resolved. What should the server return for `application/graphql-response+json` according to the GraphQL over HTTP specification (draft)?
     options:
       - text: "Статус 2xx (чернетка радить `294 Partial Success`) із частковим `data` і масивом `errors`"
+        text_en: A 2xx status (the draft recommends `294 Partial Success`) with partial `data` and an `errors` array
         correct: true
       - text: "`500 Internal Server Error` без `data`, бо виконання запиту не вдалося"
+        text_en: '`500 Internal Server Error` with no `data`, because the request execution failed'
       - text: "`400 Bad Request` із масивом `errors`, бо клієнт запитав проблемне поле"
+        text_en: '`400 Bad Request` with an `errors` array, because the client requested a problematic field'
       - text: "`502 Bad Gateway` із частковим `data` і масивом `errors`, бо поле не обчислилось"
+        text_en: '`502 Bad Gateway` with partial `data` and an `errors` array, because the field did not resolve'
     explanation: >
       Коли є і `data`, і `errors`, чернетка вимагає статус 2xx і радить `294`, який клієнти без його підтримки трактують як `200`. Статуси 4xx і 5xx тут недоречні:
       помилки самого запиту немає, а часткова відповідь вважається успішним виконанням. Тому клієнти GraphQL мають перевіряти `errors`, а не лише код статусу.
+    explanation_en: >
+      When both `data` and `errors` are present, the draft requires a 2xx status and recommends `294`, which clients that do not support it treat as `200`.
+      4xx and 5xx statuses are inappropriate here: there is no error in the request itself, and a partial response counts as successful execution. So
+      GraphQL clients must check `errors`, not just the status code.
     sources:
       - https://http-spec.graphql.org/draft/
   - id: api-design-012
@@ -233,14 +327,22 @@ questions:
     type: single
     text: >
       Браузерному клієнту треба лише отримувати від сервера потік оновлень котирувань: проксі пропускають HTTP, а повідомлень від клієнта немає. Що найпростіше використати?
+    text_en: 'A browser client only needs to receive a stream of quote updates from the server: proxies allow HTTP, and there are no messages from the client. What is simplest to use?'
     options:
       - text: "Server-Sent Events (`EventSource`): односпрямований потік поверх HTTP з автоперепідключенням"
+        text_en: 'Server-Sent Events (`EventSource`): a one-way stream over HTTP with automatic reconnection'
         correct: true
       - text: "WebSocket: це єдиний спосіб передавати події від сервера клієнту без постійного опитування"
+        text_en: 'WebSocket: the only way to push events from server to client without constant polling'
       - text: "Довге опитування (long polling) з окремим запитом на кожну подію"
+        text_en: Long polling, with a separate request for each event
       - text: "gRPC unary-виклики, які клієнт надсилає раз на секунду"
+        text_en: gRPC unary calls that the client sends once per second
     explanation: >
       Для сценарію «сервер → клієнт» достатньо SSE: `EventSource` сам перепідключається й передає `Last-Event-ID`, щоб сервер міг продовжити з потрібного місця.
       WebSocket потрібен, коли обидві сторони активно надсилають повідомлення, але він складніший у масштабуванні й проходженні через інфраструктуру.
+    explanation_en: >
+      For the server-to-client scenario SSE is enough: `EventSource` reconnects on its own and sends `Last-Event-ID` so the server can resume from the right
+      place. WebSocket is needed when both sides actively send messages, but it is harder to scale and to pass through infrastructure.
     sources:
       - https://html.spec.whatwg.org/multipage/server-sent-events.html

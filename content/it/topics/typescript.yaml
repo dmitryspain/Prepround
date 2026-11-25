@@ -3,23 +3,34 @@ title: TypeScript
 title_en: TypeScript
 description: Типи й інтерфейси, generics, union/intersection, narrowing, utility types, strict.
 description_en: Types and interfaces, generics, union/intersection, narrowing, utility types, strict.
+draft_en: true
 questions:
   - id: typescript-001
     level: junior
     type: multiple
     text: Які твердження про типи `any`, `unknown` і `never` правильні?
+    text_en: "Which statements about the `any`, `unknown`, and `never` types are true?"
     options:
       - text: "Для значення типу `any` компілятор не перевіряє доступ до властивостей і виклики"
+        text_en: "For a value of type `any`, the compiler does not check property access or calls"
         correct: true
       - text: "Перед викликом методів значення типу `unknown` треба звузити, наприклад через `typeof`"
+        text_en: "Before calling methods on a value of type `unknown`, you must narrow it, for example with `typeof`"
         correct: true
       - text: "Значення типу `never` можна присвоїти змінній будь-якого типу"
+        text_en: "A value of type `never` can be assigned to a variable of any type"
         correct: true
       - text: "`unknown` працює як `any`: методи можна викликати без попередньої перевірки типу"
+        text_en: "`unknown` works like `any`: methods can be called without checking the type first"
       - text: "`never` те саме, що `void`: тип функції, яка нічого корисного не повертає"
+        text_en: "`never` is the same as `void`: the type of a function that returns nothing useful"
     explanation: >
       `any` вимикає перевірку, а `unknown` змушує спершу з'ясувати тип, тож він безпечніший. `never` — порожній тип, у нього немає значень,
       і саме тому він сумісний із будь-яким типом. `void` означає «результат не використовують», а не «значення неможливе».
+    explanation_en: >
+      `any` turns checking off, while `unknown` forces you to work out the type first, which makes it safer. `never` is an empty type
+      with no values, which is exactly why it is assignable to any type. `void` means "the result is not used," not "the value is
+      impossible."
     sources:
       - https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown
       - https://www.typescriptlang.org/docs/handbook/2/functions.html#never
@@ -28,6 +39,7 @@ questions:
     level: junior
     type: single
     text: Що скаже компілятор щодо цього коду (`strict` увімкнено)?
+    text_en: "What will the compiler report for this code (`strict` enabled)?"
     code:
       lang: typescript
       source: |
@@ -36,13 +48,20 @@ questions:
         }
     options:
       - text: "Помилка: `toFixed` немає на типі `string | number`, доки `x` не звужено через `typeof`"
+        text_en: "Error: `toFixed` does not exist on type `string | number` until `x` is narrowed with `typeof`"
         correct: true
       - text: "Помилок немає: метод існує в одного з типів об'єднання, тому виклик дозволений компілятором"
+        text_en: "No errors: the method exists on one of the union members, so the compiler allows the call"
       - text: "Помилки під час компіляції немає, але під час виконання для рядка метод кине `TypeError`"
+        text_en: "No compile-time error, but at run time the method throws a `TypeError` for a string"
       - text: "Помилка: тип параметра треба оголосити як `any`, інакше `union` не можна використати тут"
+        text_en: "Error: the parameter type must be declared as `any`, otherwise a `union` cannot be used here"
     explanation: >
       Для значення типу `A | B` дозволені лише ті операції, що є в обох варіантів. Тому перед `toFixed` потрібне звуження (`typeof`, `in`, `instanceof`).
       Помилку видає перевірка типів ще до запуску, і саме для цього вона існує.
+    explanation_en: >
+      For a value of type `A | B`, only operations present in both members are allowed. So `toFixed` needs narrowing first (`typeof`,
+      `in`, `instanceof`). The error comes from the type check before the program runs, which is exactly what it is for.
     sources:
       - https://www.typescriptlang.org/docs/handbook/2/narrowing.html#typeof-type-guards
       - https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types
@@ -51,18 +70,27 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про вбудовані utility types правильні?
+    text_en: "Which statements about the built-in utility types are true?"
     options:
       - text: "`Partial<T>` робить усі властивості `T` необов'язковими"
+        text_en: "`Partial<T>` makes all properties of `T` optional"
         correct: true
       - text: "`Pick<T, 'a' | 'b'>` залишає лише вказані властивості та прибирає решту"
+        text_en: "`Pick<T, 'a' | 'b'>` keeps only the listed properties"
         correct: true
       - text: "`Omit<T, 'a'>` створює тип без властивості `a`, а решту лишає без змін"
+        text_en: "`Omit<T, 'a'>` creates a type without property `a`, keeping the rest"
         correct: true
       - text: "`Readonly<T>` глибоко заморожує вкладені об'єкти під час виконання"
+        text_en: "`Readonly<T>` deeply freezes nested objects at run time"
       - text: "`Required<T>` додає значення за замовчуванням для полів"
+        text_en: "`Required<T>` adds default values for the fields"
     explanation: >
       Utility types існують лише на рівні типів і не додають жодного коду в результат. `Readonly<T>` забороняє присвоєння властивостям першого рівня
       (і лише під час перевірки типів), а `Required<T>` лише прибирає `?` і значень не створює.
+    explanation_en: >
+      Utility types exist only at the type level and add no code to the output. `Readonly<T>` forbids assignment to first-level
+      properties (and only during type checking), while `Required<T>` just removes `?` and creates no values.
     sources:
       - https://www.typescriptlang.org/docs/handbook/utility-types.html
 
@@ -70,6 +98,7 @@ questions:
     level: junior
     type: single
     text: "Що скаже компілятор щодо цього коду зі `strict: true`?"
+    text_en: "What will the compiler report for this code with `strict: true`?"
     code:
       lang: typescript
       source: |
@@ -78,13 +107,20 @@ questions:
         }
     options:
       - text: "Помилка: `s` може бути `undefined`, а `strictNullChecks` це відстежує"
+        text_en: "Error: `s` may be `undefined`, and `strictNullChecks` tracks this"
         correct: true
       - text: "Помилки немає: `s.length` для `undefined` просто дає `0`"
+        text_en: "No error: `s.length` for `undefined` simply gives `0`"
       - text: "Помилка: необов'язкові параметри не можна оголошувати в звичайних функціях"
+        text_en: "Error: optional parameters cannot be declared in regular functions"
       - text: "Помилки не буде, поки `s` не отримає тип `null`: `undefined` перевірка не стосується"
+        text_en: "No error until `s` gets the type `null`: the check does not concern `undefined`"
     explanation: >
       Необов'язковий параметр має тип `string | undefined`. З `strictNullChecks` (входить у `strict`) звернення до властивості без перевірки заборонене:
       помилка `'s' is possibly 'undefined'`. Без цього прапорця код би скомпілювався й упав би під час виконання.
+    explanation_en: >
+      An optional parameter has type `string | undefined`. With `strictNullChecks` (part of `strict`), accessing a property without a
+      check is forbidden: the error `'s' is possibly 'undefined'`. Without this flag the code would compile and crash at run time.
     sources:
       - https://www.typescriptlang.org/tsconfig/#strictNullChecks
 
@@ -92,6 +128,7 @@ questions:
     level: middle
     type: single
     text: Який із цих двох рядків дасть помилку компіляції і чому?
+    text_en: "Which of these two lines produces a compile error, and why?"
     code:
       lang: typescript
       source: |
@@ -102,13 +139,20 @@ questions:
         const b: P = o;                        // (2)
     options:
       - text: "Лише (1): зайві властивості перевіряють у свіжому літералі, але не в змінній"
+        text_en: "Only (1): excess properties are checked in a fresh literal, but not in a variable"
         correct: true
       - text: "Обидва: тип `P` не допускає властивості `age` ні в літералі, ні в змінній, бо вона не оголошена"
+        text_en: "Both: type `P` does not allow property `age` in either the literal or the variable, because it is not declared"
       - text: "Лише (2): змінна `o` має ширший тип, а присвоєння ширшого типу до вужчого заборонене"
+        text_en: "Only (2): variable `o` has a wider type, and assigning a wider type to a narrower one is forbidden"
       - text: "Жоден: структурна типізація дозволяє зайві властивості в обох випадках"
+        text_en: "Neither: structural typing allows extra properties in both cases"
     explanation: >
       TypeScript структурний: об'єкт із додатковими полями сумісний із `P`. Виняток — «свіжий» літерал, записаний прямо в місці присвоєння, де зайве поле
       найімовірніше є опечаткою. Через змінну це правило не спрацьовує.
+    explanation_en: >
+      TypeScript is structural: an object with extra fields is compatible with `P`. The exception is a "fresh" literal written directly
+      at the assignment site, where an extra field is most likely a typo. Through a variable this rule does not apply.
     sources:
       - https://www.typescriptlang.org/docs/handbook/2/objects.html#excess-property-checks
 
@@ -116,18 +160,27 @@ questions:
     level: middle
     type: multiple
     text: Які відмінності між `interface` і `type` (type alias) правильні?
+    text_en: "Which differences between `interface` and `type` (type alias) are true?"
     options:
       - text: "Два оголошення `interface` з однаковим іменем зливаються в один тип"
+        text_en: "Two `interface` declarations with the same name merge into one type"
         correct: true
       - text: "Через `type` можна назвати об'єднання на кшталт `string | number`, а через `interface` ні"
+        text_en: "`type` can name a union such as `string | number`, while `interface` cannot"
         correct: true
       - text: "Клас може виконувати `implements` і для інтерфейсу, і для псевдоніма об'єктного типу"
+        text_en: "A class can `implements` both an interface and an alias of an object type"
         correct: true
       - text: "Повторне оголошення `type` з тим самим іменем теж зливається з першим"
+        text_en: "Redeclaring a `type` with the same name also merges it with the first one"
       - text: "`interface` під час компіляції породжує JS-об'єкт, а `type` повністю стирається"
+        text_en: "`interface` produces a JS object at compile time, while `type` is fully erased"
     explanation: >
       Злиття оголошень (declaration merging) — особливість `interface`; повторний `type` з тим самим іменем дає помилку дубліката. Обидва конструкти
       повністю стираються після компіляції і не залишають жодного коду.
+    explanation_en: >
+      Declaration merging is a feature of `interface`; a repeated `type` with the same name gives a duplicate error. Both constructs are
+      fully erased after compilation and leave no code.
     sources:
       - https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#differences-between-type-aliases-and-interfaces
 
@@ -136,6 +189,9 @@ questions:
     type: single
     text: >
       До об'єднання `Shape` додали третій варіант `{ kind: 'tri'; b: number }`, а в `switch` гілку не додали. Що станеться (`strict`)?
+    text_en: >
+      A third variant `{ kind: 'tri'; b: number }` was added to the `Shape` union, but no branch was added to the `switch`. What happens
+      (`strict`)?
     code:
       lang: typescript
       source: |
@@ -156,13 +212,20 @@ questions:
         }
     options:
       - text: "Помилка в `default`: `s` там має тип `{ kind: 'tri'; ... }`, а він не присвоюється до `never`"
+        text_en: "Error in `default`: `s` there has type `{ kind: 'tri'; ... }`, which is not assignable to `never`"
         correct: true
       - text: "Помилки немає: у `default` потрапить `s` із типом `Shape`, а `never` сумісний з усіма типами"
+        text_en: "No error: `s` in `default` has type `Shape`, and `never` is compatible with all types"
       - text: "Помилка з'явиться лише під час виконання, коли прийде значення з `kind: 'tri'`"
+        text_en: "The error appears only at run time, when a value with `kind: 'tri'` arrives"
       - text: "Помилка компіляції біля `switch`: компілятор вимагає `case` для кожного варіанта"
+        text_en: "Compile error at `switch`: the compiler requires a `case` for every variant"
     explanation: >
       Після звуження по дискримінанту в `default` лишаються тільки необроблені варіанти. Коли всі розібрано, там `never`, і присвоєння проходить;
       якщо ні, воно ламається, тож компілятор вказує на місце, яке забули оновити. Це і є перевірка вичерпності.
+    explanation_en: >
+      After narrowing by the discriminant, `default` keeps only the unhandled variants. When all are handled, it is `never` and the
+      assignment passes; otherwise it fails, so the compiler points to the place you forgot to update. This is exhaustiveness checking.
     sources:
       - https://www.typescriptlang.org/docs/handbook/2/narrowing.html#exhaustiveness-checking
 
@@ -170,6 +233,7 @@ questions:
     level: middle
     type: single
     text: Який виклик не скомпілюється і який тип матиме результат успішного виклику?
+    text_en: "Which call fails to compile, and what type does the result of the successful call have?"
     code:
       lang: typescript
       source: |
@@ -182,13 +246,20 @@ questions:
         const bad = get(user, 'nme');
     options:
       - text: "Не скомпілюється `get(user, 'nme')`: `'nme'` не входить у `keyof`, а `ok` має тип `string`"
+        text_en: "`get(user, 'nme')` fails to compile: `'nme'` is not in `keyof`, and `ok` has type `string`"
         correct: true
       - text: "Обидва скомпілюються: `K` просто виводиться як `string`, а `ok` має тип `string | number`"
+        text_en: "Both compile: `K` is simply inferred as `string`, and `ok` has type `string | number`"
       - text: "Не скомпілюється `get(user, 'name')`: літерал `'name'` не можна передати як `string`"
+        text_en: "`get(user, 'name')` fails: the literal `'name'` cannot be passed as `string`"
       - text: "Не скомпілюється `get(user, 'nme')`, а `ok` отримає тип `string | number`, як значення будь-якого поля"
+        text_en: "`get(user, 'nme')` fails, and `ok` gets type `string | number`, like the value of any field"
     explanation: >
       Обмеження `K extends keyof T` дозволяє лише ключі, що є в `T`. Тип результату `T[K]` залежить від конкретного ключа, тому для `'name'` це `string`,
       а не об'єднання типів усіх полів.
+    explanation_en: >
+      The constraint `K extends keyof T` allows only keys that exist in `T`. The result type `T[K]` depends on the specific key, so for
+      `'name'` it is `string`, not a union of all field types.
     sources:
       - https://www.typescriptlang.org/docs/handbook/2/generics.html#using-type-parameters-in-generic-constraints
 
@@ -198,6 +269,9 @@ questions:
     text: >
       Із `strict: true` (тобто `strictFunctionTypes`) обробник `onDog: (d: Dog) => void` присвоюють двом полям. Яке присвоєння
       пройде компіляцію, якщо `Dog extends Animal`?
+    text_en: >
+      With `strict: true` (that is, `strictFunctionTypes`), the handler `onDog: (d: Dog) => void` is assigned to two fields. Which
+      assignment compiles, if `Dog extends Animal`?
     code:
       lang: typescript
       source: |
@@ -208,13 +282,20 @@ questions:
         const h2: H2 = { handle: onDog };
     options:
       - text: "Лише `h2`: параметри властивостей-функцій контраваріантні, а методи залишено біваріантними"
+        text_en: "Only `h2`: parameters of function properties are contravariant, while methods stay bivariant"
         correct: true
       - text: "Лише `h1`: синтаксис властивості м'якший за синтаксис методу"
+        text_en: "Only `h1`: property syntax is more lenient than method syntax"
       - text: "Обидва: `Dog` є підтипом `Animal`, тож обробник `Dog` годиться скрізь, де потрібен обробник `Animal`"
+        text_en: "Both: `Dog` is a subtype of `Animal`, so a `Dog` handler fits wherever an `Animal` handler is needed"
       - text: "Жодне: `strict` вимагає точного збігу типів параметрів"
+        text_en: "Neither: `strict` requires parameter types to match exactly"
     explanation: >
       Обробник, що вимагає `Dog`, небезпечно віддавати туди, де йому передадуть довільного `Animal`, тому `h1` відхиляється. Для методів перевірка
       біваріантна, щоб не ламати типові шаблони на кшталт `Array<T>`, тож `h2` проходить, хоча це теж небезпечно.
+    explanation_en: >
+      A handler requiring `Dog` is unsafe to hand to a place that may pass any `Animal`, so `h1` is rejected. Method checks are
+      bivariant so as not to break common patterns like `Array<T>`, so `h2` passes, even though that is unsafe too.
     sources:
       - https://www.typescriptlang.org/tsconfig/#strictFunctionTypes
 
@@ -222,18 +303,28 @@ questions:
     level: senior
     type: multiple
     text: Які твердження про `as`, `as const`, `satisfies` і `!` правильні?
+    text_en: "Which statements about `as`, `as const`, `satisfies`, and `!` are true?"
     options:
       - text: "`expr satisfies T` перевіряє відповідність `T`, але не розширює вивідний тип виразу до `T`"
+        text_en: "`expr satisfies T` checks conformance to `T` but does not widen the inferred type to `T`"
         correct: true
       - text: "`as const` робить літерали вузькими, а властивості об'єкта — `readonly`"
+        text_en: "`as const` makes literals narrow and object properties `readonly`"
         correct: true
       - text: "Оператор `!` лише повідомляє компілятору, що значення не `null`, і перевірки під час виконання не додає"
+        text_en: "The `!` operator only tells the compiler the value is not `null` and adds no run-time check"
         correct: true
       - text: "`as T` перевіряє значення під час виконання й кидає виняток, якщо воно не відповідає `T`"
+        text_en: "`as T` checks the value at run time and throws if it does not match `T`"
       - text: "Типи `as` дозволяють довільне приведення: `5 as string` компілюється без помилок"
+        text_en: "`as` types allow arbitrary casts: `5 as string` compiles without errors"
     explanation: >
       Усі ці конструкції діють лише на рівні типів і перевірок не генерують. `satisfies` на відміну від `as` зберігає точніший вивідний тип
       (наприклад, `number[]` замість об'єднання). `as` не пропускає типи без перетину: `5 as string` дає помилку, потрібен проміжний `unknown`.
+    explanation_en: >
+      All these constructs work only at the type level and generate no checks. Unlike `as`, `satisfies` keeps the more precise inferred
+      type (for example, `number[]` instead of a union). `as` does not allow types with no overlap: `5 as string` is an error, and an
+      intermediate `unknown` is needed.
     sources:
       - https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator
       - https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions
@@ -242,6 +333,7 @@ questions:
     level: senior
     type: single
     text: Який тип матиме змінна `x` (TypeScript 7.0, `strict`)?
+    text_en: "What type will variable `x` have (TypeScript 7.0, `strict`)?"
     code:
       lang: typescript
       source: |
@@ -252,13 +344,20 @@ questions:
         declare const y: Wrapped<string | number>;
     options:
       - text: "`string[] | number[]`: умовний тип розподіляється по членах об'єднання, а `y` буде `(string | number)[]`"
+        text_en: "`string[] | number[]`: the conditional type distributes over union members, and `y` will be `(string | number)[]`"
         correct: true
       - text: "`(string | number)[]`: умовні типи завжди обробляють об'єднання як один тип, `y` матиме той самий тип"
+        text_en: "`(string | number)[]`: conditional types always treat a union as a single type, and `y` has the same type"
       - text: "`never`: об'єднання не задовольняє умову `T extends unknown` як ціле"
+        text_en: "`never`: the union does not satisfy `T extends unknown` as a whole"
       - text: "`string[] | number[]` і для `x`, і для `y`: дужки навколо `T` на розподіл не впливають"
+        text_en: "`string[] | number[]` for both `x` and `y`: brackets around `T` do not affect distribution"
     explanation: >
       Якщо перевіряється «голий» параметр типу, умовний тип розподіляється по кожному члену об'єднання. Загортання в кортеж `[T]` вимикає розподіл,
       і об'єднання перевіряється цілком. Це типова причина дивного результату в самописних утилітах.
+    explanation_en: >
+      When a "naked" type parameter is checked, the conditional type distributes over each union member. Wrapping it in a tuple `[T]`
+      disables distribution, and the union is checked as a whole. This is a typical cause of odd results in homemade utilities.
     sources:
       - https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
 
@@ -268,15 +367,26 @@ questions:
     text: >
       Команда запускає `.ts`-файли напряму через `node app.ts` у Node.js 24 (type stripping) і хоче, щоб `tsc` ловив синтаксис,
       який Node так не виконає. Що це за синтаксис і який параметр tsconfig допоможе?
+    text_en: >
+      A team runs `.ts` files directly with `node app.ts` in Node.js 24 (type stripping) and wants `tsc` to catch syntax that Node will
+      not execute this way. What is that syntax, and which tsconfig option helps?
     options:
       - text: "`enum` і параметри-властивості конструктора потребують генерації JS; їх забороняє `erasableSyntaxOnly`"
+        text_en: "`enum` and constructor parameter properties require JS generation; `erasableSyntaxOnly` forbids them"
         correct: true
       - text: "Анотації типів і `interface`: Node не вміє їх стирати, тому треба вмикати прапорець `strict`"
+        text_en: "Type annotations and `interface`: Node cannot erase them, so the `strict` flag must be enabled"
       - text: "`async`-функції та generics: Node у режимі stripping їх не розуміє, їх ловить `isolatedModules`"
+        text_en: "`async` functions and generics: Node does not understand them in stripping mode, and `isolatedModules` catches them"
       - text: "Будь-який код із помилками типів: Node перевіряє типи перед запуском, а `noEmit` цю перевірку вимикає"
+        text_en: "Any code with type errors: Node checks types before running, and `noEmit` turns this check off"
     explanation: >
       Type stripping просто замінює анотації пробілами й типи не перевіряє, тому підтримується лише синтаксис, що стирається без наслідків.
       `enum`, `namespace` з кодом і parameter properties потребують перетворення, і `erasableSyntaxOnly` (TypeScript 5.8+) дає помилку на них у `tsc`.
+    explanation_en: >
+      Type stripping simply replaces annotations with whitespace and does not check types, so only syntax that erases without
+      consequences is supported. `enum`, `namespace` with code, and parameter properties need transformation, and `erasableSyntaxOnly`
+      (TypeScript 5.8+) makes `tsc` report an error on them.
     sources:
       - https://nodejs.org/api/typescript.html
       - https://www.typescriptlang.org/tsconfig/#erasableSyntaxOnly

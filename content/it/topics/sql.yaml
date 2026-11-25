@@ -3,7 +3,6 @@ title: SQL і реляційні БД
 title_en: SQL and relational databases
 description: Запити, JOIN, індекси, транзакції, рівні ізоляції, нормалізація, плани виконання.
 description_en: Queries, JOIN, indexes, transactions, isolation levels, normalization, execution plans.
-draft_en: true
 questions:
   - id: sql-001
     level: junior
@@ -15,7 +14,7 @@ questions:
         text_en: '`WHERE` filters rows before `GROUP BY`, `HAVING` filters the groups'
         correct: true
       - text: Нічим, це синоніми
-        text_en: None, they are synonyms
+        text_en: Nothing, they are synonyms
       - text: "`HAVING` працює лише з індексованими колонками"
         text_en: '`HAVING` works only with indexed columns'
       - text: "`WHERE` можна використовувати лише разом з агрегатними функціями"
@@ -69,7 +68,7 @@ questions:
         text_en: '`NULL = NULL` yields `NULL` (unknown), not `TRUE`'
         correct: true
       - text: Перевіряти значення на `NULL` треба через `IS NULL` або `IS NOT NULL`
-        text_en: Test a value for `NULL` with `IS NULL` or `IS NOT NULL`
+        text_en: A value is tested for `NULL` with `IS NULL` or `IS NOT NULL`
         correct: true
       - text: "`COUNT(email)` не рахує рядки, де `email` дорівнює `NULL`"
         text_en: '`COUNT(email)` does not count rows where `email` is `NULL`'
@@ -122,7 +121,7 @@ questions:
         text_en: 'Create an expression index: `CREATE INDEX ON users (lower(email));`'
         correct: true
       - text: "Нічого не робити: PostgreSQL сам застосує індекс на `email` до `lower(email)`"
-        text_en: 'Do nothing: PostgreSQL itself applies the index on `email` before `lower(email)`'
+        text_en: 'Do nothing: PostgreSQL itself applies the index on `email` to `lower(email)`'
       - text: "Замінити `=` на `LIKE`"
         text_en: Replace `=` with `LIKE`
       - text: "Виконати `VACUUM users`"
@@ -272,7 +271,7 @@ questions:
     level: senior
     type: single
     text: Запит віддає стрічку постів сторінками. Чому на далеких сторінках він повільний і що краще зробити?
-    text_en: A query returns a feed of posts page by page. Why is it slow on far pages, and what is better to do?
+    text_en: A query returns a feed of posts page by page. Why is it slow on later pages, and what is better to do?
     code:
       lang: sql
       source: |
@@ -290,7 +289,7 @@ questions:
       - text: "Допоможе `SELECT DISTINCT`, бо зменшить кількість рядків, які база мусить відкинути"
         text_en: '`SELECT DISTINCT` will help, because it reduces the number of rows the database has to discard'
       - text: "Треба збільшити `work_mem`, і тоді `OFFSET` стане безкоштовним навіть на далеких сторінках"
-        text_en: '`work_mem` needs to be increased, and then `OFFSET` becomes free even on far pages'
+        text_en: '`work_mem` needs to be increased, and then `OFFSET` becomes free even on later pages'
     explanation: >
       Рядки, пропущені через `OFFSET`, усе одно обчислюються на сервері, тож вартість росте з номером сторінки.
       Keyset-пагінація продовжує з останнього показаного ключа `(created_at, id)` і з відповідним індексом

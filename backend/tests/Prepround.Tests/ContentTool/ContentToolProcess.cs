@@ -134,9 +134,82 @@ internal static class ContentToolProcess
     /// <summary>What a default import (without --include-drafts) puts into the database.</summary>
     public static int RealPublishedQuestionCount() => RealQuestionCount() - RealDraftQuestionCount();
 
-    private static IEnumerable<string> RealTopicFiles() =>
-        Directory.GetFiles(RealContentDirectory(), "*.yaml", SearchOption.AllDirectories)
-            .Where(path => Path.GetFileName(Path.GetDirectoryName(path)) == "topics");
+    /// <summary>
+    /// Question translations an import of the real content stores (PRP-026): see <see cref="QuestionTranslationCount"/>.
+    /// Translation waves keep translating topics and then lifting their draft_en, so a literal broke on each topic.
+    /// </summary>
+    public static int RealQuestionTranslationCount(bool includeDrafts) =>
+        QuestionTranslationCount(RealContentDirectory(), includeDrafts);
+
+    /// <summary>
+    /// Rows of QuestionTranslations an import of <paramref name="path"/> (a content tree or one topic file) stores:
+    /// one per question and language with the question's own text, the explanation and every option's text in that
+    /// language (ADR 006). Without --include-drafts a <c>draft: true</c> topic brings none, and a topic with
+    /// <c>draft_L: true</c> brings none in L. Counted from the raw lines like <see cref="RealQuestionCount"/>, so a reader
+    /// that drops a translation or a draft flag still fails the import assertions.
+    /// </summary>
+    public static int QuestionTranslationCount(string path, bool includeDrafts) =>
+        TopicFiles(path)
+            .Where(file => includeDrafts || !IsDraftFile(file))
+            .Sum(file =>
+            {
+                var lines = File.ReadAllLines(file);
+                var questions = QuestionBlocks(lines);
+                return ContentLanguages.Translations
+                    .Where(language => includeDrafts || !lines.Contains($"draft_{language}: true", StringComparer.Ordinal))
+                    .Sum(language => questions.Count(question => IsTranslated(question, language)));
+            });
+
+    /// <summary>The lines of each question of a topic file, from its <c>  - id:</c> line up to the next one.</summary>
+    private static List<string[]> QuestionBlocks(string[] lines)
+    {
+        var starts = Enumerable.Range(0, lines.Length)
+            .Where(i => lines[i].StartsWith("  - id: ", StringComparison.Ordinal))
+            .Append(lines.Length)
+            .ToList();
+        return starts.Zip(starts.Skip(1), (start, end) => lines[start..end]).ToList();
+    }
+
+    /// <summary>
+    /// The question's own keys sit at its indent (the "- id:" dash plus two). The items of "options:" start with a dash
+    /// one level deeper or, as YAML also allows, at the very indent of "options:" (some topics write them so), and an
+    /// option's translation is "text_L:" among its keys or right after its dash. Block scalar lines are deeper still.
+    /// </summary>
+    private static bool IsTranslated(string[] question, string language)
+    {
+        var keys = Indent(question[0]) + 2;
+        bool IsKey(string line, int indent, string key) =>
+            Indent(line) == indent && line.AsSpan(indent).StartsWith($"{key}:", StringComparison.Ordinal);
+
+        var optionsAt = Array.FindIndex(question, line => IsKey(line, keys, "options"));
+        if (optionsAt < 0 || optionsAt + 1 >= question.Length)
+        {
+            return false;
+        }
+
+        var dash = Indent(question[optionsAt + 1]);
+        var items = question.Skip(optionsAt + 1)
+            .Where(line => line.Trim().Length > 0)
+            .TakeWhile(line => Indent(line) > dash || (Indent(line) == dash && line.AsSpan(dash).StartsWith("- ", StringComparison.Ordinal)))
+            .ToList();
+        var options = items.Count(line => Indent(line) == dash);
+        var translatedOptions = items.Count(line => IsKey(line, dash, $"- text_{language}") || IsKey(line, dash + 2, $"text_{language}"));
+
+        return options > 0
+            && translatedOptions == options
+            && question.Any(line => IsKey(line, keys, $"text_{language}"))
+            && question.Any(line => IsKey(line, keys, $"explanation_{language}"));
+    }
+
+    private static int Indent(string line) => line.Length - line.TrimStart(' ').Length;
+
+    private static IEnumerable<string> RealTopicFiles() => TopicFiles(RealContentDirectory());
+
+    private static IEnumerable<string> TopicFiles(string path) =>
+        File.Exists(path)
+            ? [path]
+            : Directory.GetFiles(path, "*.yaml", SearchOption.AllDirectories)
+                .Where(file => Path.GetFileName(Path.GetDirectoryName(file)) == "topics");
 
     private static bool IsDraftFile(string path) => File.ReadLines(path).Contains("draft: true", StringComparer.Ordinal);
 

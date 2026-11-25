@@ -8,6 +8,7 @@ questions:
     level: junior
     type: single
     text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
     code:
       lang: java
       source: |
@@ -19,29 +20,42 @@ questions:
         t.join();
     options:
       - text: "`in main`, потім `in worker`"
+        text_en: "`in main`, then `in worker`"
         correct: true
       - text: "`in worker` двічі"
+        text_en: "`in worker` twice"
       - text: "`in worker`, потім `in main`"
+        text_en: "`in worker`, then `in main`"
       - text: "`in main` двічі"
+        text_en: "`in main` twice"
     explanation: >
       `run()` — звичайний виклик методу в поточному потоці (тут `main`), а новий потік створює лише `start()`.
       Тому перший рядок друкує `main`, а другий — `worker`; порядок підтверджено запуском.
+    explanation_en: >
+      `run()` is an ordinary method call on the current thread (here `main`); only `start()` creates a new thread. So the first line prints `main` and the second prints `worker`; the order was confirmed by running it.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Thread.html#start()
   - id: java-concurrency-002
     level: junior
     type: multiple
     text: Що гарантує `synchronized` у Java?
+    text_en: "What does `synchronized` guarantee in Java?"
     options:
       - text: Одночасно лише один потік може тримати монітор того самого об'єкта
+        text_en: "Only one thread at a time can hold the monitor of the same object"
         correct: true
       - text: Зміни, зроблені потоком до виходу з блоку, видимі наступному потоку, що входить у блок на тому ж моніторі
+        text_en: "Changes made by a thread before leaving the block are visible to the next thread entering a block on the same monitor"
         correct: true
       - text: Потоки входять у блок у тому порядку, у якому звернулися до нього (чесна черга)
+        text_en: "Threads enter the block in the order in which they requested it (a fair queue)"
       - text: Синхронізований метод екземпляра блокує всі синхронізовані методи будь-яких об'єктів цього класу
+        text_en: "A synchronized instance method blocks all synchronized methods of any objects of this class"
     explanation: >
       Монітор дає взаємне виключення й видимість: розблокування монітора відбувається раніше за наступне блокування того самого монітора.
       Порядок входу при цьому не гарантується, а метод екземпляра блокує лише монітор свого об'єкта (`this`), а не всього класу.
+    explanation_en: >
+      A monitor provides mutual exclusion and visibility: unlocking a monitor happens-before every subsequent lock of that same monitor. Entry order is not guaranteed, and an instance method locks only the monitor of its own object (`this`), not of the whole class.
     sources:
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-17.html#jls-17.4.5
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.19
@@ -49,6 +63,7 @@ questions:
     level: junior
     type: single
     text: Що станеться після того, як `main` завершить цей код (Java 25)?
+    text_en: "What happens after `main` finishes this code (Java 25)?"
     code:
       lang: java
       source: |
@@ -57,13 +72,19 @@ questions:
         System.out.println("main end");
     options:
       - text: Програма надрукує обидва рядки, але JVM не завершиться, бо потоки пулу не є демонами
+        text_en: "Both lines print, but the JVM does not exit, because pool threads are not daemons"
         correct: true
       - text: Програма надрукує обидва рядки й одразу завершиться, бо `main` закінчився
+        text_en: "The program prints both lines and exits right away, because `main` has finished"
       - text: Пул сам закриється, бо завдання виконано
+        text_en: "The pool closes itself, because the task is done"
       - text: Програма викине `RejectedExecutionException`
+        text_en: "The program throws `RejectedExecutionException`"
     explanation: >
       Потоки з фабрики за замовчуванням — не демони, тому живий пул тримає JVM, доки не буде викликано `shutdown()`. Неактивний `ExecutorService` слід закривати.
       Під час запуску з обмеженням у 4 секунди програма надрукувала обидва рядки й була зупинена таймером.
+    explanation_en: >
+      Threads from the default factory are not daemons, so a live pool keeps the JVM running until `shutdown()` is called. An unused `ExecutorService` should be closed. When run with a 4-second limit, the program printed both lines and was stopped by the timer.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ExecutorService.html
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/Executors.html#defaultThreadFactory()
@@ -71,6 +92,7 @@ questions:
     level: junior
     type: single
     text: Чому цей код (Java 25) зазвичай друкує число менше за 200000?
+    text_en: "Why does this code (Java 25) usually print a number below 200000?"
     code:
       lang: java
       source: |
@@ -82,19 +104,26 @@ questions:
         System.out.println(c);
     options:
       - text: "`c++` — читання, збільшення й запис, тож оновлення двох потоків перекриваються"
+        text_en: "`c++` is a read, an increment and a write, so the updates of the two threads overlap"
         correct: true
       - text: "Потік `t2` починає з нуля, бо `c` копіюється в кожен потік під час створення"
+        text_en: "Thread `t2` starts from zero, because `c` is copied into each thread when it is created"
       - text: "Метод `join()` завершує потоки раніше, ніж вони закінчать свій цикл"
+        text_en: "The `join()` method ends the threads before they finish their loop"
       - text: "Цикл у кожного потоку виконується менше 100000 разів через рішення планувальника"
+        text_en: "Each thread's loop runs fewer than 100000 times because of scheduler decisions"
     explanation: >
       `c++` не атомарна, тому два потоки можуть прочитати те саме значення й записати однакове нове. Лічильник слід захистити `synchronized` або замінити на `AtomicInteger`.
       У запуску вийшло 149253.
+    explanation_en: >
+      `c++` is not atomic, so two threads can read the same value and write back the same new one. The counter should be protected with `synchronized` or replaced with `AtomicInteger`. The run printed 149253.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/atomic/package-summary.html
   - id: java-concurrency-005
     level: middle
     type: single
     text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
     code:
       lang: java
       source: |
@@ -110,13 +139,19 @@ questions:
             .join();
     options:
       - text: "`CompletionException / IllegalStateException`"
+        text_en: "`CompletionException / IllegalStateException`"
         correct: true
       - text: "`IllegalStateException`, а далі `NullPointerException` на `getCause()`"
+        text_en: "`IllegalStateException`, then `NullPointerException` on `getCause()`"
       - text: "`ExecutionException / IllegalStateException`"
+        text_en: "`ExecutionException / IllegalStateException`"
       - text: "`CompletionException / CompletionException`"
+        text_en: "`CompletionException / CompletionException`"
     explanation: >
       Виняток із залежної стадії передається далі, загорнутий у `CompletionException`, тож в `exceptionally` приходить обгортка, а справжня причина лежить у `getCause()`. `ExecutionException` кидає `get()`, а не стадія.
       Поведінку підтверджено запуском еквівалентного коду.
+    explanation_en: >
+      An exception from a dependent stage is propagated wrapped in a `CompletionException`, so `exceptionally` receives the wrapper and the real cause is in `getCause()`. `ExecutionException` is thrown by `get()`, not by the stage. The behavior was confirmed by running equivalent code.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletionStage.html#exceptionally(java.util.function.Function)
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html
@@ -124,6 +159,7 @@ questions:
     level: middle
     type: single
     text: Що може піти не так у цьому коді (Java 25)?
+    text_en: "What can go wrong in this code (Java 25)?"
     code:
       lang: java
       source: |
@@ -139,13 +175,19 @@ questions:
         t.join();
     options:
       - text: "Потік може ніколи не побачити `stop = true`, бо поле не `volatile`, і тоді `join()` зависне"
+        text_en: "The thread may never see `stop = true`, because the field is not `volatile`, and then `join()` hangs"
         correct: true
       - text: Запис у `boolean` не атомарний, тому потік побачить напівзаписане значення
+        text_en: "A write to a `boolean` is not atomic, so the thread will see a half-written value"
       - text: Код не скомпілюється, бо змінна, що змінюється в іншому потоці, мусить бути `final`
+        text_en: "The code does not compile, because a variable modified in another thread must be `final`"
       - text: Виклик `Thread.sleep` скидає кеш потоку, тож зміна завжди буде помічена
+        text_en: "Calling `Thread.sleep` flushes the thread's cache, so the change will always be noticed"
     explanation: >
       Без `volatile` чи синхронізації між записом і читанням немає відношення happens-before, і JIT має право винести читання `stop` з циклу. Достатньо оголосити `volatile boolean stop`.
       Під час запуску потік після 2 секунд очікування `join` ще працював.
+    explanation_en: >
+      Without `volatile` or synchronization there is no happens-before relationship between the write and the read, and the JIT may hoist the read of `stop` out of the loop. Declaring `volatile boolean stop` is enough. In the run, the thread was still running after waiting 2 seconds for `join`.
     sources:
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-17.html#jls-17.4.5
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.3.1.4
@@ -153,6 +195,7 @@ questions:
     level: middle
     type: single
     text: Чому цей код небезпечний, хоча `cache` є `ConcurrentHashMap` (Java 25)?
+    text_en: "Why is this code unsafe even though `cache` is a `ConcurrentHashMap` (Java 25)?"
     code:
       lang: java
       source: |
@@ -161,29 +204,42 @@ questions:
         }
     options:
       - text: "Між `containsKey` і `put` інший потік може вставити значення; потрібен `computeIfAbsent`"
+        text_en: "Another thread can insert a value between `containsKey` and `put`; `computeIfAbsent` is needed"
         correct: true
       - text: Метод `put` у `ConcurrentHashMap` не потокобезпечний, тож потрібен зовнішній замок
+        text_en: "The `put` method of `ConcurrentHashMap` is not thread-safe, so an external lock is needed"
       - text: Метод `containsKey` блокує всю таблицю, тому код працює повільно, а не неправильно
+        text_en: "The `containsKey` method locks the whole table, so the code is slow rather than wrong"
       - text: Метод `containsKey` повертає застарілі дані, бо `ConcurrentHashMap` кешує результат
+        text_en: "The `containsKey` method returns stale data, because `ConcurrentHashMap` caches the result"
     explanation: >
       Кожна окрема операція `ConcurrentHashMap` потокобезпечна, але послідовність «перевірити, потім діяти» — ні, і `load` може виконатись двічі або затерти чуже значення.
       `computeIfAbsent` та `putIfAbsent` виконують перевірку й вставку атомарно.
+    explanation_en: >
+      Each individual `ConcurrentHashMap` operation is thread-safe, but a "check, then act" sequence is not, and `load` may run twice or overwrite another thread's value. `computeIfAbsent` and `putIfAbsent` perform the check and the insertion atomically.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ConcurrentHashMap.html#computeIfAbsent(K,java.util.function.Function)
   - id: java-concurrency-008
     level: middle
     type: multiple
     text: Які твердження про обробку винятків у завданнях `ThreadPoolExecutor` правильні (Java 25)?
+    text_en: "Which statements about exception handling in `ThreadPoolExecutor` tasks are true (Java 25)?"
     options:
       - text: "Виняток із `submit` зберігається у `Future` і виходить із `get()` як `ExecutionException`"
+        text_en: "An exception from `submit` is stored in the `Future` and comes out of `get()` as an `ExecutionException`"
         correct: true
       - text: "Виняток із `execute` не потрапляє у `Future`, а йде в обробник необроблених винятків потоку"
+        text_en: "An exception from `execute` does not reach a `Future`; it goes to the thread's uncaught exception handler"
         correct: true
       - text: "Якщо не викликати `get()`, виняток із `submit` усе одно буде надруковано в `stderr` потоком пулу"
+        text_en: "If `get()` is never called, an exception from `submit` is still printed to `stderr` by the pool thread"
       - text: "Метод `get()` кидає оригінальний виняток завдання напряму, без жодної обгортки `ExecutionException`"
+        text_en: "The `get()` method throws the task's original exception directly, with no `ExecutionException` wrapper"
     explanation: >
       `submit` повертає `Future`, який «поглинає» виняток, тож без `get()` про збій нічого не видно. `execute` жодного `Future` не має, тому виняток доходить до `UncaughtExceptionHandler`, а у виводі видно стек із потоку `pool-1-thread-1`.
       Це підтверджено запуском.
+    explanation_en: >
+      `submit` returns a `Future` that "swallows" the exception, so without `get()` nothing shows the failure. `execute` has no `Future`, so the exception reaches the `UncaughtExceptionHandler`, and the output shows the stack trace from thread `pool-1-thread-1`. This was confirmed by running it.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/Future.html#get()
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ThreadPoolExecutor.html
@@ -191,16 +247,23 @@ questions:
     level: senior
     type: multiple
     text: Які твердження про віртуальні потоки в Java 25 правильні?
+    text_en: "Which statements about virtual threads in Java 25 are true?"
     options:
       - text: "Для блокуючого I/O на кожну задачу створюють новий віртуальний потік, без пулу"
+        text_en: "For blocking I/O, a new virtual thread is created for each task, without a pool"
         correct: true
       - text: "У Java 25 блокування в `synchronized` здебільшого не прив'язує потік до носія (JEP 491)"
+        text_en: "In Java 25, blocking inside `synchronized` mostly does not pin the thread to its carrier (JEP 491)"
         correct: true
       - text: Віртуальні потоки прискорюють CPU-важкі обчислення, бо їх можна створити більше, ніж ядер
+        text_en: "Virtual threads speed up CPU-heavy computations, because more of them can be created than there are cores"
       - text: "Одночасно може існувати не більше віртуальних потоків, ніж ядер процесора на сервері"
+        text_en: "At any time there can be no more virtual threads than the server has processor cores"
     explanation: >
       Віртуальні потоки дешеві, тож їх не пулять, а обмежують паралелізм, наприклад, семафором. Вони виграють на задачах, що здебільшого чекають, а для CPU-навантаження бракує ядер, а не потоків.
       Починаючи з Java 24 `synchronized` більше не призводить до pinning у переважній більшості випадків.
+    explanation_en: >
+      Virtual threads are cheap, so they are not pooled; concurrency is limited instead, for example with a semaphore. They pay off on tasks that mostly wait, while for CPU-bound work it is cores that are lacking, not threads. Since Java 24, `synchronized` no longer causes pinning in the vast majority of cases.
     sources:
       - https://openjdk.org/jeps/491
       - https://openjdk.org/jeps/444
@@ -208,6 +271,7 @@ questions:
     level: senior
     type: single
     text: Сервіс завис, а два потоки стоять у стані BLOCKED. Яким є найшвидший спосіб підтвердити взаємне блокування (deadlock) і яке виправлення правильне (Java 25)?
+    text_en: "A service hung and two threads are in the BLOCKED state. What is the fastest way to confirm a deadlock, and which fix is correct (Java 25)?"
     code:
       lang: java
       source: |
@@ -215,13 +279,19 @@ questions:
         new Thread(() -> { synchronized (B) { pause(); synchronized (A) { } } }, "t2").start();
     options:
       - text: "Зняти дамп потоків через `jcmd <pid> Thread.print` і узгодити порядок замків"
+        text_en: "Take a thread dump with `jcmd <pid> Thread.print` and make the lock order consistent"
         correct: true
       - text: "Викликати `interrupt()` на заблокованих потоках, бо переривання знімає очікування монітора"
+        text_en: "Call `interrupt()` on the blocked threads, because interruption ends the wait for a monitor"
       - text: "Збільшити розмір стека `-Xss`, бо глибока вкладеність викликів тримає замки в потоках"
+        text_en: "Increase the stack size with `-Xss`, because deep call nesting holds the locks in the threads"
       - text: Замінити `synchronized` на `volatile` у полях `A` і `B`
+        text_en: "Replace `synchronized` with `volatile` on the fields `A` and `B`"
     explanation: >
       Дамп потоків показує, хто який монітор тримає й чекає, а JVM прямо повідомляє про цикл очікування. Цикл розривається єдиним порядком захоплення замків (або одним замком).
       `interrupt()` не виводить потік з очікування монітора. У запуску `jcmd` вивів `Found one Java-level deadlock` для `t1` і `t2`.
+    explanation_en: >
+      A thread dump shows who holds which monitor and who is waiting, and the JVM reports the wait cycle directly. The cycle is broken by a single lock acquisition order (or one lock). `interrupt()` does not pull a thread out of a monitor wait. In the run, `jcmd` printed `Found one Java-level deadlock` for `t1` and `t2`.
     sources:
       - https://docs.oracle.com/en/java/javase/25/troubleshoot/troubleshooting-hanging-or-looping-process.html
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Thread.html#interrupt()
@@ -229,6 +299,7 @@ questions:
     level: senior
     type: single
     text: Чому цей варіант double-checked locking без `volatile` вважають небезпечним (Java 25)?
+    text_en: "Why is this double-checked locking variant without `volatile` considered unsafe (Java 25)?"
     code:
       lang: java
       source: |
@@ -244,13 +315,19 @@ questions:
         }
     options:
       - text: "Потік може побачити не `null`, але об'єкт із ще не видимими полями"
+        text_en: "A thread may see a non-`null` reference to an object whose fields are not yet visible"
         correct: true
       - text: Другий потік завжди створить другий екземпляр, бо `synchronized` не захищає статичні поля
+        text_en: "A second thread will always create a second instance, because `synchronized` does not protect static fields"
       - text: Перевірка `inst == null` поза блоком спричиняє deadlock
+        text_en: "The `inst == null` check outside the block causes a deadlock"
       - text: "`synchronized (Holder.class)` недопустимий у статичному методі"
+        text_en: "`synchronized (Holder.class)` is not allowed in a static method"
     explanation: >
       Запис посилання `inst` і запис полів нового об'єкта можуть стати видимими іншому потокові в іншому порядку, бо читання поза монітором не утворює happens-before. Виправлення — `volatile` на `inst` або ініціалізація через клас-холдер.
       Другий потік, що зайде в монітор, побачить уже встановлене значення, тож «другий екземпляр» не виникає.
+    explanation_en: >
+      The write of the `inst` reference and the writes of the new object's fields may become visible to another thread in a different order, because a read outside the monitor creates no happens-before. The fix is `volatile` on `inst` or initialization through a holder class. A second thread entering the monitor sees the value already set, so a "second instance" does not appear.
     sources:
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-17.html#jls-17.4.5
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.3.1.4
@@ -259,6 +336,7 @@ questions:
     type: single
     text: >-
       Пул створено як на коді нижче, і в нього поспіль подано 10 завдань по 100 мс. Скільки потоків він використає і чому (Java 25)?
+    text_en: "The pool is created as in the code below, and 10 tasks of 100 ms each are submitted back to back. How many threads will it use, and why (Java 25)?"
     code:
       lang: java
       source: |
@@ -267,12 +345,18 @@ questions:
             new LinkedBlockingQueue<>());
     options:
       - text: "Два: після `corePoolSize` завдання йдуть у необмежену чергу, тож `maximumPoolSize` не використовується"
+        text_en: "Two: after `corePoolSize`, tasks go to the unbounded queue, so `maximumPoolSize` is never used"
         correct: true
       - text: Чотири, бо надлишкові завдання одразу розширюють пул до максимуму
+        text_en: "Four, because excess tasks immediately grow the pool to its maximum"
       - text: Десять, бо кожне завдання отримує власний потік
+        text_en: "Ten, because each task gets its own thread"
       - text: Чотири, бо пул спершу заповнює чергу, а потім розширюється, поки не вичерпається `keepAliveTime`
+        text_en: "Four, because the pool first fills the queue and then grows until `keepAliveTime` runs out"
     explanation: >
       Спершу пул створює потоки до `corePoolSize`, далі віддає перевагу черзі, а новий потік понад ядро додає лише тоді, коли чергу неможливо поповнити. Необмежена `LinkedBlockingQueue` не заповнюється, тож пул не виходить за 2 потоки.
       Запуск показав `threads=2`, а з `ArrayBlockingQueue(2)` — чотири потоки й відмови після переповнення.
+    explanation_en: >
+      The pool first creates threads up to `corePoolSize`, then prefers queuing, and adds a thread beyond the core only when the queue cannot accept the task. An unbounded `LinkedBlockingQueue` never fills up, so the pool never goes beyond 2 threads. The run showed `threads=2`, and with `ArrayBlockingQueue(2)` it showed four threads and rejections after overflow.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ThreadPoolExecutor.html

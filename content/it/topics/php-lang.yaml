@@ -3,6 +3,7 @@ title: PHP 8
 title_en: PHP 8
 description: Типи, ООП, traits, enums, readonly, match, винятки.
 description_en: Types, OOP, traits, enums, readonly, match, exceptions.
+draft_en: true
 questions:
   - id: php-lang-001
     level: junior

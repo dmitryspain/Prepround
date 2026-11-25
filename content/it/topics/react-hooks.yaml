@@ -3,6 +3,7 @@ title: Hooks
 title_en: Hooks
 description: useState, useEffect, useMemo/useCallback, useRef, власні хуки, правила хуків.
 description_en: useState, useEffect, useMemo/useCallback, useRef, custom hooks, rules of hooks.
+draft_en: true
 questions:
   - id: react-hooks-001
     level: junior

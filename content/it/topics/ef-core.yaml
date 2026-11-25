@@ -3,7 +3,6 @@ title: Entity Framework Core
 title_en: Entity Framework Core
 description: DbContext, відстеження змін, міграції, завантаження зв'язків, N+1, продуктивність.
 description_en: DbContext, change tracking, migrations, loading related data, N+1, performance.
-draft_en: true
 questions:
   - id: ef-core-001
     level: junior

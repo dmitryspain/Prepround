@@ -3,7 +3,6 @@ title: Брокери повідомлень
 title_en: Message brokers
 description: Kafka, RabbitMQ, гарантії доставки, outbox, ідемпотентні консюмери.
 description_en: Kafka, RabbitMQ, delivery guarantees, outbox, idempotent consumers.
-draft_en: true
 questions:
   - id: messaging-001
     level: junior

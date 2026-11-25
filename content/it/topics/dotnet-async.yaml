@@ -3,7 +3,6 @@ title: Async і багатопотоковість
 title_en: Async and multithreading
 description: Task, async/await, SynchronizationContext, lock, TPL, Channels, дедлоки.
 description_en: Task, async/await, SynchronizationContext, lock, TPL, Channels, deadlocks.
-draft_en: true
 questions:
   - id: dotnet-async-001
     level: junior

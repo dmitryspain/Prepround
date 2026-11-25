@@ -3,6 +3,7 @@ title: Express і Fastify
 title_en: Express and Fastify
 description: Маршрути, middleware, обробка помилок, валідація.
 description_en: Routes, middleware, error handling, validation.
+draft_en: true
 questions:
   - id: express-fastify-001
     level: junior
@@ -10,6 +11,7 @@ questions:
     text: >
       Express 5.3, жодного body-parser у застосунку. Клієнт надсилає `POST /users` з тілом `{"name":"Ann"}` і заголовком
       `Content-Type: application/json`. Що станеться?
+    text_en: 'Express 5.3, no body-parser in the app. A client sends `POST /users` with the body `{"name":"Ann"}` and the header `Content-Type: application/json`. What happens?'
     code:
       lang: javascript
       source: |
@@ -21,13 +23,21 @@ questions:
         });
     options:
       - text: "`req.body` дорівнює `undefined`, тож `req.body.name` кине `TypeError`, і клієнт отримає `500`"
+        text_en: '`req.body` is `undefined`, so `req.body.name` throws a `TypeError` and the client gets `500`'
         correct: true
       - text: "Express розбере JSON самостійно, і клієнт отримає `{\"name\":\"Ann\"}` зі статусом `200`"
+        text_en: 'Express parses the JSON on its own, and the client gets `{"name":"Ann"}` with status `200`'
       - text: "`req.body` буде рядком із сирим JSON, тому `req.body.name` поверне `undefined`, а відповідь — `{}`"
+        text_en: '`req.body` is a string with the raw JSON, so `req.body.name` returns `undefined` and the response is `{}`'
       - text: "Express відповість `415 Unsupported Media Type`, бо не має парсера для цього типу вмісту"
+        text_en: 'Express responds with `415 Unsupported Media Type` because it has no parser for this content type'
     explanation: >
       Express не читає тіло запиту сам: поле `req.body` заповнює лише middleware на кшталт `express.json()`. Без нього в Express 5 це `undefined`,
       а звернення до властивості кидає помилку, яку перехоплює вбудований обробник і віддає `500`. Рішення — `app.use(express.json())` до маршрутів.
+    explanation_en: >
+      Express does not read the request body by itself: `req.body` is populated only by middleware such as `express.json()`. Without it, in
+      Express 5 it is `undefined`, and accessing a property throws an error that the built-in handler catches and turns into `500`. The fix is
+      `app.use(express.json())` before the routes.
     sources:
       - https://expressjs.com/en/api.html
 
@@ -35,18 +45,27 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про об'єкти запиту й відповіді в Express правильні?
+    text_en: 'Which statements about the request and response objects in Express are true?'
     options:
       - text: "У маршруті `/users/:id` значення `req.params.id` — це рядок, навіть якщо в URL лише цифри"
+        text_en: 'In the `/users/:id` route, `req.params.id` is a string, even if the URL contains only digits'
         correct: true
       - text: "`req.query` містить розібраний рядок запиту, наприклад `{ x: '1' }` для `?x=1`"
+        text_en: '`req.query` holds the parsed query string, for example `{ x: ''1'' }` for `?x=1`'
         correct: true
       - text: "`res.status(404).json({ error: 'not found' })` виставляє статус і надсилає JSON-тіло"
+        text_en: '`res.status(404).json({ error: ''not found'' })` sets the status and sends a JSON body'
         correct: true
       - text: "`req.query` для `?x=1&x=2` завжди містить лише останнє значення, рядок `'2'`"
+        text_en: 'For `?x=1&x=2`, `req.query` always contains only the last value, the string `''2''`'
       - text: "Метод `res.send()` можна викликати кілька разів, і кожен виклик допише дані до відповіді"
+        text_en: '`res.send()` can be called several times, and each call appends data to the response'
     explanation: >
       Параметри маршруту й запиту завжди приходять рядками, тож числа треба перетворювати вручну. Тіло запиту Express за замовчуванням не розбирає.
       Другий `res.send()` після відправлення кине `ERR_HTTP_HEADERS_SENT`, бо заголовки вже надіслано.
+    explanation_en: >
+      Route and query parameters always arrive as strings, so numbers must be converted manually. Express does not parse the request body by
+      default. A second `res.send()` after the response is sent throws `ERR_HTTP_HEADERS_SENT`, because the headers have already been sent.
     sources:
       - https://expressjs.com/en/api.html
 
@@ -54,6 +73,7 @@ questions:
     level: junior
     type: single
     text: Що відправить Fastify 5 клієнту для цього маршруту?
+    text_en: 'What will Fastify 5 send to the client for this route?'
     code:
       lang: javascript
       source: |
@@ -64,13 +84,21 @@ questions:
         });
     options:
       - text: "Відповідь `200` із `{\"hello\":\"world\"}` і `application/json`: значення async-обробника стає відповіддю"
+        text_en: 'A `200` response with `{"hello":"world"}` and `application/json`: the async handler''s value becomes the response'
         correct: true
       - text: "Запит повисне, бо без виклику `reply.send()` Fastify не знає, що відповідь уже готова до надсилання"
+        text_en: 'The request hangs, because without a `reply.send()` call Fastify does not know the response is ready to send'
       - text: "Відповідь `200`, але тіло буде порожнім: об'єкт треба спершу серіалізувати через `JSON.stringify`"
+        text_en: 'A `200` response, but with an empty body: the object must first be serialized with `JSON.stringify`'
       - text: "Помилка під час старту: Fastify вимагає, щоб async-обробник приймав `request` і `reply`"
+        text_en: 'An error at startup: Fastify requires an async handler to accept `request` and `reply`'
     explanation: >
       В async-обробнику Fastify використовує значення, яким виконався проміс, як тіло відповіді, а об'єкти сам серіалізує в JSON. Явний `reply.send()`
       потрібен лише тоді, коли відправляєте відповідь іншим способом. Перевірено через `fastify.inject`: `200 application/json; charset=utf-8`.
+    explanation_en: >
+      In an async handler, Fastify uses the value the promise resolved with as the response body and serializes objects to JSON itself. An
+      explicit `reply.send()` is needed only when you send the response some other way. Verified with `fastify.inject`: `200 application/json;
+      charset=utf-8`.
     sources:
       - https://fastify.dev/docs/latest/Reference/Routes/
       - https://fastify.dev/docs/latest/Guides/Getting-Started/
@@ -79,6 +107,7 @@ questions:
     level: junior
     type: single
     text: Що Fastify 5 відповість на `POST /v` з порожнім JSON-об'єктом `{}`?
+    text_en: 'What will Fastify 5 respond to `POST /v` with an empty JSON object `{}`?'
     code:
       lang: javascript
       source: |
@@ -93,13 +122,20 @@ questions:
         }, async (req) => ({ ok: req.body.name }));
     options:
       - text: "`400 Bad Request` про відсутнє поле `name`: валідація за схемою відбувається до виклику обробника"
+        text_en: '`400 Bad Request` about the missing `name` field: schema validation runs before the handler is called'
         correct: true
       - text: "`200` із `{\"ok\":null}`: відсутні поля Fastify замінює на `null`"
+        text_en: '`200` with `{"ok":null}`: Fastify replaces missing fields with `null`'
       - text: "`500`: обробник виконається, `req.body.name` буде `undefined`, а схема лише описує документацію до API"
+        text_en: '`500`: the handler runs, `req.body.name` is `undefined`, and the schema only describes the API documentation'
       - text: "`422 Unprocessable Entity`: Fastify для помилок схеми завжди повертає цей код"
+        text_en: '`422 Unprocessable Entity`: Fastify always returns this code for schema errors'
     explanation: >
       Схема `body` перевіряється до обробника, і при порушенні Fastify сам відповідає `400` з кодом `FST_ERR_VALIDATION`. Обробник узагалі не викликається.
       Перевірено через `inject`: повідомлення `body must have required property 'name'`.
+    explanation_en: >
+      The `body` schema is checked before the handler, and on a violation Fastify itself responds with `400` and the code `FST_ERR_VALIDATION`.
+      The handler is not called at all. Verified with `inject`: the message `body must have required property 'name'`.
     sources:
       - https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/
 
@@ -107,6 +143,7 @@ questions:
     level: middle
     type: single
     text: Що побачить клієнт, який викликає `GET /h/hang`?
+    text_en: 'What will the client see when calling `GET /h/hang`?'
     code:
       lang: javascript
       source: |
@@ -120,13 +157,20 @@ questions:
         app.use('/h', router);
     options:
       - text: "Запит зависне до таймауту: middleware не відповіло й не викликало `next()`"
+        text_en: 'The request hangs until a timeout: the middleware neither responded nor called `next()`'
         correct: true
       - text: "Відповідь `ok`: Express сам викликає `next()`, коли функція завершується без відповіді"
+        text_en: 'The response `ok`: Express calls `next()` itself when the function finishes without responding'
       - text: "Відповідь `404`: після middleware без `next()` Express вважає, що маршрут не знайдено"
+        text_en: 'A `404` response: after a middleware without `next()`, Express assumes the route was not found'
       - text: "Відповідь `500`: middleware без `next` у списку параметрів вважається помилковим"
+        text_en: 'A `500` response: a middleware without `next` in its parameter list is treated as an error handler'
     explanation: >
       Middleware має або завершити відповідь, або передати керування викликом `next()`. Express не викликає його за вас, а таймаут за замовчуванням відсутній,
       тому з'єднання лишається відкритим. Перевірено: у консолі з'явився `log`, а відповіді не було.
+    explanation_en: >
+      A middleware must either end the response or pass control by calling `next()`. Express does not call it for you, and there is no timeout by
+      default, so the connection stays open. Verified: `log` appeared in the console, and there was no response.
     sources:
       - https://expressjs.com/en/guide/writing-middleware.html
       - https://expressjs.com/en/guide/using-middleware.html
@@ -135,6 +179,7 @@ questions:
     level: middle
     type: single
     text: Express 5.3. Що отримає клієнт від цього застосунку при запиті `GET /async`?
+    text_en: 'Express 5.3. What does the client get from this app on `GET /async`?'
     code:
       lang: javascript
       source: |
@@ -147,13 +192,20 @@ questions:
         });
     options:
       - text: "`500` із `{\"handled\":\"boom\"}`: Express 5 сам передає відхилення проміса в обробник помилок"
+        text_en: '`500` with `{"handled":"boom"}`: Express 5 itself passes the promise rejection to the error handler'
         correct: true
       - text: "Запит повисне, а процес отримає `unhandledRejection`, як в Express 4, доки не додати `try/catch`"
+        text_en: 'The request hangs and the process gets `unhandledRejection`, as in Express 4, unless you add `try/catch`'
       - text: "Процес Node.js аварійно завершиться, бо `throw` в `async`-функції не можна перехопити"
+        text_en: 'The Node.js process crashes, because a `throw` in an `async` function cannot be caught'
       - text: "`500` зі стандартною HTML-сторінкою: власний обробник викликається лише для синхронних помилок"
+        text_en: '`500` with the default HTML page: the custom handler is called only for synchronous errors'
     explanation: >
       В Express 5 відхилений проміс із обробника чи middleware автоматично викликає `next(err)`. В Express 4 це треба було робити вручну через `try/catch`
       або обгортку. Перевірено запуском на Express 5.3.0.
+    explanation_en: >
+      In Express 5, a rejected promise from a handler or middleware automatically calls `next(err)`. In Express 4 this had to be done manually
+      with `try/catch` or a wrapper. Verified by running on Express 5.3.0.
     sources:
       - https://expressjs.com/en/guide/error-handling.html
       - https://expressjs.com/en/guide/migrating-5.html
@@ -162,18 +214,28 @@ questions:
     level: middle
     type: multiple
     text: Які твердження про middleware обробки помилок в Express правильні?
+    text_en: 'Which statements about error-handling middleware in Express are true?'
     options:
       - text: "Його оголошують із чотирма параметрами `(err, req, res, next)`, інакше Express не вважає його обробником помилок"
+        text_en: 'It is declared with four parameters `(err, req, res, next)`, otherwise Express does not treat it as an error handler'
         correct: true
       - text: "Його реєструють після маршрутів і решти `app.use()`, інакше помилки з пізніших маршрутів він не побачить"
+        text_en: 'It is registered after the routes and the other `app.use()` calls, otherwise it will not see errors from later routes'
         correct: true
       - text: "Якщо відповідь уже почали надсилати (`res.headersSent`), обробник має передати помилку далі через `next(err)`"
+        text_en: 'If the response has already started being sent (`res.headersSent`), the handler must pass the error on via `next(err)`'
         correct: true
       - text: "Обробник із трьома параметрами `(err, req, res)` теж спрацює, бо Express визначає його за іменем першого параметра"
+        text_en: 'A handler with three parameters `(err, req, res)` works too, because Express identifies it by the name of the first parameter'
       - text: "Обробник, зареєстрований до маршрутів, перехоплює їхні помилки так само, як і зареєстрований після них"
+        text_en: 'A handler registered before the routes catches their errors just like one registered after them'
     explanation: >
       Express розпізнає обробник помилок за кількістю параметрів, а не за назвами, і шукає його далі за ланцюжком від місця, де сталась помилка.
       Перевірено запуском: обробник із трьома параметрами і обробник перед маршрутом не спрацьовують, відповідає стандартний HTML-обробник.
+    explanation_en: >
+      Express recognizes an error handler by the number of parameters, not by their names, and looks for it further along the chain from where the
+      error occurred. Verified by running: a handler with three parameters and a handler placed before the route do not fire, and the default HTML
+      handler responds.
     sources:
       - https://expressjs.com/en/guide/error-handling.html
 
@@ -181,18 +243,28 @@ questions:
     level: middle
     type: multiple
     text: Які твердження про плагіни й інкапсуляцію у Fastify 5 правильні?
+    text_en: 'Which statements about plugins and encapsulation in Fastify 5 are true?'
     options:
       - text: "Декоратор, доданий через `decorate` у плагіні з `register`, не видно в батьківському контексті"
+        text_en: 'A decorator added via `decorate` in a plugin passed to `register` is not visible in the parent context'
         correct: true
       - text: "Хук з `addHook` у плагіні застосовується лише до маршрутів цього плагіна та вкладених у нього"
+        text_en: 'A hook from `addHook` in a plugin applies only to the routes of that plugin and those nested in it'
         correct: true
       - text: "Обгортка `fastify-plugin` вимикає інкапсуляцію для обгорнутого плагіна, і його декоратори стають видимі батьківському контексту"
+        text_en: 'The `fastify-plugin` wrapper disables encapsulation for the wrapped plugin, and its decorators become visible to the parent context'
         correct: true
       - text: "Усі плагіни ділять один спільний контекст, тому `decorate` в одному з них доступний у всьому застосунку"
+        text_en: 'All plugins share one common context, so `decorate` in one of them is available throughout the app'
       - text: "Хук з `addHook` у плагіні за замовчуванням глобальний і діє на всі маршрути застосунку, включно із сусідніми плагінами"
+        text_en: 'A hook from `addHook` in a plugin is global by default and affects all routes of the app, including sibling plugins'
     explanation: >
       Кожен `register` створює новий контекст, а декоратори й хуки діють лише в ньому та в нащадках. Щоб поділитися, плагін обгортають у `fastify-plugin`,
       який ламає інкапсуляцію лише для цього плагіна. Перевірено запуском: декоратор із дочірнього контексту в батьківському недоступний.
+    explanation_en: >
+      Each `register` creates a new context, and decorators and hooks apply only in it and its descendants. To share them, the plugin is wrapped
+      in `fastify-plugin`, which breaks encapsulation only for that plugin. Verified by running: a decorator from a child context is not available
+      in the parent.
     sources:
       - https://fastify.dev/docs/latest/Reference/Encapsulation/
       - https://fastify.dev/docs/latest/Reference/Plugins/
@@ -203,6 +275,7 @@ questions:
     text: >
       Fastify 5.12. Розробник надсилає відповідь із відкладеного колбека в async-обробнику й не повертає `reply`.
       Що отримає клієнт і що з'явиться в логах?
+    text_en: 'Fastify 5.12. A developer sends the response from a deferred callback in an async handler and does not return `reply`. What does the client get, and what appears in the logs?'
     code:
       lang: javascript
       source: |
@@ -211,13 +284,21 @@ questions:
         });
     options:
       - text: "Порожню `200`: проміс завершився `undefined`, а пізніший `reply.send` лише логує «Reply was already sent»"
+        text_en: 'An empty `200`: the promise resolved with `undefined`, and the later `reply.send` only logs "Reply was already sent"'
         correct: true
       - text: "Відповідь `late` зі статусом `200`: Fastify дочекається `reply.send`, бо обробник його все одно викликає"
+        text_en: 'The response `late` with status `200`: Fastify waits for `reply.send`, because the handler calls it anyway'
       - text: "Відповідь `500` одразу: Fastify забороняє async-обробник, що завершується без `return`, і падає під час запуску"
+        text_en: 'A `500` response right away: Fastify forbids an async handler that ends without `return` and fails at startup'
       - text: "Запит висне, поки клієнт не обірве з'єднання: Fastify очікує виклику `reply.send` без обмеження часу"
+        text_en: 'The request hangs until the client drops the connection: Fastify waits for a `reply.send` call with no time limit'
     explanation: >
       Для async-обробника Fastify вважає відповіддю значення, яким виконався проміс, тож `undefined` одразу закриває запит порожнім `200`. Щоб відправити
       відповідь пізніше, треба `return reply` або `await reply`. Перевірено запуском через `inject`: `200`, порожнє тіло й попередження в журналі.
+    explanation_en: >
+      For an async handler, Fastify treats the value the promise resolved with as the response, so `undefined` immediately closes the request with
+      an empty `200`. To send the response later, you need `return reply` or `await reply`. Verified by running with `inject`: `200`, an empty
+      body, and a warning in the log.
     sources:
       - https://fastify.dev/docs/latest/Reference/Routes/
       - https://fastify.dev/docs/latest/Reference/Reply/
@@ -227,6 +308,7 @@ questions:
     type: single
     text: >
       Fastify 5. Обробник повертає об'єкт із приватним полем, а для маршруту задано схему відповіді. Що отримає клієнт?
+    text_en: 'Fastify 5. The handler returns an object with a private field, and a response schema is set for the route. What does the client get?'
     code:
       lang: javascript
       source: |
@@ -239,13 +321,20 @@ questions:
         }, async () => ({ id: 1, password: 'secret' }));
     options:
       - text: "`{\"id\":1}`: серіалізатор за схемою виводить лише описані властивості, тож `password` не потрапить у відповідь"
+        text_en: '`{"id":1}`: the schema serializer outputs only the described properties, so `password` does not reach the response'
         correct: true
       - text: "`{\"id\":1,\"password\":\"secret\"}`: схема відповіді лише документує контракт і поля не прибирає"
+        text_en: '`{"id":1,"password":"secret"}`: the response schema only documents the contract and does not remove fields'
       - text: "`500`: Fastify перевіряє відповідь за схемою й відхиляє об'єкт із зайвим полем `password`"
+        text_en: '`500`: Fastify checks the response against the schema and rejects an object with the extra field `password`'
       - text: "`{\"id\":1,\"password\":null}`: невідомі схемі поля замінюються на `null`"
+        text_en: '`{"id":1,"password":null}`: fields unknown to the schema are replaced with `null`'
     explanation: >
       Схема відповіді використовується для швидкої серіалізації, і поля, яких у ній немає, просто не потрапляють у вихідний JSON. Це додатковий захист від витоку
       даних, але не заміна явному мапінгу DTO. Перевірено через `inject`: тіло `{"id":1}`.
+    explanation_en: >
+      The response schema is used for fast serialization, and fields that are not in it simply do not make it into the output JSON. This is an
+      extra safeguard against data leaks, but not a replacement for explicit DTO mapping. Verified with `inject`: the body is `{"id":1}`.
     sources:
       - https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/
 
@@ -253,18 +342,28 @@ questions:
     level: senior
     type: multiple
     text: Які твердження про налаштування `trust proxy` в Express 5 правильні?
+    text_en: 'Which statements about the `trust proxy` setting in Express 5 are true?'
     options:
       - text: "За замовчуванням `req.ip` — адреса сокета, а заголовок `X-Forwarded-For` ігнорується"
+        text_en: 'By default, `req.ip` is the socket address, and the `X-Forwarded-For` header is ignored'
         correct: true
       - text: "`trust proxy` = `1` довіряє одному проксі, і `req.ip` бере останню адресу з `X-Forwarded-For`"
+        text_en: '`trust proxy` = `1` trusts one proxy, and `req.ip` takes the last address from `X-Forwarded-For`'
         correct: true
       - text: "`trust proxy` = `true` бере крайню ліву адресу з `X-Forwarded-For`, яку клієнт може підробити"
+        text_en: '`trust proxy` = `true` takes the leftmost address from `X-Forwarded-For`, which the client can spoof'
         correct: true
       - text: "`trust proxy` = `true` — безпечне налаштування за замовчуванням для будь-якого розгортання за балансувальником"
+        text_en: '`trust proxy` = `true` is a safe default for any deployment behind a load balancer'
       - text: "Налаштування `trust proxy` змінює лише `req.protocol`, а `req.ip` завжди береться з сокета"
+        text_en: 'The `trust proxy` setting changes only `req.protocol`, while `req.ip` is always taken from the socket'
     explanation: >
       Коли проксі довіряють без обмежень, клієнт сам може дописати в `X-Forwarded-For` довільну адресу, тому `true` безпечне лише тоді, коли крайній проксі перезаписує заголовок.
       Число хопів або список підмереж точніші. Перевірено запуском із заголовком `1.1.1.1, 5.6.7.8`: без налаштування адреса сокета (`::1` або `127.0.0.1`), з `true` — `1.1.1.1`, з `1` — `5.6.7.8`.
+    explanation_en: >
+      When the proxy is trusted without limits, the client can append any address to `X-Forwarded-For` itself, so `true` is safe only when the
+      outermost proxy overwrites the header. A hop count or a list of subnets is more precise. Verified by running with the header `1.1.1.1,
+      5.6.7.8`: without the setting, the socket address (`::1` or `127.0.0.1`); with `true`, `1.1.1.1`; with `1`, `5.6.7.8`.
     sources:
       - https://expressjs.com/en/guide/behind-proxies.html
 
@@ -274,15 +373,24 @@ questions:
     text: >
       У Fastify 5 потрібно відхиляти неавторизовані запити до того, як фреймворк прочитає й розбере велике JSON-тіло.
       У якому хуку це зробити?
+    text_en: 'In Fastify 5, you need to reject unauthorized requests before the framework reads and parses a large JSON body. Which hook should you use?'
     options:
       - text: "`onRequest`: це перший хук життєвого циклу, на ньому тіло ще не розібрано (`request.body` дорівнює `undefined`)"
+        text_en: '`onRequest`: it is the first lifecycle hook, and the body is not yet parsed there (`request.body` is `undefined`)'
         correct: true
       - text: "`preValidation`: тіло вже розібране, але не провалідоване, тому відхилення зекономить час на перевірці схеми"
+        text_en: '`preValidation`: the body is already parsed but not yet validated, so rejecting saves the time of schema checking'
       - text: "`preHandler`: це останній хук перед обробником, і саме там зручно перевіряти токен і права"
+        text_en: '`preHandler`: it is the last hook before the handler, and it is the convenient place to check the token and permissions'
       - text: "`onSend`: перед надсиланням відповіді можна замінити її на `401`, якщо користувач неавторизований"
+        text_en: '`onSend`: before the response is sent, you can replace it with `401` if the user is unauthorized'
     explanation: >
       Порядок такий: `onRequest`, `preParsing`, розбір тіла, `preValidation`, валідація, `preHandler`. Лише в `onRequest` і `preParsing` тіло ще не прочитано,
       тож відмова там не витрачає ресурси на велике тіло. Перевірено запуском: `request.body` в `onRequest` — `undefined`, у `preHandler` — об'єкт.
+    explanation_en: >
+      The order is: `onRequest`, `preParsing`, body parsing, `preValidation`, validation, `preHandler`. Only in `onRequest` and `preParsing` has
+      the body not yet been read, so rejecting there does not spend resources on a large body. Verified by running: `request.body` in `onRequest`
+      is `undefined`, and in `preHandler` it is an object.
     sources:
       - https://fastify.dev/docs/latest/Reference/Lifecycle/
       - https://fastify.dev/docs/latest/Reference/Hooks/

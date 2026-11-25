@@ -8,6 +8,7 @@ questions:
     level: junior
     type: single
     text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
     code:
       lang: java
       source: |
@@ -18,13 +19,20 @@ questions:
         System.out.println(a == b.intern());
     options:
       - text: "`false`, `true`, `true`"
+        text_en: "`false`, `true`, `true`"
         correct: true
       - text: "`true`, `true`, `true`"
+        text_en: "`true`, `true`, `true`"
       - text: "`false`, `true`, `false`"
+        text_en: "`false`, `true`, `false`"
       - text: "`false`, `false`, `true`"
+        text_en: "`false`, `false`, `true`"
     explanation: >
       Оператор `==` порівнює посилання, а `new String("java")` завжди створює новий об'єкт, тож перший рядок дає `false`.
       `equals` порівнює вміст, а `intern()` повертає канонічний екземпляр із пулу рядків, на який посилається й літерал `a`.
+    explanation_en: >
+      The `==` operator compares references, and `new String("java")` always creates a new object, so the first line prints `false`.
+      `equals` compares content, and `intern()` returns the canonical instance from the string pool, which the literal `a` also refers to.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html#intern()
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.21.3
@@ -32,22 +40,31 @@ questions:
     level: junior
     type: multiple
     text: Які з цих типів належать до перевірюваних (checked) винятків у Java?
+    text_en: "Which of these types are checked exceptions in Java?"
     options:
       - text: "`java.io.IOException`"
+        text_en: "`java.io.IOException`"
         correct: true
       - text: "`java.sql.SQLException`"
+        text_en: "`java.sql.SQLException`"
         correct: true
       - text: "`IllegalStateException`"
+        text_en: "`IllegalStateException`"
       - text: "`OutOfMemoryError`"
+        text_en: "`OutOfMemoryError`"
     explanation: >
       Перевірюваними є `Throwable` та його підкласи, окрім `RuntimeException`, `Error` і їхніх нащадків; компілятор вимагає їх обробити або оголосити в `throws`.
       `IllegalStateException` походить від `RuntimeException`, а `OutOfMemoryError` — від `Error`, тож обидва неперевірювані.
+    explanation_en: >
+      Checked exceptions are `Throwable` and its subclasses, except `RuntimeException`, `Error`, and their descendants; the compiler requires them to be handled or declared in `throws`.
+      `IllegalStateException` extends `RuntimeException` and `OutOfMemoryError` extends `Error`, so both are unchecked.
     sources:
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-11.html#jls-11.1.1
   - id: java-core-003
     level: junior
     type: single
     text: Що станеться під час виконання цього коду (Java 25)?
+    text_en: "What happens when this code runs (Java 25)?"
     code:
       lang: java
       source: |
@@ -55,29 +72,44 @@ questions:
         nums.add(4);
     options:
       - text: "Буде викинуто `UnsupportedOperationException`"
+        text_en: "`UnsupportedOperationException` is thrown"
         correct: true
       - text: "У список додасться елемент, а розмір стане 4"
+        text_en: "The element is added and the size becomes 4"
       - text: "Код не скомпілюється, бо `List.of` повертає масив"
+        text_en: "The code does not compile because `List.of` returns an array"
       - text: "Елемент мовчки проігнорується, список лишиться з трьох елементів"
+        text_en: "The element is silently ignored and the list keeps its three elements"
     explanation: >
       Колекції з фабричних методів `List.of`, `Set.of`, `Map.of` незмінні, і будь-яка спроба їх змінити закінчується `UnsupportedOperationException`.
       Код компілюється нормально, бо метод `add` є в інтерфейсі `List`; помилка виникає лише під час виконання.
+    explanation_en: >
+      Collections from the `List.of`, `Set.of`, and `Map.of` factory methods are unmodifiable, and any attempt to modify them ends with `UnsupportedOperationException`.
+      The code compiles fine because `add` is declared in the `List` interface; the error occurs only at run time.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html#unmodifiable
   - id: java-core-004
     level: junior
     type: multiple
     text: Що компілятор Java 25 автоматично створює для оголошення `record Point(int x, int y) {}`?
+    text_en: "What does the Java 25 compiler automatically generate for the declaration `record Point(int x, int y) {}`?"
     options:
       - text: "Приватні `final`-поля та канонічний конструктор"
+        text_en: "Private `final` fields and a canonical constructor"
         correct: true
       - text: "Методи доступу `x()` і `y()`"
+        text_en: "Accessor methods `x()` and `y()`"
         correct: true
       - text: "Методи `setX(int)` і `setY(int)`"
+        text_en: "Methods `setX(int)` and `setY(int)`"
       - text: "Конструктор без параметрів `Point()`"
+        text_en: "A no-argument constructor `Point()`"
     explanation: >
       Для record компілятор додає приватні `final`-поля, канонічний конструктор, методи доступу з іменами компонентів, а також `equals`, `hashCode` і `toString`.
       Сеттерів немає, бо стан запису незмінний, а конструктор без параметрів не створюється, якщо його не оголосити вручну.
+    explanation_en: >
+      For a record the compiler adds private `final` fields, a canonical constructor, accessor methods named after the components, and also `equals`, `hashCode`, and `toString`.
+      There are no setters because a record's state is immutable, and a no-argument constructor is not created unless you declare it manually.
     sources:
       - https://openjdk.org/jeps/395
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.10
@@ -86,6 +118,7 @@ questions:
     type: single
     text: >-
       У класі перевизначено `equals`, але не `hashCode`. Що може піти не так (Java 25)?
+    text_en: "A class overrides `equals` but not `hashCode`. What can go wrong (Java 25)?"
     code:
       lang: java
       source: |
@@ -101,19 +134,27 @@ questions:
         boolean found = set.contains(new Pt(1));
     options:
       - text: "`found` може бути `false`: рівні об'єкти шукаються в різних кошиках"
+        text_en: "`found` may be `false`: equal objects are looked up in different buckets"
         correct: true
       - text: "Код не скомпілюється без перевизначення `hashCode`"
+        text_en: "The code does not compile without overriding `hashCode`"
       - text: "`HashSet` порівнює лише `hashCode`, тож `found` завжди `true`"
+        text_en: "`HashSet` compares only `hashCode`, so `found` is always `true`"
       - text: "`add` викине виняток, бо контракт `equals` порушено"
+        text_en: "`add` throws an exception because the `equals` contract is violated"
     explanation: >
       Контракт вимагає, щоб рівні за `equals` об'єкти мали однаковий `hashCode`. Тут використовується ідентичний хеш-код за замовчуванням, тож `HashSet` шукає в іншому кошику і на практиці повертає `false` (під час запуску вийшло саме так).
       Компілятор такого порушення не помічає.
+    explanation_en: >
+      The contract requires objects that are equal by `equals` to have the same `hashCode`. Here the default identity hash code is used, so `HashSet` looks in a different bucket and in practice returns `false` (this is what happened when run).
+      The compiler does not notice such a violation.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#hashCode()
   - id: java-core-006
     level: middle
     type: single
     text: Що відбудеться під час виконання цього коду (Java 25)?
+    text_en: "What happens when this code runs (Java 25)?"
     code:
       lang: java
       source: |
@@ -123,13 +164,20 @@ questions:
         }
     options:
       - text: "Буде викинуто `ConcurrentModificationException`"
+        text_en: "`ConcurrentModificationException` is thrown"
         correct: true
       - text: "Елемент `2` видалиться, і цикл спокійно завершиться"
+        text_en: "Element `2` is removed and the loop finishes normally"
       - text: "Буде викинуто `IndexOutOfBoundsException` через зсув індексів"
+        text_en: "`IndexOutOfBoundsException` is thrown because of shifted indexes"
       - text: "Буде викинуто `UnsupportedOperationException`, бо в циклі `for-each` колекцію змінювати заборонено"
+        text_en: "`UnsupportedOperationException` is thrown because modifying a collection in a `for-each` loop is forbidden"
     explanation: >
       Ітератор `ArrayList` швидко падає (fail-fast): він порівнює лічильник структурних змін зі своїм, і після `remove` повз нього наступний виклик `next()` кидає `ConcurrentModificationException`.
       Безпечні шляхи — `removeIf` або `Iterator.remove()`.
+    explanation_en: >
+      The `ArrayList` iterator is fail-fast: it compares the structural modification count with its own, and after `remove` bypassing it, the next `next()` call throws `ConcurrentModificationException`.
+      The safe approaches are `removeIf` or `Iterator.remove()`.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ArrayList.html
   - id: java-core-007
@@ -137,16 +185,24 @@ questions:
     type: multiple
     text: >-
       Нехай оголошено `List<Integer> ints = new ArrayList<>();`. Які з цих присвоєнь компілюються?
+    text_en: "Suppose `List<Integer> ints = new ArrayList<>();` is declared. Which of these assignments compile?"
     options:
       - text: "`List<? extends Number> a = ints;`"
+        text_en: "`List<? extends Number> a = ints;`"
         correct: true
       - text: "`List<?> b = ints;`"
+        text_en: "`List<?> b = ints;`"
         correct: true
       - text: "`List<Number> c = ints;`"
+        text_en: "`List<Number> c = ints;`"
       - text: "`List<Object> d = ints;`"
+        text_en: "`List<Object> d = ints;`"
     explanation: >
       Параметризовані типи інваріантні: `List<Integer>` не є підтипом `List<Number>` чи `List<Object>`, інакше через такий посилальний тип у список цілих можна було б покласти `Double`.
       Символи підстановки `? extends Number` і `?` дозволяють читати елементи й тому сумісні з `List<Integer>`; компілятор для `List<Number>` дає `incompatible types`.
+    explanation_en: >
+      Parameterized types are invariant: `List<Integer>` is not a subtype of `List<Number>` or `List<Object>`, otherwise a `Double` could be put into a list of integers through such a reference type.
+      The wildcards `? extends Number` and `?` allow reading elements and are therefore compatible with `List<Integer>`; for `List<Number>` the compiler reports `incompatible types`.
     sources:
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html#jls-4.5.1
       - https://dev.java/learn/generics/wildcards/
@@ -154,6 +210,7 @@ questions:
     level: middle
     type: single
     text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
     code:
       lang: java
       source: |
@@ -172,13 +229,20 @@ questions:
         }
     options:
       - text: "`open A`, `open B`, `body`, `close B`, `close A`, `catch`, `finally`"
+        text_en: "`open A`, `open B`, `body`, `close B`, `close A`, `catch`, `finally`"
         correct: true
       - text: "`open A`, `open B`, `body`, `close A`, `close B`, `catch`, `finally`"
+        text_en: "`open A`, `open B`, `body`, `close A`, `close B`, `catch`, `finally`"
       - text: "`open A`, `open B`, `body`, `catch`, `close B`, `close A`, `finally`"
+        text_en: "`open A`, `open B`, `body`, `catch`, `close B`, `close A`, `finally`"
       - text: "`open A`, `open B`, `body`, `catch`, `finally`, `close B`, `close A`"
+        text_en: "`open A`, `open B`, `body`, `catch`, `finally`, `close B`, `close A`"
     explanation: >
       Ресурси закриваються в порядку, оберненому до відкриття, і до виконання `catch` та `finally`, бо вони належать до розширеної форми `try`, яка спершу звільняє ресурси.
       Тому `close B` і `close A` друкуються перед `catch`; результат підтверджено запуском.
+    explanation_en: >
+      Resources are closed in the reverse order of opening, and before `catch` and `finally` run, because those belong to the extended form of `try`, which releases resources first.
+      So `close B` and `close A` are printed before `catch`; the result was confirmed by running the code.
     sources:
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.20.3
   - id: java-core-009
@@ -186,6 +250,7 @@ questions:
     type: single
     text: >-
       Об'єкт, що є ключем `HashMap`, змінили після `put` так, що змінився його `hashCode`. Що побачить код (Java 25)?
+    text_en: "A `HashMap` key object was modified after `put` so that its `hashCode` changed. What will the code observe (Java 25)?"
     code:
       lang: java
       source: |
@@ -202,13 +267,20 @@ questions:
         // m.size(), m.get(k), m.containsKey(k), iteration over entrySet()
     options:
       - text: "`size()` — 1, `get(k)` і `containsKey(k)` не знаходять, перебір запис показує"
+        text_en: "`size()` is 1, `get(k)` and `containsKey(k)` do not find it, iteration shows the entry"
         correct: true
       - text: "`get(k)` знаходить запис, бо мапа зберігає посилання на той самий об'єкт"
+        text_en: "`get(k)` finds the entry because the map stores a reference to the same object"
       - text: "Запис автоматично переміщується в новий кошик, тому `get(k)` повертає `v`"
+        text_en: "The entry is automatically moved to the new bucket, so `get(k)` returns `v`"
       - text: "`size()` стає 0, бо `HashMap` видаляє записи зі зміненими ключами"
+        text_en: "`size()` becomes 0 because `HashMap` removes entries with modified keys"
     explanation: >
       `HashMap` обчислює кошик у момент `put` і не стежить за ключем далі: запис лежить у кошику для хеша 1, а `get(k)` шукає в кошику для 2.
       Запис «губиться» для пошуку, але залишається в мапі, тому видно його лише під час перебору. Через це ключами роблять незмінні об'єкти; результат підтверджено запуском.
+    explanation_en: >
+      `HashMap` computes the bucket at `put` time and does not track the key afterward: the entry sits in the bucket for hash 1, while `get(k)` looks in the bucket for 2.
+      The entry becomes "lost" for lookup but stays in the map, so it is visible only during iteration. This is why immutable objects are used as keys; the result was confirmed by running the code.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html
   - id: java-core-010
@@ -216,6 +288,7 @@ questions:
     type: single
     text: >-
       У бібліотеці через сире (raw) посилання в `List<String>` потрапило число. Де саме з'явиться `ClassCastException` (Java 25)?
+    text_en: "Through a raw reference in a library, a number got into a `List<String>`. Where exactly will `ClassCastException` appear (Java 25)?"
     code:
       lang: java
       source: |
@@ -226,13 +299,20 @@ questions:
         String s = ls.get(0);              // (4)
     options:
       - text: "У рядку (4): компілятор вставляє приведення до `String` у місці читання елемента"
+        text_en: "On line (4): the compiler inserts a cast to `String` where the element is read"
         correct: true
       - text: "У рядку (1): `add` перевіряє тип елемента в `ArrayList<String>` під час виконання"
+        text_en: "On line (1): `add` checks the element type in `ArrayList<String>` at run time"
       - text: "У рядку (2): присвоєння сирого списку типізованому відхиляється віртуальною машиною"
+        text_en: "On line (2): assigning a raw list to a typed one is rejected by the virtual machine"
       - text: "Виняток не виникне взагалі, бо після стирання типів усе є `Object`"
+        text_en: "No exception occurs at all, because after type erasure everything is `Object`"
     explanation: >
       Через стирання типів дженерики не існують під час виконання, тому `add(42)` і присвоєння проходять (компілятор лише попереджає про unchecked). Приведення до `String` вставляється в місці використання, тому збій виникає далеко від справжньої причини, і це називають heap pollution.
       Те, що виняток у рядку (4), підтверджено запуском.
+    explanation_en: >
+      Because of type erasure, generics do not exist at run time, so `add(42)` and the assignment succeed (the compiler only warns about unchecked). The cast to `String` is inserted at the point of use, so the failure appears far from the real cause, which is called heap pollution.
+      That the exception occurs on line (4) was confirmed by running the code.
     sources:
       - https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html#jls-4.12.2
       - https://dev.java/learn/generics/type-erasure/
@@ -241,6 +321,7 @@ questions:
     type: single
     text: >-
       Скільки елементів буде в кожній множині після цього коду (Java 25)?
+    text_en: "How many elements will each set contain after this code (Java 25)?"
     code:
       lang: java
       source: |
@@ -250,13 +331,20 @@ questions:
         Set<BigDecimal> tree = new TreeSet<>(List.of(a, b));
     options:
       - text: "`hash` — 2, `tree` — 1"
+        text_en: "`hash` is 2, `tree` is 1"
         correct: true
       - text: "`hash` — 1, `tree` — 1"
+        text_en: "`hash` is 1, `tree` is 1"
       - text: "`hash` — 2, `tree` — 2"
+        text_en: "`hash` is 2, `tree` is 2"
       - text: "`hash` — 1, `tree` — 2"
+        text_en: "`hash` is 1, `tree` is 2"
     explanation: >
       У `BigDecimal` метод `equals` враховує масштаб (`1.0` і `1.00` різні), а `compareTo` ні. `HashSet` спирається на `equals`/`hashCode`, а `TreeSet` лише на порівняння, тож вважає значення однаковим і лишає один елемент.
       Це приклад порядку, неузгодженого з `equals`; результат підтверджено запуском.
+    explanation_en: >
+      In `BigDecimal`, `equals` takes scale into account (`1.0` and `1.00` differ), while `compareTo` does not. `HashSet` relies on `equals`/`hashCode`, while `TreeSet` relies only on comparison, so it treats the values as the same and keeps one element.
+      This is an example of ordering inconsistent with `equals`; the result was confirmed by running the code.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/math/BigDecimal.html#equals(java.lang.Object)
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/SortedSet.html
@@ -265,16 +353,24 @@ questions:
     type: multiple
     text: >-
       Є `record Team(String name, List<String> members) {}`. Екземпляр створено з `ArrayList`, на яку код зберіг посилання. Які твердження правильні (Java 25)?
+    text_en: "There is `record Team(String name, List<String> members) {}`. An instance was created from an `ArrayList` that the code kept a reference to. Which statements are true (Java 25)?"
     options:
       - text: "Зміни вихідного `ArrayList` видно через `team.members()`"
+        text_en: "Changes to the original `ArrayList` are visible through `team.members()`"
         correct: true
       - text: "Компактний конструктор із `members = List.copyOf(members);` робить захисну копію"
+        text_en: "A compact constructor with `members = List.copyOf(members);` makes a defensive copy"
         correct: true
       - text: "Поля record є `final`, тому `team.members().add(\"x\")` завжди викидає виняток"
+        text_en: "Record fields are `final`, so `team.members().add(\"x\")` always throws an exception"
       - text: "Компілятор не дозволяє передавати в компонент record змінну колекцію"
+        text_en: "The compiler does not allow passing a mutable collection to a record component"
     explanation: >
       `final` фіксує лише посилання на список, а не його вміст, тому record захищає від перепризначення полів, але не від зміни вкладених змінних об'єктів.
       Захисну копію роблять у компактному конструкторі: `List.copyOf` створює незмінну копію. Поведінку підтверджено запуском.
+    explanation_en: >
+      `final` fixes only the reference to the list, not its contents, so a record protects against reassigning fields but not against changes to nested mutable objects.
+      The defensive copy is made in the compact constructor: `List.copyOf` creates an unmodifiable copy. The behavior was confirmed by running the code.
     sources:
       - https://openjdk.org/jeps/395
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html#copyOf(java.util.Collection)

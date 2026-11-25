@@ -3,6 +3,7 @@ title: Symfony
 title_en: Symfony
 description: Бандли, DI-контейнер, події, форми, конфігурація.
 description_en: Bundles, DI container, events, forms, configuration.
+draft_en: true
 questions:
   - id: symfony-001
     level: junior

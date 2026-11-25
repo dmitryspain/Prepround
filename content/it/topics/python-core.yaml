@@ -3,11 +3,13 @@ title: Python Core
 title_en: Core Python
 description: Типи, mutable/immutable, генератори, декоратори, контекст-менеджери, ООП, dataclasses.
 description_en: Types, mutable/immutable, generators, decorators, context managers, OOP, dataclasses.
+draft_en: true
 questions:
   - id: python-core-001
     level: junior
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: python
       source: |
@@ -17,38 +19,56 @@ questions:
         print(a)
     options:
       - text: "`[1, 2, 3]`"
+        text_en: "`[1, 2, 3]`"
         correct: true
       - text: "`[1, 2]`"
+        text_en: "`[1, 2]`"
       - text: "`[3]`"
+        text_en: "`[3]`"
       - text: "`[1, 2, [1, 2, 3]]`"
+        text_en: "`[1, 2, [1, 2, 3]]`"
     explanation: >
       Присвоєння `b = a` не копіює список, а лише дає йому друге ім'я. `a` і `b` вказують на один об'єкт,
       тож `append` через `b` видно і через `a`.
+    explanation_en: >
+      The assignment `b = a` does not copy the list; it just gives it a second name. `a` and `b` point to the same
+      object, so an `append` through `b` is visible through `a` too.
     sources:
       - https://docs.python.org/3/reference/datamodel.html#objects-values-and-types
   - id: python-core-002
     level: junior
     type: multiple
     text: Які з цих вбудованих типів є незмінними (immutable)?
+    text_en: Which of these built-in types are immutable?
     options:
       - text: "`str`"
+        text_en: "`str`"
         correct: true
       - text: "`tuple`"
+        text_en: "`tuple`"
         correct: true
       - text: "`frozenset`"
+        text_en: "`frozenset`"
         correct: true
       - text: "`list`"
+        text_en: "`list`"
       - text: "`bytearray`"
+        text_en: "`bytearray`"
       - text: "`dict`"
+        text_en: "`dict`"
     explanation: >
       Рядки, кортежі й `frozenset` не можна змінити після створення, тому їх можна використовувати як ключі словника
       (якщо вміст кортежу теж хешований). `list`, `bytearray` і `dict` змінюються на місці.
+    explanation_en: >
+      Strings, tuples and `frozenset` cannot be changed after creation, so they can be used as dictionary keys (if
+      the tuple's contents are hashable too). `list`, `bytearray` and `dict` are modified in place.
     sources:
       - https://docs.python.org/3/reference/datamodel.html#objects-values-and-types
   - id: python-core-003
     level: junior
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: python
       source: |
@@ -57,34 +77,51 @@ questions:
         print(a == b, a is b)
     options:
       - text: "`True False`"
+        text_en: "`True False`"
         correct: true
       - text: "`True True`"
+        text_en: "`True True`"
       - text: "`False False`"
+        text_en: "`False False`"
       - text: "`False True`"
+        text_en: "`False True`"
     explanation: >
       `==` порівнює значення, а `is` перевіряє, чи це той самий об'єкт. Два окремі списки з однаковим вмістом
       рівні, але не тотожні.
+    explanation_en: >
+      `==` compares values, while `is` checks whether it is the same object. Two separate lists with identical
+      contents are equal but not identical.
     sources:
       - https://docs.python.org/3/reference/expressions.html#comparisons
   - id: python-core-004
     level: junior
     type: single
     text: Що гарантує оператор `with open("data.txt") as f:` після виходу з блоку?
+    text_en: What does the `with open("data.txt") as f:` statement guarantee after the block exits?
     options:
       - text: Файл закрито, навіть якщо всередині блоку виник виняток
+        text_en: The file is closed, even if an exception was raised inside the block
         correct: true
       - text: Файл закрито лише після блоку без винятку
+        text_en: The file is closed only after a block without an exception
       - text: Файл лишається відкритим до роботи збирача сміття
+        text_en: The file stays open until the garbage collector runs
       - text: Виняток із блоку проковтнуто, і виконання йде далі
+        text_en: The exception from the block is swallowed and execution continues
     explanation: >
       `with` викликає `__exit__` контекст-менеджера за будь-якого виходу з блоку, а файловий об'єкт у ньому закривається.
       Виняток при цьому не зникає: його гасить лише `__exit__`, що повернув істинне значення, а `open` цього не робить.
+    explanation_en: >
+      `with` calls the context manager's `__exit__` on any exit from the block, and the file object closes itself in
+      it. The exception does not disappear: only an `__exit__` that returns a true value suppresses it, and `open`
+      does not do that.
     sources:
       - https://docs.python.org/3/reference/compound_stmts.html#the-with-statement
   - id: python-core-005
     level: middle
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: python
       source: |
@@ -96,19 +133,27 @@ questions:
         print(add(2))
     options:
       - text: "`[1]`, потім `[1, 2]`"
+        text_en: "`[1]`, then `[1, 2]`"
         correct: true
       - text: "`[1]`, потім `[2]`"
+        text_en: "`[1]`, then `[2]`"
       - text: "`[1, 2]` двічі"
+        text_en: "`[1, 2]` twice"
       - text: "`[1]`, потім `TypeError`"
+        text_en: "`[1]`, then `TypeError`"
     explanation: >
       Значення за замовчуванням обчислюється один раз, під час виконання `def`, і зберігається в функції.
       Тому всі виклики без другого аргументу діляться одним списком. Звичний прийом: `items=None` і створення списку всередині.
+    explanation_en: >
+      The default value is evaluated once, when `def` runs, and is stored in the function. So all calls without the
+      second argument share one list. The usual idiom: `items=None` and creating the list inside.
     sources:
       - https://docs.python.org/3/reference/compound_stmts.html#function-definitions
   - id: python-core-006
     level: middle
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: python
       source: |
@@ -117,19 +162,28 @@ questions:
         print(sum(squares))
     options:
       - text: "`14`, потім `0`"
+        text_en: "`14`, then `0`"
         correct: true
       - text: "`14`, потім `14`"
+        text_en: "`14`, then `14`"
       - text: "`14`, потім `StopIteration`"
+        text_en: "`14`, then `StopIteration`"
       - text: "`0`, потім `0`"
+        text_en: "`0`, then `0`"
     explanation: >
       Генераторний вираз створює ітератор, а не колекцію. Перший `sum` вичерпує його (0+1+4+9), і другий не отримує жодного елемента.
       Виняток `StopIteration` усередині `sum` обробляється як кінець послідовності, тому помилки немає.
+    explanation_en: >
+      A generator expression creates an iterator, not a collection. The first `sum` exhausts it (0+1+4+9), and the
+      second gets no elements. The `StopIteration` exception inside `sum` is handled as the end of the sequence, so
+      there is no error.
     sources:
       - https://docs.python.org/3/reference/expressions.html#generator-expressions
   - id: python-core-007
     level: middle
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: python
       source: |
@@ -145,19 +199,27 @@ questions:
         print(greet.__name__, greet.__doc__)
     options:
       - text: "`wrapper None`"
+        text_en: "`wrapper None`"
         correct: true
       - text: "`greet Say hi.`"
+        text_en: "`greet Say hi.`"
       - text: "`greet None`"
+        text_en: "`greet None`"
       - text: "`wrapper Say hi.`"
+        text_en: "`wrapper Say hi.`"
     explanation: >
       Після декорування ім'я `greet` вказує на `wrapper`, а той має власні `__name__` і порожній `__doc__`.
       Щоб скопіювати метадані оригіналу, обгортку прикрашають `functools.wraps(fn)`.
+    explanation_en: >
+      After decoration the name `greet` points to `wrapper`, which has its own `__name__` and an empty `__doc__`. To
+      copy the original's metadata, the wrapper is decorated with `functools.wraps(fn)`.
     sources:
       - https://docs.python.org/3/library/functools.html#functools.wraps
   - id: python-core-008
     level: middle
     type: multiple
     text: Що `@dataclass` без параметрів генерує для класу (Python 3.14)?
+    text_en: What does `@dataclass` without parameters generate for the class (Python 3.14)?
     code:
       lang: python
       source: |
@@ -169,22 +231,31 @@ questions:
             y: int
     options:
       - text: "`__init__`, що приймає `x` і `y`"
+        text_en: "`__init__` that accepts `x` and `y`"
         correct: true
       - text: "`__repr__` на кшталт `Point(x=1, y=2)`"
+        text_en: "`__repr__` like `Point(x=1, y=2)`"
         correct: true
       - text: "`__eq__`, що порівнює екземпляри за кортежем полів"
+        text_en: "`__eq__` that compares instances as a tuple of fields"
         correct: true
       - text: "`__lt__`, що дозволяє сортувати екземпляри"
+        text_en: "`__lt__` that allows sorting instances"
       - text: "`__hash__`, що дозволяє класти екземпляри в `set`"
+        text_en: "`__hash__` that allows putting instances in a `set`"
     explanation: >
       За замовчуванням `init`, `repr` і `eq` увімкнені, а порівняння на порядок потребує `order=True`.
       Через `eq=True` без `frozen=True` атрибут `__hash__` стає `None`, тож екземпляри не хешуються.
+    explanation_en: >
+      By default `init`, `repr` and `eq` are enabled, while ordering comparisons require `order=True`. With
+      `eq=True` and without `frozen=True`, `__hash__` is set to `None`, so instances are not hashable.
     sources:
       - https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass
   - id: python-core-009
     level: senior
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: python
       source: |
@@ -210,13 +281,20 @@ questions:
         D().hello()
     options:
       - text: "`D B C A`"
+        text_en: "`D B C A`"
         correct: true
       - text: "`D B A`"
+        text_en: "`D B A`"
       - text: "`D B A C`"
+        text_en: "`D B A C`"
       - text: "`D C B A`"
+        text_en: "`D C B A`"
     explanation: >
       MRO класу `D` — `D, B, C, A`, і `super()` іде до наступного класу в MRO екземпляра, а не до прямого батька.
       Тому `B` передає виклик `C`, а не `A`; `A` викликається один раз, останнім.
+    explanation_en: >
+      The MRO of `D` is `D, B, C, A`, and `super()` goes to the next class in the instance's MRO, not to the direct
+      parent. So `B` passes the call to `C`, not to `A`; `A` is called once, last.
     sources:
       - https://docs.python.org/3/howto/mro.html
       - https://docs.python.org/3/library/functions.html#super
@@ -224,6 +302,7 @@ questions:
     level: senior
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: python
       source: |
@@ -242,19 +321,28 @@ questions:
             print("caught")
     options:
       - text: "`open`, `caught`"
+        text_en: "`open`, `caught`"
         correct: true
       - text: "`open`, `close`, `caught`"
+        text_en: "`open`, `close`, `caught`"
       - text: "`open`, потім необроблений `ValueError`"
+        text_en: "`open`, then an unhandled `ValueError`"
       - text: "`caught`"
+        text_en: "`caught`"
     explanation: >
       Виняток з тіла `with` вкидається в генератор у точці `yield`. Без `try/finally` рядок `print("close")` не виконується, і виняток іде далі до зовнішнього `except`.
       Для гарантованого звільнення ресурсу `yield` обгортають у `try/finally`.
+    explanation_en: >
+      The exception from the `with` body is thrown into the generator at the `yield` point. Without `try/finally`,
+      `print("close")` does not run, and the exception propagates to the outer `except`. To guarantee releasing the
+      resource, wrap `yield` in `try/finally`.
     sources:
       - https://docs.python.org/3/library/contextlib.html#contextlib.contextmanager
   - id: python-core-011
     level: senior
     type: single
     text: Що станеться при виконанні цього коду?
+    text_en: What happens when this code runs?
     code:
       lang: python
       source: |
@@ -268,28 +356,45 @@ questions:
         print({Point(1, 2)})
     options:
       - text: "`TypeError`: об'єкт `Point` нехешований (unhashable)"
+        text_en: "`TypeError`: the `Point` object is unhashable"
         correct: true
       - text: Виведеться множина з одним об'єктом `Point`
+        text_en: A set with one `Point` object is printed
       - text: "`AttributeError`, бо в класі немає `__hash__`"
+        text_en: "`AttributeError`, because the class has no `__hash__`"
       - text: "Множина мовчки візьме `id()` об'єкта як хеш"
+        text_en: The set silently uses the object's `id()` as the hash
     explanation: >
       Клас, що визначає `__eq__` і не визначає `__hash__`, отримує `__hash__ = None`, бо рівні об'єкти мусили б мати однаковий хеш.
       Тому екземпляр не можна покласти в `set` чи використати як ключ. Виправлення: додати `__hash__` за тими ж полями, що й `__eq__`.
+    explanation_en: >
+      A class that defines `__eq__` and does not define `__hash__` gets `__hash__ = None`, because equal objects
+      would have to have the same hash. So an instance cannot be put in a `set` or used as a key. Fix: add
+      `__hash__` over the same fields as `__eq__`.
     sources:
       - https://docs.python.org/3/reference/datamodel.html#object.__hash__
   - id: python-core-012
     level: senior
     type: multiple
     text: Що правильно про `__slots__` у класі?
+    text_en: Which statements about `__slots__` in a class are correct?
     options:
       - text: Екземпляр не має `__dict__`, тож новий атрибут дає `AttributeError`
+        text_en: Instances have no `__dict__`, so a new attribute raises `AttributeError`
         correct: true
       - text: Підклас, який сам не оголошує `__slots__`, знову отримує `__dict__`
+        text_en: A subclass that does not declare its own `__slots__` gets a `__dict__` again
         correct: true
       - text: Слабкі посилання на екземпляри працюють без жодних додаткових налаштувань
+        text_en: Weak references to instances work without any extra setup
       - text: Екземпляри стають незмінними після `__init__`, бо слоти доступні лише на читання
+        text_en: Instances become immutable after `__init__`, because slots are read-only
     explanation: >
       `__slots__` замінює словник атрибутів фіксованими дескрипторами на рівні класу, а підклас без власних слотів `__dict__` повертає.
       Слабкі посилання потребують `__weakref__` у слотах, а змінювати значення оголошених слотів можна й надалі.
+    explanation_en: >
+      `__slots__` replaces the attribute dictionary with fixed class-level descriptors, and a subclass without its
+      own slots brings `__dict__` back. Weak references need `__weakref__` in the slots, and the values of declared
+      slots can still be changed.
     sources:
       - https://docs.python.org/3/reference/datamodel.html#slots

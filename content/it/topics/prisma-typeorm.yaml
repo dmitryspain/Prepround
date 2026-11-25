@@ -3,19 +3,27 @@ title: Prisma і TypeORM
 title_en: Prisma and TypeORM
 description: Схеми, міграції, зв'язки, транзакції.
 description_en: Schemas, migrations, relations, transactions.
+draft_en: true
 questions:
   - id: prisma-typeorm-001
     level: junior
     type: single
     text: Яку умову можна передати в `where` методу `findUnique` у Prisma Client 7?
+    text_en: Which condition can be passed to `where` of the `findUnique` method in Prisma Client 7?
     options:
       - text: Умову, що містить хоча б одне унікальне поле (`@id`, `@unique` або складний `@@unique`)
+        text_en: A condition that contains at least one unique field (`@id`, `@unique`, or a compound `@@unique`)
         correct: true
       - text: Умову за будь-яким скалярним полем моделі, а якщо збігів кілька, повернеться перший
+        text_en: A condition on any scalar field of the model; if several records match, the first one is returned
       - text: Умову лише за первинним ключем, а для решти полів завжди потрібен `findFirst`
+        text_en: A condition on the primary key only; every other field always requires `findFirst`
       - text: Умову за будь-яким полем, на яке в схемі додано індекс `@@index` для швидкого пошуку
+        text_en: A condition on any field that has an `@@index` in the schema for fast lookups
     explanation: >
       `findUnique` гарантує не більше одного запису, тому `where` має містити унікальний ідентифікатор: `@id`, `@unique` або складний `@@unique`. Звичайний індекс унікальності не дає, а для неунікальних полів призначені `findFirst` і `findMany`.
+    explanation_en: >
+      `findUnique` guarantees at most one record, so `where` must contain a unique identifier: `@id`, `@unique`, or a compound `@@unique`. A regular index does not provide uniqueness, and `findFirst` and `findMany` exist for non-unique fields.
     sources:
       - https://www.prisma.io/docs/orm/v7/prisma-client/queries/crud
       - https://www.prisma.io/docs/orm/v7/reference/prisma-client-reference
@@ -23,17 +31,25 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про зв'язок один-до-багатьох у TypeORM правильні?
+    text_en: Which statements about a one-to-many relation in TypeORM are true?
     options:
       - text: '`@OneToMany` не може існувати без `@ManyToOne` на другій сутності зв''язку'
+        text_en: '`@OneToMany` cannot exist without `@ManyToOne` on the other entity of the relation'
         correct: true
       - text: Колонка зовнішнього ключа з'являється в таблиці тієї сутності, що має `@ManyToOne`
+        text_en: The foreign key column appears in the table of the entity that has `@ManyToOne`
         correct: true
       - text: У парі `@ManyToOne` / `@OneToMany` декоратор `@JoinColumn` можна не вказувати
+        text_en: In a `@ManyToOne` / `@OneToMany` pair, the `@JoinColumn` decorator may be omitted
         correct: true
       - text: Колонка зовнішнього ключа з'являється в таблиці сутності з `@OneToMany`, бо вона «володіє» списком
+        text_en: The foreign key column appears in the table of the entity with `@OneToMany`, because it "owns" the list
       - text: '`@ManyToOne` можна оголосити лише тоді, коли на зворотному боці є `@OneToMany`'
+        text_en: '`@ManyToOne` can be declared only when the inverse side has `@OneToMany`'
     explanation: >
       Зовнішній ключ завжди лежить на боці «багато», тобто там, де `@ManyToOne`, а `@JoinColumn` для цієї пари необов'язковий. `@OneToMany` без `@ManyToOne` неможливий, а от зворотне дозволене: `@ManyToOne` можна описати без `@OneToMany`.
+    explanation_en: >
+      The foreign key always sits on the "many" side, that is, where `@ManyToOne` is, and `@JoinColumn` is optional for this pair. `@OneToMany` without `@ManyToOne` is impossible, but the reverse is allowed: `@ManyToOne` can be described without `@OneToMany`.
     sources:
       - https://typeorm.io/docs/relations/many-to-one-one-to-many-relations
   - id: prisma-typeorm-003
@@ -42,6 +58,7 @@ questions:
     text: >
       У схемі Prisma 7 модель `User` має поле `posts Post[]`. Що міститиме `user`
       після такого запиту?
+    text_en: In a Prisma 7 schema, the `User` model has a `posts Post[]` field. What will `user` contain after this query?
     code:
       lang: typescript
       source: |
@@ -50,26 +67,39 @@ questions:
         });
     options:
       - text: Лише скалярні поля `User`; зв'язок `posts` не завантажується, доки не додати `include` або `select`
+        text_en: Only the scalar fields of `User`; the `posts` relation is not loaded until `include` or `select` is added
         correct: true
       - text: Усі скалярні поля й масив `posts`, бо Prisma завжди підтягує зв'язки, описані в схемі
+        text_en: All scalar fields and the `posts` array, because Prisma always fetches the relations described in the schema
       - text: Скалярні поля й порожній масив `posts`, який можна заповнити пізнішим зверненням до `user.posts`
+        text_en: Scalar fields and an empty `posts` array that can be filled later by accessing `user.posts`
       - text: Скалярні поля й `posts` як ліниве поле, що виконає окремий запит при першому читанні
+        text_en: Scalar fields and `posts` as a lazy field that runs a separate query on first read
     explanation: >
       Prisma Client повертає зв'язки лише на явну вимогу через `include` або вкладений `select`. Ліниво завантажуваних властивостей у результаті немає: поле `posts` просто відсутнє.
+    explanation_en: >
+      Prisma Client returns relations only on explicit request via `include` or a nested `select`. There are no lazily loaded properties in the result: the `posts` field is simply absent.
     sources:
       - https://www.prisma.io/docs/orm/v7/prisma-client/queries/relation-queries
   - id: prisma-typeorm-004
     level: junior
     type: single
     text: 'Що робить опція `synchronize: true` у `DataSource` TypeORM і чому її не радять для production?'
+    text_en: 'What does the `synchronize: true` option in a TypeORM `DataSource` do, and why is it not recommended for production?'
     options:
       - text: Під час запуску приводить схему БД до стану сутностей, тож зміна сутності може знищити дані
+        text_en: Brings the database schema in line with the entities at startup, so changing an entity can destroy data
         correct: true
       - text: Синхронізує кеш сутностей між кількома інстансами застосунку, через що зростає навантаження
+        text_en: Synchronizes the entity cache between several application instances, which increases the load
       - text: Зберігає в БД історію міграцій і повторно виконує їх на кожному старті, що сповільнює запуск
+        text_en: Stores the migration history in the database and re-runs it on every start, which slows startup
       - text: Вмикає транзакційний режим для всіх запитів, тому довгі запити блокують рядки в таблицях
+        text_en: Enables transaction mode for all queries, so long queries block rows in tables
     explanation: >
       На кожному старті TypeORM порівнює сутності зі схемою й сам виконує потрібні `ALTER`-запити. Це зручно в розробці, але в production, наприклад, перейменування чи видалення колонки може стерти дані. Для production використовують міграції.
+    explanation_en: >
+      On every start TypeORM compares the entities with the schema and runs the needed `ALTER` queries itself. This is convenient in development, but in production, for example, renaming or dropping a column can wipe data. Use migrations in production.
     sources:
       - https://typeorm.io/docs/data-source/data-source-options
       - https://typeorm.io/docs/migrations/why
@@ -78,6 +108,7 @@ questions:
     type: single
     text: >
       TypeORM 1.1, PostgreSQL. Що буде в таблиці після виконання цього коду?
+    text_en: TypeORM 1.1, PostgreSQL. What will be in the table after this code runs?
     code:
       lang: typescript
       source: |
@@ -92,12 +123,18 @@ questions:
           .map((i) => i.name);
     options:
       - text: '`[''global'']`: запис не через `manager` виконався поза транзакцією й не відкотився'
+        text_en: '`[''global'']`: the write not made through `manager` ran outside the transaction and was not rolled back'
         correct: true
       - text: '`[]`: виняток у колбеку відкочує всі записи, зроблені під час транзакції'
+        text_en: '`[]`: an exception in the callback rolls back all writes made during the transaction'
       - text: '`[''inside'']`: `manager` робить запис одразу, а відкочується лише глобальний репозиторій'
+        text_en: '`[''inside'']`: `manager` writes immediately, and only the global repository is rolled back'
       - text: '`[''inside'', ''global'']`: `transaction` лише обгортає код у `try`, а відкат вмикається окремо'
+        text_en: '`[''inside'', ''global'']`: `transaction` only wraps the code in `try`, and rollback is enabled separately'
     explanation: >
       Транзакцією керує тільки `manager`, який TypeORM передає в колбек: він працює на виділеному з'єднанні. Репозиторій від `dataSource` бере інше з'єднання з пулу й комітить одразу, тож `global` лишається, а `inside` відкочується. Документація прямо радить не користуватися глобальним менеджером усередині транзакції. Перевірено запуском на Postgres.
+    explanation_en: >
+      Only the `manager` that TypeORM passes into the callback controls the transaction: it works on a dedicated connection. A repository from `dataSource` takes a different connection from the pool and commits immediately, so `global` stays and `inside` is rolled back. The documentation explicitly advises against using the global manager inside a transaction. Verified by running on Postgres.
     sources:
       - https://typeorm.io/docs/transactions
   - id: prisma-typeorm-006
@@ -106,17 +143,25 @@ questions:
     text: >
       Які твердження про команди Prisma Migrate (ORM 7) `migrate dev` і
       `migrate deploy` правильні?
+    text_en: Which statements about the Prisma Migrate (ORM 7) commands `migrate dev` and `migrate deploy` are true?
     options:
       - text: '`migrate dev` перевіряє історію міграцій на дрейф, перевиконуючи її в shadow-базі'
+        text_en: '`migrate dev` checks the migration history for drift by replaying it in a shadow database'
         correct: true
       - text: '`migrate deploy` не користується shadow-базою і не виявляє дрейф схеми'
+        text_en: '`migrate deploy` does not use a shadow database and does not detect schema drift'
         correct: true
       - text: '`migrate deploy` не генерує артефакти, зокрема Prisma Client'
+        text_en: '`migrate deploy` does not generate artifacts, including Prisma Client'
         correct: true
       - text: '`migrate deploy` сам створює нову міграцію, якщо `schema.prisma` змінилася'
+        text_en: '`migrate deploy` creates a new migration itself if `schema.prisma` has changed'
       - text: '`migrate deploy` скидає БД і застосовує історію знову, коли помічає дрейф'
+        text_en: '`migrate deploy` resets the database and applies the history again when it notices drift'
     explanation: >
       `migrate dev` призначена для розробки: shadow-база, генерація міграцій із різниці схем, можливе скидання. `migrate deploy` для CI/CD лише застосовує вже наявні невиконані міграції, нічого не створює, не скидає й не генерує клієнт.
+    explanation_en: >
+      `migrate dev` is meant for development: a shadow database, generating migrations from schema differences, possible reset. `migrate deploy`, for CI/CD, only applies existing pending migrations; it creates nothing, resets nothing, and does not generate the client.
     sources:
       - https://www.prisma.io/docs/orm/v7/prisma-migrate/workflows/development-and-production
   - id: prisma-typeorm-007
@@ -125,6 +170,7 @@ questions:
     text: >
       Prisma 7, модель `User` зі зв'язком `posts Post[]`. Яка проблема в цьому
       коді й як її розв'язати?
+    text_en: Prisma 7, a `User` model with a `posts Post[]` relation. What is the problem in this code and how do you fix it?
     code:
       lang: typescript
       source: |
@@ -137,12 +183,18 @@ questions:
         }
     options:
       - text: 'Це N+1: на N користувачів буде N+1 запитів; потрібен `findMany({ include: { posts: true } })`'
+        text_en: 'This is N+1: for N users there will be N+1 queries; you need `findMany({ include: { posts: true } })`'
         correct: true
       - text: Запити йдуть послідовно, тож це не N+1, а лише повільніше; достатньо обгорнути цикл у `Promise.all`
+        text_en: The queries run sequentially, so this is not N+1, just slower; wrapping the loop in `Promise.all` is enough
       - text: Prisma Client кешує результат `findMany`, тож повторні запити в циклі до БД не йдуть
+        text_en: Prisma Client caches the `findMany` result, so repeated queries in the loop do not reach the database
       - text: Prisma сама об'єднає запити циклу в один `IN`, якщо їх виконати в одному тіку подій
+        text_en: Prisma itself merges the loop queries into one `IN` if they run in the same event loop tick
     explanation: >
       Один запит за користувачами плюс по запиту на кожного користувача дає 1+N звернень до БД. `include` (або вкладений `select`) завантажує зв'язок разом із основним запитом: стратегія `join` за замовчуванням робить це одним запитом, а `query` — двома. `Promise.all` кількість запитів не зменшує, лише паралелізує їх.
+    explanation_en: >
+      One query for users plus one query per user gives 1+N database round trips. `include` (or a nested `select`) loads the relation together with the main query: the default `join` strategy does it in one query, and `query` in two. `Promise.all` does not reduce the number of queries, it only parallelizes them.
     sources:
       - https://www.prisma.io/docs/orm/v7/prisma-client/queries/relation-queries
   - id: prisma-typeorm-008
@@ -151,6 +203,7 @@ questions:
     text: >
       TypeORM 1.1: `User` має `@OneToMany` зв'язок `posts` (без `eager`), у БД є
       користувач із одним постом. Що виведе код?
+    text_en: 'TypeORM 1.1: `User` has a `@OneToMany` relation `posts` (not `eager`), and the database has a user with one post. What does the code print?'
     code:
       lang: typescript
       source: |
@@ -160,12 +213,18 @@ questions:
         console.log(user?.posts);
     options:
       - text: '`undefined`: без `relations` чи `eager` зв''язок не завантажується'
+        text_en: '`undefined`: without `relations` or `eager` the relation is not loaded'
         correct: true
       - text: '`[]`: порожній масив підставляється, доки пости явно не запитано'
+        text_en: '`[]`: an empty array is filled in until the posts are explicitly requested'
       - text: '`[ Post { ... } ]`: `findOne` сам додає `JOIN` для всіх описаних зв''язків'
+        text_en: '`[ Post { ... } ]`: `findOne` adds a `JOIN` itself for all described relations'
       - text: '`Promise`, який виконає запит за постами при першому `await user.posts`'
+        text_en: A `Promise` that runs a query for the posts on the first `await user.posts`
     explanation: >
       Зв'язки в TypeORM не завантажуються самі: треба `relations: { posts: true }`, `leftJoinAndSelect` у QueryBuilder або позначити зв'язок `eager: true`. Проміс-значення повертає лише ліниве відношення, оголошене як `Promise<Post[]>`. Перевірено запуском: без `relations` поле `undefined`, із ним масив із постом.
+    explanation_en: >
+      Relations in TypeORM are not loaded on their own: you need `relations: { posts: true }`, `leftJoinAndSelect` in QueryBuilder, or mark the relation `eager: true`. Only a lazy relation declared as `Promise<Post[]>` returns a promise value. Verified by running: without `relations` the field is `undefined`, with it an array with the post.
     sources:
       - https://typeorm.io/docs/relations/eager-and-lazy-relations
   - id: prisma-typeorm-009
@@ -175,14 +234,21 @@ questions:
       Prisma 7, PostgreSQL. В інтерактивній транзакції `prisma.$transaction(async (tx) => …)`
       між двома записами виконується виклик зовнішнього платіжного API, який інколи
       відповідає за 8 секунд. У логах з'являються помилки транзакцій. Як правильно виправити?
+    text_en: Prisma 7, PostgreSQL. In an interactive transaction `prisma.$transaction(async (tx) => …)`, an external payment API call that sometimes responds in 8 seconds runs between two writes. Transaction errors appear in the logs. What is the right fix?
     options:
       - text: Винести виклик API за межі транзакції, а в транзакції лишити короткі записи
+        text_en: Move the API call outside the transaction and keep only short writes inside it
         correct: true
       - text: Підняти `maxWait` до 10 секунд, бо саме він обмежує тривалість виконання транзакції
+        text_en: Raise `maxWait` to 10 seconds, because it is what limits how long the transaction may run
       - text: Замінити інтерактивну транзакцію на `$transaction([…])` і викликати API між елементами масиву
+        text_en: Replace the interactive transaction with `$transaction([…])` and call the API between array elements
       - text: Зменшити `timeout` до 1 секунди, щоб повільні транзакції швидше звільняли з'єднання
+        text_en: Lower `timeout` to 1 second so slow transactions release the connection sooner
     explanation: >
       Інтерактивна транзакція має ліміт `timeout` (за замовчуванням 5000 мс) на час виконання, а `maxWait` (за замовчуванням 2000 мс) обмежує лише очікування старту. Довгі транзакції тримають з'єднання й блокування та шкодять продуктивності, тому мережеві виклики виносять назовні. Підняття `timeout` лише маскує проблему.
+    explanation_en: >
+      An interactive transaction has a `timeout` limit (5000 ms by default) on execution time, while `maxWait` (2000 ms by default) limits only the wait to start. Long transactions hold the connection and locks and hurt performance, so network calls are moved out. Raising `timeout` only masks the problem.
     sources:
       - https://www.prisma.io/docs/orm/v7/prisma-client/queries/transactions
   - id: prisma-typeorm-010
@@ -192,16 +258,24 @@ questions:
       Prisma 7, PostgreSQL (READ COMMITTED за замовчуванням). Під навантаженням
       зменшення залишку товару інколи йде «в мінус»: код читає `stock`, перевіряє
       його й виконує `update`. Які зміни коректно прибирають гонку?
+    text_en: 'Prisma 7, PostgreSQL (READ COMMITTED by default). Under load, decrementing a product''s stock sometimes goes negative: the code reads `stock`, checks it, and runs `update`. Which changes correctly remove the race?'
     options:
       - text: 'Один `updateMany` з умовою `stock: { gte: 1 }` і `decrement`, а потім перевірка `count`'
+        text_en: 'A single `updateMany` with the condition `stock: { gte: 1 }` and `decrement`, then check `count`'
         correct: true
       - text: Транзакція з рівнем `Serializable` і повтором при помилці `P2034`
+        text_en: A transaction with the `Serializable` level and a retry on error `P2034`
         correct: true
       - text: Обгорнути `findUnique` і `update` в інтерактивну транзакцію з рівнем ізоляції за замовчуванням
+        text_en: Wrap `findUnique` and `update` in an interactive transaction with the default isolation level
       - text: Передати `findUnique` і `update` одним масивом у пакетний `$transaction([…])`
+        text_en: Pass `findUnique` and `update` as one array to a batch `$transaction([…])`
       - text: Збільшити `timeout` транзакції, щоб обидві операції встигали виконатися без перерви
+        text_en: Increase the transaction `timeout` so both operations can finish without a break
     explanation: >
       Атомарна умовна зміна виконується одним оператором, а `Serializable` змушує БД провалювати конфліктні транзакції (Prisma повертає `P2034`, тож потрібен повтор). Просто транзакція під READ COMMITTED не заважає двом клієнтам прочитати те саме значення, а в масиві `$transaction([…])` результат читання не можна використати для наступного запису.
+    explanation_en: >
+      An atomic conditional change runs as a single statement, and `Serializable` makes the database fail conflicting transactions (Prisma returns `P2034`, so a retry is needed). A plain transaction under READ COMMITTED does not stop two clients from reading the same value, and in a `$transaction([…])` array the read result cannot be used for the next write.
     sources:
       - https://www.prisma.io/docs/orm/v7/prisma-client/queries/transactions
   - id: prisma-typeorm-011
@@ -212,14 +286,21 @@ questions:
       production застосовує міграції. Розробник додав колонку в сутність і запустив
       `typeorm migration:generate` проти своєї локальної БД, але команда відповіла, що змін
       у схемі немає, і міграцію не створила. Яка причина і правильний процес?
+    text_en: 'A team on TypeORM 1.1 develops with `synchronize: true` on the local database and applies migrations in production. A developer added a column to an entity and ran `typeorm migration:generate` against their local database, but the command reported no changes in the schema and created no migration. What is the cause and the right process?'
     options:
       - text: Локальна схема вже збігається з сутностями завдяки синхронізації, тож різниці немає; генерувати треба проти БД зі станом міграцій
+        text_en: Synchronization already matched the local schema to the entities, so there is no diff; generate against a database at the migration state
         correct: true
       - text: Команда `migration:generate` порівнює сутності з файлами міграцій, а не з БД, тому колонку просто не знайшла
+        text_en: '`migration:generate` compares the entities with migration files, not the database, so it simply did not find the column'
       - text: '`migration:generate` формує зміни лише для нових таблиць, а колонки в наявних таблицях потрібно описувати вручну'
+        text_en: '`migration:generate` produces changes only for new tables, and columns in existing tables must be written by hand'
       - text: 'Відповідь «змін немає» означає, що колонку не додано в `entities`; після `synchronize: false` вона з''явиться'
+        text_en: 'The "no changes" answer means the column was not added to `entities`; after `synchronize: false` it will appear'
     explanation: >
       `migration:generate` порівнює сутності з реальною схемою БД, до якої підключений. Якщо `synchronize` уже змінив локальну схему, різниці немає, і SQL для production не з'являється. Тому розробку ведуть без `synchronize`: БД піднімають командою `migration:run` до поточного стану історії, а потім генерують нову міграцію.
+    explanation_en: >
+      `migration:generate` compares the entities with the real schema of the database it is connected to. If `synchronize` has already changed the local schema, there is no difference and no SQL for production appears. So development is done without `synchronize`: the database is brought to the current history state with `migration:run`, and then a new migration is generated.
     sources:
       - https://typeorm.io/docs/migrations/generating
   - id: prisma-typeorm-012
@@ -228,13 +309,20 @@ questions:
     text: >
       У production уже є БД PostgreSQL зі схемою, створеною вручну. Команда переходить
       на Prisma Migrate (ORM 7). Як правильно ввести міграції, не пошкодивши дані?
+    text_en: A production PostgreSQL database already exists with a schema created by hand. The team is moving to Prisma Migrate (ORM 7). How do you introduce migrations correctly without damaging the data?
     options:
       - text: Згенерувати початкову міграцію зі схеми, а в production позначити її застосованою через `prisma migrate resolve --applied`
+        text_en: Generate an initial migration from the schema and mark it as applied in production with `prisma migrate resolve --applied`
         correct: true
       - text: Запустити `prisma migrate deploy` на production, і початкова міграція створить таблиці, пропустивши наявні
+        text_en: Run `prisma migrate deploy` in production, and the initial migration will create the tables, skipping existing ones
       - text: Запустити `prisma migrate dev` на production, щоб Prisma сама виявила наявну схему й скинула лише різницю
+        text_en: Run `prisma migrate dev` in production so Prisma itself detects the existing schema and resets only the difference
       - text: Видалити таблиці в production і виконати початкову міграцію, а дані повернути з резервної копії
+        text_en: Delete the tables in production and run the initial migration, then restore the data from a backup
     explanation: >
       Це базування (baselining): початкова міграція описує поточну схему, а `migrate resolve --applied` лише додає її в `_prisma_migrations`, не виконуючи SQL. Далі `migrate deploy` застосовує тільки нові міграції. Виконання початкової міграції на заповненій БД упало б на вже наявних таблицях.
+    explanation_en: >
+      This is baselining: the initial migration describes the current schema, and `migrate resolve --applied` only records it in `_prisma_migrations` without running the SQL. After that `migrate deploy` applies only new migrations. Running the initial migration on a populated database would fail on the already existing tables.
     sources:
       - https://www.prisma.io/docs/orm/v7/prisma-migrate/workflows/baselining

@@ -3,11 +3,13 @@ title: Async, GIL і конкурентність
 title_en: Async, GIL and concurrency
 description: asyncio, GIL, threading vs multiprocessing, event loop.
 description_en: asyncio, GIL, threading vs multiprocessing, event loop.
+draft_en: true
 questions:
   - id: python-async-001
     level: junior
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: python
       source: |
@@ -19,65 +21,97 @@ questions:
         print(type(result).__name__)
     options:
       - text: "`coroutine`, а рядка `running` не буде"
+        text_en: '`coroutine`, and the line `running` will not appear'
         correct: true
       - text: "`running`, потім `int`"
+        text_en: '`running`, then `int`'
       - text: "`running`, потім `coroutine`"
+        text_en: '`running`, then `coroutine`'
       - text: "`int`, а рядка `running` не буде"
+        text_en: '`int`, and the line `running` will not appear'
     explanation: >
       Виклик `async def`-функції не виконує її тіло, а лише створює об'єкт корутини. Тіло стартує, коли корутину чекають через `await` або передають в `asyncio.run`.
       Через це інтерпретатор ще й попередить, що корутину ніхто не очікував (`never awaited`).
+    explanation_en: >
+      Calling an `async def` function does not run its body; it only creates a coroutine object. The body starts when the coroutine is awaited with `await` or passed to `asyncio.run`.
+      That is also why the interpreter warns that nobody awaited the coroutine (`never awaited`).
     sources:
       - https://docs.python.org/3/library/asyncio-task.html#coroutines
   - id: python-async-002
     level: junior
     type: single
     text: Що робить `asyncio.run(main())`?
+    text_en: What does `asyncio.run(main())` do?
     options:
       - text: Створює цикл подій, виконує корутину `main()` до завершення й закриває цикл
+        text_en: Creates an event loop, runs the `main()` coroutine to completion, and closes the loop
         correct: true
       - text: Запускає `main()` в окремому потоці й одразу повертає керування
+        text_en: Runs `main()` in a separate thread and returns control immediately
       - text: Запускає `main()` в окремому процесі, щоб обійти GIL
+        text_en: Runs `main()` in a separate process to get around the GIL
       - text: Лише планує `main()` на вже наявному циклі й не чекає результату
+        text_en: Only schedules `main()` on an already existing loop and does not wait for the result
     explanation: >
       `asyncio.run` є точкою входу для асинхронної програми: вона піднімає новий цикл подій, доводить корутину до кінця, повертає її результат і закриває цикл.
       Усе виконується в поточному потоці, без нових потоків чи процесів.
+    explanation_en: >
+      `asyncio.run` is the entry point of an asynchronous program: it starts a new event loop, drives the coroutine to completion, returns its result, and closes the loop.
+      Everything runs in the current thread, with no new threads or processes.
     sources:
       - https://docs.python.org/3/library/asyncio-runner.html#asyncio.run
   - id: python-async-003
     level: junior
     type: single
     text: Що таке GIL у CPython (стандартна збірка)?
+    text_en: What is the GIL in CPython (the standard build)?
     options:
       - text: "Замок інтерпретатора: байткод Python виконує лише один потік за раз"
+        text_en: 'An interpreter lock: only one thread at a time executes Python bytecode'
         correct: true
       - text: Механізм збирача сміття, що зупиняє всі потоки на час очищення пам'яті
+        text_en: A garbage collector mechanism that stops all threads while memory is being cleaned up
       - text: Правило мови, за яким кожна змінна належить лише тому потоку, що її створив
+        text_en: A language rule under which each variable belongs only to the thread that created it
       - text: Блокування файлів, що не дає двом процесам Python відкрити один файл
+        text_en: File locking that prevents two Python processes from opening the same file
     explanation: >
       GIL (global interpreter lock) гарантує, що в межах одного інтерпретатора байткод виконує один потік у кожен момент.
       Він не заважає потокам чекати на ввід-вивід, але не дає чистому Python-коду розподілитися по кількох ядрах.
+    explanation_en: >
+      The GIL (global interpreter lock) guarantees that within one interpreter only one thread executes bytecode at any moment.
+      It does not stop threads from waiting on I/O, but it prevents pure Python code from spreading across several cores.
     sources:
       - https://docs.python.org/3/glossary.html#term-global-interpreter-lock
   - id: python-async-004
     level: junior
     type: multiple
     text: У яких задачах кілька потоків (`threading`) у стандартному CPython із GIL реально скорочують загальний час?
+    text_en: In which tasks do several threads (`threading`) in standard CPython with the GIL actually reduce total time?
     options:
       - text: Одночасне завантаження сотні сторінок з різних серверів блокуючими сокетами
+        text_en: Downloading a hundred pages from different servers at once using blocking sockets
         correct: true
       - text: Одночасне читання багатьох великих файлів із диска
+        text_en: Reading many large files from disk at the same time
         correct: true
       - text: Рекурсивне обчислення чисел Фібоначчі в чотирьох потоках
+        text_en: Recursive computation of Fibonacci numbers in four threads
       - text: Підрахунок простих чисел до 10 мільйонів чистим Python-циклом у кількох потоках
+        text_en: Counting primes up to 10 million with a pure Python loop in several threads
     explanation: >
       Під час очікування на мережу чи диск потік відпускає GIL, тому інші потоки встигають працювати. Чисті CPU-обчислення на Python-коді
       тримають GIL, тож кілька потоків виконуються по черзі й виграшу не дають.
+    explanation_en: >
+      While waiting on the network or disk, a thread releases the GIL, so other threads can work. Pure CPU computation in Python code
+      holds the GIL, so several threads run in turn and give no speedup.
     sources:
       - https://docs.python.org/3/library/threading.html
   - id: python-async-005
     level: middle
     type: single
     text: Скільки секунд (округлено) виведе цей код?
+    text_en: How many seconds (rounded) will this code print?
     code:
       lang: python
       source: |
@@ -94,69 +128,103 @@ questions:
         asyncio.run(main())
     options:
       - text: "`1`: три очікування накладаються одне на одне"
+        text_en: '`1`: the three waits overlap each other'
         correct: true
       - text: "`3`: `gather` виконує корутини строго по черзі"
+        text_en: '`3`: `gather` runs the coroutines strictly one after another'
       - text: "`0`: `gather` пропускає `sleep` усередині корутин"
+        text_en: '`0`: `gather` skips `sleep` inside the coroutines'
       - text: "`RuntimeError`: `gather` не приймає однакові корутини"
+        text_en: '`RuntimeError`: `gather` does not accept identical coroutines'
     explanation: >
       `gather` обгортає кожну корутину в задачу, і всі три чекають на `sleep` одночасно в одному циклі подій. Загальний час дорівнює найдовшому очікуванню, тобто близько секунди.
       Послідовні `await job()` дали б три секунди.
+    explanation_en: >
+      `gather` wraps each coroutine in a task, and all three wait on `sleep` simultaneously in one event loop. The total time equals the longest wait, about one second.
+      Sequential `await job()` calls would take three seconds.
     sources:
       - https://docs.python.org/3/library/asyncio-task.html#asyncio.gather
   - id: python-async-006
     level: middle
     type: multiple
     text: Які виклики всередині `async def` блокують цикл подій, поки не завершаться?
+    text_en: Which calls inside `async def` block the event loop until they finish?
     options:
       - text: "`time.sleep(2)`"
+        text_en: '`time.sleep(2)`'
         correct: true
       - text: Синхронний `requests.get(url)`
+        text_en: Synchronous `requests.get(url)`
         correct: true
       - text: Довгий чисто-Python цикл без жодного `await`
+        text_en: A long pure-Python loop without any `await`
         correct: true
       - text: "`await asyncio.sleep(2)`"
+        text_en: '`await asyncio.sleep(2)`'
       - text: "`await asyncio.to_thread(time.sleep, 2)`"
+        text_en: '`await asyncio.to_thread(time.sleep, 2)`'
     explanation: >
       Цикл подій працює в одному потоці, тож будь-який синхронний виклик чи довге обчислення без `await` зупиняє всі інші задачі.
       `await asyncio.sleep` віддає керування циклу, а `to_thread` переносить блокуючий виклик в окремий потік.
+    explanation_en: >
+      The event loop runs in a single thread, so any synchronous call or long computation without `await` stops all other tasks.
+      `await asyncio.sleep` hands control back to the loop, and `to_thread` moves the blocking call to a separate thread.
     sources:
       - https://docs.python.org/3/library/asyncio-dev.html#running-blocking-code
   - id: python-async-007
     level: middle
     type: single
     text: Чому документація `asyncio` радить зберігати посилання на об'єкт, який повернув `asyncio.create_task()`?
+    text_en: Why does the `asyncio` documentation recommend keeping a reference to the object returned by `asyncio.create_task()`?
     options:
       - text: Цикл подій тримає на задачу лише слабке посилання, тож без іншого її може прибрати збирач сміття
+        text_en: The event loop holds only a weak reference to the task, so without another one the garbage collector may remove it
         correct: true
       - text: Без збереженого посилання `create_task` не зможе запланувати корутину на цикл подій, і вона не стартує
+        text_en: Without a saved reference `create_task` cannot schedule the coroutine on the event loop, and it will not start
       - text: Лише через посилання можна дізнатися про завершення задачі, а без нього `await` не поверне керування
+        text_en: Only through the reference can you learn that the task has finished, and without it `await` will not return control
       - text: Задача без посилання виконується синхронно й блокує цикл подій, доки не завершиться
+        text_en: A task without a reference runs synchronously and blocks the event loop until it finishes
     explanation: >
       Цикл зберігає задачі слабкими посиланнями, тому «забута» задача може зникнути посеред виконання. Посилання тримають у змінній чи колекції
       або використовують `TaskGroup`, який сам стежить за своїми задачами.
+    explanation_en: >
+      The loop keeps tasks only by weak references, so a "forgotten" task may disappear in the middle of execution. Keep the reference in a variable or a collection,
+      or use `TaskGroup`, which tracks its own tasks.
     sources:
       - https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task
   - id: python-async-008
     level: middle
     type: multiple
     text: Що дає паралельне виконання важкого чисто-Python коду на кількох ядрах у стандартній збірці Python 3.14 із GIL?
+    text_en: What allows heavy pure-Python code to run in parallel on several cores in the standard Python 3.14 build with the GIL?
     options:
       - text: "`ProcessPoolExecutor`: воркери є окремими процесами"
+        text_en: '`ProcessPoolExecutor`: the workers are separate processes'
         correct: true
       - text: "`InterpreterPoolExecutor`: воркери мають власні інтерпретатори"
+        text_en: '`InterpreterPoolExecutor`: the workers have their own interpreters'
         correct: true
       - text: "`ThreadPoolExecutor` із вісьмома воркерами-потоками"
+        text_en: '`ThreadPoolExecutor` with eight worker threads'
       - text: "`asyncio.gather` над вісьмома CPU-важкими корутинами"
+        text_en: '`asyncio.gather` over eight CPU-heavy coroutines'
       - text: "`asyncio.to_thread` для кожного окремого завдання"
+        text_en: '`asyncio.to_thread` for each separate job'
     explanation: >
       Окремі процеси мають окремі GIL, а `InterpreterPoolExecutor` (з'явився в Python 3.14) дає кожному воркеру свій інтерпретатор із власним GIL.
       Потоки, у тому числі через `to_thread`, і корутини в одному потоці діляться одним GIL, тому CPU-робота все одно виконується по черзі.
+    explanation_en: >
+      Separate processes have separate GILs, and `InterpreterPoolExecutor` (added in Python 3.14) gives each worker its own interpreter with its own GIL.
+      Threads, including those started via `to_thread`, and coroutines in one thread share a single GIL, so CPU work still runs in turn.
     sources:
       - https://docs.python.org/3/library/concurrent.futures.html#interpreterpoolexecutor
   - id: python-async-009
     level: senior
     type: single
     text: Що виведе цей код?
+    text_en: What does this code print?
     code:
       lang: python
       source: |
@@ -180,19 +248,27 @@ questions:
         asyncio.run(main())
     options:
       - text: "`error`, потім `ok done`"
+        text_en: '`error`, then `ok done`'
         correct: true
       - text: "Лише `error`: `gather` скасував другу корутину після помилки першої"
+        text_en: 'Only `error`: `gather` cancelled the second coroutine after the first one failed'
       - text: "`ok done`, потім `error`: `gather` спершу чекає всі корутини"
+        text_en: '`ok done`, then `error`: `gather` first waits for all the coroutines'
       - text: "Лише `ok done`: без `return_exceptions=True` помилку проковтнуто"
+        text_en: 'Only `ok done`: without `return_exceptions=True` the error is swallowed'
     explanation: >
       За замовчуванням (`return_exceptions=False`) перший виняток одразу летить у того, хто чекає `gather`, але решта задач не скасовується й виконується далі.
       Тому `ok` встигає надрукувати своє, поки `main` спить. Для скасування решти використовують `TaskGroup`.
+    explanation_en: >
+      By default (`return_exceptions=False`) the first exception immediately propagates to the one awaiting `gather`, but the remaining tasks are not cancelled and keep running.
+      So `ok` manages to print its line while `main` sleeps. To cancel the rest, use `TaskGroup`.
     sources:
       - https://docs.python.org/3/library/asyncio-task.html#asyncio.gather
   - id: python-async-010
     level: senior
     type: single
     text: Що виведе цей код (Python 3.14)?
+    text_en: What does this code print (Python 3.14)?
     code:
       lang: python
       source: |
@@ -220,31 +296,47 @@ questions:
         asyncio.run(main())
     options:
       - text: "`cancelled`, потім `caught`"
+        text_en: '`cancelled`, then `caught`'
         correct: true
       - text: "`caught`, а `slow` лишається працювати ще 10 секунд"
+        text_en: '`caught`, and `slow` keeps running for another 10 seconds'
       - text: "`caught`, а `cancelled` не виводиться, бо `slow` просто покинуто"
+        text_en: '`caught`, and `cancelled` is not printed because `slow` is simply abandoned'
       - text: "Необроблений `ValueError`, бо `except*` не перехоплює звичайні винятки"
+        text_en: Unhandled `ValueError`, because `except*` does not catch ordinary exceptions
     explanation: >
       Коли одна задача в `TaskGroup` падає, група скасовує решту, дочікується їх і піднімає `ExceptionGroup` з усіма помилками.
       `except* ValueError` дістає з групи потрібні винятки. Це головна відмінність від `gather`, де решта задач живе далі.
+    explanation_en: >
+      When one task in a `TaskGroup` fails, the group cancels the rest, waits for them, and raises an `ExceptionGroup` with all the errors.
+      `except* ValueError` extracts the matching exceptions from the group. This is the main difference from `gather`, where the other tasks live on.
     sources:
       - https://docs.python.org/3/library/asyncio-task.html#task-groups
   - id: python-async-011
     level: senior
     type: multiple
     text: Що правильно про збірку Python 3.14 без GIL (free-threaded)?
+    text_en: Which statements about the Python 3.14 build without the GIL (free-threaded) are true?
     options:
       - text: Вона офіційно підтримується, але є окремим варіантом збірки, а не типовою
+        text_en: It is officially supported, but it is a separate build variant, not the default one
         correct: true
       - text: Потоки з чистим Python-кодом можуть виконуватися паралельно на кількох ядрах
+        text_en: Threads running pure Python code can execute in parallel on several cores
         correct: true
       - text: Імпорт розширення C, не позначеного як сумісне, може знову ввімкнути GIL
+        text_en: Importing a C extension not marked as compatible may turn the GIL back on
         correct: true
       - text: Операція `counter += 1` над спільною змінною з кількох потоків стає атомарною
+        text_en: The operation `counter += 1` on a shared variable from several threads becomes atomic
       - text: GIL у такій збірці неможливо повернути ні змінною середовища, ні прапорцем запуску
+        text_en: The GIL cannot be restored in such a build with either an environment variable or a startup flag
     explanation: >
       PEP 779 зробив free-threaded збірку офіційно підтримуваною в 3.14, проте стандартні дистрибутиви лишаються зі GIL, а несумісні розширення вмикають його назад.
       Прибрання GIL не робить складені операції на кшталт `counter += 1` атомарними, тому спільний стан усе одно потребує `Lock`; GIL повертають через `PYTHON_GIL=1` або `-X gil=1`.
+    explanation_en: >
+      PEP 779 made the free-threaded build officially supported in 3.14, but standard distributions remain with the GIL, and incompatible extensions turn it back on.
+      Removing the GIL does not make compound operations such as `counter += 1` atomic, so shared state still needs a `Lock`; the GIL is restored with `PYTHON_GIL=1` or `-X gil=1`.
     sources:
       - https://docs.python.org/3/howto/free-threading-python.html
       - https://docs.python.org/3/whatsnew/3.14.html
@@ -252,14 +344,22 @@ questions:
     level: senior
     type: single
     text: Сервіс на `asyncio` під навантаженням відповідає все повільніше, і є підозра, що десь у корутині ховається синхронний виклик. Що найшвидше вкаже на винуватця?
+    text_en: Under load an `asyncio` service responds slower and slower, and there is a suspicion that a synchronous call is hiding somewhere in a coroutine. What will point to the culprit fastest?
     options:
       - text: Запустити в debug-режимі asyncio, що логує колбеки довші за `slow_callback_duration` (типово 100 мс)
+        text_en: Run in asyncio debug mode, which logs callbacks longer than `slow_callback_duration` (100 ms by default)
         correct: true
       - text: Збільшити розмір пулу потоків за замовчуванням, тоді блокуючі виклики не гальмуватимуть цикл
+        text_en: Increase the size of the default thread pool, then blocking calls will not slow down the loop
       - text: Замінити всі `asyncio.gather` на `asyncio.TaskGroup`, бо групи не дають блокувати цикл подій
+        text_en: Replace all `asyncio.gather` with `asyncio.TaskGroup`, because groups do not let anything block the event loop
       - text: Ввімкнути запуск без GIL, після чого блокуючий виклик більше не зупиняє цикл подій
+        text_en: Enable running without the GIL, after which a blocking call no longer stops the event loop
     explanation: >
       У debug-режимі (`asyncio.run(..., debug=True)` або `PYTHONASYNCIODEBUG=1`) цикл пише в лог про кожен колбек, що виконувався довше за поріг, і вказує задачу в рядку `coro=<handler() … defined at файл:рядок>`; рядок «created at» показує лише місце створення задачі (обгортку `create_task`).
       Пул потоків, `TaskGroup` чи вимкнений GIL не змінюють того, що синхронний виклик у корутині зупиняє весь цикл.
+    explanation_en: >
+      In debug mode (`asyncio.run(..., debug=True)` or `PYTHONASYNCIODEBUG=1`) the loop logs every callback that ran longer than the threshold and identifies the task in the line `coro=<handler() … defined at файл:рядок>`; the "created at" line shows only where the task was created (the `create_task` wrapper).
+      A thread pool, `TaskGroup`, or disabling the GIL does not change the fact that a synchronous call in a coroutine stops the whole loop.
     sources:
       - https://docs.python.org/3/library/asyncio-dev.html#debug-mode

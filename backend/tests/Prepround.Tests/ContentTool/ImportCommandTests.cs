@@ -65,13 +65,19 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         // Guards the raw-line count itself: seed 36 + PRP-018 36. Content only grows, so this is a lower bound.
         Assert.True(RealQuestionCount() >= 72, $"RealQuestionCount() = {RealQuestionCount()}");
 
+        // Translation waves (ADR 006) bring complete question translations into the real content; with the flag every
+        // one of them is imported, draft_en or not.
+        var translations = RealQuestionTranslationCount(includeDrafts: true);
+
         var first = await RunIsolatedAsync(db, null, "import", content, IncludeDrafts);
 
         Assert.True(first.ExitCode == SuccessExitCode, first.Output);
         Assert.Empty(first.Stderr);
         Assert.Equal(
-            Summary(fields: (1, 0, 0), levels: (3, 0, 0), directions: (2, 0, 0), stacks: (9, 0, 0), topics: (61, 0, 0), questions: (RealQuestionCount(), 0, 0)),
+            Summary(fields: (1, 0, 0), levels: (3, 0, 0), directions: (2, 0, 0), stacks: (9, 0, 0), topics: (61, 0, 0), questions: (RealQuestionCount(), 0, 0),
+                translations: (translations, 0, 0)),
             first.StdoutLines);
+        Assert.Equal(translations, await CountAsync(db, context => context.QuestionTranslations));
         var afterFirst = await PostgresFixture.SnapshotAsync(db);
 
         var second = await RunIsolatedAsync(db, null, "import", content, IncludeDrafts);
@@ -88,25 +94,32 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         var db = await postgres.CreateDatabaseAsync();
         var content = RealContentDirectory();
         var (all, drafts, published) = (RealQuestionCount(), RealDraftQuestionCount(), RealPublishedQuestionCount());
+        // Translations of draft topics and of draft_en topics come and go with the flag (PRP-023, ADR 006).
+        var (publishedTranslations, allTranslations) = (RealQuestionTranslationCount(includeDrafts: false), RealQuestionTranslationCount(includeDrafts: true));
+        var draftTranslations = allTranslations - publishedTranslations;
 
         var first = await RunIsolatedAsync(db, null, "import", content);
         Assert.True(first.ExitCode == SuccessExitCode, first.Output);
         Assert.Equal(
-            Summary(fields: (1, 0, 0), levels: (3, 0, 0), directions: (2, 0, 0), stacks: (9, 0, 0), topics: (61, 0, 0), questions: (published, 0, 0)),
+            Summary(fields: (1, 0, 0), levels: (3, 0, 0), directions: (2, 0, 0), stacks: (9, 0, 0), topics: (61, 0, 0), questions: (published, 0, 0),
+                translations: (publishedTranslations, 0, 0)),
             first.StdoutLines);
         Assert.Equal((published, published, 61), await QuestionAndTopicCountsAsync(db));
+        Assert.Equal(publishedTranslations, await CountAsync(db, context => context.QuestionTranslations));
         Assert.Equal(NothingChanged, (await RunIsolatedAsync(db, null, "import", content)).StdoutLines);
 
         var withDrafts = await RunIsolatedAsync(db, null, "import", content, IncludeDrafts);
         Assert.True(withDrafts.ExitCode == SuccessExitCode, withDrafts.Output);
-        Assert.Equal(Summary(questions: (drafts, 0, 0)), withDrafts.StdoutLines);
+        Assert.Equal(Summary(questions: (drafts, 0, 0), translations: (draftTranslations, 0, 0)), withDrafts.StdoutLines);
         Assert.Equal((all, all, 61), await QuestionAndTopicCountsAsync(db));
+        Assert.Equal(allTranslations, await CountAsync(db, context => context.QuestionTranslations));
         Assert.Equal(NothingChanged, (await RunIsolatedAsync(db, null, "import", content, IncludeDrafts)).StdoutLines);
 
         var switchedOff = await RunIsolatedAsync(db, null, "import", content);
         Assert.True(switchedOff.ExitCode == SuccessExitCode, switchedOff.Output);
-        Assert.Equal(Summary(questions: (0, 0, drafts)), switchedOff.StdoutLines);
+        Assert.Equal(Summary(questions: (0, 0, drafts), translations: (0, 0, draftTranslations)), switchedOff.StdoutLines);
         Assert.Equal((published, all, 61), await QuestionAndTopicCountsAsync(db));
+        Assert.Equal(publishedTranslations, await CountAsync(db, context => context.QuestionTranslations));
         // Exactly the questions of the draft topics are off: the raw "draft: true" lines decide which.
         await using var context = PostgresFixture.CreateContext(db);
         var inactiveTopics = await context.Questions.AsNoTracking().Where(question => !question.IsActive)
@@ -125,6 +138,8 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         using var content = new RealContentCopy();
         var original = content.Read(SqlFile);
         var sqlCount = RealTopic("sql").Questions.Count;
+        // Once sql is translated and its draft_en lifted, the switch-off takes its translations away too (PRP-026).
+        var sqlTranslations = QuestionTranslationCount(Path.Combine(content.Root, SqlFile), includeDrafts: false);
         await ImportOkAsync(db, content.Root);
         var before = await UpdatedAtByIdAsync(db);
 
@@ -132,7 +147,7 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         var off = await RunIsolatedAsync(db, null, "import", content.Root);
 
         Assert.True(off.ExitCode == SuccessExitCode, off.Output);
-        Assert.Equal(Summary(questions: (0, 0, sqlCount)), off.StdoutLines);
+        Assert.Equal(Summary(questions: (0, 0, sqlCount), translations: (0, 0, sqlTranslations)), off.StdoutLines);
         await using (var context = PostgresFixture.CreateContext(db))
         {
             var sql = await context.Questions.AsNoTracking().Where(question => question.TopicId == "sql")
@@ -147,7 +162,7 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         var back = await RunIsolatedAsync(db, null, "import", content.Root);
 
         Assert.True(back.ExitCode == SuccessExitCode, back.Output);
-        Assert.Equal(Summary(questions: (0, sqlCount, 0)), back.StdoutLines);
+        Assert.Equal(Summary(questions: (0, sqlCount, 0), translations: (sqlTranslations, 0, 0)), back.StdoutLines);
         Assert.Equal(before, await UpdatedAtByIdAsync(db));
         Assert.Equal((RealPublishedQuestionCount(), RealPublishedQuestionCount(), 61), await QuestionAndTopicCountsAsync(db));
     }
@@ -197,14 +212,18 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         var original = content.Read(SqlFile);
         // The last question of the file, whatever its number: sql keeps growing (ADR 004).
         var last = RealTopic("sql").Questions[^1].Id;
+        var sqlPath = Path.Combine(content.Root, SqlFile);
+        var translationsBefore = QuestionTranslationCount(sqlPath, includeDrafts: false);
         await ImportOkAsync(db, content.Root);
         var lastBefore = await QuestionAsync(db, last);
 
         content.Write(SqlFile, original[..original.IndexOf($"  - id: {last}\n", StringComparison.Ordinal)]);
+        // Its translation, if a published one, goes with it (PRP-026): 0 or 1 by what the file holds.
+        var lostTranslations = translationsBefore - QuestionTranslationCount(sqlPath, includeDrafts: false);
         var removed = await RunIsolatedAsync(db, null, "import", content.Root);
 
         Assert.True(removed.ExitCode == SuccessExitCode, removed.Output);
-        Assert.Equal(Summary(questions: (0, 0, 1)), removed.StdoutLines);
+        Assert.Equal(Summary(questions: (0, 0, 1), translations: (0, 0, lostTranslations)), removed.StdoutLines);
         var deactivated = await QuestionAsync(db, last);
         Assert.False(deactivated.IsActive);
         Assert.Equal(lastBefore.UpdatedAt, deactivated.UpdatedAt);
@@ -214,7 +233,7 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         var returned = await RunIsolatedAsync(db, null, "import", content.Root);
 
         Assert.True(returned.ExitCode == SuccessExitCode, returned.Output);
-        Assert.Equal(Summary(questions: (0, 1, 0)), returned.StdoutLines);
+        Assert.Equal(Summary(questions: (0, 1, 0), translations: (lostTranslations, 0, 0)), returned.StdoutLines);
         var reactivated = await QuestionAsync(db, last);
         Assert.True(reactivated.IsActive);
         // Only the activity changed, not the content.

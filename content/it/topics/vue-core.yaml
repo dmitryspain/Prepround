@@ -3,6 +3,7 @@ title: "Vue: реактивність і шаблони"
 title_en: 'Vue: reactivity and templates'
 description: Реактивність, директиви, компоненти, props/emits, slots.
 description_en: Reactivity, directives, components, props/emits, slots.
+draft_en: true
 questions:
   - id: vue-core-001
     level: junior

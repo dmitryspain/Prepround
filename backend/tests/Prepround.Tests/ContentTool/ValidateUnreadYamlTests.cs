@@ -75,8 +75,9 @@ public class ValidateUnreadYamlTests
         var run = await RunAsync("validate", content.Root);
 
         Assert.True(run.ExitCode == SuccessExitCode, run.Output);
-        var (topicsBefore, questionsBefore) = TopicAndQuestionCount(before.Stdout);
-        Assert.Equal((topicsBefore + 1, questionsBefore + 1), TopicAndQuestionCount(run.Stdout));
+        var (topicsBefore, questionsBefore, translationsBefore) = TopicAndQuestionCount(before.Stdout);
+        // The extra topic has no English, so the translations suffix (PRP-025, translation waves) stays as it was.
+        Assert.Equal((topicsBefore + 1, questionsBefore + 1, translationsBefore), TopicAndQuestionCount(run.Stdout));
     }
 
     [Fact]
@@ -129,11 +130,12 @@ public class ValidateUnreadYamlTests
         }
     }
 
-    private static (int Topics, int Questions) TopicAndQuestionCount(string stdout)
+    private static (int Topics, int Questions, string Translations) TopicAndQuestionCount(string stdout)
     {
-        var match = Regex.Match(stdout, @"^it: .*тем (\d+), питань (\d+)(?:, з них у чернетках [1-9]\d*)?$", RegexOptions.Multiline);
+        var match = Regex.Match(stdout,
+            @"^it: .*тем (\d+), питань (\d+)(?:, з них у чернетках [1-9]\d*)?((?:, перекладів [a-z]+: [1-9]\d*)*)$", RegexOptions.Multiline);
         Assert.True(match.Success, stdout);
-        return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
+        return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value), match.Groups[3].Value);
     }
 
     private static string ContentToolUserSecretsId() =>

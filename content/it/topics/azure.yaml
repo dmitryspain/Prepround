@@ -3,7 +3,6 @@ title: Azure
 title_en: Azure
 description: App Service, Functions, Azure SQL, Service Bus, Key Vault, Entra ID.
 description_en: App Service, Functions, Azure SQL, Service Bus, Key Vault, Entra ID.
-draft_en: true
 questions:
   - id: azure-001
     level: junior
@@ -225,7 +224,7 @@ questions:
     level: senior
     type: single
     text: Для обробки подій одного замовлення треба зберегти порядок (FIFO), але паралельно обробляти різні замовлення. Що застосувати в Service Bus?
-    text_en: To process events of one order, FIFO order must be preserved, while different orders are processed in parallel. What should you use in Service Bus?
+    text_en: Events of one order must be processed in FIFO order, while different orders must be processed in parallel. What should you use in Service Bus?
     options:
     - text: 'Сесії: `SessionId` = номер замовлення, і одну сесію в кожний момент обробляє один споживач'
       text_en: 'Sessions: `SessionId` = order number, and one session is processed by a single consumer at any moment'

@@ -3,7 +3,6 @@ title: Docker і Kubernetes
 title_en: Docker and Kubernetes
 description: Образи, шари, compose, поди, деплойменти, сервіси, probes, ресурси.
 description_en: Images, layers, Compose, pods, deployments, services, probes, resources.
-draft_en: true
 questions:
   - id: docker-k8s-001
     level: junior
@@ -64,7 +63,7 @@ questions:
       text_en: The smallest deployable unit, made of one or more containers that share network and storage
       correct: true
     - text: Окремий фізичний або віртуальний сервер кластера, на якому працюють контейнери застосунків
-      text_en: A separate physical or virtual cluster server on which application containers run
+      text_en: A physical or virtual server in the cluster on which application containers run
     - text: Набір правил, що відкриває застосунок назовні через стабільну адресу та балансує трафік
       text_en: A set of rules that exposes an application externally through a stable address and balances traffic
     - text: Файл конфігурації, у якому описано образ, змінні середовища й порти для запуску контейнера
@@ -285,7 +284,7 @@ questions:
     - text: HPA прийме нульовий запит і масштабуватиме Deployment до значення `maxReplicas` одразу
       text_en: The HPA treats the request as zero and immediately scales the Deployment to `maxReplicas`
     - text: Kubernetes сам підставить типовий запит із ліміту вузла, і HPA працюватиме як звичайно
-      text_en: Kubernetes substitutes a default request from the node limit itself, and the HPA works as usual
+      text_en: Kubernetes itself substitutes a default request from the node limit, and the HPA works as usual
     explanation: |
       `Utilization` — це частка від запиту CPU контейнера, тож без `requests` знаменника немає, і HPA повідомляє про помилку метрики. Тип `AverageValue` не залежить від запитів, але тоді поріг задають в абсолютних одиницях.
     explanation_en: |

@@ -3,22 +3,30 @@ title: Spring Boot
 title_en: Spring Boot
 description: IoC/DI, біни і скоупи, автоконфігурація, Spring MVC, Spring Security, профілі.
 description_en: IoC/DI, beans and scopes, auto-configuration, Spring MVC, Spring Security, profiles.
+draft_en: true
 questions:
   - id: spring-boot-001
     level: junior
     type: multiple
     text: Які можливості вмикає анотація `@SpringBootApplication` (Spring Boot 4.1)?
+    text_en: "Which features does the `@SpringBootApplication` annotation enable (Spring Boot 4.1)?"
     options:
       - text: "`@EnableAutoConfiguration` — автоконфігурацію Spring Boot"
+        text_en: "`@EnableAutoConfiguration` — Spring Boot auto-configuration"
         correct: true
       - text: "`@ComponentScan` — пошук компонентів у пакеті застосунку"
+        text_en: "`@ComponentScan` — scanning for components in the application package"
         correct: true
       - text: "`@SpringBootConfiguration` — клас як джерело визначень бінів"
+        text_en: "`@SpringBootConfiguration` — the class as a source of bean definitions"
         correct: true
       - text: "`@EnableTransactionManagement` — транзакції для всіх бінів"
+        text_en: "`@EnableTransactionManagement` — transactions for all beans"
     explanation: >
       `@SpringBootApplication` — зручне об'єднання трьох анотацій: автоконфігурації, сканування компонентів і конфігураційного класу.
       Керування транзакціями окремо не вмикається цією анотацією: його додає автоконфігурація, коли в проєкті є відповідна інфраструктура.
+    explanation_en: >
+      `@SpringBootApplication` is a convenient combination of three annotations: auto-configuration, component scanning, and a configuration class. Transaction management is not enabled separately by this annotation: auto-configuration adds it when the project has the relevant infrastructure.
     sources:
       - https://docs.spring.io/spring-boot/reference/using/using-the-springbootapplication-annotation.html
   - id: spring-boot-002
@@ -26,36 +34,51 @@ questions:
     type: single
     text: >-
       У біні `OrderService` є єдиний конструктор `OrderService(OrderRepository repo)`. Що потрібно, щоб Spring Boot 4.1 підставив залежність?
+    text_en: "Bean `OrderService` has a single constructor `OrderService(OrderRepository repo)`. What is needed for Spring Boot 4.1 to inject the dependency?"
     options:
       - text: "Нічого, єдиний конструктор використовується автоматично"
+        text_en: "Nothing, a single constructor is used automatically"
         correct: true
       - text: "Анотація `@Autowired` на конструкторі є обов'язковою, інакше буде помилка"
+        text_en: "The `@Autowired` annotation on the constructor is mandatory, otherwise there is an error"
       - text: Поле `repo` має бути не `final` і мати сеттер
+        text_en: "The `repo` field must be non-`final` and have a setter"
       - text: Клас має бути оголошений через `new` у `@Bean`-методі
+        text_en: "The class must be declared through `new` in a `@Bean` method"
     explanation: >
       Якщо в бін є лише один конструктор, контейнер розв'язує його параметри як залежності без `@Autowired`. Анотація потрібна лише коли конструкторів кілька і треба вказати, який використовувати.
       Це дозволяє робити поля `final` і краще підходить для тестів.
+    explanation_en: >
+      If a bean has only one constructor, the container resolves its parameters as dependencies without `@Autowired`. The annotation is needed only when there are several constructors and you must specify which one to use. This allows `final` fields and suits tests better.
     sources:
       - https://docs.spring.io/spring-framework/reference/core/beans/annotation-config/autowired.html
   - id: spring-boot-003
     level: junior
     type: single
     text: Що означає анотація `@RestController` на класі?
+    text_en: "What does the `@RestController` annotation on a class mean?"
     options:
       - text: "`@Controller` разом із `@ResponseBody`: значення методів йдуть у тіло відповіді"
+        text_en: "`@Controller` together with `@ResponseBody`: method return values go into the response body"
         correct: true
       - text: "Усі методи класу автоматично стають асинхронними й повертають `CompletableFuture`"
+        text_en: "All methods of the class automatically become asynchronous and return `CompletableFuture`"
       - text: "Клас обслуговує лише запити з типом вмісту JSON і відхиляє решту з кодом 415"
+        text_en: "The class serves only requests with a JSON content type and rejects the rest with status 415"
       - text: "Клас реєструється як `@Service`, тому його не видно у MVC-диспетчері"
+        text_en: "The class is registered as a `@Service`, so it is not visible to the MVC dispatcher"
     explanation: >
       `@RestController` є зручною комбінацією `@Controller` і `@ResponseBody`: результат методу серіалізується конвертером повідомлень (наприклад, у JSON) і йде у тіло відповіді.
       Асинхронності чи обмеження типу вмісту вона не додає.
+    explanation_en: >
+      `@RestController` is a convenient combination of `@Controller` and `@ResponseBody`: the method result is serialized by a message converter (for example, to JSON) and goes into the response body. It adds neither asynchrony nor a content-type restriction.
     sources:
       - https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html
   - id: spring-boot-004
     level: junior
     type: single
     text: Яке значення порту отримає застосунок Spring Boot 4.1, якщо його запущено з профілем `prod`?
+    text_en: "What port value will a Spring Boot 4.1 application get if it is started with the `prod` profile?"
     code:
       lang: properties
       source: |
@@ -69,13 +92,19 @@ questions:
         java -jar app.jar --spring.profiles.active=prod
     options:
       - text: "`9090`: профільний файл перевизначає базовий"
+        text_en: "`9090`: the profile file overrides the base one"
         correct: true
       - text: "`8080`: базовий файл завжди має пріоритет над профільним"
+        text_en: "`8080`: the base file always takes precedence over the profile one"
       - text: "Застосунок слухатиме обидва порти: `8080` і `9090`"
+        text_en: "The application will listen on both ports: `8080` and `9090`"
       - text: Старт завершиться помилкою через дублювання властивості
+        text_en: "Startup fails with an error because of the duplicated property"
     explanation: >
       Профільні файли `application-{profile}.properties` завантажуються для активного профілю і перекривають однойменні властивості з базового файла.
       Дублікат між файлами не є помилкою: це звичайний механізм перевизначення.
+    explanation_en: >
+      Profile files `application-{profile}.properties` are loaded for the active profile and override same-named properties from the base file. A duplicate across files is not an error: it is the normal override mechanism.
     sources:
       - https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.files.profile-specific
       - https://docs.spring.io/spring-boot/reference/features/profiles.html
@@ -84,6 +113,7 @@ questions:
     type: single
     text: >-
       Бін `Cart` має скоуп `prototype` і впроваджується в singleton `Shop` через конструктор. Скільки екземплярів `Cart` побачить `Shop` за 100 викликів `shop.cart()` і як отримувати новий щоразу (Spring Boot 4.1)?
+    text_en: "Bean `Cart` has `prototype` scope and is injected into singleton `Shop` through the constructor. How many `Cart` instances will `Shop` see over 100 calls of `shop.cart()`, and how do you get a new one each time (Spring Boot 4.1)?"
     code:
       lang: java
       source: |
@@ -99,13 +129,19 @@ questions:
         }
     options:
       - text: "Один, бо залежність вводиться раз; новий щоразу дає `ObjectProvider<Cart>`"
+        text_en: "One, because the dependency is injected once; `ObjectProvider<Cart>` gives a new one each time"
         correct: true
       - text: Сто, бо `prototype` створює новий екземпляр на кожне звернення до поля
+        text_en: "One hundred, because `prototype` creates a new instance on every access to the field"
       - text: Один, а новий на кожен `shop.cart()` дасть `prototype` для `Shop`
+        text_en: "One, and a new one for every `shop.cart()` comes from `prototype` on `Shop`"
       - text: Жодного, бо Spring забороняє ін'єкцію prototype у singleton
+        text_en: "None, because Spring forbids injecting a prototype into a singleton"
     explanation: >
       Залежності singleton розв'язуються лише під час його створення, тому `Cart` ін'єктується один раз і далі живе в полі. Щоб діставати новий екземпляр, інжектують `ObjectProvider<Cart>` (або `Provider`) і викликають `getObject()` щоразу.
       Ін'єкція prototype у singleton дозволена, але дає саме таку поведінку.
+    explanation_en: >
+      A singleton's dependencies are resolved only when it is created, so `Cart` is injected once and then lives in the field. To get a new instance, inject `ObjectProvider<Cart>` (or `Provider`) and call `getObject()` each time. Injecting a prototype into a singleton is allowed, but it behaves exactly this way.
     sources:
       - https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html#beans-factory-scopes-sing-prot-interaction
   - id: spring-boot-006
@@ -113,6 +149,7 @@ questions:
     type: single
     text: >-
       У застосунку ввімкнено `@EnableCaching` (Spring Boot 4.1, режим проксі за замовчуванням). Що станеться з кешуванням, коли `total` викликає `price` усередині того самого класу?
+    text_en: "`@EnableCaching` is enabled in the application (Spring Boot 4.1, proxy mode by default). What happens to caching when `total` calls `price` inside the same class?"
     code:
       lang: java
       source: |
@@ -127,13 +164,19 @@ questions:
         }
     options:
       - text: "Кеш не використовується, бо виклик `this.price(...)` іде повз проксі"
+        text_en: "The cache is not used, because the `this.price(...)` call bypasses the proxy"
         correct: true
       - text: "Кеш працює, бо Spring підміняє всі виклики між методами в межах біна"
+        text_en: "The cache works, because Spring replaces all calls between methods within a bean"
       - text: "Старт застосунку впаде з помилкою про цикл у бінах `PriceService`"
+        text_en: "Application startup fails with an error about a cycle in `PriceService` beans"
       - text: "Кеш спрацює, але лише якщо метод `price` зробити `private` або `final`"
+        text_en: "The cache works, but only if the `price` method is made `private` or `final`"
     explanation: >
       Кешування робить проксі навколо біна, а виклик `this.price(...)` усередині класу не проходить через нього, тому `@Cacheable` ігнорується. Рішення — винести метод в інший бін або застосувати режим aspectj.
       Те саме стосується інших анотацій на основі проксі, наприклад `@Async`.
+    explanation_en: >
+      Caching is implemented by a proxy around the bean, and the `this.price(...)` call inside the class does not go through it, so `@Cacheable` is ignored. The fix is to move the method to another bean or to use aspectj mode. The same applies to other proxy-based annotations, such as `@Async`.
     sources:
       - https://docs.spring.io/spring-framework/reference/integration/cache/annotations.html
       - https://docs.spring.io/spring-framework/reference/core/aop/proxying.html
@@ -141,35 +184,50 @@ questions:
     level: middle
     type: multiple
     text: Які запити до контролера Spring MVC (Spring Boot 4.1) за замовчуванням завершаться статусом `400 Bad Request`?
+    text_en: "Which requests to a Spring MVC controller (Spring Boot 4.1) end with status `400 Bad Request` by default?"
     options:
       - text: Запит без обов'язкового параметра `@RequestParam`
+        text_en: "A request without the required `@RequestParam` parameter"
         correct: true
       - text: Запит із тілом, яке не вдається розібрати як JSON для `@RequestBody`
+        text_en: "A request whose body cannot be parsed as JSON for `@RequestBody`"
         correct: true
       - text: Запит, у якому тіло не пройшло перевірку `@Valid` (наприклад, `@NotBlank`)
+        text_en: "A request whose body failed `@Valid` validation (for example, `@NotBlank`)"
         correct: true
       - text: Запит на URL, для якого немає жодного обробника
+        text_en: "A request to a URL that has no handler at all"
       - text: Запит, під час обробки якого метод контролера кинув необроблений `IllegalStateException`
+        text_en: "A request during which the controller method threw an unhandled `IllegalStateException`"
     explanation: >
       Відсутній параметр, нечитабельне тіло й помилки перевірки привласнюють стандартні резолвери винятків, і клієнт отримує 400. Невідомий URL дає 404, а необроблений виняток із коду — 500.
       Цю поведінку можна змінити власним `@ExceptionHandler` чи `@ControllerAdvice`.
+    explanation_en: >
+      A missing parameter, an unreadable body, and validation errors are mapped by the standard exception resolvers, and the client gets 400. An unknown URL gives 404, and an unhandled exception from the code gives 500. This behavior can be changed with your own `@ExceptionHandler` or `@ControllerAdvice`.
     sources:
       - https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/support/DefaultHandlerExceptionResolver.html
   - id: spring-boot-008
     level: middle
     type: multiple
     text: Які твердження про автоконфігурацію Spring Boot 4.1 правильні?
+    text_en: "Which statements about Spring Boot 4.1 auto-configuration are true?"
     options:
       - text: Якщо оголосити власний бін того ж призначення, відповідна автоконфігурація відступає
+        text_en: "If you declare your own bean of the same purpose, the corresponding auto-configuration backs off"
         correct: true
       - text: Запуск із `--debug` додає в лог звіт про умови, який показує, що застосовано й чому
+        text_en: "Running with `--debug` adds a conditions report to the log that shows what was applied and why"
         correct: true
       - text: Конкретну автоконфігурацію можна вимкнути атрибутом `exclude` у `@SpringBootApplication`
+        text_en: "A specific auto-configuration can be disabled with the `exclude` attribute of `@SpringBootApplication`"
         correct: true
       - text: Автоконфігурація застосовується незалежно від наявності відповідних бібліотек на classpath
+        text_en: "Auto-configuration is applied regardless of whether the relevant libraries are on the classpath"
     explanation: >
       Автоконфігурація умовна: вона вмикається, коли на classpath є потрібні класи, і відступає перед вашими власними бінами. Щоб зрозуміти, чому щось застосовано або ні, дивляться звіт умов зі `--debug`.
       Тож твердження про застосування незалежно від classpath хибне.
+    explanation_en: >
+      Auto-configuration is conditional: it is enabled when the needed classes are on the classpath, and it backs off in favor of your own beans. To understand why something was or was not applied, look at the conditions report from `--debug`. So the claim about applying regardless of the classpath is false.
     sources:
       - https://docs.spring.io/spring-boot/reference/using/auto-configuration.html
   - id: spring-boot-009
@@ -177,6 +235,7 @@ questions:
     type: single
     text: >-
       Яким буде результат для запиту `GET /api/public/info` без автентифікації (Spring Security у Spring Boot 4.1)?
+    text_en: "What will be the result for a `GET /api/public/info` request without authentication (Spring Security in Spring Boot 4.1)?"
     code:
       lang: java
       source: |
@@ -190,13 +249,19 @@ questions:
         }
     options:
       - text: "Вимагатиме автентифікації: діє лише перший збіг, тобто `/api/**`"
+        text_en: "It will require authentication: only the first match applies, namely `/api/**`"
         correct: true
       - text: Запит пройде, бо специфічніший шаблон `/api/public/**` має пріоритет
+        text_en: "The request will pass, because the more specific pattern `/api/public/**` takes precedence"
       - text: Запит пройде, бо `permitAll` перемагає `authenticated`, коли правила збігаються
+        text_en: "The request will pass, because `permitAll` wins over `authenticated` when rules match"
       - text: Застосунок не стартує, бо шаблони перекриваються
+        text_en: "The application will not start, because the patterns overlap"
     explanation: >
       `AuthorizationFilter` проходить правила в порядку оголошення і застосовує лише перший збіг, тому специфічні винятки треба ставити перед загальними. Правильно: спершу `/api/public/**`, потім `/api/**`.
       Перекриття шаблонів не є помилкою конфігурації.
+    explanation_en: >
+      `AuthorizationFilter` goes through the rules in declaration order and applies only the first match, so specific exceptions must come before general ones. Correct: first `/api/public/**`, then `/api/**`. Overlapping patterns are not a configuration error.
     sources:
       - https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html
   - id: spring-boot-010
@@ -204,15 +269,22 @@ questions:
     type: single
     text: >-
       Два біни, `A` і `B`, приймають один одного через конструктор. Що відбудеться під час старту застосунку на Spring Boot 4.1?
+    text_en: "Two beans, `A` and `B`, take each other through the constructor. What happens when the application starts on Spring Boot 4.1?"
     options:
       - text: "Контекст не створиться (циклічна залежність); виправляти треба дизайн"
+        text_en: "The context will not be created (circular dependency); the design must be fixed"
         correct: true
       - text: Spring створить проксі, і обидва біни запрацюють без помилок
+        text_en: "Spring will create a proxy, and both beans will work without errors"
       - text: Застосунок запуститься, а помилка виникне під час першого виклику методу бінів
+        text_en: "The application will start, and the error will occur on the first call of a bean method"
       - text: Помилки не буде, якщо додати `@Autowired` до обох конструкторів
+        text_en: "There will be no error if `@Autowired` is added to both constructors"
     explanation: >
       Цикл через конструктори принципово не розв'язується: щоб створити `A`, потрібен `B`, а щоб створити `B`, потрібен `A`. До того ж Boot за замовчуванням забороняє циклічні посилання (`spring.main.allow-circular-references=false`).
       Навіть `allow-circular-references=true` для циклу через конструктори не допоможе: `BeanCurrentlyInCreationException` лишається, тож треба розірвати цикл (спільна логіка в третій бін або подію).
+    explanation_en: >
+      A cycle through constructors cannot be resolved in principle: to create `A`, `B` is needed, and to create `B`, `A` is needed. Besides, Boot forbids circular references by default (`spring.main.allow-circular-references=false`). Even `allow-circular-references=true` will not help for a constructor cycle: `BeanCurrentlyInCreationException` remains, so the cycle must be broken (shared logic into a third bean or an event).
     sources:
       - https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html
       - https://docs.spring.io/spring-boot/appendix/application-properties/index.html
@@ -221,15 +293,22 @@ questions:
     type: single
     text: >-
       Метод сервісу позначено `@PreAuthorize("hasRole('ADMIN')")`, а `SecurityFilterChain` налаштовано. Звичайний користувач усе одно викликає метод успішно (Spring Boot 4.1). Яка причина найімовірніша?
+    text_en: "A service method is annotated `@PreAuthorize(\"hasRole('ADMIN')\")`, and a `SecurityFilterChain` is configured. An ordinary user still calls the method successfully (Spring Boot 4.1). What is the most likely cause?"
     options:
       - text: "Захист методів не ввімкнено: потрібна `@EnableMethodSecurity` на конфігурації"
+        text_en: "Method security is not enabled: `@EnableMethodSecurity` is needed on the configuration"
         correct: true
       - text: "`@PreAuthorize` працює лише на методах контролерів, а не сервісів"
+        text_en: "`@PreAuthorize` works only on controller methods, not on services"
       - text: Роль слід писати з префіксом, тож `hasRole('ADMIN')` ніколи не спрацьовує
+        text_en: "The role must be written with a prefix, so `hasRole('ADMIN')` never matches"
       - text: Фільтр безпеки вимикає перевірки методів для автентифікованих користувачів
+        text_en: "The security filter disables method checks for authenticated users"
     explanation: >
       Анотації `@PreAuthorize` обробляються лише тоді, коли ввімкнено захист методів через `@EnableMethodSecurity`, інакше їх тихо ігнорують. Після ввімкнення працюють на будь-якому біні, а не тільки на контролерах.
       Префікс `ROLE_` у `hasRole('ADMIN')` додається автоматично.
+    explanation_en: >
+      `@PreAuthorize` annotations are processed only when method security is enabled via `@EnableMethodSecurity`; otherwise they are silently ignored. Once enabled, they work on any bean, not only on controllers. The `ROLE_` prefix in `hasRole('ADMIN')` is added automatically.
     sources:
       - https://docs.spring.io/spring-security/reference/servlet/authorization/method-security.html
   - id: spring-boot-012
@@ -237,14 +316,21 @@ questions:
     type: single
     text: >-
       Застосунок упаковано в jar із `application.properties` (`app.mode=file`). Поруч із jar лежить `config/application.properties` (`app.mode=ext`), у середовищі задано `APP_MODE=env`. Яке значення побачить застосунок Spring Boot 4.1 без інших джерел?
+    text_en: "The application is packaged in a jar with `application.properties` (`app.mode=file`). Next to the jar lies `config/application.properties` (`app.mode=ext`), and the environment sets `APP_MODE=env`. What value will the Spring Boot 4.1 application see, with no other sources?"
     options:
       - text: "`env`: змінні середовища сильніші за файли конфігурації, навіть зовнішні"
+        text_en: "`env`: environment variables outrank configuration files, even external ones"
         correct: true
       - text: "`ext`: зовнішній файл поруч із jar завжди перекриває будь-які інші джерела"
+        text_en: "`ext`: the external file next to the jar always overrides any other sources"
       - text: "`file`: файл усередині jar має пріоритет над рештою джерел конфігурації"
+        text_en: "`file`: the file inside the jar takes precedence over the other configuration sources"
       - text: Старт завершиться помилкою через конфлікт значень
+        text_en: "Startup fails with an error because of conflicting values"
     explanation: >
       Boot упорядковує джерела за пріоритетом: файли конфігурації (спершу з jar, потім зовнішні) перекриваються змінними середовища, а ті — аргументами командного рядка. Тож `APP_MODE` перекриє обидва файли.
       Конфлікту значень не буває: перемагає джерело з вищим пріоритетом.
+    explanation_en: >
+      Boot orders sources by precedence: configuration files (first from the jar, then external ones) are overridden by environment variables, and those by command-line arguments. So `APP_MODE` overrides both files. There is no value conflict: the source with higher precedence wins.
     sources:
       - https://docs.spring.io/spring-boot/reference/features/external-config.html

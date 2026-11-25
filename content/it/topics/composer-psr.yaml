@@ -3,6 +3,7 @@ title: Composer і PSR
 title_en: Composer and PSR
 description: Автозавантаження, версії залежностей, PSR-4/7/12/15.
 description_en: Autoloading, dependency versions, PSR-4/7/12/15.
+draft_en: true
 questions:
   - id: composer-psr-001
     level: junior

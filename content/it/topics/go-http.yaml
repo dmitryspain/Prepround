@@ -3,6 +3,7 @@ title: net/http і фреймворки
 title_en: net/http and frameworks
 description: net/http, middleware, Gin/Echo, graceful shutdown.
 description_en: net/http, middleware, Gin/Echo, graceful shutdown.
+draft_en: true
 questions:
   - id: go-http-001
     level: junior

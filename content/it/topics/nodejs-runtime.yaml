@@ -3,23 +3,34 @@ title: Node.js runtime
 title_en: Node.js runtime
 description: Event loop і фази, libuv, streams, buffers, worker threads, модулі.
 description_en: Event loop and phases, libuv, streams, buffers, worker threads, modules.
+draft_en: true
 questions:
   - id: nodejs-runtime-001
     level: junior
     type: multiple
     text: Які твердження про libuv у складі Node.js правильні?
+    text_en: "Which statements about libuv in Node.js are true?"
     options:
       - text: "libuv реалізує event loop і кросплатформний асинхронний ввід-вивід для Node.js"
+        text_en: "libuv implements the event loop and cross-platform asynchronous I/O for Node.js"
         correct: true
       - text: "Файлові операції `fs` і `crypto.pbkdf2` виконуються у пулі потоків libuv"
+        text_en: "File operations in `fs` and `crypto.pbkdf2` run in the libuv thread pool"
         correct: true
       - text: "Мережеві сокети обслуговуються через механізми ОС (epoll, kqueue, IOCP), а не через пул потоків"
+        text_en: "Network sockets are served through OS mechanisms (epoll, kqueue, IOCP), not through the thread pool"
         correct: true
       - text: "Кожен JS-колбек виконується в окремому потоці з пулу libuv, тому Node.js працює паралельно"
+        text_en: "Every JS callback runs in a separate thread from the libuv pool, so Node.js works in parallel"
       - text: "Пул потоків libuv відповідає за виконання вашого JavaScript-коду, а `V8` лише компілює його"
+        text_en: "The libuv thread pool is responsible for executing your JavaScript code, while `V8` only compiles it"
     explanation: >
       JavaScript виконується в одному головному потоці, а libuv лише віддає туди колбеки після завершення роботи. Пул потоків потрібен для операцій, які
       ОС не вміє робити неблокувально (файли, `crypto`, `zlib`, `dns.lookup`); мережа натомість спирається на системні механізми повідомлень.
+    explanation_en: >
+      JavaScript runs in a single main thread, and libuv only hands callbacks back to it once the work is done. The thread pool is needed for
+      operations the OS cannot do without blocking (files, `crypto`, `zlib`, `dns.lookup`); networking relies on system notification mechanisms
+      instead.
     sources:
       - https://docs.libuv.org/en/v1.x/design.html
       - https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop
@@ -28,6 +39,7 @@ questions:
     level: junior
     type: single
     text: Що виведе код і чому?
+    text_en: "What does the code print, and why?"
     code:
       lang: javascript
       source: |
@@ -37,13 +49,20 @@ questions:
         console.log('after call');
     options:
       - text: "Спершу `after call`, потім `read done`: `readFile` неблокувальний, колбек прийде після читання"
+        text_en: "`after call` first, then `read done`: `readFile` is non-blocking, and the callback arrives after the read"
         correct: true
       - text: "Спершу `read done`, потім `after call`: `readFile` блокує потік, доки не прочитає весь файл повністю"
+        text_en: "`read done` first, then `after call`: `readFile` blocks the thread until it has read the whole file"
       - text: "Лише `after call`: без `await` колбек `readFile` ніколи не викликається, бо Node чекає проміс"
+        text_en: "Only `after call`: without `await` the `readFile` callback is never called, because Node waits for a promise"
       - text: "Порядок випадковий: колбек може запуститися будь-коли, навіть посеред виконання наступного рядка"
+        text_en: "The order is random: the callback can run at any moment, even in the middle of executing the next line"
     explanation: >
       `fs.readFile` ставить роботу в пул потоків і одразу повертає керування, а колбек потрапляє в чергу event loop лише після читання. Колбек не може
       перервати синхронний код, тож `after call` завжди виходить першим. Блокувальним був би `readFileSync`.
+    explanation_en: >
+      `fs.readFile` hands the work to the thread pool and returns control immediately, and the callback enters the event loop queue only after the
+      read finishes. A callback cannot interrupt synchronous code, so `after call` always comes first. `readFileSync` would be the blocking one.
     sources:
       - https://nodejs.org/api/fs.html
       - https://nodejs.org/en/learn/asynchronous-work/asynchronous-flow-control
@@ -52,18 +71,27 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про `process` у Node.js правильні?
+    text_en: "Which statements about `process` in Node.js are true?"
     options:
       - text: "`process.argv[2]` — перший аргумент, переданий користувачем у командному рядку"
+        text_en: "`process.argv[2]` is the first argument passed by the user on the command line"
         correct: true
       - text: "Значення в `process.env` завжди є рядками, тож `process.env.PORT` треба самостійно перетворювати на число"
+        text_en: "Values in `process.env` are always strings, so you must convert `process.env.PORT` to a number yourself"
         correct: true
       - text: "Ненульовий код у `process.exit(code)` сигналізує оболонці й CI про помилку"
+        text_en: "A non-zero code in `process.exit(code)` signals failure to the shell and CI"
         correct: true
       - text: "`process.argv[0]` — перший аргумент користувача, а шлях до Node.js там не зберігається"
+        text_en: "`process.argv[0]` is the first user argument, and the path to Node.js is not stored there"
       - text: "`process.env.PORT` автоматично повертає число, якщо змінна середовища містить лише цифри"
+        text_en: "`process.env.PORT` automatically returns a number if the environment variable contains only digits"
     explanation: >
       У `process.argv` перший елемент — шлях до виконуваного файла Node.js, другий — шлях до скрипта, а аргументи користувача починаються з третього.
       Змінні середовища завжди текстові, тому число потрібно розбирати вручну.
+    explanation_en: >
+      In `process.argv` the first element is the path to the Node.js executable, the second is the script path, and user arguments start at the
+      third. Environment variables are always text, so numbers must be parsed manually.
     sources:
       - https://nodejs.org/api/process.html
 
@@ -71,6 +99,7 @@ questions:
     level: junior
     type: single
     text: Що виведе код?
+    text_en: "What does the code print?"
     code:
       lang: javascript
       source: |
@@ -78,13 +107,20 @@ questions:
         console.log(s.length, Buffer.byteLength(s), Buffer.from(s).length);
     options:
       - text: "`6 12 12`: рядок має 6 символів, а в UTF-8 кожна українська літера займає 2 байти"
+        text_en: "`6 12 12`: the string has 6 characters, and in UTF-8 each Ukrainian letter takes 2 bytes"
         correct: true
       - text: "`6 6 6`: один символ завжди дорівнює одному байту"
+        text_en: "`6 6 6`: one character always equals one byte"
       - text: "`12 12 12`: `length` рядка в Node.js рахує байти, а не кодові одиниці UTF-16"
+        text_en: "`12 12 12`: a string's `length` in Node.js counts bytes, not UTF-16 code units"
       - text: "`6 12 6`: `Buffer.from` за замовчуванням зберігає лише по одному байту на символ"
+        text_en: "`6 12 6`: `Buffer.from` by default stores only one byte per character"
     explanation: >
       `length` рядка рахує кодові одиниці UTF-16, а `Buffer` — байти в кодуванні, яке за замовчуванням є UTF-8. Кирилична літера кодується двома байтами,
       тому `Buffer.byteLength` вдвічі більший за довжину рядка.
+    explanation_en: >
+      A string's `length` counts UTF-16 code units, while a `Buffer` counts bytes in its encoding, which is UTF-8 by default. A Cyrillic letter is
+      encoded as two bytes, so `Buffer.byteLength` is twice the string length.
     sources:
       - https://nodejs.org/api/buffer.html
 
@@ -92,6 +128,7 @@ questions:
     level: middle
     type: single
     text: Що виведе код, якщо `setTimeout` і `setImmediate` викликано всередині колбека `fs.readFile`?
+    text_en: "What does the code print if `setTimeout` and `setImmediate` are called inside an `fs.readFile` callback?"
     code:
       lang: javascript
       source: |
@@ -103,13 +140,20 @@ questions:
         });
     options:
       - text: "Завжди `immediate`, потім `timeout`: після poll іде фаза check, а таймери чекають наступної ітерації"
+        text_en: "Always `immediate`, then `timeout`: the check phase follows poll, and timers wait for the next iteration"
         correct: true
       - text: "Завжди `timeout`, потім `immediate`: таймер із нульовою затримкою спрацьовує негайно після poll"
+        text_en: "Always `timeout`, then `immediate`: a timer with zero delay fires right after poll"
       - text: "Порядок не визначений: залежить від навантаження процесу, як і в головному модулі скрипта"
+        text_en: "The order is undefined: it depends on process load, as in the script's main module"
       - text: "Спершу `immediate`, а `timeout` не виведеться, бо колбек уже в фазі poll"
+        text_en: "`immediate` first, and `timeout` is never printed, because the callback is already in the poll phase"
     explanation: >
       Колбек I/O виконується у фазі poll, за якою одразу йде фаза check, де живе `setImmediate`. Таймери перевіряються лише на початку наступної ітерації.
       З головного модуля порядок справді недетермінований, але всередині I/O-колбека він фіксований.
+    explanation_en: >
+      The I/O callback runs in the poll phase, which is immediately followed by the check phase where `setImmediate` lives. Timers are checked
+      only at the start of the next iteration. From the main module the order really is nondeterministic, but inside an I/O callback it is fixed.
     sources:
       - https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick#setimmediate-vs-settimeout
 
@@ -117,6 +161,7 @@ questions:
     level: middle
     type: single
     text: У якому порядку CommonJS-скрипт виведе рядки?
+    text_en: "In what order does the CommonJS script print the lines?"
     code:
       lang: javascript
       source: |
@@ -127,13 +172,21 @@ questions:
         console.log('sync');
     options:
       - text: "`sync`, `tick`, `promise`, а далі `timeout` і `immediate` у непередбачуваному порядку"
+        text_en: "`sync`, `tick`, `promise`, then `timeout` and `immediate` in unpredictable order"
         correct: true
       - text: "`sync`, `promise`, `tick`, а далі `timeout` і `immediate` у непередбачуваному порядку"
+        text_en: "`sync`, `promise`, `tick`, then `timeout` and `immediate` in unpredictable order"
       - text: "`sync`, `timeout`, `immediate`, `tick`, `promise`: черги мікрозадач виконуються після кожної фази"
+        text_en: "`sync`, `timeout`, `immediate`, `tick`, `promise`: microtask queues run after each phase"
       - text: "`sync`, `tick`, `timeout`, `promise`, `immediate`: `nextTick` належить до фази таймерів"
+        text_en: "`sync`, `tick`, `timeout`, `promise`, `immediate`: `nextTick` belongs to the timers phase"
     explanation: >
       Після синхронного коду Node спершу вичерпує чергу `process.nextTick`, потім чергу мікрозадач промісів, і лише тоді event loop переходить до фаз.
       Тому `tick` завжди передує `promise` у CommonJS-модулі, а порядок `timeout` / `immediate` з головного модуля залежить від швидкодії процесу.
+    explanation_en: >
+      After the synchronous code, Node first drains the `process.nextTick` queue, then the promise microtask queue, and only then does the event
+      loop move on to its phases. So `tick` always precedes `promise` in a CommonJS module, while the `timeout` / `immediate` order from the main
+      module depends on process speed.
     sources:
       - https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick#processnexttick
 
@@ -141,15 +194,23 @@ questions:
     level: middle
     type: single
     text: Чому для з'єднання потоків у продакшн-коді радять `stream.pipeline()`, а не ланцюжок `.pipe()`?
+    text_en: "Why is `stream.pipeline()` recommended over a `.pipe()` chain for connecting streams in production code?"
     options:
       - text: "`pipeline()` передає помилку з будь-якої ланки в один колбек і знищує всі потоки, а `.pipe()` цього не робить"
+        text_en: "`pipeline()` passes an error from any stage to one callback and destroys all streams; `.pipe()` does not"
         correct: true
       - text: "`pipeline()` швидший за `.pipe()`, бо читає дані великими блоками в обхід внутрішнього буфера потоку"
+        text_en: "`pipeline()` is faster than `.pipe()` because it reads data in large chunks, bypassing the stream's internal buffer"
       - text: "Лише `pipeline()` підтримує зворотний тиск: `.pipe()` читає дані без урахування швидкості приймача даних"
+        text_en: "Only `pipeline()` supports backpressure: `.pipe()` reads data regardless of the receiver's speed"
       - text: "`.pipe()` застарів і видаляється у новіших версіях, тому `pipeline()` — його єдина заміна"
+        text_en: "`.pipe()` is deprecated and removed in newer versions, so `pipeline()` is its only replacement"
     explanation: >
       Зворотний тиск обробляють обидва підходи. Різниця в обробці помилок: після помилки джерела `.pipe()` лишає приймач відкритим, і через це
       можуть витікати дескриптори файлів. `pipeline()` викликає `destroy(err)` для всіх потоків ланцюжка й повідомляє про помилку один раз.
+    explanation_en: >
+      Both approaches handle backpressure. The difference is error handling: after a source error `.pipe()` leaves the destination open, which can
+      leak file descriptors. `pipeline()` calls `destroy(err)` on all streams in the chain and reports the error once.
     sources:
       - https://nodejs.org/api/stream.html#streampipelinesource-transforms-destination-callback
 
@@ -157,18 +218,27 @@ questions:
     level: middle
     type: multiple
     text: Які твердження про `worker_threads` правильні?
+    text_en: "Which statements about `worker_threads` are true?"
     options:
       - text: "Кожен воркер виконується в окремому ізоляті V8 зі своїм власним event loop і своєю купою"
+        text_en: "Each worker runs in its own V8 isolate with its own event loop and its own heap"
         correct: true
       - text: "Воркери спілкуються через `postMessage` і можуть ділити пам'ять через `SharedArrayBuffer`"
+        text_en: "Workers communicate via `postMessage` and can share memory through `SharedArrayBuffer`"
         correct: true
       - text: "Воркери корисні передусім для CPU-інтенсивної роботи на JavaScript, а не для вводу-виводу"
+        text_en: "Workers are mainly useful for CPU-intensive JavaScript work, not for I/O"
         correct: true
       - text: "Воркери ділять із головним потоком глобальні змінні, тож об'єкти доступні напряму"
+        text_en: "Workers share global variables with the main thread, so objects are accessible directly"
       - text: "Воркер прискорює ввід-вивід, бо вбудований асинхронний I/O Node.js менш ефективний"
+        text_en: "A worker speeds up I/O, because Node.js's built-in asynchronous I/O is less efficient"
     explanation: >
       Воркер має власний ізольований стан, тому дані копіюються через structured clone або передаються як `ArrayBuffer`. Асинхронний I/O у Node.js
       і так не блокує головний потік, тож воркери для нього зазвичай не потрібні й можуть бути навіть повільнішими.
+    explanation_en: >
+      A worker has its own isolated state, so data is copied via structured clone or passed as an `ArrayBuffer`. Asynchronous I/O in Node.js
+      already does not block the main thread, so workers are usually unnecessary for it and may even be slower.
     sources:
       - https://nodejs.org/api/worker_threads.html
 
@@ -178,15 +248,23 @@ questions:
     text: >
       Сервіс виконує 8 одночасних асинхронних `crypto.pbkdf2`, і водночас запити з `fs.readFile` відповідають із помітною затримкою,
       хоча CPU не завантажений на 100 %. Яка причина і що зробити?
+    text_en: "A service runs 8 concurrent asynchronous `crypto.pbkdf2` calls, and at the same time requests using `fs.readFile` respond with noticeable latency even though the CPU is not 100% loaded. What is the cause and what should be done?"
     options:
       - text: "Пул потоків libuv має 4 потоки за замовчуванням і спільний для `fs`, `crypto`, `zlib`, `dns.lookup`; розмір задає `UV_THREADPOOL_SIZE`"
+        text_en: "The libuv thread pool has 4 threads by default and is shared by `fs`, `crypto`, `zlib`, `dns.lookup`; its size is set by `UV_THREADPOOL_SIZE`"
         correct: true
       - text: "Асинхронний `pbkdf2` виконується в головному потоці й блокує event loop, тому його треба замінити на синхронний `pbkdf2Sync` в обробнику"
+        text_en: "Asynchronous `pbkdf2` runs on the main thread and blocks the event loop, so it should be replaced with synchronous `pbkdf2Sync` in the handler"
       - text: "Кожна операція отримує окремий потік автоматично, тож причина лише в обмеженні файлових дескрипторів у `ulimit` на хості"
+        text_en: "Each operation gets its own thread automatically, so the cause is only the file descriptor limit in `ulimit` on the host"
       - text: "Пул потоків окремий для кожного модуля, тому `crypto` і `fs` не впливають одна на одну, а проблема в `setImmediate`"
+        text_en: "The thread pool is separate for each module, so `crypto` and `fs` do not affect each other, and the problem is in `setImmediate`"
     explanation: >
       Файлові операції й частина `crypto` ділять один пул із чотирьох потоків, тому чотири довгі хешування займають його повністю, а `readFile` стоїть
       у черзі. Збільшити пул можна через `UV_THREADPOOL_SIZE` до старту процесу. Перевірено: 8 викликів `pbkdf2` завершуються двома хвилями по 4.
+    explanation_en: >
+      File operations and part of `crypto` share one pool of four threads, so four long hashes occupy it completely and `readFile` waits in the
+      queue. The pool can be enlarged via `UV_THREADPOOL_SIZE` before the process starts. Verified: 8 `pbkdf2` calls finish in two waves of 4.
     sources:
       - https://nodejs.org/api/cli.html#uv_threadpool_sizesize
       - https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop
@@ -195,6 +273,7 @@ questions:
     level: senior
     type: single
     text: Що станеться з процесом Node.js 24 під час виконання цього коду без жодних обробників і прапорців?
+    text_en: "What happens to a Node.js 24 process when this code runs with no handlers and no flags?"
     code:
       lang: javascript
       source: |
@@ -202,13 +281,21 @@ questions:
         setTimeout(() => console.log('still alive'), 100);
     options:
       - text: "Необроблене відхилення стає винятком: процес завершується з ненульовим кодом, `still alive` не виведеться"
+        text_en: "It becomes an exception: the process exits with a non-zero code, and `still alive` is not printed"
         correct: true
       - text: "Процес лише виведе попередження в `stderr`, продовжить роботу й виведе `still alive` через 100 мс"
+        text_en: "The process only prints a warning to `stderr`, keeps running, and prints `still alive` after 100 ms"
       - text: "Помилка мовчки ігнорується, а `still alive` виведеться: проміси ніколи не можуть завершити процес Node.js аварійно"
+        text_en: "The error is silently ignored and `still alive` is printed: promises can never crash a Node.js process"
       - text: "Процес завершиться лише після 100 мс, коли відпрацює таймер, із кодом 0"
+        text_en: "The process exits only after 100 ms, when the timer fires, with code 0"
     explanation: >
       Із Node.js 15 режим `--unhandled-rejections` за замовчуванням `throw`: якщо відхилення не оброблено, воно піднімається як `uncaughtException`,
       і без обробника процес падає. До цього був лише `warning`. Захищатися слід `.catch()` / `try`-`await`, а не глобальним обробником.
+    explanation_en: >
+      Since Node.js 15 the `--unhandled-rejections` mode defaults to `throw`: if a rejection is not handled, it is raised as an
+      `uncaughtException`, and without a handler the process crashes. Before that it was only a `warning`. Protect with `.catch()` /
+      `try`-`await`, not with a global handler.
     sources:
       - https://nodejs.org/api/cli.html#--unhandled-rejectionsmode
       - https://nodejs.org/api/process.html
@@ -217,18 +304,27 @@ questions:
     level: senior
     type: multiple
     text: Які твердження про зворотний тиск (backpressure) у streams правильні?
+    text_en: "Which statements about backpressure in streams are true?"
     options:
       - text: "`writable.write()` повертає `false`, коли внутрішній буфер перевищив `highWaterMark`, і далі слід чекати події `drain`"
+        text_en: "`writable.write()` returns `false` when the internal buffer has exceeded `highWaterMark`, and you should then wait for the `drain` event"
         correct: true
       - text: "Якщо ігнорувати `false` і писати далі, дані не губляться, а буфер у пам'яті продовжує рости"
+        text_en: "If you ignore `false` and keep writing, data is not lost, and the in-memory buffer keeps growing"
         correct: true
       - text: "`pipeline()` і `.pipe()` самі призупиняють читання джерела, поки приймач не звільнить буфер"
+        text_en: "`pipeline()` and `.pipe()` pause reading from the source on their own until the destination frees its buffer"
         correct: true
       - text: "`false` від `write()` означає, що дані відкинуто, і запис треба повторити після події `drain`"
+        text_en: "`false` from `write()` means the data was discarded, and the write must be repeated after the `drain` event"
       - text: "`highWaterMark` — жорсткий ліміт: спроба записати понад нього одразу кидає виняток"
+        text_en: "`highWaterMark` is a hard limit: trying to write beyond it immediately throws an exception"
     explanation: >
       `highWaterMark` — лише поріг, після якого потік просить зупинитися; жодних даних не відкидається й виняток не кидається. Якщо не зважати на сигнал,
       пам'ять зростає, поки не вичерпається. Зворотний тиск автоматично обробляють `.pipe()` і `pipeline()`.
+    explanation_en: >
+      `highWaterMark` is only a threshold after which the stream asks to stop; no data is discarded and no exception is thrown. If the signal is
+      ignored, memory grows until it runs out. Backpressure is handled automatically by `.pipe()` and `pipeline()`.
     sources:
       - https://nodejs.org/api/stream.html
       - https://nodejs.org/en/learn/modules/backpressuring-in-streams
@@ -238,14 +334,22 @@ questions:
     type: single
     text: >
       У Node.js 24 CommonJS-файл викликає `require('./lib.mjs')`, де `lib.mjs` — ES-модуль. Що станеться?
+    text_en: "In Node.js 24, a CommonJS file calls `require('./lib.mjs')`, where `lib.mjs` is an ES module. What happens?"
     options:
       - text: "Працює, якщо в модулі та його залежностях немає top-level `await`; інакше буде `ERR_REQUIRE_ASYNC_MODULE`"
+        text_en: "Works if neither the module nor its dependencies use top-level `await`; otherwise `ERR_REQUIRE_ASYNC_MODULE` is thrown"
         correct: true
       - text: "Завжди `ERR_REQUIRE_ESM`: з CommonJS можна завантажити ES-модуль лише через динамічний `import()`"
+        text_en: "Always `ERR_REQUIRE_ESM`: an ES module can be loaded from CommonJS only via dynamic `import()`"
       - text: "Працює завжди: `require` дочекається top-level `await` і синхронно поверне готовий результат"
+        text_en: "Always works: `require` waits for top-level `await` and synchronously returns the finished result"
       - text: "Працює лише з прапорцем `--experimental-require-module`, без нього поведінка така сама, як у Node.js 20.0"
+        text_en: "Works only with the `--experimental-require-module` flag; without it the behavior is the same as in Node.js 20.0"
     explanation: >
       Починаючи з Node.js 22.12 `require()` може синхронно завантажувати ES-модулі без прапорця. Синхронний `require` не вміє чекати, тому модульний граф
       із top-level `await` відхиляється з `ERR_REQUIRE_ASYNC_MODULE`. Перевірено запуском на Node 24.
+    explanation_en: >
+      Starting with Node.js 22.12, `require()` can load ES modules synchronously without a flag. A synchronous `require` cannot wait, so a module
+      graph with top-level `await` is rejected with `ERR_REQUIRE_ASYNC_MODULE`. Verified by running on Node 24.
     sources:
       - https://nodejs.org/api/modules.html#loading-ecmascript-modules-using-require

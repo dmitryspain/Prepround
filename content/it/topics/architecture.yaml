@@ -3,7 +3,6 @@ title: Архітектура й патерни
 title_en: Architecture and patterns
 description: SOLID, GoF-патерни, Clean Architecture, DDD, мікросервіси, system design.
 description_en: SOLID, GoF patterns, Clean Architecture, DDD, microservices, system design.
-draft_en: true
 questions:
   - id: architecture-001
     level: junior
@@ -95,7 +94,7 @@ questions:
     explanation: |
       Незалежне розгортання дає автономію команд і масштабування по частинах, але додає мережеві виклики, розподілені дані й операційну складність. Спільна БД якраз зводить автономію нанівець.
     explanation_en: |
-      Independent deployment gives teams autonomy and scaling by parts, but adds network calls, distributed data, and operational complexity. A shared database is exactly what undermines that autonomy.
+      Independent deployment gives teams autonomy and scaling individual parts, but adds network calls, distributed data, and operational complexity. A shared database is exactly what undermines that autonomy.
     sources:
     - https://learn.microsoft.com/en-us/azure/architecture/microservices/
   - id: architecture-005
@@ -139,7 +138,7 @@ questions:
     text_en: What does the dependency rule in Clean Architecture require?
     options:
     - text: 'Залежності спрямовані всередину: домен не знає про базу даних, UI чи фреймворк'
-      text_en: '''Dependencies point inward: the domain knows nothing about the database, the UI, or the framework'''
+      text_en: 'Dependencies point inward: the domain knows nothing about the database, the UI, or the framework'
       correct: true
     - text: Внутрішні шари викликають зовнішні напряму, щоб уникнути зайвих абстракцій і прошарків
       text_en: Inner layers call outer ones directly, to avoid unnecessary abstractions and layers
@@ -166,7 +165,7 @@ questions:
       text_en: Other aggregates are referenced by identifier rather than by a direct reference
       correct: true
     - text: Агрегати проєктують малими, лише з даних для однієї транзакції
-      text_en: Aggregates are kept small, holding data for one transaction
+      text_en: Aggregates are kept small, holding only the data for one transaction
       correct: true
     - text: Кожна таблиця бази даних має відповідати одному агрегату
       text_en: Each table in the database schema should correspond to one aggregate
@@ -244,7 +243,7 @@ questions:
     level: senior
     type: multiple
     text: Сервіс масово повторює запити до перевантаженої залежності й погіршує ситуацію (retry storm). Які заходи допоможуть?
-    text_en: A service massively retries requests to an overloaded dependency and makes things worse (a retry storm). Which measures will help?
+    text_en: A service aggressively retries requests to an overloaded dependency and makes things worse (a retry storm). Which measures will help?
     options:
     - text: Обмежити кількість спроб і загальний час повторів
       text_en: Limit the number of attempts and the total retry time
@@ -269,7 +268,7 @@ questions:
     text_en: In a system with Event Sourcing, an erroneous `OrderPriceSet` event was found in an already stored stream. How should the state be corrected properly?
     options:
     - text: Додати нову подію, яка виправляє або скасовує наслідки помилкової, не змінюючи історію
-      text_en: Append a new event that corrects or reverses the erroneous one, keeping history
+      text_en: Append a new event that corrects or reverses the erroneous one, keeping history intact
       correct: true
     - text: Знайти й відредагувати помилкову подію безпосередньо в сховищі подій, оновивши її поля
       text_en: Find and edit the erroneous event directly in the event store, updating its fields
