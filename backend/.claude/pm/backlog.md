@@ -128,10 +128,12 @@
     8. Frontend із PASS: `angular-components`, `react-core`, `react-hooks`, `vue-core`, `vue-composition-api`.
   - **Не перекладаємо:** 14 тем із `draft: true`. Їх напишуть двома мовами, коли відновляться хвилі Frontend.
   - **Рішення власника (2026-11-21): англійська в проді — після груп 1–2** (.NET і спільні, 13 тем), а не після всіх 47. Тому головна сесія поставила `draft_en: true` усім 34 ще не перекладеним опублікованим темам. Правило 12 (PRP-031) з ними виконується, а такі теми англійською показують «0 questions». Хвилі йдуть далі. Після PASS кожної теми позначку знімає головна сесія, а наступний прод-імпорт додає тему в англійський тест.
-  - **Прогрес** (тема → PASS, коло; 2026-11-21):
-    - група 1 (.NET): `dotnet-async` — PASS 1; `ef-core` — PASS 1; `csharp`, `dotnet-clr`, `aspnet-core` — на перевірці (той самий tester оновлює тести імпорту, щоб переклади рахувались із контенту);
-    - група 2 (спільні): `messaging` — PASS 1; `sql`, `architecture` — PASS 2 (коло 1: `major` — «до» як «before» у sql-005; буквальні лапки `'''…'''` у правильному варіанті architecture-006); `docker-k8s`, `azure`, `aws`, `nosql`, `api-design` — PASS 1 (стилістичні `minor` внесли автори після PASS, лінт 0);
-    - група 3 (Java): `java-core`, `jvm` — на перевірці; `java-concurrency` — перекладено; `spring-boot`, `hibernate-jpa` — перекладаються.
+  - **Прогрес** (2026-11-25; 21 листопада всіх агентів зупинив тижневий ліміт API):
+    - **PASS (15):** `dotnet-async`, `ef-core`, `messaging`, `sql`, `architecture`, `docker-k8s`, `azure`, `aws`, `nosql`, `api-design`, `java-core`, `jvm`, `java-concurrency`, а також `spring-boot` і `hibernate-jpa` (мінорні правки ще не внесено, `draft_en` лишається до них);
+    - **на перевірці, перервано лімітом:** `csharp`, `dotnet-clr`, `aspnet-core` (група 1); `javascript`, `typescript`, `nodejs-runtime`, `express-fastify`; `nestjs`, `prisma-typeorm`, `python-core`;
+    - **перекладено, лінт `✗`:** `python-async` (008 — довжини multiple 1,37);
+    - **не почато:** `django` і решта черги з п. 5–8.
+    - Тести імпорту тепер рахують переклади з контенту (tester групи 1 + головна сесія, `WithoutTranslationOf`): `dotnet test` 460/0 на контенті з 312 перекладеними питаннями.
   - **Хвости фактчеку української** (не переклад, окрема картка після хвиль): api-design-011 (MUST 2xx лише коли `data` не `null`), api-design-009 (кирилиця в `code`), aws-010 («зазвичай до 6 годин»), architecture-005 (джерело — блог), architecture-007 (двозначний дистрактор), messaging-007 («Жодної зміни»), ef-core-006 (варіант 3 залежить від версії), службові «Перевірено/підтверджено запуском» у docker-k8s-009, jvm-002/005/006/009.
   - **Ідея для `content-lint`:** ловити `*_en` у буквальних лапках, коли українське поле без лапок.
 - **Прогрес** (тема → питань, статус): `csharp` 12, `ef-core` 12, `sql` 12 (seed); `dotnet-async` 12, `dotnet-clr` 12, `aspnet-core` 12 (PRP-018, PASS); хвиля 1 (PASS): `azure`, `docker-k8s`, `architecture`, `messaging`, `java-core`, `jvm`, `java-concurrency`, `spring-boot`, `hibernate-jpa`, `aws`, `nosql`, `api-design` — по 12. Хвиля 2 (зупинена ENOSPC 2026-11-15): `python-core`, `javascript`, `django` — по 12, без запуску коду й фактчеку; решта 8 тем не почато.
