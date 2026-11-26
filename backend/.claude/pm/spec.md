@@ -248,14 +248,17 @@
     "id": "it", "title": "IT",
     "levels": [{ "id": "junior", "title": "Junior", "rank": 1 }],
     "directions": [{ "id": "backend", "title": "Backend",
-      "stacks": [{ "id": "dotnet", "title": ".NET (C#)", "topicIds": ["csharp", "ef-core"] }] }],
+      "stacks": [{ "id": "dotnet", "title": ".NET (C#)", "topicIds": ["csharp", "ef-core"],
+        "icon": "dotnet", "symbol": "Nt" }] }],
     "topics": [{ "id": "ef-core", "title": "Entity Framework Core", "description": "…",
-      "questionCounts": { "junior": 4, "middle": 4, "senior": 4 } }]
+      "questionCounts": { "junior": 4, "middle": 4, "senior": 4 }, "icon": null }]
   }]
 }
 ```
 
 `questionCounts` містить кількість активних питань теми за id рівня. Рівнів без питань у ньому немає.
+
+`icon` стеку й теми — slug логотипа (назва файлу `tech/<icon>.svg` у фронті), `symbol` стеку — 1–3 символи для клітинки головної (PRP-033). Обидва з контенту, від мови не залежать; `null`, якщо в файлі їх немає.
 
 ### 5.2 `POST /api/tests`
 

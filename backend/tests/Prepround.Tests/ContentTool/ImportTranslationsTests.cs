@@ -283,6 +283,8 @@ public partial class ImportCommandTests
         var db = await postgres.CreateDatabaseAsync();
         using var untranslated = new RealContentCopy();
         EnglishTranslation.RemoveFrom(untranslated.Root);
+        // Nor had it icons: migrating down to the first migration drops their columns too (PRP-033).
+        RemoveIcons(untranslated.Root);
         var content = untranslated.Root;
         await ImportOkAsync(db, content, IncludeDrafts);
         var imported = await PostgresFixture.SnapshotAsync(db);
@@ -323,14 +325,26 @@ public partial class ImportCommandTests
 
         Assert.True(real.ExitCode == SuccessExitCode, real.Output);
         Assert.Contains(Counts("Питання", (0, 0, 0)), real.StdoutLines);
-        Assert.Contains(Counts("Теми", (0, RealTopicsWithEnglishCount(), 0)), real.StdoutLines);
+        Assert.Contains(Counts("Теми", (0, RealTopicsWithEnglishOrIconCount(), 0)), real.StdoutLines);
     }
 
-    /// <summary>Topics whose file has a top-level title_en or description_en, from the raw lines.</summary>
-    private static int RealTopicsWithEnglishCount() =>
+    /// <summary>Topics whose file has a top-level title_en, description_en or icon, from the raw lines.</summary>
+    private static int RealTopicsWithEnglishOrIconCount() =>
         Directory.GetFiles(Path.Combine(RealContentDirectory(), "it", "topics"), "*.yaml")
             .Count(path => File.ReadLines(path).Any(line =>
-                line.StartsWith("title_en:", StringComparison.Ordinal) || line.StartsWith("description_en:", StringComparison.Ordinal)));
+                line.StartsWith("title_en:", StringComparison.Ordinal) || line.StartsWith("description_en:", StringComparison.Ordinal)
+                || line.StartsWith("icon:", StringComparison.Ordinal)));
+
+    /// <summary>Drops the icon and symbol lines of stacks and topics (PRP-033), leaving every other line as it was.</summary>
+    private static void RemoveIcons(string root)
+    {
+        foreach (var path in Directory.GetFiles(root, "*.yaml", SearchOption.AllDirectories))
+        {
+            var lines = File.ReadAllLines(path).Where(line => !line.TrimStart().StartsWith("icon:", StringComparison.Ordinal)
+                                                             && !line.TrimStart().StartsWith("symbol:", StringComparison.Ordinal));
+            File.WriteAllText(path, string.Join('\n', lines) + "\n");
+        }
+    }
 
     /// <summary>
     /// A copy of the real content whose sql.yaml has no English yet, where these tests add their own: sql carries

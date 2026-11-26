@@ -4,4 +4,5 @@ title_en: Frontend testing
 description: Юніт-тести (Vitest, Jest), Testing Library, e2e (Playwright), моки.
 description_en: Unit tests (Vitest, Jest), Testing Library, e2e (Playwright), mocks.
 draft: true
+icon: jest
 questions: []

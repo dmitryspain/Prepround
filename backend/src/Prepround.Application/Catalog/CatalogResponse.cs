@@ -17,7 +17,14 @@ public sealed record LevelResponse(string Id, string Title, int Rank);
 public sealed record DirectionResponse(string Id, string Title, IReadOnlyList<StackResponse> Stacks);
 
 /// <param name="TopicIds">Active topics of the stack, in file order.</param>
-public sealed record StackResponse(string Id, string Title, IReadOnlyList<string> TopicIds);
+/// <param name="Icon">Logo slug, or null when the stack has none; the same in every language.</param>
+/// <param name="Symbol">Short symbol of the stack, or null when it has none; the same in every language.</param>
+public sealed record StackResponse(
+    string Id,
+    string Title,
+    IReadOnlyList<string> TopicIds,
+    string? Icon,
+    string? Symbol);
 
 /// <param name="Description">Empty when the topic file has none.</param>
 /// <param name="QuestionCounts">
@@ -25,8 +32,10 @@ public sealed record StackResponse(string Id, string Title, IReadOnlyList<string
 /// is absent, so a topic without any gives {}.
 /// The client sums the selected levels to get the maximum count for the topic.
 /// </param>
+/// <param name="Icon">Logo slug, or null when the topic has none; the same in every language.</param>
 public sealed record TopicResponse(
     string Id,
     string Title,
     string Description,
-    IReadOnlyDictionary<string, int> QuestionCounts);
+    IReadOnlyDictionary<string, int> QuestionCounts,
+    string? Icon);

@@ -3,6 +3,7 @@ title: Node.js runtime
 title_en: Node.js runtime
 description: Event loop і фази, libuv, streams, buffers, worker threads, модулі.
 description_en: Event loop and phases, libuv, streams, buffers, worker threads, modules.
+icon: nodedotjs
 questions:
   - id: nodejs-runtime-001
     level: junior

@@ -3,6 +3,7 @@ title: API-дизайн
 title_en: API design
 description: REST, коди статусів, версіонування, ідемпотентність, gRPC і Protobuf, GraphQL, WebSocket.
 description_en: REST, status codes, versioning, idempotency, gRPC and Protobuf, GraphQL, WebSocket.
+icon: swagger
 questions:
   - id: api-design-001
     level: junior

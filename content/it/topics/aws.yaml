@@ -3,6 +3,7 @@ title: AWS
 title_en: AWS
 description: EC2, S3, Lambda, RDS, SQS/SNS, IAM, VPC.
 description_en: EC2, S3, Lambda, RDS, SQS/SNS, IAM, VPC.
+icon: amazonwebservices
 questions:
   - id: aws-001
     level: junior

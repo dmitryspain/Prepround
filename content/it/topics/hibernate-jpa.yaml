@@ -3,6 +3,7 @@ title: Hibernate і JPA
 title_en: Hibernate and JPA
 description: Сутності, зв'язки, lazy/eager, N+1, транзакції, кеш першого/другого рівня.
 description_en: Entities, relationships, lazy/eager, N+1, transactions, first/second-level cache.
+icon: hibernate
 questions:
   - id: hibernate-jpa-001
     level: junior

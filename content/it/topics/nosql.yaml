@@ -3,6 +3,7 @@ title: NoSQL і кеш
 title_en: NoSQL and caching
 description: Redis, MongoDB, моделі даних, кешування, TTL, консистентність.
 description_en: Redis, MongoDB, data models, caching, TTL, consistency.
+icon: redis
 questions:
   - id: nosql-001
     level: junior

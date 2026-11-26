@@ -3,6 +3,7 @@ title: Prisma і TypeORM
 title_en: Prisma and TypeORM
 description: Схеми, міграції, зв'язки, транзакції.
 description_en: Schemas, migrations, relations, transactions.
+icon: prisma
 questions:
   - id: prisma-typeorm-001
     level: junior

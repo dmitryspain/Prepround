@@ -3,6 +3,7 @@ title: Django і DRF
 title_en: Django and DRF
 description: Моделі, ORM, міграції, views, middleware, серіалізатори DRF.
 description_en: Models, ORM, migrations, views, middleware, DRF serializers.
+icon: django
 questions:
   - id: django-001
     level: junior

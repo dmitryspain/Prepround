@@ -5,13 +5,15 @@ public sealed class Topic : CatalogEntity
 {
     /// <param name="titleTranslations">Null when the title has no translation.</param>
     /// <param name="descriptionTranslations">Null when the description has no translation.</param>
+    /// <param name="icon">Null when the file gives none.</param>
     public Topic(
         string fieldId,
         string id,
         string title,
         string description,
         IReadOnlyDictionary<string, string>? titleTranslations = null,
-        IReadOnlyDictionary<string, string>? descriptionTranslations = null)
+        IReadOnlyDictionary<string, string>? descriptionTranslations = null,
+        string? icon = null)
     {
         FieldId = fieldId;
         Id = id;
@@ -19,6 +21,7 @@ public sealed class Topic : CatalogEntity
         Description = description;
         TitleTranslations = titleTranslations ?? Translations.None;
         DescriptionTranslations = descriptionTranslations ?? Translations.None;
+        Icon = icon;
     }
 
     public string FieldId { get; private set; }
@@ -36,6 +39,9 @@ public sealed class Topic : CatalogEntity
     /// <summary>The description in the translation languages; a language missing here shows <see cref="Description"/>.</summary>
     public IReadOnlyDictionary<string, string> DescriptionTranslations { get; private set; }
 
+    /// <summary>Logo slug (a simple-icons name); the client maps it to an image file, so it is never translated.</summary>
+    public string? Icon { get; private set; }
+
     /// <summary>Takes the values of <paramref name="source"/>, built from the files, and reactivates the topic.</summary>
     /// <returns>True when the row changed.</returns>
     public bool UpdateFrom(Topic source)
@@ -44,11 +50,13 @@ public sealed class Topic : CatalogEntity
                       | Title != source.Title
                       | Description != source.Description
                       | !Translations.Equal(TitleTranslations, source.TitleTranslations)
-                      | !Translations.Equal(DescriptionTranslations, source.DescriptionTranslations);
+                      | !Translations.Equal(DescriptionTranslations, source.DescriptionTranslations)
+                      | Icon != source.Icon;
         Title = source.Title;
         Description = source.Description;
         TitleTranslations = source.TitleTranslations;
         DescriptionTranslations = source.DescriptionTranslations;
+        Icon = source.Icon;
         return changed;
     }
 }

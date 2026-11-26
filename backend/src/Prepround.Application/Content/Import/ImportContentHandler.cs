@@ -192,7 +192,8 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
                 for (var j = 0; j < direction.Stacks.Count; j++)
                 {
                     var stack = direction.Stacks[j];
-                    stacks.Add(new Stack(field.Id, stack.Id, direction.Id, stack.Title, j + 1, stack.TitleTranslations));
+                    stacks.Add(new Stack(field.Id, stack.Id, direction.Id, stack.Title, j + 1, stack.TitleTranslations,
+                        stack.Icon, stack.Symbol));
 
                     for (var k = 0; k < stack.TopicIds.Count; k++)
                     {
@@ -206,7 +207,7 @@ public sealed class ImportContentHandler : ICommandHandler<ImportContentCommand,
                 // A draft topic itself stays in the catalog; only its questions count as absent (ADR 002), so the sync
                 // below adds none of them and deactivates those imported before: also the emergency switch-off.
                 topics.Add(new Topic(field.Id, topic.Id, topic.Title, topic.Description,
-                    topic.TitleTranslations, topic.DescriptionTranslations));
+                    topic.TitleTranslations, topic.DescriptionTranslations, topic.Icon));
                 if (!includeDrafts && topic.IsDraft)
                 {
                     continue;

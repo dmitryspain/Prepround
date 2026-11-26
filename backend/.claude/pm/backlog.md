@@ -15,6 +15,7 @@
   - відновлення хвиль Frontend — одразу двома мовами (розділ нижче);
   - PRP-012 (історія і «вже бачені») — todo.
 - **Готово для coder зараз:** — (PRP-012 чекає рішення власника про пріоритет).
+- **Чекає власника:** PRP-033 done локально — застосувати міграцію `CatalogIcons` у Neon (скрипт `dotnet ef migrations script ContentTranslations CatalogIcons --idempotent`), потім push обох репо і прод-імпорт.
 - **Власник може робити зараз:** Render Build Filters (`backend/.claude/**`, `backend/tests/**`).
 - **Відкладено, не брати:** PRP-008 (iOS).
 - **Закрито:** етапи 1, 2, 2a, 3, 4a, 5 — картки в `backlog-archive.md`.
@@ -172,6 +173,40 @@
 ---
 
 ## Картки
+
+### PRP-033 · Головна: «періодична таблиця стеків» з логотипами технологій
+- **Статус:** done
+- **Виконавець:** coder
+- **Пріоритет:** P1
+- **Область:** content + backend + frontend (обидва репо, рішення 003; правило контракту)
+- **Платформа:** web
+- **Залежить від:** —
+- **Навіщо:** власник обрав концепт E зі сесії дизайну 2026-11-26: головна виглядає як періодична таблиця стеків; при наведенні/фокусі/кліку на «елемент» праворуч видно його склад — технології з логотипами. Сайт перестає бути «технічною односторінковою формою».
+- **Макет (еталон вигляду й поведінки):** `Prepround/backend/.claude/reports/PRP-033-design.html` (HTML-артборд, дані в `<script>` унизу — лише як приклад; у застосунку все з API). Відтворити композицію, не код: заголовок-«постер» великими літерами, коментар `// …` моноширинним, сітка клітинок по напрямах (6 колонок, порожні місця пунктиром), бічна панель складу, кнопка «скласти тест».
+- **Що зробити:**
+  1. **Контент (`Prepround/content/it/`)** — нові **необов'язкові** поля:
+     - у стеку `field.yaml`: `icon` (slug simple-icons, `^[a-z0-9]+$`) і `symbol` (1–3 символи, «хімічний символ» клітинки). Значення: dotnet `dotnet`/`Nt`, java `openjdk`/`Jv`, python `python`/`Py`, nodejs `nodedotjs`/`Nd`, go `go`/`Go`, php `php`/`Ph`, react `react`/`Re`, angular `angular`/`Ng`, vue `vuedotjs`/`Vu`.
+     - у темі `topics/<тема>.yaml`: `icon`. Значення: aspnet-core `dotnet`, sql `postgresql`, messaging `rabbitmq`, docker-k8s `kubernetes`, java-core `openjdk`, spring-boot `springboot`, hibernate-jpa `hibernate`, aws `amazonwebservices`, python-core `python`, django `django`, fastapi `fastapi`, sqlalchemy `sqlalchemy`, celery `celery`, pytest `pytest`, nosql `redis`, javascript `javascript`, typescript `typescript`, nodejs-runtime `nodedotjs`, express-fastify `fastify`, nestjs `nestjs`, prisma-typeorm `prisma`, api-design `swagger`, go-lang `go`, go-db `postgresql`, php-lang `php`, laravel `laravel`, symfony `symfony`, composer-psr `composer`, react-core `react`, react-hooks `react`, nextjs `nextdotjs`, усі `angular-*` `angular`, `vue-*` `vuedotjs`, html-css `html5`, frontend-testing `jest`. Решта тем — без `icon`.
+  2. **Бекенд (`Prepround/backend`):** `Stack.Icon`, `Stack.Symbol`, `Topic.Icon` (nullable `string`); YAML-моделі, валідація (`validate`: формат slug, довжина symbol 1–3, повідомлення українською), імпорт (оновлює й ці поля), **нова EF-міграція** (старі не чіпати), `GET /api/catalog` віддає `icon`/`symbol` у стеку і `icon` у темі (`null`, якщо немає). Оновити spec розділ 5.1 і формат контенту (spec/ADR 002 — де описано поля YAML) одним-двома рядками.
+  3. **Фронтенд (`PreproundWeb`):**
+     - іконки: скопіювати `Prepround/backend/.claude/reports/PRP-033-icons/*.svg` у `public/tech/` + `public/tech/README.md` (джерело simple-icons 13.21.0, CC0). Файл = slug з API; жодних id каталогу в `src`.
+     - `core/models.ts` + `core/api.service.ts`: `icon: string | null`, `symbol: string | null` (стек), `icon` (тема).
+     - новий компонент `setup/stack-table/` на `/` між hero і формою (hero переробити під макет: великий заголовок верхнім регістром, акцентне третє слово, коментар-рядки з цифрами каталогу — числа з того ж `stats()`; бейдж/градієнт/пляму-світіння прибрати):
+       - групи = напрями каталогу, клітинка = стек: номер (наскрізний, `01`…), кількість питань мовою сайту (активні теми), `symbol` (немає — перші 2 літери/цифри назви), назва, маленький логотип;
+       - вибрана клітинка залита акцентом; вибір — `mouseenter`, `focus`, `click`; `aria-pressed`; панель `aria-live="polite"`;
+       - панель: номер / напрям, назва, `symbol` у квадраті акценту, «тем · питань · рівні», список тем стека з логотипом (немає `icon` — нейтральний маркер) і кількістю питань; теми з 0 питань мовою сайту — притушено з позначкою «скоро»;
+       - кнопка «Скласти тест: <стек>» вибирає напрям і стек у формі (ті самі методи, що й селекти) і прокручує до форми; початково вибрано стек форми, інакше перший.
+     - логотипи — CSS `mask` з `url(tech/<slug>.svg)` і `background: currentColor`, щоб брали колір теми; кольори лише токенами (`--accent`, `--accent-ink`, `--line`, `--surface…`, `--ink…`); кути 0 у таблиці й панелі; моноширинний — `--font-mono`; вебшрифтів не додавати.
+     - телефон: 3 колонки клітинок, панель під таблицею; `prefers-reduced-motion` шанувати.
+     - тексти — `messages/uk.ts` і `en.ts`.
+- **Критерії приймання:**
+  - `validate` чистий, `import` у dev-БД заповнює нові поля; `/api/catalog?lang=uk|en` містить `icon`/`symbol`.
+  - `/` показує таблицю 6 + 3 клітинки з логотипами; наведення/фокус/клік міняє панель; кнопка панелі ставить стек у формі.
+  - Усі три теми сайту виглядають коректно (кольори з токенів); на 390 px без горизонтального скролу.
+  - `dotnet test` і `npx ng test --watch=false && npm run build` зелені; нові тести на валідацію/імпорт/DTO і на компонент.
+- **Деплой:** міграцію в Neon застосовує власник/головна сесія до push бекенду (process.md, «Деплой»); потім прод-імпорт.
+- **Результат (2026-11-26):** PASS з 1 кола (+ доробка 1: ширина `/` 72rem, панель праворуч); тести: backend 507 / failed 0, web 324 / failed 0.
+- **Хвости:** (`reports/PRP-033-tester.md`) рядок hero «праворуч його склад» неправдивий на вузьких екранах; `aria-live` панелі озвучує кожне наведення; немає перевірки, що для кожного `icon` є svg; 3 svg не використовуються; шапка 72rem над колонкою 42rem на `/test`, `/result` (tester: прийнятно). Деплой: міграцію `CatalogIcons` застосувати в Neon, потім push і прод-імпорт.
 
 ### PRP-012 · Історія і «вже бачені»
 - **Статус:** todo

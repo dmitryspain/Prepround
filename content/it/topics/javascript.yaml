@@ -3,6 +3,7 @@ title: JavaScript
 title_en: JavaScript
 description: Типи, замикання, прототипи, this, event loop, проміси, async/await, модулі.
 description_en: Types, closures, prototypes, this, event loop, promises, async/await, modules.
+icon: javascript
 questions:
   - id: javascript-001
     level: junior

@@ -26,9 +26,10 @@ public sealed class YamlContentReader : IContentReader
     private static readonly MappingKeys FieldKeys = new(["id", "title", "levels", "directions"], translated: ["title"]);
     private static readonly MappingKeys LevelKeys = new(["id", "title"], translated: ["title"]);
     private static readonly MappingKeys DirectionKeys = new(["id", "title", "stacks"], translated: ["title"]);
-    private static readonly MappingKeys StackKeys = new(["id", "title", "topics"], translated: ["title"]);
+    private static readonly MappingKeys StackKeys =
+        new(["id", "title", "icon", "symbol", "topics"], translated: ["title"]);
     private static readonly MappingKeys TopicKeys =
-        new(["id", "title", "description", "draft", "questions"], translated: ["title", "description", "draft"]);
+        new(["id", "title", "description", "icon", "draft", "questions"], translated: ["title", "description", "draft"]);
     private static readonly MappingKeys QuestionKeys = new(
         ["id", "level", "type", "text", "code", "options", "explanation", "sources"], translated: ["text", "explanation"]);
     private static readonly MappingKeys CodeKeys = new(["lang", "source"], translated: []);
@@ -190,6 +191,8 @@ public sealed class YamlContentReader : IContentReader
         return new StackDefinition(map.Text("id"), map.Text("title"), topicIds)
         {
             TitleTranslations = map.Translations("title"),
+            Icon = map.OptionalText("icon"),
+            Symbol = map.OptionalText("symbol"),
         };
     }
 
@@ -235,6 +238,7 @@ public sealed class YamlContentReader : IContentReader
         {
             TitleTranslations = map.Translations("title"),
             DescriptionTranslations = map.Translations("description"),
+            Icon = map.OptionalText("icon"),
             DraftLanguages = draftLanguages,
         };
     }
@@ -465,6 +469,12 @@ public sealed class YamlContentReader : IContentReader
         public bool Has(string key) => _values.ContainsKey(key);
 
         public string Text(string key) => Scalar(key)?.Trim() ?? string.Empty;
+
+        /// <summary>
+        /// Null only when the key is absent: "icon:" reaches the validator as an empty text, because the author meant
+        /// to give a value.
+        /// </summary>
+        public string? OptionalText(string key) => Has(key) ? Text(key) : null;
 
         /// <summary>Code keeps its leading indentation; only the trailing newline of a "|" block is dropped.</summary>
         public string Code(string key) => Scalar(key)?.TrimEnd() ?? string.Empty;

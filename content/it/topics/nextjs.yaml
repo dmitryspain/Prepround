@@ -4,6 +4,7 @@ title_en: Next.js
 description: App Router, SSR/SSG/ISR, Server Components, маршрутизація.
 description_en: App Router, SSR/SSG/ISR, Server Components, routing.
 draft: true
+icon: nextdotjs
 questions:
   - id: nextjs-001
     level: junior

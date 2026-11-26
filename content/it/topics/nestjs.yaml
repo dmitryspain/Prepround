@@ -3,6 +3,7 @@ title: NestJS
 title_en: NestJS
 description: Модулі, провайдери, DI, guards, pipes, interceptors.
 description_en: Modules, providers, DI, guards, pipes, interceptors.
+icon: nestjs
 questions:
   - id: nestjs-001
     level: junior

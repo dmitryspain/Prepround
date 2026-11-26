@@ -194,11 +194,17 @@ namespace Prepround.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Icon")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<int>("Order")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Symbol")
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -258,6 +264,9 @@ namespace Prepround.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("jsonb")
                         .HasDefaultValueSql("'{}'::jsonb");
+
+                    b.Property<string>("Icon")
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");

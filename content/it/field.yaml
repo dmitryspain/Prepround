@@ -13,31 +13,49 @@ directions:
     stacks:
       - id: dotnet
         title: .NET (C#)
+        icon: dotnet
+        symbol: Nt
         topics: [csharp, dotnet-clr, dotnet-async, aspnet-core, ef-core, sql, architecture, messaging, azure, docker-k8s]
       - id: java
         title: Java
+        icon: openjdk
+        symbol: Jv
         topics: [java-core, jvm, java-concurrency, spring-boot, hibernate-jpa, sql, architecture, messaging, aws, docker-k8s]
       - id: python
         title: Python
+        icon: python
+        symbol: Py
         topics: [python-core, python-async, django, fastapi, sqlalchemy, celery, pytest, sql, nosql, docker-k8s]
       - id: nodejs
         title: Node.js
+        icon: nodedotjs
+        symbol: Nd
         topics: [javascript, typescript, nodejs-runtime, express-fastify, nestjs, prisma-typeorm, sql, nosql, api-design, docker-k8s]
       - id: go
         title: Go
+        icon: go
+        symbol: Go
         topics: [go-lang, go-concurrency, go-runtime, go-http, go-db, api-design, sql, messaging, architecture, docker-k8s]
       - id: php
         title: PHP
+        icon: php
+        symbol: Ph
         topics: [php-lang, laravel, symfony, php-orm, composer-psr, phpunit, sql, nosql, api-design, architecture]
   - id: frontend
     title: Frontend
     stacks:
       - id: react
         title: React
+        icon: react
+        symbol: Re
         topics: [javascript, typescript, html-css, react-core, react-hooks, react-state, nextjs, react-data-routing, frontend-testing, web-performance]
       - id: angular
         title: Angular
+        icon: angular
+        symbol: Ng
         topics: [javascript, typescript, html-css, angular-components, angular-di, angular-change-detection, rxjs, ngrx, angular-routing-forms, frontend-testing]
       - id: vue
         title: Vue
+        icon: vuedotjs
+        symbol: Vu
         topics: [javascript, typescript, html-css, vue-core, vue-composition-api, pinia, vue-router, nuxt, frontend-testing, web-performance]

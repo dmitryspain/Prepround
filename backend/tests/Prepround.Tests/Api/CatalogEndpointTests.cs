@@ -68,7 +68,7 @@ public class CatalogEndpointTests(PostgresFixture postgres)
         var stacks = directions
             .SelectMany(direction => direction["stacks"]!.AsArray().Select(stack => (Direction: Str(direction, "id"), Stack: stack!.AsObject())))
             .ToList();
-        Assert.All(stacks, stack => Assert.Equal(["id", "title", "topicIds"], Names(stack.Stack)));
+        Assert.All(stacks, stack => Assert.Equal(["id", "title", "topicIds", "icon", "symbol"], Names(stack.Stack)));
         Assert.Equal(
             Spec41.Select(row => $"{row.Direction}/{row.Stack}: {string.Join(",", row.TopicIds)}"),
             stacks.Select(s => $"{s.Direction}/{Str(s.Stack, "id")}: {string.Join(",", s.Stack["topicIds"]!.AsArray().Select(id => id!.GetValue<string>()))}"));
@@ -76,7 +76,7 @@ public class CatalogEndpointTests(PostgresFixture postgres)
 
         var topics = field["topics"]!.AsArray().Select(topic => topic!.AsObject()).ToList();
         Assert.Equal(61, topics.Count);
-        Assert.All(topics, topic => Assert.Equal(["id", "title", "description", "questionCounts"], Names(topic)));
+        Assert.All(topics, topic => Assert.Equal(["id", "title", "description", "questionCounts", "icon"], Names(topic)));
         var titles = topics.Select(topic => Str(topic, "title")).ToList();
         Assert.Equal(titles.Order(StringComparer.InvariantCulture), titles);
         // Every topic a stack refers to is in the field's topic list.

@@ -1,9 +1,10 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Prepround.Application.Content;
 
 /// <summary>
-/// Rules 1–8 and 10–12 of ADR 002 over content that has already been read. Collects every problem instead of stopping
+/// Rules 1–8 and 10–13 of ADR 002 over content that has already been read. Collects every problem instead of stopping
 /// at the first one, so an author fixes a whole batch of questions in one pass. Never throws on bad content.
 /// Rule 9 (unknown keys) belongs to the reader: once YAML becomes this model, unknown keys are gone.
 /// </summary>
@@ -13,6 +14,7 @@ public sealed partial class ContentValidator
     private const string MultipleType = "multiple";
     private const int MinOptionCount = 2;
     private const int MaxOptionCount = 8;
+    private const int MaxSymbolLength = 3;
 
     public IReadOnlyList<ContentError> Validate(IReadOnlyList<FieldDefinition> fields)
     {
@@ -90,6 +92,8 @@ public sealed partial class ContentValidator
                 CheckTitle(stack.Title, "стеку", file, shown, errors);
                 CheckTitleTranslations(stack.TitleTranslations, "стеку", file, shown, errors);
                 CheckUnique(stackIds, stack.Id, "стеку", file, shown, errors);
+                CheckIcon(stack.Icon, file, shown, errors);
+                CheckSymbol(stack.Symbol, file, shown, errors);
 
                 var stackTopicIds = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var topicId in stack.TopicIds)
@@ -129,6 +133,7 @@ public sealed partial class ContentValidator
         CheckTitleTranslations(topic.TitleTranslations, "теми", file, shown, errors);
         CheckTranslations(topic.DescriptionTranslations, "description", "Порожній опис теми", file, shown, errors);
         CheckUnique(seenTopicIds, topic.Id, "теми", file, shown, errors);
+        CheckIcon(topic.Icon, file, shown, errors);
         if (topic.Id.Length > 0 && topic.Id != fileStem)
         {
             errors.Add(new ContentError(file, shown,
@@ -460,6 +465,47 @@ public sealed partial class ContentValidator
         }
     }
 
+    /// <summary>
+    /// Rule 13: an optional logo slug. The client turns it into a file name, so only lowercase Latin letters and digits
+    /// pass, as simple-icons names them.
+    /// </summary>
+    private static void CheckIcon(string? icon, string file, string shown, List<ContentError> errors)
+    {
+        if (icon is null)
+        {
+            return;
+        }
+
+        if (icon.Length == 0)
+        {
+            errors.Add(new ContentError(file, shown, "Порожній icon: вкажіть назву логотипа або приберіть ключ."));
+        }
+        else if (!IconSlug().IsMatch(icon))
+        {
+            errors.Add(new ContentError(file, shown,
+                $"Icon «{icon}» має складатися лише з малих латинських літер і цифр, як назви simple-icons."));
+        }
+    }
+
+    /// <summary>Rule 13: an optional symbol of 1–3 characters, counted as the user sees them.</summary>
+    private static void CheckSymbol(string? symbol, string file, string shown, List<ContentError> errors)
+    {
+        if (symbol is null)
+        {
+            return;
+        }
+
+        if (symbol.Length == 0)
+        {
+            errors.Add(new ContentError(file, shown, "Порожній symbol: вкажіть 1–3 символи або приберіть ключ."));
+        }
+        else if (new StringInfo(symbol).LengthInTextElements > MaxSymbolLength)
+        {
+            errors.Add(new ContentError(file, shown,
+                $"Symbol «{symbol}» задовгий: допустимо від 1 до {MaxSymbolLength} символів."));
+        }
+    }
+
     private static void CheckUnique(
         HashSet<string> seen, string id, string entity, string file, string shown, List<ContentError> errors)
     {
@@ -475,4 +521,7 @@ public sealed partial class ContentValidator
     // \z rather than $: in .NET, $ also matches before a trailing newline, which would let "abc\n" through.
     [GeneratedRegex(@"^[a-z0-9]+(-[a-z0-9]+)*\z")]
     private static partial Regex KebabCase();
+
+    [GeneratedRegex(@"^[a-z0-9]+\z")]
+    private static partial Regex IconSlug();
 }

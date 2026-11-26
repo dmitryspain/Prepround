@@ -3,6 +3,7 @@ title: Composition API
 title_en: Composition API
 description: setup, ref/reactive, computed, watch, composables, vs Options API.
 description_en: setup, ref/reactive, computed, watch, composables, vs Options API.
+icon: vuedotjs
 questions:
   - id: vue-composition-api-001
     level: junior

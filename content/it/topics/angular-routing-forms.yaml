@@ -4,4 +4,5 @@ title_en: Routing and forms
 description: Роутер, guards, resolvers, lazy loading, reactive forms, валідація.
 description_en: Router, guards, resolvers, lazy loading, reactive forms, validation.
 draft: true
+icon: angular
 questions: []

@@ -4,6 +4,7 @@ title_en: Vue Router
 description: Маршрути, guards, lazy loading, вкладені маршрути.
 description_en: Routes, guards, lazy loading, nested routes.
 draft: true
+icon: vuedotjs
 questions:
   - id: vue-router-001
     level: junior

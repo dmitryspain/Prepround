@@ -3,6 +3,7 @@ title: Робота з БД у Go
 title_en: Working with databases in Go
 description: database/sql, sqlx, GORM, пул з'єднань, транзакції.
 description_en: database/sql, sqlx, GORM, connection pool, transactions.
+icon: postgresql
 questions:
   - id: go-db-001
     level: junior

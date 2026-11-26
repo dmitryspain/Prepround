@@ -58,7 +58,8 @@ public sealed class GetCatalogHandler : IQueryHandler<GetCatalogQuery, CatalogRe
                 topic.Id,
                 Localized(topic.Title, topic.TitleTranslations, language),
                 Localized(topic.Description, topic.DescriptionTranslations, language),
-                QuestionCounts(rows.QuestionCounts[(field.Id, topic.Id)], levels)))
+                QuestionCounts(rows.QuestionCounts[(field.Id, topic.Id)], levels),
+                topic.Icon))
             .OrderBy(topic => topic.Title, TitleComparer)
             .ThenBy(topic => topic.Id, StringComparer.Ordinal)
             .ToList();
@@ -81,7 +82,9 @@ public sealed class GetCatalogHandler : IQueryHandler<GetCatalogQuery, CatalogRe
                             .OrderBy(link => link.Order)
                             .ThenBy(link => link.TopicId, StringComparer.Ordinal)
                             .Select(link => link.TopicId)
-                            .ToList()))
+                            .ToList(),
+                        stack.Icon,
+                        stack.Symbol))
                     .ToList()))
             .ToList();
 

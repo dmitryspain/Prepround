@@ -4,6 +4,7 @@ title_en: DI and services
 description: Інжектори, providedIn, токени, ієрархія, inject().
 description_en: Injectors, providedIn, tokens, hierarchy, inject().
 draft: true
+icon: angular
 questions:
   - id: angular-di-001
     level: junior

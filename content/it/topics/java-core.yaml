@@ -3,6 +3,7 @@ title: Java Core
 title_en: Core Java
 description: ООП, колекції, generics, Stream API, винятки, records, equals/hashCode.
 description_en: OOP, collections, generics, Stream API, exceptions, records, equals/hashCode.
+icon: openjdk
 questions:
   - id: java-core-001
     level: junior

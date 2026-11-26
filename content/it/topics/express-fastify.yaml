@@ -3,6 +3,7 @@ title: Express і Fastify
 title_en: Express and Fastify
 description: Маршрути, middleware, обробка помилок, валідація.
 description_en: Routes, middleware, error handling, validation.
+icon: fastify
 questions:
   - id: express-fastify-001
     level: junior
