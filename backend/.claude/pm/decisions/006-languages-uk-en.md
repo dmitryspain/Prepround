@@ -310,3 +310,5 @@ questions:
   - `PreproundWeb/src/app/core/api.service.ts` (`messageOf`), `prefs.service.ts`, `test-session.service.ts` (`TestSession.field`), `public/theme-init.js`;
   - `Prepround/backend/src/Prepround.Infrastructure/Content/YamlContentReader.cs` (списки ключів), `Configurations/QuestionConfiguration.cs` (jsonb `Options` з `ValueComparer`), `Migrations/20261114000242_InitialCatalog.cs`.
 - Підрахунок контенту — `yaml.safe_load` по `content/it/topics/*.yaml`, 2026-11-19.
+
+**Оновлення 2026-11-26 (рішення власника):** перемикач у шапці — сегментований: усі мови з прапорцем і позначкою (UA з українським прапором, EN з британським), поточна натиснута; повна назва мови — aria-label. Попереднє правило «без UK/UA» скасовано.
