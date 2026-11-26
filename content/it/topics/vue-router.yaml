@@ -3,22 +3,29 @@ title: Vue Router
 title_en: Vue Router
 description: Маршрути, guards, lazy loading, вкладені маршрути.
 description_en: Routes, guards, lazy loading, nested routes.
-draft: true
 icon: vuedotjs
 questions:
   - id: vue-router-001
     level: junior
     type: single
     text: Який компонент Vue Router 5 відображає компонент, що відповідає поточному збігу маршруту?
+    text_en: Which Vue Router 5 component renders the component matching the current route?
     options:
       - text: '`<RouterView>`'
+        text_en: '`<RouterView>`'
         correct: true
       - text: '`<RouterLink>`, який приймає в `to` шлях потрібного маршруту'
+        text_en: '`<RouterLink>` that takes the path of the target route in `to`'
       - text: '`<Teleport>`, який переносить компонент маршруту в `<body>`'
+        text_en: '`<Teleport>` that moves the route component into `<body>`'
       - text: '`<KeepAlive>`, який підставляє компонент за поточним URL'
+        text_en: '`<KeepAlive>` that swaps in the component for the current URL'
     explanation: >
       `<RouterView>` є місцем у шаблоні, куди підставляється компонент знайденого маршруту. `<RouterLink>` лише
       створює посилання для навігації й нічого не рендерить із маршруту.
+    explanation_en: >
+      `<RouterView>` is the place in the template where the component of the matched route is rendered.
+      `<RouterLink>` only creates a navigation link and renders nothing from the route.
     sources:
       - https://router.vuejs.org/guide/
 
@@ -26,6 +33,7 @@ questions:
     level: junior
     type: single
     text: Як у `<script setup>` компонента Vue Router 5 отримати значення динамічного сегмента `:id` з маршруту `/users/:id`?
+    text_en: In `<script setup>` of a Vue Router 5 component, how do you get the value of the dynamic segment `:id` from the route `/users/:id`?
     code:
       lang: js
       source: |
@@ -35,13 +43,20 @@ questions:
         const route = useRoute()
     options:
       - text: Прочитати `route.params.id`
+        text_en: Read `route.params.id`
         correct: true
       - text: Прочитати `route.query.id`
+        text_en: Read `route.query.id`
       - text: Прочитати `route.meta.id`
+        text_en: Read `route.meta.id`
       - text: Прочитати `route.hash.id`
+        text_en: Read `route.hash.id`
     explanation: >
       Значення динамічних сегментів шляху лежать в об'єкті `route.params`. `query` містить параметри після `?`,
       `meta` задається в конфігурації маршруту, а `hash` є рядком із фрагментом URL.
+    explanation_en: >
+      Values of dynamic path segments live in the `route.params` object. `query` holds the parameters after `?`,
+      `meta` is set in the route configuration, and `hash` is a string with the URL fragment.
     sources:
       - https://router.vuejs.org/guide/essentials/dynamic-matching.html
 
@@ -49,18 +64,27 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про `router.push('/login')` і `router.replace('/login')` у Vue Router 5.5 правильні?
+    text_en: Which statements about `router.push('/login')` and `router.replace('/login')` in Vue Router 5.5 are true?
     options:
       - text: '`replace` підміняє поточний запис в історії браузера, а `push` додає новий'
+        text_en: '`replace` swaps the current browser history entry, while `push` adds a new one'
         correct: true
       - text: Обидва методи повертають проміс і проходять через навігаційні guard-и
+        text_en: Both methods return a promise and go through navigation guards
         correct: true
       - text: Після `replace` кнопка «назад» не вертає на сторінку, з якої перейшли
+        text_en: After `replace`, the Back button does not return to the page you navigated from
         correct: true
       - text: '`replace` повністю перезавантажує сторінку, а `push` змінює лише компонент'
+        text_en: '`replace` fully reloads the page, while `push` only changes the component'
       - text: '`replace` пропускає guard-и, бо працює без створення нового запису'
+        text_en: '`replace` skips guards because it works without creating a new entry'
     explanation: >
       Різниця лише в історії: `replace` підміняє запис, тому «назад» веде ще далі. Конвеєр навігації з guard-ами
       і проміс-результат однакові, а перезавантаження сторінки жоден із методів не робить.
+    explanation_en: >
+      The only difference is in history: `replace` swaps the entry, so Back goes even further back. The navigation
+      pipeline with guards and the promise result are the same, and neither method reloads the page.
     sources:
       - https://router.vuejs.org/guide/essentials/navigation.html#Replace-current-location
 
@@ -68,15 +92,24 @@ questions:
     level: junior
     type: single
     text: "Що дає запис маршруту `{ path: '/admin', component: () => import('./AdminPage.vue') }` порівняно зі статичним імпортом компонента?"
+    text_en: "What does the route record `{ path: '/admin', component: () => import('./AdminPage.vue') }` give you compared to a static component import?"
     options:
       - text: Код сторінки потрапляє в окремий чанк і завантажується під час першого переходу на маршрут
+        text_en: The page code goes into a separate chunk and is loaded on the first navigation to the route
         correct: true
       - text: Компонент створюється лише один раз, а далі між переходами його стан завжди зберігається
+        text_en: The component is created only once, and its state is always preserved between navigations
       - text: Маршрут стає захищеним, і неавторизований користувач не потрапить на `/admin`
+        text_en: The route becomes protected, and an unauthorized user cannot reach `/admin`
       - text: Сторінка обов'язково рендериться на сервері до відправки відповіді браузеру
+        text_en: The page is always rendered on the server before the response is sent to the browser
     explanation: >
       Функція з динамічним `import()` змушує збирач виділити компонент в окремий чанк, який роутер підтягує, коли
       маршрут вперше активується. До кешування стану, доступу чи SSR це не має стосунку.
+    explanation_en: >
+      A function with a dynamic `import()` makes the bundler split the component into a separate chunk, which the
+      router fetches when the route is first activated. This has nothing to do with state caching, access control,
+      or SSR.
     sources:
       - https://router.vuejs.org/guide/advanced/lazy-loading.html
 
@@ -86,6 +119,9 @@ questions:
     text: >
       Маршрут `/users/:id` рендерить `UserPage`, яка завантажує дані користувача в `onMounted`. Користувач натискає
       посилання з `/users/1` на `/users/2`. Що станеться і як це виправити?
+    text_en: >
+      The route `/users/:id` renders `UserPage`, which loads user data in `onMounted`. The user clicks a link from
+      `/users/1` to `/users/2`. What happens, and how do you fix it?
     code:
       lang: js
       source: |
@@ -98,14 +134,22 @@ questions:
         })
     options:
       - text: Екземпляр компонента перевикористається, `onMounted` не спрацює вдруге; потрібен `watch` на `route.params.id`
+        text_en: The component instance is reused, `onMounted` does not run again; you need a `watch` on `route.params.id`
         correct: true
       - text: Компонент знищується й створюється наново, тож `onMounted` спрацює вдруге і дані оновляться
+        text_en: The component is destroyed and created anew, so `onMounted` runs again and the data refreshes
       - text: Роутер заблокує такий перехід, поки не буде додано `beforeEnter` для цього маршруту
+        text_en: The router blocks such a navigation until `beforeEnter` is added for this route
       - text: '`onMounted` спрацює вдруге лише тоді, коли обгорнути `<RouterView>` у `<KeepAlive>`'
+        text_en: '`onMounted` runs again only if `<RouterView>` is wrapped in `<KeepAlive>`'
     explanation: >
       Обидва шляхи збігаються з одним записом маршруту, тому Vue Router перевикористовує той самий екземпляр
       компонента, і хуки життєвого циклу не повторюються. Реагувати на зміну параметра треба через
       `watch(() => route.params.id, …)` або `onBeforeRouteUpdate`.
+    explanation_en: >
+      Both paths match the same route record, so Vue Router reuses the same component instance, and lifecycle hooks
+      do not repeat. To react to the parameter change, use `watch(() => route.params.id, …)` or
+      `onBeforeRouteUpdate`.
     sources:
       - https://router.vuejs.org/guide/essentials/dynamic-matching.html#Reacting-to-Params-Changes
 
@@ -115,6 +159,9 @@ questions:
     text: >
       Vue Router 5.5, глобальний guard нижче. Що станеться при переході на маршрут `/profile`, коли `isLoggedIn()`
       повертає `false`?
+    text_en: >
+      Vue Router 5.5, the global guard below. What happens when navigating to the route `/profile` while
+      `isLoggedIn()` returns `false`?
     code:
       lang: js
       source: |
@@ -125,14 +172,22 @@ questions:
         })
     options:
       - text: Навігацію перенаправить на `/login`, і `next()` для цього викликати не потрібно
+        text_en: The navigation is redirected to `/login`, and there is no need to call `next()`
         correct: true
       - text: Навігація зависне, доки в guard не буде викликано `next()`
+        text_en: The navigation hangs until `next()` is called in the guard
       - text: Навігацію скасовано, користувач лишається на попередній сторінці без переходу на `/login`
+        text_en: The navigation is canceled, and the user stays on the previous page without going to `/login`
       - text: "Роутер кине помилку, бо guard повертає об'єкт замість виклику `next({ path: '/login' })`"
+        text_en: "The router throws an error because the guard returns an object instead of calling `next({ path: '/login' })`"
     explanation: >
       У сучасному API guard керує навігацією значенням, що повертається: `false` скасовує перехід, шлях або
       об'єкт локації перенаправляє, а `undefined` дозволяє. Аргумент `next` необов'язковий і застосовується лише в
       застарілому стилі: починаючи з 5.0.3 виклик `next` у розробці логує попередження про застарілість.
+    explanation_en: >
+      In the modern API, a guard controls navigation through its return value: `false` cancels the navigation, a
+      path or location object redirects, and `undefined` allows it. The `next` argument is optional and used only in
+      the legacy style: since 5.0.3, calling `next` logs a deprecation warning in development.
     sources:
       - https://router.vuejs.org/guide/advanced/navigation-guards.html#Global-Before-Guards
 
@@ -140,19 +195,29 @@ questions:
     level: middle
     type: multiple
     text: Які твердження про режими історії Vue Router (`createWebHistory` і `createWebHashHistory`) правильні для SPA, розгорнутого на статичному сервері?
+    text_en: Which statements about Vue Router history modes (`createWebHistory` and `createWebHashHistory`) are true for an SPA deployed on a static server?
     options:
       - text: Прямий запит на `/users/1` із `createWebHistory` дає 404, доки сервер не повертає `index.html`
+        text_en: A direct request for `/users/1` with `createWebHistory` returns 404 unless the server returns `index.html`
         correct: true
       - text: '`createWebHashHistory` не потребує налаштувань сервера: частина після `#` до нього не йде'
+        text_en: '`createWebHashHistory` needs no server configuration: the part after `#` is never sent to it'
         correct: true
       - text: З fallback на `index.html` для 404-сторінки потрібен catch-all маршрут у застосунку
+        text_en: With a fallback to `index.html`, a catch-all route in the app is needed for the 404 page
         correct: true
       - text: '`createWebHistory` дописує `#` перед шляхом, тому сервер можна лишити без налаштувань для будь-яких URL'
+        text_en: '`createWebHistory` adds `#` before the path, so the server can be left unconfigured for any URL'
       - text: '`createWebHashHistory` надсилає сегмент після `#` на сервер, і саме сервер обирає компонент сторінки'
+        text_en: '`createWebHashHistory` sends the segment after `#` to the server, and the server picks the page component'
     explanation: >
       Hash-режим тримає шлях у фрагменті URL, який лишається на клієнті, тому сервер завжди віддає один файл.
       У history-режимі URL чисті, але сервер мусить повертати `index.html` для будь-якого шляху, а після цього
       показ 404 для невідомих адрес бере на себе роутер.
+    explanation_en: >
+      Hash mode keeps the path in the URL fragment, which stays on the client, so the server always serves a single
+      file. In history mode the URLs are clean, but the server must return `index.html` for any path, and after that
+      the router takes over showing 404 for unknown addresses.
     sources:
       - https://router.vuejs.org/guide/essentials/history-mode.html
 
@@ -162,6 +227,9 @@ questions:
     text: >
       Для `/settings/profile` налаштовано вкладений маршрут, але вміст `ProfilePage` на сторінці не з'являється,
       хоча `SettingsLayout` відображається. Яка найімовірніша причина?
+    text_en: >
+      A nested route is configured for `/settings/profile`, but the content of `ProfilePage` does not appear on the
+      page, although `SettingsLayout` is displayed. What is the most likely cause?
     code:
       lang: js
       source: |
@@ -175,14 +243,22 @@ questions:
         // <template><h1>Налаштування</h1></template>
     options:
       - text: У шаблоні `SettingsLayout` немає власного `<RouterView>`, куди підставити дочірній компонент
+        text_en: '`SettingsLayout` has no `<RouterView>` of its own to render the child into'
         correct: true
       - text: Шлях дочірнього маршруту треба записувати з початковим `/`, тобто `/profile`
+        text_en: The child route path must be written with a leading `/`, that is `/profile`
       - text: Батьківському маршруту потрібна властивість `name`, без неї `children` ігноруються
+        text_en: The parent route needs a `name` property, without it `children` are ignored
       - text: Для вкладених маршрутів `ProfilePage` має бути оголошений як лінивий через `import()`
+        text_en: For nested routes, `ProfilePage` must be declared lazy via `import()`
     explanation: >
       Кожен рівень вкладення має власний `<RouterView>`: кореневий показує `SettingsLayout`, а дочірній компонент
       з'явиться лише там, де батько розмістить вкладений `<RouterView>`. Шлях без `/` якраз і означає відносний
       до батьківського.
+    explanation_en: >
+      Each nesting level has its own `<RouterView>`: the root one shows `SettingsLayout`, and the child component
+      appears only where the parent places a nested `<RouterView>`. A path without `/` is precisely what means
+      relative to the parent.
     sources:
       - https://router.vuejs.org/guide/essentials/nested-routes.html
 
@@ -192,16 +268,28 @@ questions:
     text: >
       Vue Router 5.5, навігація з `/a` на `/b`, компоненти різні. Є `beforeRouteLeave` у компоненті `/a`, глобальні
       `beforeEach`, `beforeResolve`, `afterEach` і `beforeEnter` у записі `/b`. Який порядок їх виконання?
+    text_en: >
+      Vue Router 5.5, navigation from `/a` to `/b`, the components differ. There are `beforeRouteLeave` in the
+      component of `/a`, global `beforeEach`, `beforeResolve`, `afterEach`, and `beforeEnter` in the record of `/b`.
+      In what order do they run?
     options:
       - text: '`beforeRouteLeave`, `beforeEach`, `beforeEnter`, `beforeResolve`, `afterEach`'
+        text_en: '`beforeRouteLeave`, `beforeEach`, `beforeEnter`, `beforeResolve`, `afterEach`'
         correct: true
       - text: '`beforeEach`, `beforeRouteLeave`, `beforeEnter`, `beforeResolve`, `afterEach`'
+        text_en: '`beforeEach`, `beforeRouteLeave`, `beforeEnter`, `beforeResolve`, `afterEach`'
       - text: '`beforeRouteLeave`, `beforeEach`, `beforeResolve`, `beforeEnter`, `afterEach`'
+        text_en: '`beforeRouteLeave`, `beforeEach`, `beforeResolve`, `beforeEnter`, `afterEach`'
       - text: '`beforeEnter`, `beforeRouteLeave`, `beforeEach`, `beforeResolve`, `afterEach`'
+        text_en: '`beforeEnter`, `beforeRouteLeave`, `beforeEach`, `beforeResolve`, `afterEach`'
     explanation: >
       Спершу виконуються guard-и компонентів, що покидаються, потім глобальні `beforeEach`, далі `beforeEnter` із
       конфігурації маршруту, а після завантаження асинхронних компонентів і guard-ів компонентів, що
       активуються, іде `beforeResolve`. `afterEach` викликається вже після підтвердження навігації.
+    explanation_en: >
+      First the guards of the components being left run, then global `beforeEach`, then `beforeEnter` from the route
+      configuration, and after async components are resolved and the guards of the components being activated have
+      run, `beforeResolve` follows. `afterEach` is called after the navigation is confirmed.
     sources:
       - https://router.vuejs.org/guide/advanced/navigation-guards.html#The-Full-Navigation-Resolution-Flow
 
@@ -211,6 +299,9 @@ questions:
     text: >
       Vue Router 5.5, поточний маршрут уже `/cart`. Код нижче викликається повторно з `/cart`. Що відбудеться з
       промісом, який повертає `router.push`?
+    text_en: >
+      Vue Router 5.5, the current route is already `/cart`. The code below is called again from `/cart`. What
+      happens to the promise returned by `router.push`?
     code:
       lang: js
       source: |
@@ -220,14 +311,22 @@ questions:
         }
     options:
       - text: Проміс виконається з об'єктом `NavigationFailure` типу `duplicated`, тому тост не покажеться
+        text_en: The promise resolves with a `NavigationFailure` object of type `duplicated`, so the toast is not shown
         correct: true
       - text: Проміс відхилиться з помилкою, тож `await` кине виняток і рядок з тостом не виконається
+        text_en: The promise rejects with an error, so `await` throws and the toast line is not executed
       - text: Проміс виконається зі значенням `undefined`, бо навігація на ту саму сторінку вважається успішною
+        text_en: The promise resolves with `undefined`, because navigating to the same page counts as successful
       - text: Проміс не завершиться ніколи, доки `/cart` лишається поточним маршрутом
+        text_en: The promise never settles while `/cart` remains the current route
     explanation: >
-      Скасований (`false`), перерваний новою навігацією чи дубльований перехід не відхиляє проміс, а виконує його з
-      об'єктом `NavigationFailure`. Успіх позначається значенням `undefined`, тож статус перевіряють через
+      Перехід, перерваний guard-ом (`false`, тип `aborted`), скасований новішою навігацією (`cancelled`) чи
+      дубльований (`duplicated`), не відхиляє проміс, а виконує його з об'єктом `NavigationFailure`. Успіх позначається значенням `undefined`, тож статус перевіряють через
       `isNavigationFailure(result, NavigationFailureType.duplicated)`.
+    explanation_en: >
+      A navigation aborted by a guard (`false`, type `aborted`), cancelled by a newer navigation (`cancelled`), or
+      duplicated (`duplicated`) does not reject the promise; it resolves with a `NavigationFailure` object. Success is indicated by `undefined`, so the status is
+      checked via `isNavigationFailure(result, NavigationFailureType.duplicated)`.
     sources:
       - https://router.vuejs.org/guide/advanced/navigation-failures.html
 
@@ -235,19 +334,29 @@ questions:
     level: senior
     type: multiple
     text: "Які твердження про guard-и й лінивий `component: () => import(…)` у Vue Router 5.5 правильні?"
+    text_en: "Which statements about guards and a lazy `component: () => import(…)` in Vue Router 5.5 are true?"
     options:
       - text: '`beforeEnter` не спрацьовує, коли змінюються лише `params`, `query` чи `hash` маршруту'
+        text_en: '`beforeEnter` does not fire when only the `params`, `query`, or `hash` of the route change'
         correct: true
       - text: Відхилений динамічний `import()` скасовує навігацію й передає помилку в `router.onError`
+        text_en: A rejected dynamic `import()` cancels the navigation and passes the error to `router.onError`
         correct: true
       - text: Проміс із `beforeEach` затримує навігацію, доки він не завершиться
+        text_en: A promise from `beforeEach` delays the navigation until it settles
         correct: true
       - text: '`afterEach` може скасувати навігацію, якщо повернути з нього `false`, як і `beforeEach`'
+        text_en: '`afterEach` can cancel the navigation by returning `false`, just like `beforeEach`'
       - text: '`beforeEnter` викликається щоразу, коли на тому самому маршруті змінюється значення `route.params`'
+        text_en: '`beforeEnter` is called every time `route.params` changes on the same route'
     explanation: >
       `beforeEnter` реагує лише на вхід у маршрут, а зміни параметрів у межах нього обробляють `beforeEach` чи
       `beforeRouteUpdate`. Помилка завантаження чанка зупиняє навігацію і потрапляє в `router.onError`, а `afterEach`
       викликається після підтвердження переходу й вплинути на нього вже не може.
+    explanation_en: >
+      `beforeEnter` reacts only to entering the route, while parameter changes within it are handled by `beforeEach`
+      or `beforeRouteUpdate`. A chunk loading error stops the navigation and goes to `router.onError`, and
+      `afterEach` is called after the navigation is confirmed and can no longer affect it.
     sources:
       - https://router.vuejs.org/guide/advanced/navigation-guards.html#Per-Route-Guard
 
@@ -257,6 +366,9 @@ questions:
     text: >
       Vue Router 5.5. У розробці консоль показує попередження про можливе нескінченне перенаправлення в guard-і, а перехід
       на будь-яку сторінку не відбувається. Яка причина в цьому guard-і?
+    text_en: >
+      Vue Router 5.5. In development, the console shows a warning about a possible infinite redirect in a guard, and
+      navigation to any page does not happen. What is the cause in this guard?
     code:
       lang: js
       source: |
@@ -267,13 +379,21 @@ questions:
         })
     options:
       - text: Guard повертає `/login` і для самого `/login`, тож перенаправлення повторюється
+        text_en: The guard returns `/login` even for `/login` itself, so the redirect repeats
         correct: true
       - text: Guard треба оголосити `async`, інакше він блокує потік і навігація не завершується
+        text_en: The guard must be declared `async`, otherwise it blocks the thread and the navigation never completes
       - text: Гостьовий редирект із guard-а можливий лише через `router.push('/login')`, а не через `return`
+        text_en: A guest redirect from a guard is possible only via `router.push('/login')`, not via `return`
       - text: Повернення рядка з guard-а не підтримується, і роутер щоразу повторює навігацію
+        text_en: Returning a string from a guard is not supported, and the router retries the navigation every time
     explanation: >
       Редирект на `/login` теж проходить через `beforeEach`, де умова знову істинна, тому роутер зациклюється й
       обриває навігацію з помилкою. Редирект має бути умовним: виключити сам `/login`, наприклад перевіркою
       `to.path !== '/login'` або полем `meta`.
+    explanation_en: >
+      The redirect to `/login` also goes through `beforeEach`, where the condition is true again, so the router
+      loops and aborts the navigation with an error. The redirect must be conditional: exclude `/login` itself, for
+      example with a `to.path !== '/login'` check or a `meta` field.
     sources:
       - https://router.vuejs.org/guide/advanced/navigation-guards.html#Global-Before-Guards

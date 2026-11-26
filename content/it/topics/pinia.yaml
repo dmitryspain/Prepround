@@ -3,12 +3,12 @@ title: Pinia
 title_en: Pinia
 description: Stores, state/getters/actions, плагіни, порівняння з Vuex.
 description_en: Stores, state/getters/actions, plugins, comparison with Vuex.
-draft: true
 questions:
   - id: pinia-001
     level: junior
     type: single
     text: Що з визначеного в setup-функції стору Pinia (Pinia 4, `defineStore('id', () => { … })`) перетворюється на getters?
+    text_en: Which part of a Pinia setup store (Pinia 4, `defineStore('id', () => { … })`) becomes getters?
     code:
       lang: js
       source: |
@@ -20,13 +20,20 @@ questions:
         })
     options:
       - text: Значення, створені через `computed()`, тут це `total`
+        text_en: Values created with `computed()`, here `total`
         correct: true
       - text: Усі повернені значення, які містять у назві слово `total` або `count`
+        text_en: Every returned value whose name contains the word `total` or `count`
       - text: Значення, створені через `ref()`, тут це `items`
+        text_en: Values created with `ref()`, here `items`
       - text: Функції, які повертають значення і не змінюють `ref`, тут це `add`
+        text_en: Functions that return a value and do not change any `ref`, here `add`
     explanation: >
       У setup-сторі `ref()` стає state, `computed()` стає getter, а функція стає action. `items` лишається state,
       а `add` є action незалежно від того, чи вона щось повертає.
+    explanation_en: >
+      In a setup store, `ref()` becomes state, `computed()` becomes a getter, and a function becomes an action. `items` stays
+      state, and `add` is an action whether or not it returns anything.
     sources:
       - https://pinia.vuejs.org/core-concepts/#setup-stores
 
@@ -34,22 +41,30 @@ questions:
     level: junior
     type: single
     text: Що буде в `count` після виклику `store.increment()`, якщо стор створено через `defineStore` з полем `count` у state, а компонент зробив так?
+    text_en: What will `count` hold after `store.increment()` is called, if the store is created with `defineStore` with a `count` field in state and the component did this?
     code:
       lang: js
       source: |
         const store = useCounterStore()
-        const { count } = store      // count був 0
-        store.increment()            // збільшує this.count на 1
+        const { count } = store      // count was 0
+        store.increment()            // increments this.count by 1
         console.log(count)
     options:
       - text: '`0`: деструктуризація скопіювала значення, зв’язок із реактивним станом втрачено'
+        text_en: '`0`: destructuring copied the value, so the link to the reactive state is lost'
         correct: true
       - text: '`1`: Pinia обгортає кожну властивість у `ref`, тож `count` стежить за стором'
+        text_en: '`1`: Pinia wraps every property in a `ref`, so `count` follows the store'
       - text: '`undefined`: state-властивості стору не можна читати через деструктуризацію'
+        text_en: '`undefined`: state properties of a store cannot be read through destructuring'
       - text: '`1`, але лише якщо `increment` оголошено як action, а не метод'
+        text_en: '`1`, but only if `increment` is declared as an action rather than a method'
     explanation: >
       Стор — це `reactive`-об'єкт, тому деструктуризація примітивів дає звичайні копії. Щоб зберегти реактивність, використовують
       `storeToRefs(store)`; actions можна деструктурувати напряму.
+    explanation_en: >
+      A store is a `reactive` object, so destructuring primitives produces plain copies. To keep reactivity, use
+      `storeToRefs(store)`; actions can be destructured directly.
     sources:
       - https://pinia.vuejs.org/core-concepts/#destructuring-from-a-store
 
@@ -57,6 +72,7 @@ questions:
     level: junior
     type: single
     text: Як у Pinia 4 в option store отримати в getter значення іншого getter?
+    text_en: In Pinia 4, how do you get the value of another getter inside a getter of an option store?
     code:
       lang: js
       source: |
@@ -69,13 +85,22 @@ questions:
         })
     options:
       - text: Оголосити getter звичайною функцією й звернутися до `this.count`
+        text_en: Declare the getter as a regular function and read `this.count`
         correct: true
       - text: "Стрілка з другим параметром, як у Vuex: `(state, getters) => getters.count * 2`"
+        text_en: 'An arrow function with a second parameter, as in Vuex: `(state, getters) => getters.count * 2`'
       - text: Імпортувати `useStatsStore` усередині getter і викликати `store.count()`
+        text_en: Import `useStatsStore` inside the getter and call `store.count()`
       - text: Записати `count` у state, бо getter не може залежати від getter
+        text_en: Put `count` in state, because a getter cannot depend on another getter
     explanation: >
       У звичайній функції `this` — екземпляр усього стору, тож через нього видно інші getters. Другого параметра `getters`, як у Vuex,
-      Pinia не передає: він буде `undefined`, і звернення до `getters.count` завершиться помилкою.
+      Pinia не передає: він буде `undefined`, і звернення до `getters.count` завершиться помилкою. Значення getter — число, а не функція,
+      тому `store.count()` теж кине помилку.
+    explanation_en: >
+      In a regular function, `this` is the instance of the whole store, so other getters are visible through it. Pinia does not
+      pass a second `getters` parameter as Vuex does: it is `undefined`, so accessing `getters.count` throws an error. A getter
+      value is a number, not a function, so `store.count()` throws too.
     sources:
       - https://pinia.vuejs.org/core-concepts/getters.html#Accessing-other-getters
 
@@ -83,18 +108,27 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про відмінності Pinia 4 від Vuex правильні?
+    text_en: Which statements about the differences between Pinia 4 and Vuex are true?
     options:
       - text: Мутацій немає, стан можна змінювати в actions або безпосередньо через `store.firstName = 'Ann'`
+        text_en: There are no mutations; state can be changed in actions or directly via `store.firstName = 'Ann'`
         correct: true
       - text: Вкладених модулів немає, замість них кожен стор визначають окремо через `defineStore`
+        text_en: There are no nested modules; each store is defined separately with `defineStore`
         correct: true
       - text: Actions можуть бути синхронними або асинхронними, окремого шару для асинхронності не потрібно
+        text_en: Actions can be synchronous or asynchronous, and no separate layer for asynchronous work is needed
         correct: true
       - text: Зміна стану поза мутацією не потрапляє в devtools, тож мутації лишаються обов'язковими
+        text_en: A state change made outside a mutation does not reach devtools, so mutations remain mandatory
       - text: Усі стори мають бути зареєстровані в кореневому сторі через поле `modules` у `createPinia`
+        text_en: All stores must be registered in a root store through the `modules` field of `createPinia`
     explanation: >
       У Pinia мутацій не існує: їх замінюють actions або пряме присвоєння, а devtools бачить обидва шляхи. Модулі Vuex теж зникли,
       і кожен стор самодостатній та імпортується там, де потрібен.
+    explanation_en: >
+      Pinia has no mutations: actions or direct assignment replace them, and devtools sees both paths. Vuex modules are gone as
+      well, and each store is self-contained and imported where it is needed.
     sources:
       - https://pinia.vuejs.org/cookbook/migration-vuex.html
       - https://pinia.vuejs.org/introduction.html
@@ -103,22 +137,30 @@ questions:
     level: middle
     type: single
     text: Чому для додавання елемента в масив у state зазвичай радять `$patch` із функцією, а не з об'єктом?
+    text_en: Why is `$patch` with a function usually recommended over an object when adding an item to an array in state?
     code:
       lang: js
       source: |
-        // варіант А
+        // option A
         store.$patch({ items: [...store.items, newItem] })
-        // варіант Б
+        // option B
         store.$patch((state) => { state.items.push(newItem) })
     options:
       - text: Об'єктний `$patch` змушує створювати нову колекцію, а функція змінює масив на місці
+        text_en: An object `$patch` forces you to build a new collection, while the function mutates the array in place
         correct: true
       - text: Об'єктний `$patch` не викликає підписки `$subscribe`, а функціональний викликає
+        text_en: An object `$patch` does not trigger `$subscribe` subscriptions, while the function form does
       - text: Об'єктний `$patch` працює лише з примітивами, а масиви в ньому ігноруються
+        text_en: An object `$patch` works only with primitives, and arrays in it are ignored
       - text: Функціональний `$patch` робить зміну асинхронно, тому не блокує рендер
+        text_en: A function `$patch` applies the change asynchronously, so it does not block rendering
     explanation: >
       Об'єктний `$patch` зливає частковий стан, і колекцію для нього треба передати цілком, тобто створити копію з усіма старими
       елементами. Функція отримує реактивний `state` і дозволяє зробити `push` чи `splice` одним групованим оновленням.
+    explanation_en: >
+      An object `$patch` merges partial state, so the collection must be passed in full, which means making a copy with all the old
+      items. The function receives the reactive `state` and lets you `push` or `splice` in a single grouped update.
     sources:
       - https://pinia.vuejs.org/core-concepts/state.html#Mutating-the-state
 
@@ -126,6 +168,7 @@ questions:
     level: middle
     type: single
     text: Що станеться під час виклику `store.$reset()` у режимі розробки (`NODE_ENV` не `production`) на сторі, оголошеному setup-синтаксисом (Pinia 4), якщо власного `$reset` у ньому немає?
+    text_en: What happens when `store.$reset()` is called in development mode (`NODE_ENV` is not `production`) on a store defined with the setup syntax (Pinia 4), if it has no `$reset` of its own?
     code:
       lang: js
       source: |
@@ -136,20 +179,30 @@ questions:
         useA().$reset()
     options:
       - text: Pinia кине помилку, що setup-стор не реалізує `$reset()`
+        text_en: Pinia throws an error saying the setup store does not implement `$reset()`
         correct: true
       - text: Усі `ref` у сторі повернуться до значень, з якими їх було створено
+        text_en: Every `ref` in the store returns to the value it was created with
       - text: Виклик нічого не зробить і мовчки завершиться
+        text_en: The call does nothing and finishes silently
       - text: "Скинеться лише state, оголошений у початковому об'єкті `state: () => ({})`"
+        text_en: 'Only the state declared in the initial `state: () => ({})` object is reset'
     explanation: >
       `$reset()` покладається на фабрику `state()`, яка є лише в option store. У setup-сторі Pinia не знає, які початкові значення мали
-      `ref`, тож треба написати власний `$reset` (наприклад, у плагіні) або функцію-action, що повертає початкові значення.
+      `ref`, тож у режимі розробки кидає помилку, а в production виклик нічого не робить. Скидання треба написати самому: власним `$reset`
+      (наприклад, у плагіні) або action, що повертає початкові значення.
+    explanation_en: >
+      `$reset()` relies on the `state()` factory, which exists only in option stores. In a setup store Pinia does not know the
+      initial values of each `ref`, so in development mode it throws an error, while in production the call does nothing. You have
+      to write the reset yourself: a custom `$reset` (for example, in a plugin) or an action that returns the initial values.
     sources:
       - https://pinia.vuejs.org/core-concepts/state.html#Resetting-the-state
 
   - id: pinia-007
     level: middle
     type: single
-    text: Файл `router.js` на рівні модуля викликає `useAuthStore()`, а `main.js` імпортує його до `app.use(pinia)`. Що станеться і як це виправити?
+    text: У режимі розробки файл `router.js` на рівні модуля викликає `useAuthStore()`, а `main.js` імпортує його до `app.use(pinia)`. Що станеться і як це виправити?
+    text_en: In development mode, the file `router.js` calls `useAuthStore()` at module level, and `main.js` imports it before `app.use(pinia)`. What happens, and how do you fix it?
     code:
       lang: js
       source: |
@@ -158,13 +211,20 @@ questions:
         router.beforeEach((to) => !to.meta.private || auth.loggedIn)
     options:
       - text: Помилка про відсутню активну Pinia; виклик переносять у guard або передають `pinia` аргументом
+        text_en: An error about a missing active Pinia; move the call into the guard or pass `pinia` as an argument
         correct: true
       - text: Pinia створить власний прихований екземпляр і тихо працюватиме, тож виправляти нічого не треба
+        text_en: Pinia creates its own hidden instance and works silently, so nothing needs fixing
       - text: Стор створиться, але лишиться порожнім, поки `app.use(pinia)` не оновить його стан
+        text_en: The store is created but stays empty until `app.use(pinia)` updates its state
       - text: Виклик повернеться порожнім `undefined`, тому стор треба імпортувати через `import()`
+        text_en: The call returns an empty `undefined`, so the store has to be imported through `import()`
     explanation: >
       `useStore()` бере активний екземпляр Pinia, який встановлюється під час `app.use(pinia)` або вручну через `setActivePinia`.
       До цього моменту його немає, тому виклик кидає помилку; перенесений у guard, він виконається вже після встановлення.
+    explanation_en: >
+      `useStore()` takes the active Pinia instance, which is set when `app.use(pinia)` runs or manually through `setActivePinia`.
+      Until then there is none, so the call throws an error; moved into a guard, it runs after the instance is installed.
     sources:
       - https://pinia.vuejs.org/core-concepts/outside-component-usage.html
 
@@ -172,18 +232,28 @@ questions:
     level: middle
     type: multiple
     text: Які твердження про `store.$onAction(({ name, args, after, onError }) => …)` у Pinia 4 правильні?
+    text_en: Which statements about `store.$onAction(({ name, args, after, onError }) => …)` in Pinia 4 are true?
     options:
       - text: Колбек викликається до виконання action і отримує його назву та аргументи
+        text_en: The callback runs before the action executes and receives its name and arguments
         correct: true
       - text: Колбек `after` отримує значення, яке повернув action, а для async-action — значення, з яким проміс завершився
+        text_en: The `after` callback receives the value the action returned, or for an async action, the value its promise resolved with
         correct: true
       - text: Колбек `onError` викликається, якщо action кинув помилку або його проміс відхилено
+        text_en: The `onError` callback runs if the action throws an error or its promise is rejected
         correct: true
       - text: Підписка спрацьовує і на пряму зміну `store.count++`, бо реагує на кожну зміну стану
+        text_en: The subscription also fires on a direct change like `store.count++`, because it reacts to every state change
       - text: Підписка, додана в `setup()`, залишається активною після демонтажу компонента за замовчуванням
+        text_en: A subscription added in `setup()` stays active after the component is unmounted by default
     explanation: >
       `$onAction` стежить лише за викликами actions і дає хуки `after` та `onError`. Прямі зміни стану ловить `$subscribe`. Підписка з `setup()` прив'язана
       до компонента й знімається разом із ним, якщо другим аргументом не передати `true`.
+    explanation_en: >
+      `$onAction` tracks only action calls and provides the `after` and `onError` hooks. Direct state changes are caught by
+      `$subscribe`. A subscription from `setup()` is bound to the component and removed along with it, unless `true` is passed as
+      the second argument.
     sources:
       - https://pinia.vuejs.org/core-concepts/actions.html#Subscribing-to-actions
 
@@ -191,15 +261,24 @@ questions:
     level: senior
     type: single
     text: SSR-застосунок на Vue 3.5 і Pinia 4 створює один `pinia` на рівні модуля, а guard викликає `useMainStore()` без аргументів. Під навантаженням користувач бачить дані іншого. Що причина і що робити?
+    text_en: An SSR application on Vue 3.5 and Pinia 4 creates one `pinia` at module level, and a guard calls `useMainStore()` without arguments. Under load, a user sees another user's data. What is the cause and what should be done?
     options:
       - text: Стан спільний для запитів на сервері; створювати `createPinia()` на кожен запит і передавати його у `useMainStore(pinia)`
+        text_en: State is shared between requests on the server; create `createPinia()` for each request and pass it to `useMainStore(pinia)`
         correct: true
       - text: Pinia не підтримує серверний рендеринг, тому стан доводиться тримати у `localStorage`
+        text_en: Pinia does not support server-side rendering, so state has to be kept in `localStorage`
       - text: Потрібно викликати `$reset()` на початку кожного запиту й лишити один спільний екземпляр pinia
+        text_en: Call `$reset()` at the start of each request and keep one shared pinia instance
       - text: "Дані течуть через кеш браузера, тому достатньо додати до відповідей заголовок `Cache-Control: no-store`"
+        text_en: 'The data leaks through the browser cache, so adding a `Cache-Control: no-store` header to responses is enough'
     explanation: >
       Модульний екземпляр живе весь час роботи процесу, тож стан одного запиту потрапляє до наступних, а `useStore()` без аргументу поза `setup`
       може взяти не той активний pinia. Документація радить передавати pinia поточного застосунку, а свіжий екземпляр на запит прибирає саму причину витоку.
+    explanation_en: >
+      A module-level instance lives as long as the process, so one request's state leaks into the next ones, and `useStore()`
+      without an argument outside `setup` may pick the wrong active pinia. The documentation advises passing the pinia of the
+      current app, and a fresh instance per request removes the cause of the leak.
     sources:
       - https://pinia.vuejs.org/ssr/#Using-the-store-outside-of-setup()
       - https://vuejs.org/guide/scaling-up/ssr.html#cross-request-state-pollution
@@ -208,6 +287,7 @@ questions:
     level: senior
     type: multiple
     text: Які твердження про плагіни Pinia 4 (`pinia.use(plugin)`) правильні?
+    text_en: Which statements about Pinia 4 plugins (`pinia.use(plugin)`) are true?
     code:
       lang: js
       source: |
@@ -218,16 +298,24 @@ questions:
         app.use(pinia)
     options:
       - text: Плагін викликається один раз для кожного створеного стору й отримує його екземпляр у `context.store`
+        text_en: The plugin is called once for each created store and receives its instance in `context.store`
         correct: true
       - text: Плагін не застосується до сторів, створених до того, як pinia передано в застосунок
+        text_en: The plugin is not applied to stores created before pinia is passed to the app
         correct: true
       - text: Властивість, додана як `store.secret`, не входить у `store.$state`, тож на SSR не серіалізується
+        text_en: A property added as `store.secret` is not part of `store.$state`, so it is not serialized during SSR
         correct: true
       - text: Плагін одразу застосовується й до вже створених сторів, тому порядок створення неважливий
+        text_en: The plugin is applied immediately to already created stores too, so creation order does not matter
       - text: Усі властивості, додані плагіном, потрапляють у `store.$state` і серіалізуються автоматично
+        text_en: All properties added by the plugin end up in `store.$state` and are serialized automatically
     explanation: >
       Pinia запускає плагіни під час створення стору, а до встановлення в застосунок вони не працюють. Звичайна властивість на сторі
       не є state; щоб вона серіалізувалась і гідратувалась, її додають ще й у `store.$state`.
+    explanation_en: >
+      Pinia runs plugins when a store is created, and they do not work before pinia is installed in the app. A regular property on
+      a store is not state; to have it serialized and hydrated, it must also be added to `store.$state`.
     sources:
       - https://pinia.vuejs.org/core-concepts/plugins.html#Introduction
       - https://pinia.vuejs.org/core-concepts/plugins.html#Adding-new-state
@@ -236,39 +324,57 @@ questions:
     level: senior
     type: single
     text: У setup-сторі Pinia 4 `ref` для кешу оголошено, але не повернено з функції. Що це означає для стору?
+    text_en: In a Pinia 4 setup store, a `ref` for a cache is declared but not returned from the function. What does this mean for the store?
     code:
       lang: js
       source: |
         const useSearch = defineStore('search', () => {
           const query = ref('')
-          const cache = ref({})   // не повертається
-          function run() { /* пише в cache */ }
+          const cache = ref({})   // not returned
+          function run() { /* writes to cache */ }
           return { query, run }
         })
     options:
       - text: Pinia не бачить `cache` як state, тому його немає в `$state`, devtools, SSR-серіалізації й плагінах
+        text_en: Pinia does not see `cache` as state, so it is missing from `$state`, devtools, SSR serialization, and plugins
         correct: true
       - text: Це коректний спосіб зробити приватний state, який Pinia серіалізує разом з рештою
+        text_en: This is a valid way to make private state that Pinia serializes together with the rest
       - text: Pinia додасть `cache` до стору автоматично, бо шукає всі `ref` у замиканні функції
+        text_en: Pinia adds `cache` to the store automatically, because it scans every `ref` in the function's closure
       - text: Лише devtools не покажуть `cache`, а SSR-гідратація й `$patch` працюватимуть із ним як зазвичай
+        text_en: Only devtools will not show `cache`, while SSR hydration and `$patch` will work with it as usual
     explanation: >
       Pinia збирає state з того, що повертає setup, тож неповернений `ref` лишається звичайною локальною змінною. Внаслідок цього не працюють
       SSR-гідратація, devtools і плагіни, а приватного state в setup-сторах немає.
+    explanation_en: >
+      Pinia collects state from what the setup function returns, so an unreturned `ref` stays an ordinary local variable. As a
+      result SSR hydration, devtools, and plugins do not work with it, and setup stores have no private state.
     sources:
       - https://pinia.vuejs.org/core-concepts/#setup-stores
 
   - id: pinia-012
     level: senior
     type: single
-    text: Стори `useX` і `useY` у Pinia 4 мають залежати один від одного. Яке рішення відповідає правилу композиції сторів?
+    text: Стори `useX` і `useY` у Pinia 4 мають користуватися один одним. Яке рішення відповідає правилу композиції сторів?
+    text_en: Stores `useX` and `useY` in Pinia 4 need to use each other. Which solution follows the store composition rule?
     options:
-      - text: Читати стан іншого стору в getters або actions, а не обох одночасно напряму в setup
+      - text: Не читати чужий state в setup обох сторів; звертатися до нього в getters чи actions без циклу викликів
+        text_en: Do not read the other store's state in both setups; access it in getters or actions without a call cycle
         correct: true
       - text: Об'єднати їх в один стор, бо Pinia не дозволяє стору викликати інший стор
-      - text: Викликати `useY()` у setup `useX` і `useX()` у setup `useY` та читати state одне одного на старті
+        text_en: Merge them into one store, because Pinia does not allow a store to call another store
+      - text: Викликати `useY()` у setup `useX` і `useX()` у setup `useY` та читати `name` одне одного на старті
+        text_en: Call `useY()` in the setup of `useX` and `useX()` in the setup of `useY`, and read each other's `name` at startup
       - text: Створити для кожного стору окремий екземпляр pinia, щоб вони не заважали одне одному
+        text_en: Create a separate pinia instance for each store so that they do not interfere with each other
     explanation: >
-      Стори можуть користуватися один одним, але два стори не можуть одночасно напряму читати чужий state у setup: один зі сторів
-      прочитає ще не готовий (`undefined`) стан іншого. Читання всередині getter чи action відкладене до виклику, тож стан уже буде ініціалізований.
+      Стори можуть користуватися один одним, але не можуть обидва напряму читати state одне одного в setup: стор, який створюється
+      першим, ще не завершив setup, тож другий прочитає `undefined`. Читання всередині getter чи action відкладене до виклику, тож стан
+      уже ініціалізований; єдина умова — не будувати нескінченний цикл викликів через getters чи actions.
+    explanation_en: >
+      Stores may use each other, but both cannot directly read each other's state in setup: the store created first has not
+      finished its setup, so the second one reads `undefined`. Reading inside a getter or action is deferred until the call, so the
+      state is already initialized; the only condition is not to build an infinite call loop through getters or actions.
     sources:
       - https://pinia.vuejs.org/cookbook/composing-stores.html

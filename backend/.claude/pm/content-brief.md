@@ -83,7 +83,7 @@
 - **Node:** Node 26 LTS (запуск на 24), TypeScript 7.0, Express 5.3, Fastify 5.12, NestJS 12.5, Prisma 7.10 (8.0 ще RC, не беремо), TypeORM 1.1.
 - **Go** (реєстри, 2026-11-17): Go 1.27 (запуск на `golang:1.27-alpine`), Gin 1.12, Echo v5.4, sqlx 1.4, GORM 1.31, pgx v5.13.
 - **PHP** (реєстри, 2026-11-17): PHP 8.5, Laravel 13, Symfony 8.1, Doctrine ORM 3.8, PHPUnit 13.4, Composer 2.
-- **Frontend** (npm, 2026-11-18): Angular 22.2 (standalone, signals, zoneless — типово з 21), RxJS 7.8 (8/9 — лише beta, не беремо), NgRx 22 (Store і SignalStore); React 19.3, Next.js 16.4 (App Router), TanStack Query 5, React Router 8.5, Redux Toolkit 2.14, Zustand 5.1; Vue 3.5, Nuxt 4.6, Pinia 4.1, Vue Router 5.5; Vite 8, Vitest 5, Testing Library (React 16), Playwright 1.65.
+- **Frontend** (npm, 2026-11-18): Angular 22.2 (standalone, signals, zoneless — типово з 21; з 22 типова стратегія — `OnPush`, а колишня `Default` зветься `Eager`, підтверджено запуском 2026-11-27), RxJS 7.8 (8/9 — лише beta, не беремо), NgRx 22 (Store і SignalStore); React 19.3, Next.js 16.4 (App Router), TanStack Query 5, React Router 8.5, Redux Toolkit 2.14, Zustand 5.1; Vue 3.5, Nuxt 4.6, Pinia 4.1, Vue Router 5.5; Vite 8, Vitest 5, Testing Library (React 16), Playwright 1.65.
 - **Стек без бази тут:** візьми актуальну stable одним WebSearch і назви її у звіті. Головна сесія допише її сюди й в ADR 004, розділ 5.
 
 ## Запуск коду
