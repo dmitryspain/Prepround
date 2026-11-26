@@ -27,14 +27,15 @@ internal static class TranslatedFixture
     }
 
     /// <summary>
-    /// <c>title_en</c>, <c>description_en</c> and <c>draft_en: true</c> of topic alpha, plus the full translation of
-    /// alpha-001: <c>text_en</c>, <c>explanation_en</c> and <c>text_en</c> of both options. alpha-002 stays untranslated.
+    /// <c>title_en</c> and <c>description_en</c> of topic alpha, plus the full translation of alpha-001: <c>text_en</c>,
+    /// <c>explanation_en</c> and <c>text_en</c> of both options. alpha-002 stays untranslated, so alpha keeps the
+    /// <c>draft_en: true</c> of <see cref="ContentFixture"/> (rule 12).
     /// </summary>
     public static void TranslateAlphaAndItsFirstQuestion(ContentFixture content)
     {
         content.Replace(ContentFixture.AlphaFile, "title: Alpha\n", $"title: Alpha\ntitle_en: {TopicTitle}\n");
         content.Replace(ContentFixture.AlphaFile, "description: Перша тема.\n",
-            $"description: Перша тема.\ndescription_en: {TopicDescription}\ndraft_en: true\n");
+            $"description: Перша тема.\ndescription_en: {TopicDescription}\n");
         content.Replace(ContentFixture.AlphaFile, "    text: Питання з одним варіантом?\n",
             $"    text: Питання з одним варіантом?\n    text_en: {QuestionText}\n");
         content.Replace(ContentFixture.AlphaFile, "      - text: Так\n", $"      - text: Так\n        text_en: \"{FirstOption}\"\n");

@@ -5,8 +5,9 @@ namespace Prepround.Tests.Content;
 
 /// <summary>
 /// Rule 11 (PRP-025, ADR 006): a translated value is never blank, a question is translated into a language
-/// completely or not at all, and its translated options do not repeat. Each test breaks one thing in a valid,
-/// fully translated field.
+/// completely or not at all, and its translated options do not repeat. Rule 12 (PRP-031): a topic without
+/// <c>draft: true</c> and <c>draft_en: true</c> is published in English and has all of it. Each test breaks one thing
+/// in a valid, fully translated field whose topic is published in English.
 /// </summary>
 public class ContentValidatorTranslationTests
 {
@@ -23,11 +24,117 @@ public class ContentValidatorTranslationTests
     }
 
     [Fact]
-    public void Untranslated_question_next_to_a_translated_one_has_no_errors()
+    public void Untranslated_question_next_to_a_translated_one_has_no_errors_while_the_topic_holds_english_back()
+    {
+        // Rule 11 takes "none"; only rule 12 asks for more, and draft_en lifts it (the way translation waves work).
+        var field = WithQuestion(Field(), Untranslated(Question()));
+
+        Assert.Empty(_validator.Validate([WithAlpha(field, alpha => alpha with { DraftLanguages = new HashSet<string> { "en" } })]));
+    }
+
+    [Fact]
+    public void Untranslated_question_in_a_topic_published_in_english_is_one_error_with_the_file_id_and_language()
     {
         var field = WithQuestion(Field(), Untranslated(Question()));
 
+        var error = Assert.Single(_validator.Validate([field]));
+
+        Assert.Equal(new ContentError(AlphaFile, "alpha-001",
+            "Тема опублікована мовою en, а перекладу питання цією мовою немає. " +
+            "Потрібні text_en, explanation_en і text_en кожного варіанта або позначка теми draft_en: true."), error);
+    }
+
+    [Fact]
+    public void Every_untranslated_question_of_a_published_topic_is_reported_not_only_the_first()
+    {
+        var alpha = Field().Topics[0];
+        var field = WithAlpha(Field(), _ => alpha with { Questions = alpha.Questions.Select(Untranslated).ToList() });
+
+        var errors = _validator.Validate([field]);
+
+        Assert.Equal(["alpha-001", "alpha-002"], errors.Select(error => error.Id));
+        Assert.All(errors, error => Assert.StartsWith("Тема опублікована мовою en, ", error.Message));
+    }
+
+    [Theory]
+    [InlineData("draft_en")]
+    [InlineData("draft")]
+    [InlineData("both")]
+    public void Draft_or_draft_en_lifts_rule_12_from_a_topic_without_any_english(string flag)
+    {
+        var alpha = Field().Topics[0] with
+        {
+            TitleTranslations = TranslatedTexts.None,
+            DescriptionTranslations = TranslatedTexts.None,
+            Questions = [Untranslated(Question()), Untranslated(Question()) with { Id = "alpha-002" }],
+            IsDraft = flag is "draft" or "both",
+            DraftLanguages = flag is "draft_en" or "both" ? new HashSet<string> { "en" } : new HashSet<string>(),
+        };
+
+        Assert.Empty(_validator.Validate([WithAlpha(Field(), _ => alpha)]));
+        // Control: the same topic without either flag breaks rule 12 four times (title, description, two questions).
+        Assert.Equal(4, _validator.Validate([WithAlpha(Field(), _ => alpha with { IsDraft = false, DraftLanguages = new HashSet<string>() })]).Count);
+    }
+
+    [Fact]
+    public void Topic_published_in_english_without_title_en_is_an_error()
+    {
+        var field = WithAlpha(Field(), alpha => alpha with { TitleTranslations = TranslatedTexts.None });
+
+        var error = Assert.Single(_validator.Validate([field]));
+
+        Assert.Equal(new ContentError(AlphaFile, "alpha",
+            "Тема опублікована мовою en, а title_en немає. Перекладіть назву або позначте тему draft_en: true."), error);
+    }
+
+    [Fact]
+    public void Topic_published_in_english_with_a_description_but_without_description_en_is_an_error()
+    {
+        var field = WithAlpha(Field(), alpha => alpha with { DescriptionTranslations = TranslatedTexts.None });
+
+        var error = Assert.Single(_validator.Validate([field]));
+
+        Assert.Equal(new ContentError(AlphaFile, "alpha",
+            "Тема опублікована мовою en, а description_en немає. Перекладіть опис або позначте тему draft_en: true."), error);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void Topic_published_in_english_without_a_description_needs_no_description_en(string description)
+    {
+        var field = WithAlpha(Field(), alpha => alpha with { Description = description, DescriptionTranslations = TranslatedTexts.None });
+
         Assert.Empty(_validator.Validate([field]));
+    }
+
+    [Fact]
+    public void Empty_draft_topic_breaks_no_rule_and_an_empty_published_one_still_needs_title_en()
+    {
+        var empty = Field().Topics[0] with
+        {
+            TitleTranslations = TranslatedTexts.None,
+            DescriptionTranslations = TranslatedTexts.None,
+            Questions = [],
+        };
+
+        Assert.Empty(_validator.Validate([WithAlpha(Field(), _ => empty with { IsDraft = true })]));
+        var errors = _validator.Validate([WithAlpha(Field(), _ => empty)]);
+        Assert.Equal(2, errors.Count);
+        Assert.Contains("а title_en немає", errors[0].Message);
+        Assert.Contains("а description_en немає", errors[1].Message);
+    }
+
+    [Fact]
+    public void Rule_12_holds_in_every_field_and_names_the_file_of_the_topic()
+    {
+        var other = new FieldDefinition("med/field.yaml", "med", "Медицина", [new LevelDefinition("phd", "PhD")], [],
+            [new TopicDefinition("med/topics/anatomy.yaml", "anatomy", "Анатомія", "", [])]);
+
+        var error = Assert.Single(_validator.Validate([Field(), other]));
+
+        Assert.Equal(("med/topics/anatomy.yaml", "anatomy"), (error.File, error.Id));
+        Assert.Contains("title_en", error.Message);
     }
 
     [Fact]
@@ -170,6 +277,26 @@ public class ContentValidatorTranslationTests
     }
 
     [Fact]
+    public void Rule_12_does_not_run_when_the_reader_found_errors()
+    {
+        // ADR 002, "Уточнення реалізації": a half-read catalog is not checked by the rules, rule 12 included.
+        using var content = new ContentFixture();
+        content.PublishInEnglish(ContentFixture.AlphaFile);
+        content.Replace(ContentFixture.BetaFile, "title: Beta", "title: Beta\ntitel_en: Beta");
+        var loader = new ContentLoader(new YamlContentReader(), _validator);
+
+        var error = Assert.Single(loader.Load(content.Root).Errors);
+        Assert.Equal((ContentFixture.BetaFile, "beta"), (error.File, error.Id));
+        Assert.Contains("«titel_en»", error.Message);
+
+        // Control: without the reader error the same alpha breaks rule 12 (title, description, both questions).
+        content.Replace(ContentFixture.BetaFile, "titel_en: Beta", "# titel_en: Beta");
+        var ruleErrors = loader.Load(content.Root).Errors;
+        Assert.Equal(["alpha", "alpha", "alpha-001", "alpha-002"], ruleErrors.Select(ruleError => ruleError.Id));
+        Assert.All(ruleErrors, ruleError => Assert.StartsWith("Тема опублікована мовою en, ", ruleError.Message));
+    }
+
+    [Fact]
     public void Rule_11_does_not_run_when_the_reader_found_errors()
     {
         // ADR 002, "Уточнення реалізації": a half-read catalog is not checked by the rules.
@@ -240,6 +367,9 @@ public class ContentValidatorTranslationTests
     {
         TitleTranslations = En("IT"),
     };
+
+    private static FieldDefinition WithAlpha(FieldDefinition field, Func<TopicDefinition, TopicDefinition> change) =>
+        field with { Topics = [change(field.Topics[0]), .. field.Topics.Skip(1)] };
 
     private static FieldDefinition WithQuestion(FieldDefinition field, QuestionDefinition question)
     {

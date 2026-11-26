@@ -250,17 +250,22 @@ public class CatalogEndpointTests(PostgresFixture postgres)
               - id: principal
                 title: Principal
             """);
+        // Translated, as rule 12 wants of a new question in a topic published in English.
         content.Write(SqlFile, content.Read(SqlFile) + $"""
 
               - id: {questionId}
                 level: lead-architect
                 type: single
                 text: Питання для рівня, якого в коді немає?
+                text_en: A question for a level the code does not know?
                 options:
                   - text: Так
+                    text_en: "Yes"
                     correct: true
                   - text: Ні
+                    text_en: "No"
                 explanation: Рівні — це дані з field.yaml.
+                explanation_en: Levels are data from field.yaml.
             """);
         await ImportAsync(db, content.Root);
 

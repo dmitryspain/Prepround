@@ -21,15 +21,17 @@ public partial class ImportCommandTests
     public async Task One_question_translation_is_added_updated_and_removed_and_the_questions_never_change()
     {
         var db = await postgres.CreateDatabaseAsync();
+        // sql holds English back while it is translated question by question (rule 12), so, as in translation
+        // waves, its translations reach the database only with --include-drafts: every import here has the flag.
         using var content = WithUntranslatedSql();
         var original = content.Read(SqlFile);
         // A multiple-choice question: OptionTexts must keep the file order of all its options.
         var question = RealTopic("sql").Questions.First(definition => definition.Type == "multiple" && definition.Options.Count > 3);
-        await ImportOkAsync(db, content.Root);
+        await ImportOkAsync(db, content.Root, IncludeDrafts);
         var baseRows = await PostgresFixture.SnapshotAsync(db);
 
         var english = TranslateQuestion(content, question.Id, "first");
-        var added = await RunIsolatedAsync(db, null, "import", content.Root);
+        var added = await RunIsolatedAsync(db, null, "import", content.Root, IncludeDrafts);
 
         Assert.True(added.ExitCode == SuccessExitCode, added.Output);
         Assert.Equal(Summary(translations: (1, 0, 0)), added.StdoutLines);
@@ -46,14 +48,14 @@ public partial class ImportCommandTests
 
         var afterAdd = await PostgresFixture.SnapshotAsync(db);
         // Quotes, <&>, é and the dash come back from jsonb escaped differently: still not an update.
-        var repeat = await RunIsolatedAsync(db, null, "import", content.Root);
+        var repeat = await RunIsolatedAsync(db, null, "import", content.Root, IncludeDrafts);
 
         Assert.True(repeat.ExitCode == SuccessExitCode, repeat.Output);
         Assert.Equal(NothingChanged, repeat.StdoutLines);
         Assert.Equal(afterAdd, await PostgresFixture.SnapshotAsync(db));
 
         content.Replace(SqlFile, Quoted(english.Explanation), Quoted(english.Explanation + " Changed."));
-        var explanationChanged = await RunIsolatedAsync(db, null, "import", content.Root);
+        var explanationChanged = await RunIsolatedAsync(db, null, "import", content.Root, IncludeDrafts);
 
         Assert.True(explanationChanged.ExitCode == SuccessExitCode, explanationChanged.Output);
         Assert.Equal(Summary(translations: (0, 1, 0)), explanationChanged.StdoutLines);
@@ -61,7 +63,7 @@ public partial class ImportCommandTests
         await AssertTranslationAsync(db, question.Id, english with { Explanation = english.Explanation + " Changed." });
 
         content.Replace(SqlFile, Quoted(english.Options[^1]), Quoted("Last option, reworded"));
-        var optionChanged = await RunIsolatedAsync(db, null, "import", content.Root);
+        var optionChanged = await RunIsolatedAsync(db, null, "import", content.Root, IncludeDrafts);
 
         Assert.True(optionChanged.ExitCode == SuccessExitCode, optionChanged.Output);
         Assert.Equal(Summary(translations: (0, 1, 0)), optionChanged.StdoutLines);
@@ -72,7 +74,7 @@ public partial class ImportCommandTests
         });
 
         content.Write(SqlFile, original);
-        var removed = await RunIsolatedAsync(db, null, "import", content.Root);
+        var removed = await RunIsolatedAsync(db, null, "import", content.Root, IncludeDrafts);
 
         Assert.True(removed.ExitCode == SuccessExitCode, removed.Output);
         Assert.Equal(Summary(translations: (0, 0, 1)), removed.StdoutLines);
@@ -136,26 +138,27 @@ public partial class ImportCommandTests
     public async Task Draft_en_holds_back_the_question_translations_of_its_topic_without_the_flag_but_not_its_questions_or_titles()
     {
         var db = await postgres.CreateDatabaseAsync();
-        using var content = WithUntranslatedSql();
+        var (content, english) = WithEnglishSql();
+        using var _ = content;
         var sqlCount = RealTopic("sql").Questions.Count;
         var drafts = RealDraftQuestionCount();
-        // The other topics' translations (translation waves), before sql-001 gets its own: they are not this test's
-        // subject, but the flag brings in those of draft and draft_en topics alongside sql-001.
-        var (otherPublished, otherAll) = (QuestionTranslationCount(content.Root, includeDrafts: false), QuestionTranslationCount(content.Root, includeDrafts: true));
-        var english = TranslateQuestion(content, "sql-001", "draft");
+        // The other topics' translations (translation waves) are not this test's subject, but the flag brings in those
+        // of draft and draft_en topics alongside sql's.
+        var (published, all) = (QuestionTranslationCount(content.Root, includeDrafts: false), QuestionTranslationCount(content.Root, includeDrafts: true));
+        var withFlagOnly = all - published + sqlCount;
         await ImportOkAsync(db, content.Root);
-        Assert.Equal(otherPublished + 1, await CountAsync(db, context => context.QuestionTranslations));
-        Assert.Equal(1, await CountAsync(db, context => context.QuestionTranslations.Where(t => t.QuestionId == "sql-001")));
+        Assert.Equal(published, await CountAsync(db, context => context.QuestionTranslations));
+        Assert.Equal(sqlCount, await CountAsync(db, context => context.QuestionTranslations.Where(t => t.QuestionId.StartsWith("sql-"))));
         var before = await UpdatedAtByIdAsync(db);
 
-        content.Replace(SqlFile, "\nquestions:", "\ndraft_en: true\nquestions:");
-        content.Replace(SqlFile, SqlTitle, SqlTitle + "title_en: SQL and relational databases\n");
+        // The emergency switch-off of a published translation (ADR 006): draft_en back on.
+        content.Replace(SqlFile, "\ndescription_en: ", "\ndraft_en: true\ndescription_en: ");
         var off = await RunIsolatedAsync(db, null, "import", content.Root);
 
         Assert.True(off.ExitCode == SuccessExitCode, off.Output);
-        Assert.Equal(Summary(topics: (0, 1, 0), translations: (0, 0, 1)), off.StdoutLines);
-        Assert.Equal(otherPublished, await CountAsync(db, context => context.QuestionTranslations));
-        Assert.Equal(0, await CountAsync(db, context => context.QuestionTranslations.Where(t => t.QuestionId == "sql-001")));
+        Assert.Equal(Summary(translations: (0, 0, sqlCount)), off.StdoutLines);
+        Assert.Equal(published - sqlCount, await CountAsync(db, context => context.QuestionTranslations));
+        Assert.Equal(0, await CountAsync(db, context => context.QuestionTranslations.Where(t => t.QuestionId.StartsWith("sql-"))));
         Assert.Equal(before, await UpdatedAtByIdAsync(db));
         Assert.Equal(sqlCount, await CountAsync(db, context => context.Questions.Where(q => q.TopicId == "sql" && q.IsActive)));
         // draft_en does not act on the topic's own titles (ADR 006, section 1).
@@ -165,59 +168,58 @@ public partial class ImportCommandTests
         var withDrafts = await RunIsolatedAsync(db, null, "import", content.Root, IncludeDrafts);
 
         Assert.True(withDrafts.ExitCode == SuccessExitCode, withDrafts.Output);
-        Assert.Equal(Summary(questions: (drafts, 0, 0), translations: (1 + otherAll - otherPublished, 0, 0)), withDrafts.StdoutLines);
-        Assert.Equal(otherAll + 1, await CountAsync(db, context => context.QuestionTranslations));
-        await AssertTranslationAsync(db, "sql-001", english);
+        Assert.Equal(Summary(questions: (drafts, 0, 0), translations: (withFlagOnly, 0, 0)), withDrafts.StdoutLines);
+        Assert.Equal(all, await CountAsync(db, context => context.QuestionTranslations));
+        await AssertTranslationAsync(db, "sql-001", english["sql-001"]);
         Assert.Equal(NothingChanged, (await RunIsolatedAsync(db, null, "import", content.Root, IncludeDrafts)).StdoutLines);
 
         var offAgain = await RunIsolatedAsync(db, null, "import", content.Root);
 
         Assert.True(offAgain.ExitCode == SuccessExitCode, offAgain.Output);
-        Assert.Equal(Summary(questions: (0, 0, drafts), translations: (0, 0, 1 + otherAll - otherPublished)), offAgain.StdoutLines);
-        Assert.Equal(otherPublished, await CountAsync(db, context => context.QuestionTranslations));
-        Assert.Equal(0, await CountAsync(db, context => context.QuestionTranslations.Where(t => t.QuestionId == "sql-001")));
+        Assert.Equal(Summary(questions: (0, 0, drafts), translations: (0, 0, withFlagOnly)), offAgain.StdoutLines);
+        Assert.Equal(published - sqlCount, await CountAsync(db, context => context.QuestionTranslations));
+        Assert.Equal(0, await CountAsync(db, context => context.QuestionTranslations.Where(t => t.QuestionId.StartsWith("sql-"))));
     }
 
     [Fact]
     public async Task Draft_topic_without_the_flag_deactivates_its_questions_and_removes_their_translations()
     {
         var db = await postgres.CreateDatabaseAsync();
-        using var content = WithUntranslatedSql();
+        var (content, english) = WithEnglishSql();
+        using var _ = content;
         var sqlCount = RealTopic("sql").Questions.Count;
         // Published translations of the other topics stay through all of this (translation waves).
-        var others = QuestionTranslationCount(content.Root, includeDrafts: false);
-        TranslateQuestion(content, "sql-001", "one");
-        var english = TranslateQuestion(content, "sql-002", "two");
+        var others = QuestionTranslationCount(content.Root, includeDrafts: false) - sqlCount;
         var translated = content.Read(SqlFile);
         await ImportOkAsync(db, content.Root);
-        Assert.Equal(others + 2, await CountAsync(db, context => context.QuestionTranslations));
+        Assert.Equal(others + sqlCount, await CountAsync(db, context => context.QuestionTranslations));
 
         content.Replace(SqlFile, "\nquestions:", "\ndraft: true\nquestions:");
         var off = await RunIsolatedAsync(db, null, "import", content.Root);
 
         Assert.True(off.ExitCode == SuccessExitCode, off.Output);
-        Assert.Equal(Summary(questions: (0, 0, sqlCount), translations: (0, 0, 2)), off.StdoutLines);
+        Assert.Equal(Summary(questions: (0, 0, sqlCount), translations: (0, 0, sqlCount)), off.StdoutLines);
         Assert.Equal(others, await CountAsync(db, context => context.QuestionTranslations));
-        Assert.Equal(0, await CountAsync(db, context => context.QuestionTranslations.Where(t => t.QuestionId == "sql-001" || t.QuestionId == "sql-002")));
+        Assert.Equal(0, await CountAsync(db, context => context.QuestionTranslations.Where(t => t.QuestionId.StartsWith("sql-"))));
         Assert.Equal(sqlCount, await CountAsync(db, context => context.Questions.Where(q => q.TopicId == "sql" && !q.IsActive)));
 
         content.Write(SqlFile, translated);
         var back = await RunIsolatedAsync(db, null, "import", content.Root);
 
         Assert.True(back.ExitCode == SuccessExitCode, back.Output);
-        Assert.Equal(Summary(questions: (0, sqlCount, 0), translations: (2, 0, 0)), back.StdoutLines);
-        await AssertTranslationAsync(db, "sql-002", english);
+        Assert.Equal(Summary(questions: (0, sqlCount, 0), translations: (sqlCount, 0, 0)), back.StdoutLines);
+        await AssertTranslationAsync(db, "sql-002", english["sql-002"]);
     }
 
     [Fact]
     public async Task Question_removed_from_the_file_is_deactivated_and_loses_its_translation_until_it_returns()
     {
         var db = await postgres.CreateDatabaseAsync();
-        using var content = WithUntranslatedSql();
+        var (content, english) = WithEnglishSql();
+        using var _ = content;
         var last = RealTopic("sql").Questions[^1].Id;
-        // Published translations of the other topics stay (translation waves).
-        var others = QuestionTranslationCount(content.Root, includeDrafts: false);
-        var english = TranslateQuestion(content, last, "last");
+        // Published translations of all the other questions stay (translation waves).
+        var others = QuestionTranslationCount(content.Root, includeDrafts: false) - 1;
         var translated = content.Read(SqlFile);
         await ImportOkAsync(db, content.Root);
 
@@ -235,7 +237,7 @@ public partial class ImportCommandTests
 
         Assert.True(returned.ExitCode == SuccessExitCode, returned.Output);
         Assert.Equal(Summary(questions: (0, 1, 0), translations: (1, 0, 0)), returned.StdoutLines);
-        await AssertTranslationAsync(db, last, english);
+        await AssertTranslationAsync(db, last, english[last]);
     }
 
     [Fact]
@@ -246,7 +248,8 @@ public partial class ImportCommandTests
         var original = content.Read(SqlFile);
         TranslateQuestion(content, "sql-001", "one");
         TranslateQuestion(content, "sql-002", "two");
-        await ImportOkAsync(db, content.Root);
+        // sql holds English back (rule 12), so its translations are written only with --include-drafts.
+        await ImportOkAsync(db, content.Root, IncludeDrafts);
         await PostgresFixture.ExecuteAsync(db, """
             CREATE FUNCTION fail_import() RETURNS trigger LANGUAGE plpgsql AS $$
             BEGIN RAISE EXCEPTION 'test: translation of % refused', NEW."QuestionId"; END $$;
@@ -264,7 +267,7 @@ public partial class ImportCommandTests
         content.Replace(SqlFile, SqlTitle, SqlTitle + "title_en: SQL and relational databases\n");
         content.Replace(FieldFile, "  - id: senior\n    title: Senior", ArchitectLevel);
         content.Write(SqlFile, content.Read(SqlFile) + ArchitectQuestion);
-        var run = await RunIsolatedAsync(db, null, "import", content.Root);
+        var run = await RunIsolatedAsync(db, null, "import", content.Root, IncludeDrafts);
 
         Assert.True(run.ExitCode == DatabaseErrorExitCode, run.Output);
         Assert.Contains("Помилка бази даних під час імпорту", run.Stderr);
@@ -331,13 +334,27 @@ public partial class ImportCommandTests
 
     /// <summary>
     /// A copy of the real content whose sql.yaml has no English yet, where these tests add their own: sql carries
-    /// a title_en since PRP-030, and translation waves add the rest of it.
+    /// a title_en since PRP-030, and translation waves add the rest of it. Without English sql holds it back with
+    /// draft_en: true (rule 12), so its question translations are imported only with --include-drafts.
     /// </summary>
     private static RealContentCopy WithUntranslatedSql()
     {
         var content = new RealContentCopy();
         EnglishTranslation.RemoveFrom(Path.Combine(content.Root, SqlFile));
         return content;
+    }
+
+    /// <summary>
+    /// A copy whose sql.yaml is translated whole, by these tests' own texts, and published in English (no draft_en):
+    /// since rule 12 the only sql whose translations a default import stores. The English of each question by id.
+    /// </summary>
+    private static (RealContentCopy Content, Dictionary<string, English> English) WithEnglishSql()
+    {
+        var content = WithUntranslatedSql();
+        var english = RealTopic("sql").Questions.ToDictionary(question => question.Id, question => TranslateQuestion(content, question.Id, question.Id));
+        content.Replace(SqlFile, SqlTitle, SqlTitle + "title_en: SQL and relational databases\n");
+        content.Replace(SqlFile, "\ndraft_en: true\n", "\ndescription_en: Queries, joins and indexes.\n");
+        return (content, english);
     }
 
     /// <summary>The English texts a test gave one question; the option texts are in file order.</summary>

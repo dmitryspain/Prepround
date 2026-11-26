@@ -11,7 +11,8 @@ namespace Prepround.Tests.ContentTool;
 /// <remarks>
 /// The real content carries English of its own since PRP-030 (topic titles and descriptions), and translation waves
 /// keep adding more. <see cref="AddTo"/> therefore replaces it rather than adding a second key, and tests that need
-/// the content "as before any translation" start from <see cref="RemoveFrom"/>.
+/// the content "as before any translation" start from <see cref="RemoveFrom"/>. Since rule 12 (PRP-031) content
+/// without English is valid only while every topic holds it back, so both leave each topic with <c>draft_en: true</c>.
 /// </remarks>
 internal static partial class EnglishTranslation
 {
@@ -19,23 +20,31 @@ internal static partial class EnglishTranslation
     {
         foreach (var path in Directory.GetFiles(root, "*.yaml", SearchOption.AllDirectories))
         {
-            var isTopic = Path.GetFileName(Path.GetDirectoryName(path)) == "topics";
-            File.WriteAllText(path, Translate(Strip(File.ReadAllText(path)), isTopic));
+            File.WriteAllText(path, Translate(Strip(File.ReadAllText(path)), IsTopic(path)));
         }
     }
 
     /// <summary>
-    /// Drops every <c>*_en</c> key (with the lines of its value) and every <c>draft_en</c> from a content tree or a
-    /// single file, leaving the base lines byte for byte: what the content looked like before it had any English.
+    /// Drops every <c>*_en</c> key (with the lines of its value) from a content tree or a single file, leaving the base
+    /// lines byte for byte: what the content looked like before it had any English. Each topic gets
+    /// <c>draft_en: true</c> right before <c>questions:</c> in place of its own, as rule 12 wants of a topic without
+    /// English; the base rows an import writes are the same with it and without it.
     /// </summary>
     public static void RemoveFrom(string path)
     {
         var files = File.Exists(path) ? [path] : Directory.GetFiles(path, "*.yaml", SearchOption.AllDirectories);
         foreach (var file in files)
         {
-            File.WriteAllText(file, Strip(File.ReadAllText(file)));
+            var stripped = Strip(File.ReadAllText(file));
+            File.WriteAllText(file, IsTopic(file) ? HoldBackEnglish(stripped) : stripped);
         }
     }
+
+    private static bool IsTopic(string path) => Path.GetFileName(Path.GetDirectoryName(path)) == "topics";
+
+    private static string HoldBackEnglish(string yaml) =>
+        string.Join('\n', yaml.Split('\n').SelectMany(line =>
+            line.StartsWith("questions:", StringComparison.Ordinal) ? ["draft_en: true", line] : new[] { line }));
 
     private static string Translate(string yaml, bool isTopic)
     {

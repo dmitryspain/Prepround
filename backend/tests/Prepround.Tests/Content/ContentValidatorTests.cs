@@ -4,6 +4,7 @@ namespace Prepround.Tests.Content;
 
 /// <summary>
 /// Rules 1–8 of ADR 002 and rule 10 of ADR 004 on an in-memory model: each test breaks one thing in a valid field.
+/// The field is in Ukrainian only, so every topic holds English back (rule 12 has tests of its own).
 /// </summary>
 public class ContentValidatorTests
 {
@@ -36,7 +37,7 @@ public class ContentValidatorTests
         var science = new FieldDefinition("science/field.yaml", "science", "Наука",
             [new LevelDefinition("aspirant", "Аспірант"), new LevelDefinition("doctor", "Доктор наук")],
             [],
-            [new TopicDefinition("science/topics/physics.yaml", "physics", "Фізика", "", [Single("physics-001") with { LevelId = "doctor" }])]);
+            [UkrainianOnly(new TopicDefinition("science/topics/physics.yaml", "physics", "Фізика", "", [Single("physics-001") with { LevelId = "doctor" }]))]);
 
         Assert.Empty(_validator.Validate([Field(), science]));
         var error = Assert.Single(_validator.Validate([Field(), science with
@@ -120,7 +121,7 @@ public class ContentValidatorTests
     public void Same_question_id_in_two_fields_is_an_error()
     {
         var other = new FieldDefinition("med/field.yaml", "med", "Медицина", [new LevelDefinition("phd", "PhD")], [],
-            [new TopicDefinition("med/topics/anatomy.yaml", "anatomy", "Анатомія", "", [Single("alpha-001") with { LevelId = "phd" }])]);
+            [UkrainianOnly(new TopicDefinition("med/topics/anatomy.yaml", "anatomy", "Анатомія", "", [Single("alpha-001") with { LevelId = "phd" }]))]);
 
         var error = Assert.Single(_validator.Validate([Field(), other]));
 
@@ -535,9 +536,13 @@ public class ContentValidatorTests
         FieldFile, "it", "IT", Levels(),
         [new DirectionDefinition("backend", "Backend", [new StackDefinition("dotnet", ".NET (C#)", ["alpha", "beta"])])],
         [
-            new TopicDefinition(AlphaFile, "alpha", "Alpha", "Перша тема.", [Single(), Multiple()]),
-            new TopicDefinition(BetaFile, "beta", "Beta", "", []),
+            UkrainianOnly(new TopicDefinition(AlphaFile, "alpha", "Alpha", "Перша тема.", [Single(), Multiple()])),
+            UkrainianOnly(new TopicDefinition(BetaFile, "beta", "Beta", "", [])),
         ]);
+
+    /// <summary><c>draft_en: true</c>: a topic without English is valid only so (rule 12, PRP-031).</summary>
+    private static TopicDefinition UkrainianOnly(TopicDefinition topic) =>
+        topic with { DraftLanguages = new HashSet<string> { "en" } };
 
     private static FieldDefinition WithAlphaQuestion(FieldDefinition field, int index, QuestionDefinition question)
     {

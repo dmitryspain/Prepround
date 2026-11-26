@@ -24,7 +24,9 @@ namespace Prepround.Tests.Api;
 /// on a Testcontainers Postgres filled by the real import of a small translated content tree:
 /// topic alpha (A) has 12 questions, 10 of them translated, and <c>title_en</c> / <c>description_en</c>;
 /// topic beta (B) has 12 questions and no translation at all; topic gamma has 12 translated questions and only
-/// <c>title_en</c>, so every title falls back to the base language on its own.
+/// <c>title_en</c>, so every title falls back to the base language on its own. Since rule 12 (PRP-031) such gaps are
+/// valid only in topics that hold English back, so all three have <c>draft_en: true</c> and the import takes them with
+/// <c>--include-drafts</c>, as in the dev database during translation waves. The API knows nothing of drafts.
 /// </summary>
 [Collection(PostgresCollection.Name)]
 public class ContentLanguageEndpointTests(PostgresFixture postgres)
@@ -286,7 +288,7 @@ public class ContentLanguageEndpointTests(PostgresFixture postgres)
             await using var scope = provider.CreateAsyncScope();
             var handler = scope.ServiceProvider.GetRequiredService<ICommandHandler<ImportContentCommand, ImportSummary>>();
 
-            var result = await handler.Handle(new ImportContentCommand(root), TestContext.Current.CancellationToken);
+            var result = await handler.Handle(new ImportContentCommand(root, IncludeDrafts: true), TestContext.Current.CancellationToken);
 
             Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Message : null);
         }
@@ -461,7 +463,7 @@ internal static class TranslatedContent
             yaml.Append($"description_en: {descriptionEn}\n");
         }
 
-        yaml.Append("questions:\n");
+        yaml.Append("draft_en: true\nquestions:\n");
         string[] levels = ["junior", "middle", "senior"];
         for (var number = 1; number <= 12; number++)
         {

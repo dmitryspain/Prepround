@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 namespace Prepround.Application.Content;
 
 /// <summary>
-/// Rules 1–8, 10 and 11 of ADR 002 over content that has already been read. Collects every problem instead of stopping
+/// Rules 1–8 and 10–12 of ADR 002 over content that has already been read. Collects every problem instead of stopping
 /// at the first one, so an author fixes a whole batch of questions in one pass. Never throws on bad content.
 /// Rule 9 (unknown keys) belongs to the reader: once YAML becomes this model, unknown keys are gone.
 /// </summary>
@@ -135,9 +135,51 @@ public sealed partial class ContentValidator
                 $"Ім'я файлу «{Path.GetFileName(file)}» не збігається з id теми «{topic.Id}»."));
         }
 
+        var publishedLanguages = PublishedLanguages(topic);
+        foreach (var language in publishedLanguages)
+        {
+            ValidatePublishedTopic(topic, language, file, shown, errors);
+        }
+
         for (var i = 0; i < topic.Questions.Count; i++)
         {
-            ValidateQuestion(topic.Questions[i], i, file, levelIds, levelScale, questionFiles, errors);
+            ValidateQuestion(
+                topic.Questions[i], i, file, levelIds, levelScale, publishedLanguages, questionFiles, errors);
+        }
+    }
+
+    /// <summary>
+    /// Translation languages the topic is published in (rule 12): all of them unless the topic is a draft,
+    /// minus those marked <c>draft_L: true</c>.
+    /// </summary>
+    private static HashSet<string> PublishedLanguages(TopicDefinition topic) =>
+        topic.IsDraft
+            ? []
+            : ContentLanguages.Translations
+                .Where(language => !topic.DraftLanguages.Contains(language))
+                .ToHashSet(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Rule 12 for the topic's own texts: once published in a language, its title and a non-empty description
+    /// are translated, so the topic never shows up there in the base language.
+    /// </summary>
+    private static void ValidatePublishedTopic(
+        TopicDefinition topic, string language, string file, string shown, List<ContentError> errors)
+    {
+        var draftKey = ContentLanguages.TranslationKey("draft", language);
+
+        if (!topic.TitleTranslations.ContainsKey(language))
+        {
+            errors.Add(new ContentError(file, shown,
+                $"Тема опублікована мовою {language}, а {ContentLanguages.TranslationKey("title", language)} немає. " +
+                $"Перекладіть назву або позначте тему {draftKey}: true."));
+        }
+
+        if (!string.IsNullOrWhiteSpace(topic.Description) && !topic.DescriptionTranslations.ContainsKey(language))
+        {
+            errors.Add(new ContentError(file, shown,
+                $"Тема опублікована мовою {language}, а {ContentLanguages.TranslationKey("description", language)} " +
+                $"немає. Перекладіть опис або позначте тему {draftKey}: true."));
         }
     }
 
@@ -147,6 +189,7 @@ public sealed partial class ContentValidator
         string file,
         HashSet<string> levelIds,
         string levelScale,
+        HashSet<string> publishedLanguages,
         Dictionary<string, string> questionFiles,
         List<ContentError> errors)
     {
@@ -265,16 +308,22 @@ public sealed partial class ContentValidator
 
         foreach (var language in ContentLanguages.Translations)
         {
-            ValidateTranslation(question, language, file, shown, errors);
+            ValidateTranslation(question, language, publishedLanguages.Contains(language), file, shown, errors);
         }
     }
 
     /// <summary>
     /// Rule 11 for one question and one language: all of its texts are translated or none is, so a test in that
     /// language never mixes in base-language text. Blank and repeated texts are rejected as in rules 7 and 8.
+    /// Rule 12 on top: in a topic published in the language (<paramref name="published"/>), none is not enough.
     /// </summary>
     private static void ValidateTranslation(
-        QuestionDefinition question, string language, string file, string shown, List<ContentError> errors)
+        QuestionDefinition question,
+        string language,
+        bool published,
+        string file,
+        string shown,
+        List<ContentError> errors)
     {
         var textKey = ContentLanguages.TranslationKey("text", language);
         var explanationKey = ContentLanguages.TranslationKey("explanation", language);
@@ -315,9 +364,20 @@ public sealed partial class ContentValidator
             }
         }
 
-        // Nothing missing is a full translation, everything missing is none; both are fine.
+        // Nothing missing is a full translation, everything missing is none. Rule 11 takes both; rule 12 rejects
+        // none in a published topic. A partial one is reported once, by rule 11, whether published or not.
         var keyCount = 2 + question.Options.Count;
-        if (missing.Count > 0 && missing.Count < keyCount)
+        if (missing.Count == keyCount)
+        {
+            if (published)
+            {
+                errors.Add(new ContentError(file, shown,
+                    $"Тема опублікована мовою {language}, а перекладу питання цією мовою немає. " +
+                    $"Потрібні {textKey}, {explanationKey} і {textKey} кожного варіанта " +
+                    $"або позначка теми {ContentLanguages.TranslationKey("draft", language)}: true."));
+            }
+        }
+        else if (missing.Count > 0)
         {
             errors.Add(new ContentError(file, shown,
                 $"Неповний переклад мовою {language}: {string.Join("; ", missing)}. " +

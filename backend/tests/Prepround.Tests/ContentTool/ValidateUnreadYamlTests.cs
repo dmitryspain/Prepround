@@ -20,6 +20,7 @@ public class ValidateUnreadYamlTests
         id: extra
         title: Додаткова тема
         description: Тема, якої немає в жодному стеку.
+        draft_en: true
         questions:
           - id: extra-001
             level: junior
@@ -76,7 +77,8 @@ public class ValidateUnreadYamlTests
 
         Assert.True(run.ExitCode == SuccessExitCode, run.Output);
         var (topicsBefore, questionsBefore, translationsBefore) = TopicAndQuestionCount(before.Stdout);
-        // The extra topic has no English, so the translations suffix (PRP-025, translation waves) stays as it was.
+        // The extra topic has no English (held back by draft_en, rule 12), so the translations suffix (PRP-025,
+        // translation waves) stays as it was.
         Assert.Equal((topicsBefore + 1, questionsBefore + 1, translationsBefore), TopicAndQuestionCount(run.Stdout));
     }
 

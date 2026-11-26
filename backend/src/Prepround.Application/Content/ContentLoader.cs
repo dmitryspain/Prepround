@@ -20,7 +20,7 @@ public sealed class ContentLoader
     {
         var content = _reader.Read(rootDirectory);
 
-        // Rules 1–8, 10 and 11 assume every file was read; checking a half-read catalog would only add misleading
+        // Rules 1–8 and 10–12 assume every file was read; checking a half-read catalog would only add misleading
         // "topic does not exist" errors on top of the reader error that caused them.
         var errors = content.Errors.Count > 0
             ? content.Errors

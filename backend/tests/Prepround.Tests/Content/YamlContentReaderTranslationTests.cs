@@ -50,6 +50,8 @@ public class YamlContentReaderTranslationTests
     public void Content_without_translation_keys_reads_no_translations_and_no_draft_languages()
     {
         using var content = new ContentFixture();
+        content.PublishInEnglish(ContentFixture.AlphaFile);
+        content.PublishInEnglish(ContentFixture.BetaFile);
 
         var field = Assert.Single(_reader.Read(content.Root).Fields);
 
@@ -79,6 +81,7 @@ public class YamlContentReaderTranslationTests
     {
         // ADR 006: draft_en holds back only the translation, the base questions stay published.
         using var content = new ContentFixture();
+        content.PublishInEnglish(ContentFixture.AlphaFile);
         content.Replace(ContentFixture.AlphaFile, "description: Перша тема.", $"description: Перша тема.\n{line}");
 
         var result = _reader.Read(content.Root);
@@ -97,6 +100,7 @@ public class YamlContentReaderTranslationTests
     public void Draft_en_accepts_only_true_or_false_like_draft(string value, string message)
     {
         using var content = new ContentFixture();
+        content.PublishInEnglish(ContentFixture.AlphaFile);
         content.Replace(ContentFixture.AlphaFile, "description: Перша тема.", $"description: Перша тема.\ndraft_en: {value}");
 
         var error = Assert.Single(_reader.Read(content.Root).Errors);

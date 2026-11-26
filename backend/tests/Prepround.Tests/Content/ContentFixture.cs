@@ -2,7 +2,7 @@ namespace Prepround.Tests.Content;
 
 /// <summary>
 /// A small valid content tree in a temporary directory: field "it" with three levels, one stack, two topics,
-/// two questions. Tests break one thing in it and check that exactly that thing is reported.
+/// two questions, all in Ukrainian only. Tests break one thing in it and check that exactly that thing is reported.
 /// </summary>
 internal sealed class ContentFixture : IDisposable
 {
@@ -12,6 +12,12 @@ internal sealed class ContentFixture : IDisposable
 
     /// <summary>What <c>validate</c> prints for the untouched fixture.</summary>
     public const string Summary = "it: рівнів 3, напрямів 1, стеків 1, тем 2, питань 2";
+
+    /// <summary>
+    /// The last line of both topics. The fixture has no English, and since rule 12 (PRP-031) a topic without it is
+    /// valid only while it holds English back. Last, so the line numbers of every key above stay as they were.
+    /// </summary>
+    public const string DraftEn = "draft_en: true";
 
     public const string FieldYaml = """
         id: it
@@ -63,12 +69,14 @@ internal sealed class ContentFixture : IDisposable
                 correct: true
               - text: Третій
             explanation: Перші два.
+        draft_en: true
         """;
 
     public const string BetaYaml = """
         id: beta
         title: Beta
         questions: []
+        draft_en: true
         """;
 
     public ContentFixture()
@@ -100,6 +108,9 @@ internal sealed class ContentFixture : IDisposable
         Assert.True(index >= 0, $"Fixture {relative} has no \"{oldText}\".");
         Write(relative, string.Concat(text.AsSpan(0, index), newText, text.AsSpan(index + oldText.Length)));
     }
+
+    /// <summary>Drops <see cref="DraftEn"/> from a topic, which publishes it in English (rule 12).</summary>
+    public void PublishInEnglish(string relative) => Replace(relative, "\n" + DraftEn, "");
 
     public void Move(string fromRelative, string toRelative)
     {

@@ -30,7 +30,10 @@ public partial class ImportCommandTests(PostgresFixture postgres)
             title: Architect
         """;
 
-    /// <summary>A sql question on the new level; its id is the first free one, since sql keeps growing (ADR 004).</summary>
+    /// <summary>
+    /// A sql question on the new level; its id is the first free one, since sql keeps growing (ADR 004). Translated,
+    /// as rule 12 wants of a new question in a topic published in English.
+    /// </summary>
     private static string ArchitectQuestionId => FreeQuestionId("sql");
 
     private static string ArchitectQuestion => $"""
@@ -39,11 +42,15 @@ public partial class ImportCommandTests(PostgresFixture postgres)
             level: architect
             type: single
             text: Питання для рівня, якого в коді немає?
+            text_en: A question for a level the code does not know?
             options:
               - text: Так
+                text_en: "Yes"
                 correct: true
               - text: Ні
+                text_en: "No"
             explanation: Рівні — це дані з field.yaml.
+            explanation_en: Levels are data from field.yaml.
         """;
 
     private static readonly string[] NothingChanged = Summary(
@@ -267,12 +274,16 @@ public partial class ImportCommandTests(PostgresFixture postgres)
         using var content = new RealContentCopy();
         await ImportOkAsync(db, content.Root);
 
+        var sqlPath = Path.Combine(content.Root, SqlFile);
+        var translationsBefore = QuestionTranslationCount(sqlPath, includeDrafts: false);
         content.Replace(FieldFile, "  - id: senior\n    title: Senior", ArchitectLevel);
         content.Write(SqlFile, content.Read(SqlFile) + ArchitectQuestion);
+        // Its translation is stored too unless sql holds English back: 1 or 0 by what the file says.
+        var newTranslations = QuestionTranslationCount(sqlPath, includeDrafts: false) - translationsBefore;
         var run = await RunIsolatedAsync(db, null, "import", content.Root);
 
         Assert.True(run.ExitCode == SuccessExitCode, run.Output);
-        Assert.Equal(Summary(levels: (1, 0, 0), questions: (1, 0, 0)), run.StdoutLines);
+        Assert.Equal(Summary(levels: (1, 0, 0), questions: (1, 0, 0), translations: (newTranslations, 0, 0)), run.StdoutLines);
         await using var context = PostgresFixture.CreateContext(db);
         var levels = await context.Levels.AsNoTracking().OrderBy(level => level.Rank).ToListAsync(TestContext.Current.CancellationToken);
         Assert.Equal(

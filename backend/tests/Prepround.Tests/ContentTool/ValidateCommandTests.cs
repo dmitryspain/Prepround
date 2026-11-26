@@ -62,7 +62,11 @@ public partial class ValidateCommandTests
         ["draft-not-a-boolean"] = c => c.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft: maybe"),
         ["draft-not-a-scalar"] = c => c.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft: [true]"),
         // PRP-025: translation keys (ADR 006) and rule 11.
-        ["draft-en-not-a-boolean"] = c => c.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft_en: так"),
+        ["draft-en-not-a-boolean"] = c =>
+        {
+            c.PublishInEnglish(ContentFixture.AlphaFile);
+            c.Replace(ContentFixture.AlphaFile, "description: Перша тема.", "description: Перша тема.\ndraft_en: так");
+        },
         ["rule-9-text-de"] = c => c.Replace(ContentFixture.AlphaFile, "    level: junior", "    level: junior\n    text_de: x"),
         ["rule-9-title-EN"] = c => c.Replace(ContentFixture.AlphaFile, "title: Alpha", "title: Alpha\ntitle_EN: x"),
         ["rule-9-code-source-en"] = c => c.Replace(ContentFixture.AlphaFile, "      lang: csharp", "      lang: csharp\n      source_en: x"),
@@ -85,6 +89,20 @@ public partial class ValidateCommandTests
         {
             TranslatedFixture.TranslateField(c);
             c.Replace(ContentFixture.FieldFile, $"title_en: {TranslatedFixture.LevelTitle}", "title_en: \"\"");
+        },
+        // PRP-031: rule 12, a topic published in English has all of it.
+        ["rule-12-published-question-without-en"] = c =>
+        {
+            TranslatedFixture.TranslateAlphaAndItsFirstQuestion(c);
+            c.PublishInEnglish(ContentFixture.AlphaFile);
+        },
+        ["rule-12-published-without-title-en"] = c => c.PublishInEnglish(ContentFixture.BetaFile),
+        ["rule-12-draft-en-false"] = c => c.Replace(ContentFixture.BetaFile, ContentFixture.DraftEn, "draft_en: false"),
+        ["rule-12-published-without-description-en"] = c =>
+        {
+            TranslatedFixture.TranslateAlphaAndItsFirstQuestion(c);
+            c.Replace(ContentFixture.AlphaFile, $"description_en: {TranslatedFixture.TopicDescription}\n", "");
+            c.PublishInEnglish(ContentFixture.AlphaFile);
         },
     };
 
@@ -137,7 +155,7 @@ public partial class ValidateCommandTests
 
         var translated = await RunAsync("validate", content.Root);
 
-        content.Replace(ContentFixture.AlphaFile, "draft_en: true\n", "draft_en: true\ndraft: true\n");
+        content.Replace(ContentFixture.AlphaFile, ContentFixture.DraftEn, $"{ContentFixture.DraftEn}\ndraft: true");
         var draft = await RunAsync("validate", content.Root);
 
         Assert.True(translated.ExitCode == SuccessExitCode, translated.Output);
@@ -151,7 +169,8 @@ public partial class ValidateCommandTests
     {
         using var content = new ContentFixture();
         TranslatedFixture.TranslateField(content);
-        content.Replace(ContentFixture.AlphaFile, "title: Alpha", "title: Alpha\ntitle_en: Alpha\ndraft_en: true");
+        // alpha keeps the draft_en of the fixture.
+        content.Replace(ContentFixture.AlphaFile, "title: Alpha", "title: Alpha\ntitle_en: Alpha");
 
         var run = await RunAsync("validate", content.Root);
 
@@ -251,6 +270,7 @@ public partial class ValidateCommandTests
         content.Write("med/topics/anatomy.yaml", """
             id: anatomy
             title: Анатомія
+            draft_en: true
             questions:
               - id: anatomy-001
                 level: phd
@@ -307,6 +327,10 @@ public partial class ValidateCommandTests
     [InlineData("rule-11-blank-text-en", ContentFixture.AlphaFile, "alpha-001", "Порожній текст питання (text_en).")]
     [InlineData("rule-11-repeated-option-en", ContentFixture.AlphaFile, "alpha-001", "Варіант «Yes» повторюється (text_en).")]
     [InlineData("rule-11-blank-level-title-en", ContentFixture.FieldFile, "junior", "Порожня назва рівня (title_en).")]
+    [InlineData("rule-12-published-question-without-en", ContentFixture.AlphaFile, "alpha-002", "Тема опублікована мовою en, а перекладу питання цією мовою немає.")]
+    [InlineData("rule-12-published-without-title-en", ContentFixture.BetaFile, "beta", "Тема опублікована мовою en, а title_en немає.")]
+    [InlineData("rule-12-draft-en-false", ContentFixture.BetaFile, "beta", "Тема опублікована мовою en, а title_en немає.")]
+    [InlineData("rule-12-published-without-description-en", ContentFixture.AlphaFile, "alpha", "Тема опублікована мовою en, а description_en немає.")]
     public async Task Broken_content_is_reported_as_file_id_message_on_stderr_and_exits_with_1(
         string breakage, string file, string id, string messageFragment)
     {

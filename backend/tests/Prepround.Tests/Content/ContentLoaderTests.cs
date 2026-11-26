@@ -61,7 +61,11 @@ public class ContentLoaderTests
             "alpha-001", "junior", "single", "Питання?", null,
             [new OptionDefinition("Так", true), new OptionDefinition("Ні", false)],
             "Бо так.", null);
-        var topic = new TopicDefinition("it/topics/alpha.yaml", "alpha", "Alpha", "Тема.", [question]);
+        // Ukrainian only, so English is held back (rule 12).
+        var topic = new TopicDefinition("it/topics/alpha.yaml", "alpha", "Alpha", "Тема.", [question])
+        {
+            DraftLanguages = new HashSet<string> { "en" },
+        };
         var stack = new StackDefinition("dotnet", ".NET", stackTopics);
 
         return
