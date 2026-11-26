@@ -3,21 +3,27 @@ title: "Vue: реактивність і шаблони"
 title_en: 'Vue: reactivity and templates'
 description: Реактивність, директиви, компоненти, props/emits, slots.
 description_en: Reactivity, directives, components, props/emits, slots.
-draft_en: true
 questions:
   - id: vue-core-001
     level: junior
     type: single
     text: Чим `v-show` відрізняється від `v-if` у Vue 3?
+    text_en: What is the difference between `v-show` and `v-if` in Vue 3?
     options:
       - text: '`v-show` лишає елемент у DOM і перемикає лише CSS-властивість `display`'
+        text_en: '`v-show` keeps the element in the DOM and only toggles its CSS `display` property'
         correct: true
       - text: '`v-show` видаляє елемент із DOM, а `v-if` ховає його через `display: none`'
+        text_en: '`v-show` removes the element from the DOM, while `v-if` hides it with `display: none`'
       - text: '`v-show` працює лише на компонентах, а `v-if` лише на HTML-елементах'
+        text_en: '`v-show` works only on components, while `v-if` works only on HTML elements'
       - text: '`v-show` перераховується раз за життя елемента, а `v-if` на кожне оновлення'
+        text_en: '`v-show` is evaluated once per element lifetime, while `v-if` on every update'
     explanation: >
       `v-if` справді додає й прибирає елемент (і його вміст) з дерева, а `v-show` завжди рендерить елемент і лише
       змінює inline-стиль `display`. Тому в спокусливому дистракторі ролі переплутано.
+    explanation_en: >
+      `v-if` really adds and removes the element (and its content) from the tree, while `v-show` always renders the element and only changes its inline `display` style. So the tempting distractor swaps the roles.
     sources:
       - https://vuejs.org/guide/essentials/conditional.html#v-if-vs-v-show
 
@@ -25,19 +31,26 @@ questions:
     level: junior
     type: single
     text: Навіщо в `v-for` додають атрибут `:key` з унікальним значенням?
+    text_en: 'Why do you add a `:key` attribute with a unique value to `v-for`?'
     code:
       lang: vue
       source: |
         <li v-for="todo in todos" :key="todo.id">{{ todo.text }}</li>
     options:
       - text: Vue за ключем розпізнає елементи між оновленнями й перевикористовує або переставляє їх
+        text_en: Vue uses the key to identify elements between updates and reuse or reorder them
         correct: true
       - text: Ключ перетворює елементи на властивості об'єкта, до яких можна звертатися як до `todos[id]`
+        text_en: The key turns the elements into object properties that can be accessed as `todos[id]`
       - text: Ключ обов'язковий, бо без нього `v-for` не відрендерить жодного елемента
+        text_en: The key is required, because without it `v-for` renders no elements at all
       - text: Ключ задає порядок сортування елементів у DOM незалежно від порядку масиву
+        text_en: The key sets the sort order of elements in the DOM regardless of the array order
     explanation: >
       Алгоритм оновлення порівнює старий і новий списки за ключами, щоб зрозуміти, який вузол збігається з яким.
       Без ключа список усе одно рендериться, але Vue порівнює елементи за позицією.
+    explanation_en: >
+      The update algorithm compares the old and new lists by keys to work out which node matches which. Without a key the list still renders, but Vue compares elements by position.
     sources:
       - https://vuejs.org/guide/essentials/list.html#maintaining-state-with-key
 
@@ -47,6 +60,7 @@ questions:
     text: >
       Дочірній компонент має повідомити батьківському, що користувач натиснув кнопку. Як це робиться
       у Vue 3 за односпрямованим потоком даних?
+    text_en: A child component must tell its parent that the user clicked a button. How is this done in Vue 3 following one-way data flow?
     code:
       lang: vue
       source: |
@@ -58,13 +72,19 @@ questions:
         </template>
     options:
       - text: Дочірній викликає `emit('save', …)`, а батько слухає подію через `@save`
+        text_en: The child calls `emit('save', …)`, and the parent listens for the event with `@save`
         correct: true
       - text: Дочірній присвоює значення в `props`, і зміна автоматично потрапляє до батька
+        text_en: The child assigns a value to `props`, and the change automatically reaches the parent
       - text: Дочірній викликає метод батька напряму через `this.$parent.save(42)`
+        text_en: The child calls a parent method directly via `this.$parent.save(42)`
       - text: Дочірній компонент оновлює спільну змінну в `window`, а батько стежить за нею
+        text_en: The child component updates a shared variable on `window`, and the parent watches it
     explanation: >
       Дані йдуть униз через props, а повідомлення вгору — через події. Присвоєння в props не змінює батьківський
       стан: об'єкт props доступний лише для читання.
+    explanation_en: >
+      Data flows down through props, and messages flow up through events. Assigning to props does not change the parent's state: the props object is read-only.
     sources:
       - https://vuejs.org/guide/components/events.html#emitting-and-listening-to-events
 
@@ -72,16 +92,23 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про передачу props у шаблоні Vue 3 правильні?
+    text_en: Which statements about passing props in a Vue 3 template are true?
     options:
       - text: Статичний атрибут `count="5"` передає рядок `"5"`
+        text_en: The static attribute `count="5"` passes the string `"5"`
         correct: true
       - text: Атрибут `:count="5"` передає число, бо значення обчислюється як вираз JavaScript
+        text_en: 'The attribute `:count="5"` passes a number, because the value is evaluated as a JavaScript expression'
         correct: true
       - text: Будь-який атрибут, переданий компоненту, автоматично стає його prop
+        text_en: Any attribute passed to a component automatically becomes its prop
       - text: Дочірній компонент може присвоїти `props.count = 10`, і батько побачить нове значення
+        text_en: The child component can assign `props.count = 10`, and the parent will see the new value
     explanation: >
       Без `v-bind` значення завжди рядок, а `:` робить його виразом. Props — лише ті атрибути, що оголошені
       через `defineProps`, решта потрапляє в атрибути, що «провалюються». Об'єкт props доступний лише для читання.
+    explanation_en: >
+      Without `v-bind` the value is always a string, and `:` makes it an expression. Props are only the attributes declared via `defineProps`; the rest end up in fallthrough attributes. The props object is read-only.
     sources:
       - https://vuejs.org/guide/components/props.html#static-vs-dynamic-props
       - https://vuejs.org/guide/components/props.html#one-way-data-flow
@@ -91,19 +118,26 @@ questions:
     type: single
     text: >
       У Vue 3 на одному елементі стоять `v-for` і `v-if`, що посилається на змінну циклу. Що станеться?
+    text_en: In Vue 3, `v-for` and a `v-if` that references the loop variable are on the same element. What happens?
     code:
       lang: vue
       source: |
         <li v-for="todo in todos" v-if="!todo.done">{{ todo.text }}</li>
     options:
       - text: '`v-if` обчислюється першим, коли `todo` ще не існує, тож буде помилка в рендері'
+        text_en: '`v-if` is evaluated first, when `todo` does not exist yet, so a render error occurs'
         correct: true
       - text: '`v-for` обчислюється першим, тож відрендеряться лише невиконані завдання'
+        text_en: '`v-for` is evaluated first, so only the unfinished tasks are rendered'
       - text: Шаблон не скомпілюється, бо Vue 3 забороняє обидві директиви на одному елементі
+        text_en: The template does not compile, because Vue 3 forbids both directives on one element
       - text: '`v-if` перевірить один раз увесь масив `todos`, а не кожен елемент'
+        text_en: '`v-if` checks the whole `todos` array once, not each element'
     explanation: >
       У Vue 3 `v-if` має вищий пріоритет за `v-for` (у Vue 2 було навпаки). Тому в `v-if` змінної `todo` ще немає,
       і звернення до `todo.done` падає. Правильно фільтрувати через `computed` або обгорнути `<li>` у `<template v-for>`.
+    explanation_en: >
+      In Vue 3 `v-if` has higher priority than `v-for` (in Vue 2 it was the opposite). So `todo` does not exist yet in `v-if`, and accessing `todo.done` fails. The right fix is to filter via `computed` or wrap the `<li>` in `<template v-for>`.
     sources:
       - https://vuejs.org/guide/essentials/list.html#v-for-with-v-if
 
@@ -113,15 +147,22 @@ questions:
     text: >
       Дочірній компонент оголошує `const model = defineModel()` (Vue 3.5) і виконує `model.value = 'a'`.
       Батько використовує `<Child v-model="name" />`. Що відбудеться?
+    text_en: A child component declares `const model = defineModel()` (Vue 3.5) and runs `model.value = 'a'`. The parent uses `<Child v-model="name" />`. What happens?
     options:
       - text: Дочірній емітить `update:modelValue`, батько оновлює `name`, і нове значення повертається в `model`
+        text_en: 'The child emits `update:modelValue`, the parent updates `name`, and the new value flows back into `model`'
         correct: true
       - text: Змінюється лише локальна копія в дочірньому, а `name` у батька лишається старим
+        text_en: Only the local copy in the child changes, while `name` in the parent stays the old one
       - text: Vue кидає помилку, бо присвоювати значення в props не можна навіть через `defineModel`
+        text_en: Vue throws an error, because assigning to props is not allowed even through `defineModel`
       - text: Змінюється `name` у батька напряму, без подій, бо `model` — посилання на ту саму ref
+        text_en: '`name` in the parent changes directly, without events, because `model` is a reference to the same ref'
     explanation: >
       `defineModel` повертає ref, що синхронізується з батьком: читання бере prop, а присвоєння емітить
       `update:modelValue`. Це зручна обгортка над парою prop + emit, тож потік даних лишається односпрямованим.
+    explanation_en: >
+      `defineModel` returns a ref that syncs with the parent: reading takes the prop, and assignment emits `update:modelValue`. It is a convenient wrapper over a prop + emit pair, so data flow remains one-way.
     sources:
       - https://vuejs.org/guide/components/v-model.html#basic-usage
       - https://vuejs.org/api/sfc-script-setup.html#definemodel
@@ -132,6 +173,7 @@ questions:
     text: >
       Компонент `Pair` має шаблон із двома кореневими елементами. Батько пише `<Pair class="x" />`.
       Що станеться з класом (Vue 3.5)?
+    text_en: The component `Pair` has a template with two root elements. The parent writes `<Pair class="x" />`. What happens to the class (Vue 3.5)?
     code:
       lang: vue
       source: |
@@ -142,13 +184,19 @@ questions:
         </template>
     options:
       - text: Клас не потрапить ні на один елемент, а Vue видасть попередження про непрокинуті атрибути
+        text_en: The class reaches neither element, and Vue warns about extraneous non-props attributes
         correct: true
       - text: Клас додається до першого кореневого елемента `<p>a</p>`
+        text_en: The class is added to the first root element `<p>a</p>`
       - text: Клас додається до обох кореневих елементів
+        text_en: The class is added to both root elements
       - text: Шаблон із двома коренями не скомпілюється, тож помилка буде ще на етапі збірки
+        text_en: A template with two roots does not compile, so the error appears already at build time
     explanation: >
       Автоматичне наслідування атрибутів працює лише для одного кореня. Для кількох коренів Vue не знає, куди
       їх віддати, тому треба явно прив'язати `v-bind="$attrs"` до потрібного елемента.
+    explanation_en: >
+      Automatic attribute inheritance works only for a single root. With multiple roots Vue does not know where to pass them, so you must explicitly bind `v-bind="$attrs"` to the right element.
     sources:
       - https://vuejs.org/guide/components/attrs.html#attribute-inheritance-on-multiple-root-nodes
 
@@ -158,16 +206,23 @@ questions:
     text: >
       Батько передає у слот `<template #default="{ item }">…</template>` компонента `List`, який у шаблоні
       має `<slot :item="x" />`. Які твердження про область видимості правильні?
+    text_en: 'The parent passes `<template #default="{ item }">…</template>` into the slot of the `List` component, which has `<slot :item="x" />` in its template. Which statements about scope are true?'
     options:
       - text: Вміст слота компілюється в області батька і бачить його стан без передавання
+        text_en: The slot content is compiled in the parent's scope and sees its state without it being passed
         correct: true
       - text: Дані дочірнього компонента доступні в слоті лише тоді, коли він передає їх як slot props
+        text_en: The child component's data is available in the slot only when it passes it as slot props
         correct: true
       - text: Вміст слота може напряму читати будь-яку `ref` з `setup` дочірнього компонента
+        text_en: The slot content can directly read any `ref` from the child component's `setup`
       - text: Slot props двосторонні, тож присвоєння `item = …` у слоті змінює дані дочірнього
+        text_en: Slot props are two-way, so assigning `item = …` in the slot changes the child's data
     explanation: >
       Слот — це функція, яку батько віддає дочірньому, і тіло шаблону в ній належить батьківській області.
       Дочірній ділиться даними лише через атрибути на `<slot>`, а присвоєння змінній slot prop не змінює дані дочірнього.
+    explanation_en: >
+      A slot is a function that the parent hands to the child, and the template body inside it belongs to the parent scope. The child shares data only via attributes on `<slot>`, and assigning to a slot prop variable does not change the child's data.
     sources:
       - https://vuejs.org/guide/components/slots.html#render-scope
       - https://vuejs.org/guide/components/slots.html#scoped-slots
@@ -178,6 +233,7 @@ questions:
     text: >
       Vue 3.5. Лічильник `count` (ref) використано в шаблоні. Код тричі виконує `count.value++` поспіль
       і одразу читає текст елемента. Що побачимо?
+    text_en: Vue 3.5. The counter `count` (a ref) is used in the template. The code runs `count.value++` three times in a row and immediately reads the element's text. What will we see?
     code:
       lang: js
       source: |
@@ -189,13 +245,19 @@ questions:
         console.log(el.textContent)
     options:
       - text: Спершу старе значення, після `nextTick` — `3`, DOM оновився один раз, а не тричі
+        text_en: First the old value, after `nextTick` — `3`; the DOM updated once, not three times
         correct: true
       - text: Спершу `3`, бо кожен інкремент синхронно перемальовує DOM, після `nextTick` те саме
+        text_en: First `3`, because each increment synchronously re-renders the DOM; after `nextTick` the same
       - text: Спершу старе значення, після `nextTick` — `1`, бо Vue бере лише перший інкремент
+        text_en: First the old value, after `nextTick` — `1`, because Vue takes only the first increment
       - text: Спершу `3`, після `nextTick` — `3`, а DOM оновлювався тричі й лише перший раз синхронно
+        text_en: First `3`, after `nextTick` — `3`, and the DOM updated three times, only the first one synchronously
     explanation: >
       Vue ставить оновлення компонента в чергу й виконує його раз за тік, тому зміни об'єднуються і DOM
       відстає від стану. `nextTick` чекає завершення цього оновлення.
+    explanation_en: >
+      Vue queues the component update and runs it once per tick, so changes are batched and the DOM lags behind the state. `nextTick` waits for that update to finish.
     sources:
       - https://vuejs.org/guide/essentials/reactivity-fundamentals.html#dom-update-timing
       - https://vuejs.org/api/general.html#nexttick
@@ -206,15 +268,22 @@ questions:
     text: >
       Бібліотека тримає посилання на звичайний об'єкт `raw`, а компонент рендерить `const state = reactive(raw)`.
       Бібліотека робить `raw.n++`, і інтерфейс не оновлюється. Чому і що це за модель реактивності?
+    text_en: A library holds a reference to a plain object `raw`, and a component renders `const state = reactive(raw)`. The library does `raw.n++`, and the UI does not update. Why, and what is this reactivity model?
     options:
       - text: Реактивність працює через Proxy; зміна оригіналу в обхід проксі не відстежується, треба міняти `state`
+        text_en: Reactivity works through Proxy; changing the original bypassing the proxy is not tracked, so you must change `state`
         correct: true
       - text: '`reactive` робить глибоку копію `raw`, тому оригінал і `state` більше не пов''язані взагалі'
+        text_en: '`reactive` makes a deep copy of `raw`, so the original and `state` are no longer connected at all'
       - text: Vue 3 відстежує зміни опитуванням об'єкта на кожному тіку, а `raw.n++` потрапляє між опитуваннями
+        text_en: Vue 3 tracks changes by polling the object on every tick, and `raw.n++` falls between polls
       - text: Зміни властивостей, що вже існували під час виклику `reactive`, Vue 3 не відстежує зовсім
+        text_en: Vue 3 never tracks changes to properties that already existed when `reactive` was called
     explanation: >
       `reactive` повертає Proxy над тим самим об'єктом, а не копію. Підписки й тригери спрацьовують лише на
       операції через проксі, тож пряма зміна `raw` непомітна. Тому в обидва боки треба працювати через `state`.
+    explanation_en: >
+      `reactive` returns a Proxy over the same object, not a copy. Subscriptions and triggers fire only on operations through the proxy, so a direct change to `raw` goes unnoticed. So you must work through `state` in both directions.
     sources:
       - https://vuejs.org/guide/extras/reactivity-in-depth.html#how-reactivity-works-in-vue
       - https://vuejs.org/guide/essentials/reactivity-fundamentals.html#reactive-proxy-vs-original
@@ -225,6 +294,7 @@ questions:
     text: >
       Список `Item` з локальним станом (запам'ятовується початкове значення в `created`) рендериться через
       `v-for` з `:key="index"`. Користувач видаляє перший елемент з `['A','B','C']`. Що побачить у рядках?
+    text_en: 'A list of `Item` components with local state (each remembers its initial value in `created`) is rendered via `v-for` with `:key="index"`. The user removes the first element from `[''A'',''B'',''C'']`. What will they see in the rows?'
     code:
       lang: vue
       source: |
@@ -233,14 +303,20 @@ questions:
              template: <li>{{ label }}:{{ init }}</li> -->
     options:
       - text: 'Рядки `B:A` і `C:B`: екземпляри за індексом лишилися, змінились лише props, а знищено останній'
+        text_en: 'Rows `B:A` and `C:B`: instances by index remained, only props changed, and the last one was destroyed'
         correct: true
       - text: 'Рядки `B:B` і `C:C`: перший екземпляр знищено, решта зберегла свій стан'
+        text_en: 'Rows `B:B` and `C:C`: the first instance was destroyed, the rest kept their state'
       - text: 'Рядки `B:A` і `C:C`: стан скидається лише в тих екземплярів, чиї props змінилися'
+        text_en: 'Rows `B:A` and `C:C`: state resets only in instances whose props changed'
       - text: 'Рядки `A:A` і `B:B`: Vue не бачить зміни масиву, бо індекс не змінився'
+        text_en: 'Rows `A:A` and `B:B`: Vue does not see the array change, because the index did not change'
     explanation: >
       За ключа-індекса Vue вважає, що екземпляр 0 і 1 — ті самі, лише з новими props, тому локальний стан
       лишається від старих елементів. Стабільний ключ за ідентичністю даних (`:key="x.id"`) прибере саме
       видалений елемент.
+    explanation_en: >
+      With an index key Vue considers instances 0 and 1 to be the same ones, just with new props, so local state is left over from the old elements. A stable key based on data identity (`:key="x.id"`) will remove exactly the deleted element.
     sources:
       - https://vuejs.org/guide/essentials/list.html#maintaining-state-with-key
 
@@ -250,15 +326,22 @@ questions:
     text: >
       Важкий компонент `Editor` з локальним станом перемикається користувачем. Які твердження про
       `v-show` і `v-if` для нього правильні (Vue 3.5)?
+    text_en: The heavy component `Editor` with local state is toggled by the user. Which statements about `v-show` and `v-if` for it are true (Vue 3.5)?
     options:
       - text: При `v-if="false"` екземпляр знищується, локальний стан губиться, а при поверненні створюється заново
+        text_en: With `v-if="false"` the instance is destroyed, its state is lost, and it is created anew on return
         correct: true
       - text: При `v-show` екземпляр живе постійно, зберігає стан і не повторює `mounted` при перемиканні
+        text_en: With `v-show` the instance lives permanently, keeps its state, and does not rerun `mounted` on toggle
         correct: true
       - text: При `v-show="false"` на старті компонент не створюється, доки його вперше не покажуть
+        text_en: With `v-show="false"` the component is not created at startup until it is shown for the first time
       - text: При `v-show` перемикання викликає `unmounted` для `Editor` і всіх його дочірніх
+        text_en: With `v-show` toggling calls `unmounted` for `Editor` and all its children
     explanation: >
       `v-if` ліниве й руйнує піддерево, тому перемикання дорожче, але старт дешевший. `v-show` один раз
       рендерить компонент і далі змінює лише `display`, тож стан і підписки лишаються живими.
+    explanation_en: >
+      `v-if` is lazy and tears down the subtree, so toggling is more expensive but startup is cheaper. `v-show` renders the component once and afterwards only changes `display`, so state and subscriptions stay alive.
     sources:
       - https://vuejs.org/guide/essentials/conditional.html#v-if-vs-v-show

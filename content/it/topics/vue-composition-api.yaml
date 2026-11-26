@@ -3,12 +3,12 @@ title: Composition API
 title_en: Composition API
 description: setup, ref/reactive, computed, watch, composables, vs Options API.
 description_en: setup, ref/reactive, computed, watch, composables, vs Options API.
-draft_en: true
 questions:
   - id: vue-composition-api-001
     level: junior
     type: single
     text: Як у Vue 3.5 прочитати й змінити значення `ref` у блоці `<script setup>`, а як вивести його в шаблоні?
+    text_en: How do you read and change the value of a `ref` in a Vue 3.5 `<script setup>` block, and how do you output it in the template?
     code:
       lang: vue
       source: |
@@ -24,13 +24,19 @@ questions:
         </template>
     options:
       - text: 'У скрипті через `count.value`, а в шаблоні досить `count`: ref верхнього рівня розгортається'
+        text_en: 'In the script via `count.value`, while in the template plain `count` is enough: a top-level ref is unwrapped'
         correct: true
       - text: 'І в скрипті, і в шаблоні потрібно писати `count.value`, інакше замість числа вийде об''єкт-обгортка'
+        text_en: 'Both in the script and in the template you must write `count.value`, otherwise you get a wrapper object instead of a number'
       - text: 'У скрипті достатньо `count++`, а в шаблоні обов''язково `count.value` без винятків'
+        text_en: 'In the script `count++` is enough, while in the template `count.value` is required with no exceptions'
       - text: 'Значення читається через виклик `count()`, а змінюється через `count.set(...)`'
+        text_en: 'The value is read by calling `count()` and changed with `count.set(...)`'
     explanation: >
       `ref` повертає об'єкт з властивістю `.value`, тому в JavaScript доступ іде через неї. У шаблоні ref верхнього рівня
       розгортається автоматично, тож `.value` не потрібне. Варіант з `count++` хибний: це спроба переприсвоїти саму `const`-змінну (`TypeError`), а не змінити `.value`.
+    explanation_en: >
+      `ref` returns an object with a `.value` property, so in JavaScript you access it through that. In the template a top-level ref is unwrapped automatically, so `.value` is not needed. The `count++` option is wrong: it tries to reassign the `const` variable itself (`TypeError`) instead of changing `.value`.
     sources:
       - https://vuejs.org/guide/essentials/reactivity-fundamentals.html#ref-unwrapping-in-templates
 
@@ -38,15 +44,22 @@ questions:
     level: junior
     type: single
     text: Чим обчислювана властивість `computed` відрізняється від звичайної функції (методу), що повертає те саме значення (Vue 3.5)?
+    text_en: How does the `computed` property differ from a regular function (method) that returns the same value (Vue 3.5)?
     options:
       - text: 'Результат `computed` кешується й перераховується лише коли змінилась одна з реактивних залежностей'
+        text_en: 'The result of `computed` is cached and recomputed only when one of its reactive dependencies changes'
         correct: true
       - text: 'Результат `computed` перераховується при кожному зверненні, а метод запам''ятовує останнє значення'
+        text_en: 'The result of `computed` is recomputed on every access, while a method remembers the last value'
       - text: 'Функція в `computed` може асинхронно чекати на відповідь сервера й повертати проміс як звичайне значення'
+        text_en: 'A function in `computed` can asynchronously wait for a server response and return a promise as a regular value'
       - text: '`computed` можна викликати лише в шаблоні, а метод доступний і в скрипті'
+        text_en: '`computed` can be called only in the template, while a method is available in the script too'
     explanation: >
       Vue відстежує, які реактивні дані читав getter, і поки вони не змінились, віддає збережений результат. Метод виконується
       щоразу, коли його викликають. Хибне уявлення про кешування методом переплутує ролі.
+    explanation_en: >
+      Vue tracks which reactive data the getter read, and while it has not changed, returns the stored result. A method runs every time it is called. The false idea that a method caches swaps the roles.
     sources:
       - https://vuejs.org/guide/essentials/computed.html#computed-caching-vs-methods
 
@@ -54,16 +67,23 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про `ref` і `reactive` у Vue 3.5 правильні?
+    text_en: Which statements about `ref` and `reactive` in Vue 3.5 are true?
     options:
       - text: '`reactive()` працює лише з об''єктними типами (об''єкти, масиви, `Map`, `Set`), а не з рядком чи числом'
+        text_en: '`reactive()` works only with object types (objects, arrays, `Map`, `Set`), not with a string or a number'
         correct: true
       - text: '`ref()` може тримати і примітив, і об''єкт, а значення лежить у властивості `.value`'
+        text_en: '`ref()` can hold both a primitive and an object, and the value lives in the `.value` property'
         correct: true
       - text: 'Присвоєння `state = reactive({ n: 1 })` замість старого об''єкта зберігає зв''язок з усіма, хто його використовував'
+        text_en: 'Assigning `state = reactive({ n: 1 })` in place of the old object keeps the connection with everything that used it'
       - text: '`reactive()` повертає той самий об''єкт-обгортку з `.value`, що й `ref()`, лише для масивів'
+        text_en: '`reactive()` returns the same wrapper object with `.value` as `ref()`, only for arrays'
     explanation: >
       `reactive` не вміє тримати примітиви, тож для них беруть `ref`. Заміна всього reactive-об'єкта новим розриває
       зв'язок, бо відстеження йде через доступ до властивостей конкретного проксі.
+    explanation_en: >
+      `reactive` cannot hold primitives, so `ref` is used for them. Replacing a whole reactive object with a new one breaks the connection, because tracking works through property access on a specific proxy.
     sources:
       - https://vuejs.org/guide/essentials/reactivity-fundamentals.html#limitations-of-reactive
 
@@ -71,6 +91,7 @@ questions:
     level: junior
     type: single
     text: Що буде в масиві `log` після виконання цього коду у Vue 3.5 (після чергового тіку `await nextTick()`)?
+    text_en: What will the `log` array contain after this code runs in Vue 3.5 (after the next tick `await nextTick()`)?
     code:
       lang: javascript
       source: |
@@ -87,13 +108,19 @@ questions:
         console.log(log.join())
     options:
       - text: '`e0,w1,e1`: `watchEffect` стартує одразу, `watch` — після зміни'
+        text_en: '`e0,w1,e1`: `watchEffect` starts immediately, `watch` after a change'
         correct: true
       - text: '`w0,e0,w1,e1`: обидва виконуються одразу при створенні'
+        text_en: '`w0,e0,w1,e1`: both run immediately on creation'
       - text: '`w1,e1`: жоден із них не виконується при створенні'
+        text_en: '`w1,e1`: neither of them runs on creation'
       - text: '`e0,e1`: `watch` без опції `deep` не реагує на зміну значення `ref`'
+        text_en: '`e0,e1`: `watch` without the `deep` option does not react to a change of the `ref` value'
     explanation: >
       `watchEffect` одразу запускає функцію, щоб зібрати залежності. `watch` за замовчуванням ліниве: колбек викликається
       лише після зміни джерела, якщо не задано `immediate: true`.
+    explanation_en: >
+      `watchEffect` runs the function right away to collect dependencies. `watch` is lazy by default: the callback is called only after the source changes, unless `immediate: true` is set.
     sources:
       - https://vuejs.org/guide/essentials/watchers.html#eager-watchers
       - https://vuejs.org/guide/essentials/watchers.html#watcheffect
@@ -104,6 +131,8 @@ questions:
     text: >
       Vue 3.5. Компонент робить `const { n } = state`, де `state = reactive({ n: 0 })`, і читає `n` у `watchEffect`.
       Потім `state.n = 5`. Що станеться, і як це виправити?
+    text_en: >
+      Vue 3.5. A component does `const { n } = state`, where `state = reactive({ n: 0 })`, and reads `n` in a `watchEffect`. Then `state.n = 5`. What happens, and how do you fix it?
     code:
       lang: javascript
       source: |
@@ -113,13 +142,19 @@ questions:
         state.n = 5
     options:
       - text: 'Ефект не перезапуститься, бо `n` — число; потрібен `toRefs(state)` або `toRef(state, ''n'')`'
+        text_en: 'The effect will not rerun, because `n` is a number; you need `toRefs(state)` or `toRef(state, ''n'')`'
         correct: true
       - text: 'Ефект спрацює й виведе `5`, бо деструктуризація зберігає проксі разом із відстеженням залежностей'
+        text_en: 'The effect will run and print `5`, because destructuring keeps the proxy together with dependency tracking'
       - text: 'Ефект спрацює, але лише якщо додати опцію `deep: true` до `watchEffect` разом із `flush: ''sync''`'
+        text_en: 'The effect will run, but only if you add the `deep: true` option to `watchEffect` together with `flush: ''sync''`'
       - text: 'Буде виняток під час деструктуризації, бо `reactive`-об''єкт заморожений для читання'
+        text_en: 'An exception is thrown during destructuring, because a `reactive` object is frozen for reading'
     explanation: >
       Деструктуризація копіює поточне значення властивості в локальну змінну, і зв'язок із проксі губиться. `toRefs`
       або `toRef` створюють ref-и, які посилаються на властивості того самого reactive-об'єкта.
+    explanation_en: >
+      Destructuring copies the current property value into a local variable, and the link to the proxy is lost. `toRefs` or `toRef` create refs that point to properties of the same reactive object.
     sources:
       - https://vuejs.org/guide/essentials/reactivity-fundamentals.html#limitations-of-reactive
       - https://vuejs.org/api/reactivity-utilities.html#torefs
@@ -130,6 +165,8 @@ questions:
     text: >
       Vue 3.5. Розробник хоче реагувати на зміну `state.count` і пише `watch(state.count, cb)`, де
       `state = reactive({ count: 0 })`. Що відбувається?
+    text_en: >
+      Vue 3.5. A developer wants to react to changes of `state.count` and writes `watch(state.count, cb)`, where `state = reactive({ count: 0 })`. What happens?
     code:
       lang: javascript
       source: |
@@ -138,13 +175,19 @@ questions:
         state.count = 1
     options:
       - text: 'Джерело — число `0`: Vue попереджає про некоректне джерело, колбек не виконується; потрібен getter `() => state.count`'
+        text_en: 'The source is the number `0`: Vue warns about an invalid source and the callback does not run; you need the getter `() => state.count`'
         correct: true
       - text: 'Колбек викличеться з `1`, бо Vue перехоплює читання `state.count` просто під час виклику `watch`'
+        text_en: 'The callback is called with `1`, because Vue intercepts the read of `state.count` right when `watch` is called'
       - text: 'Колбек викличеться з `1`, але лише якщо додати `immediate: true` і `deep: true`'
+        text_en: 'The callback is called with `1`, but only if you add `immediate: true` and `deep: true`'
       - text: 'Vue викине помилку, бо `watch` приймає лише `ref` або `reactive`-об''єкт, а getter-функції не підтримує'
+        text_en: 'Vue throws an error, because `watch` accepts only a `ref` or a `reactive` object and does not support getter functions'
     explanation: >
       Вираз `state.count` обчислюється до виклику `watch` і дає звичайне число, а не реактивне джерело. Правильне
       джерело — getter-функція, ref, reactive-об'єкт або масив із них.
+    explanation_en: >
+      The expression `state.count` is evaluated before `watch` is called and yields a plain number, not a reactive source. A valid source is a getter function, a ref, a reactive object, or an array of them.
     sources:
       - https://vuejs.org/guide/essentials/watchers.html#basic-example
 
@@ -154,6 +197,8 @@ questions:
     text: >
       Vue 3.5. Синхронний код тричі поспіль змінює `a.value` (1, 2, 3), а `watch(a, cb)` має типові
       налаштування. Скільки разів викличеться колбек і з якими значеннями `(new, old)`?
+    text_en: >
+      Vue 3.5. Synchronous code changes `a.value` three times in a row (1, 2, 3), and `watch(a, cb)` has default settings. How many times is the callback called, and with which `(new, old)` values?
     code:
       lang: javascript
       source: |
@@ -164,14 +209,20 @@ questions:
         a.value = 3
     options:
       - text: 'Один раз, зі значеннями `(3, 0)`, бо колбеки групуються й виконуються після синхронного коду'
+        text_en: 'Once, with `(3, 0)`, because callbacks are batched and run after the synchronous code'
         correct: true
       - text: 'Тричі, зі значеннями `(1, 0)`, `(2, 1)`, `(3, 2)`, бо кожне присвоєння — окрема подія'
+        text_en: 'Three times, with `(1, 0)`, `(2, 1)`, `(3, 2)`, because each assignment is a separate event'
       - text: 'Двічі, зі значеннями `(1, 0)` і `(3, 1)`, бо перша зміна обробляється одразу'
+        text_en: 'Twice, with `(1, 0)` and `(3, 1)`, because the first change is handled immediately'
       - text: 'Жодного разу, бо колбек `watch` без `flush: ''sync''` ніколи не викликається при синхронних змінах'
+        text_en: 'Never, because a `watch` callback without `flush: ''sync''` is never called on synchronous changes'
     explanation: >
       Колбеки користувацьких watcher-ів групуються, як і оновлення компонентів, тож за один тік виконується один виклик
       з початковим значенням як `old` і останнім як `new`. Щоб реагувати на кожну зміну, є `flush: 'sync'`, але його радять
       для рідкісних випадків.
+    explanation_en: >
+      User watcher callbacks are batched, just like component updates, so one call runs per tick, with the initial value as `old` and the last one as `new`. To react to every change there is `flush: 'sync'`, but it is recommended only for rare cases.
     sources:
       - https://vuejs.org/guide/essentials/watchers.html#callback-flush-timing
 
@@ -179,17 +230,24 @@ questions:
     level: middle
     type: multiple
     text: Які твердження про `computed` у Vue 3.5 правильні?
+    text_en: Which statements about `computed` in Vue 3.5 are true?
     options:
       - text: 'Getter має бути чистим обчисленням: змінювати інший стан, робити запити чи чіпати DOM у ньому не слід'
+        text_en: 'The getter should be a pure computation: changing other state, making requests, or touching the DOM in it is not advised'
         correct: true
       - text: 'Щоб присвоювати значення в `computed`, його створюють з об''єктом `{ get, set }`'
+        text_en: 'To assign a value to a `computed`, create it with a `{ get, set }` object'
         correct: true
       - text: 'Результат `computed` радять не мутувати: змінюють вихідний стан, від якого він залежить'
+        text_en: 'Mutating the result of a `computed` is not recommended: change the source state it depends on instead'
         correct: true
       - text: 'Getter викликається лише раз за життя компонента, а подальші зміни залежностей ігноруються'
+        text_en: 'The getter is called only once in the component''s lifetime, and later changes of dependencies are ignored'
     explanation: >
       `computed` — похідне значення, а побічні ефекти належать watcher-ам. Без `set` присвоєння ігнорується з попередженням,
       а з ним setter оновлює вихідний стан. Хибний варіант суперечить кешуванню: перерахунок іде при зміні залежностей.
+    explanation_en: >
+      `computed` is a derived value, while side effects belong in watchers. Without `set`, an assignment is ignored with a warning, and with it the setter updates the source state. The false option contradicts caching: recomputation happens when dependencies change.
     sources:
       - https://vuejs.org/guide/essentials/computed.html#best-practices
       - https://vuejs.org/guide/essentials/computed.html#writable-computed
@@ -200,6 +258,8 @@ questions:
     text: >
       Vue 3.5. Watcher завантажує дані за `id`. Користувач швидко змінює `id` 1 → 2 → 3, а відповіді приходять не
       за порядком, тож застарілі перезаписують результат. Який підхід у `watch` вирішує це без стороннього коду?
+    text_en: >
+      Vue 3.5. A watcher loads data by `id`. The user quickly changes `id` 1 → 2 → 3, and responses arrive out of order, so stale ones overwrite the result. Which approach in `watch` solves this without third-party code?
     code:
       lang: javascript
       source: |
@@ -211,13 +271,19 @@ questions:
         })
     options:
       - text: 'Викликати `onWatcherCleanup(() => ctrl.abort())` до першого `await` у колбеку'
+        text_en: 'Call `onWatcherCleanup(() => ctrl.abort())` before the first `await` in the callback'
         correct: true
       - text: 'Додати `{ immediate: true }`, і тоді Vue сам скасує попередні запити при кожній зміні `id`'
+        text_en: 'Add `{ immediate: true }`, and then Vue itself cancels previous requests on every `id` change'
       - text: 'Викликати `onWatcherCleanup` після `await`, коли відповідь прийшла й запит точно завершено'
+        text_en: 'Call `onWatcherCleanup` after the `await`, when the response has arrived and the request has surely finished'
       - text: 'Замінити `watch` на `computed`, бо він скасовує асинхронні getter-и попередніх обчислень'
+        text_en: 'Replace `watch` with `computed`, because it cancels the async getters of previous computations'
     explanation: >
       Cleanup-функція викликається перед повторним запуском колбека й при зупинці watcher-а. `onWatcherCleanup` має
       викликатися синхронно в колбеку, до першого `await`; для асинхронного випадку є третій аргумент `onCleanup`.
+    explanation_en: >
+      The cleanup function is called before the callback reruns and when the watcher is stopped. `onWatcherCleanup` must be called synchronously in the callback, before the first `await`; for the asynchronous case there is the third argument `onCleanup`.
     sources:
       - https://vuejs.org/guide/essentials/watchers.html#side-effect-cleanup
 
@@ -227,6 +293,8 @@ questions:
     text: >
       Vue 3.5. Великий об'єкт із тисячами вкладених полів тримають у `shallowRef` для продуктивності. Код мутує
       `big.value.items[0].price = 9`, але інтерфейс не оновлюється. Що правильно?
+    text_en: >
+      Vue 3.5. A large object with thousands of nested fields is held in a `shallowRef` for performance. The code mutates `big.value.items[0].price = 9`, but the interface does not update. What is right?
     code:
       lang: javascript
       source: |
@@ -235,13 +303,19 @@ questions:
         big.value.items[0].price = 9
     options:
       - text: 'Реактивна лише заміна `.value`; після глибокої мутації викликають `triggerRef(big)` або присвоюють новий об''єкт'
+        text_en: 'Only replacing `.value` is reactive; after a deep mutation you call `triggerRef(big)` or assign a new object'
         correct: true
       - text: 'Достатньо додати `deep: true` до `watchEffect`, і мутації вкладених полів почнуть відстежуватись'
+        text_en: 'It is enough to add `deep: true` to `watchEffect`, and mutations of nested fields will start being tracked'
       - text: 'Мутацію треба виконувати в `nextTick`, бо `shallowRef` оновлюється з затримкою в один тік'
+        text_en: 'The mutation must be done in `nextTick`, because `shallowRef` updates with a delay of one tick'
       - text: 'Усі вкладені об''єкти `shallowRef` лишаються реактивними, а проблема лише в індексі `0` масиву'
+        text_en: 'All nested objects of a `shallowRef` stay reactive, and the problem is only the array index `0`'
     explanation: >
       `shallowRef` відстежує тільки доступ до `.value` і його заміну, вкладені властивості не огортаються проксі.
       Тому після мутації «зсередини» залежні ефекти треба запускати вручну через `triggerRef` або замінювати значення.
+    explanation_en: >
+      `shallowRef` tracks only access to `.value` and its replacement; nested properties are not wrapped in a proxy. So after an "inside" mutation, dependent effects must be triggered manually via `triggerRef` or by replacing the value.
     sources:
       - https://vuejs.org/api/reactivity-advanced.html#shallowref
       - https://vuejs.org/api/reactivity-advanced.html#triggerref
@@ -252,15 +326,23 @@ questions:
     text: >
       Vue 3.5, компонент на звичайному `setup()` без `<script setup>` (Options-стиль із Composition API). Після
       `await` у `async setup()` викликається composable, який усередині реєструє `onMounted`. Що станеться?
+    text_en: >
+      Vue 3.5, a component with a plain `setup()` without `<script setup>` (Options style with the Composition API). After an `await` in `async setup()`, a composable is called that registers `onMounted` inside. What happens?
     options:
       - text: 'Активний екземпляр компонента вже втрачено, тож хук не прив''яжеться до компонента й Vue попередить про це'
+        text_en: 'The active component instance is already lost, so the hook will not be bound to the component and Vue will warn about it'
         correct: true
       - text: 'Хук коректно зареєструється, бо `await` у `setup()` завжди відновлює контекст компонента'
+        text_en: 'The hook is registered correctly, because `await` in `setup()` always restores the component context'
       - text: 'Хук зареєструється, але спрацює лише при другому монтуванні компонента'
+        text_en: 'The hook is registered, but it fires only on the second mount of the component'
       - text: 'Vue перенесе виклик `onMounted` до початку `setup()` на етапі компіляції шаблону'
+        text_en: 'Vue moves the `onMounted` call to the start of `setup()` at template compile time'
     explanation: >
       Lifecycle-хуки й watcher-и прив'язуються до поточного активного екземпляра, який відомий лише під час
       синхронної частини `setup()`. Лише `<script setup>` має компіляторну підтримку, що відновлює контекст після `await`.
+    explanation_en: >
+      Lifecycle hooks and watchers are bound to the current active instance, which is known only during the synchronous part of `setup()`. Only `<script setup>` has compiler support that restores the context after `await`.
     sources:
       - https://vuejs.org/guide/reusability/composables.html#usage-restrictions
 
@@ -269,16 +351,24 @@ questions:
     type: multiple
     text: >
       Vue 3.5. Компонент створює watcher не синхронно в `setup`, а у `setTimeout`. Які твердження правильні?
+    text_en: >
+      Vue 3.5. A component creates a watcher not synchronously in `setup`, but inside `setTimeout`. Which statements are true?
     options:
       - text: 'Такий watcher не прив''язаний до компонента й не зупиниться автоматично при його розмонтуванні'
+        text_en: 'Such a watcher is not bound to the component and does not stop automatically when the component unmounts'
         correct: true
       - text: 'Функція, яку повертає `watch`, зупиняє watcher, тож її викликають вручну в `onUnmounted`'
+        text_en: 'The function that `watch` returns stops the watcher, so you call it manually in `onUnmounted`'
         correct: true
       - text: 'Watcher, створені синхронно в `setup`, зупиняються автоматично при розмонтуванні компонента'
+        text_en: 'Watchers created synchronously in `setup` are stopped automatically when the component unmounts'
         correct: true
       - text: 'Усі watcher-и всередині компонента Vue зупиняє автоматично, незалежно від місця створення'
+        text_en: 'Vue stops all watchers inside a component automatically, regardless of where they were created'
     explanation: >
       Автоматична зупинка працює через прив'язку до власника, яка існує лише під час синхронного `setup`. Після
       асинхронного створення watcher продовжить працювати й може тримати пам'ять, якщо його не зупинити вручну.
+    explanation_en: >
+      Automatic stopping works through a binding to the owner, a binding that exists only during the synchronous `setup`. A watcher created asynchronously keeps running and can hold memory if it is not stopped manually.
     sources:
       - https://vuejs.org/guide/essentials/watchers.html#stopping-a-watcher

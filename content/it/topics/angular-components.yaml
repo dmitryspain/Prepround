@@ -3,7 +3,6 @@ title: Компоненти й шаблони
 title_en: Components and templates
 description: Standalone, input/output, життєвий цикл, control flow, content projection.
 description_en: Standalone, input/output, lifecycle, control flow, content projection.
-draft_en: true
 questions:
   - id: angular-components-001
     level: junior
@@ -11,15 +10,26 @@ questions:
     text: >
       Angular 22, проєкт без NgModule. Шаблон `ProfileComponent` містить тег `<app-avatar />`, а `AvatarComponent` є окремим
       компонентом. Що потрібно зробити, щоб тег запрацював?
+    text_en: >
+      Angular 22, a project without NgModule. The template of `ProfileComponent` contains the tag `<app-avatar />`,
+      and `AvatarComponent` is a separate component. What must be done for the tag to work?
     options:
       - text: "Додати `AvatarComponent` у масив `imports` декоратора `@Component` компонента `ProfileComponent`"
+        text_en: "Add `AvatarComponent` to the `imports` array of the `@Component` decorator of `ProfileComponent`"
         correct: true
       - text: "Додати `AvatarComponent` у масив `declarations` декоратора `@Component` компонента `ProfileComponent`"
+        text_en: "Add `AvatarComponent` to the `declarations` array of the `@Component` decorator of `ProfileComponent`"
       - text: "Додати `AvatarComponent` у масив `providers` декоратора `@Component` компонента `ProfileComponent`"
+        text_en: "Add `AvatarComponent` to the `providers` array of the `@Component` decorator of `ProfileComponent`"
       - text: "Нічого не робити: усі компоненти проєкту автоматично видимі в усіх шаблонах за своїм селектором"
+        text_en: "Do nothing: all components in the project are automatically visible in all templates by their selector"
     explanation: >
       Шаблон standalone-компонента бачить лише те, що перелічено в його `imports`. `declarations` існує тільки в NgModule,
       а `providers` стосується сервісів, а не елементів шаблону. Глобальної видимості компонентів за селектором немає.
+    explanation_en: >
+      A standalone component's template sees only what is listed in its `imports`. `declarations` exists only in
+      NgModule, and `providers` is about services, not template elements. There is no global visibility of
+      components by selector.
     sources:
       - https://angular.dev/guide/components#using-components
 
@@ -27,6 +37,8 @@ questions:
     level: junior
     type: single
     text: Що отримає метод `onSaved` у батьківському компоненті після натискання кнопки?
+    text_en: >
+      What will the `onSaved` method in the parent component receive after the button is clicked?
     code:
       lang: typescript
       source: |
@@ -43,14 +55,22 @@ questions:
         // <app-editor (saved)="onSaved($event)" />
     options:
       - text: "Рядок `'draft'`: `$event` містить значення, передане в `emit`"
+        text_en: "The string `'draft'`: `$event` holds the value passed to `emit`"
         correct: true
       - text: "Об'єкт `MouseEvent` від кліку по кнопці, бо подія виникла саме від нього"
+        text_en: "A `MouseEvent` object from the button click, because the event originated from it"
       - text: "Об'єкт `CustomEvent`, у властивості `detail` якого лежить рядок `'draft'`"
+        text_en: "A `CustomEvent` object whose `detail` property holds the string `'draft'`"
       - text: "Нічого не отримає: `output()` треба підписувати вручну через `subscribe`"
+        text_en: "Nothing: `output()` must be subscribed to manually via `subscribe`"
     explanation: >
       Подія виходу доставляє слухачеві рівно те, що передали в `emit`. Клік по кнопці всередині `Editor` до батька не
       потрапляє, а обгортки `CustomEvent` Angular не створює. Підписуватися вручну потрібно лише тоді, коли
       компонент створюють програмно.
+    explanation_en: >
+      The output event delivers to the listener exactly what was passed to `emit`. The click on the button inside
+      `Editor` does not reach the parent, and Angular does not create a `CustomEvent` wrapper. Manual subscription
+      is needed only when the component is created programmatically.
     sources:
       - https://angular.dev/guide/components/outputs
 
@@ -58,18 +78,29 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про блок `@for` у вбудованому control flow Angular 22 правильні?
+    text_en: >
+      Which statements about the `@for` block in Angular 22 built-in control flow are true?
     options:
       - text: "Вираз `track` обов'язковий: за ним Angular зіставляє елементи колекції з вузлами DOM"
+        text_en: "The `track` expression is required: Angular uses it to match collection items to DOM nodes"
         correct: true
       - text: "Блок `@empty` після `@for` показується, коли колекція порожня"
+        text_en: "The `@empty` block after `@for` is shown when the collection is empty"
         correct: true
       - text: "Усередині блока доступна змінна `$index` з індексом поточного елемента"
+        text_en: "The `$index` variable with the index of the current item is available inside the block"
         correct: true
       - text: "Блок працює лише з масивами, а `Set` чи `Map` перебирати в ньому не можна"
+        text_en: "The block works only with arrays, and a `Set` or `Map` cannot be iterated in it"
       - text: "Щоб `@for` запрацював, `NgFor` має бути в масиві `imports` компонента"
+        text_en: "For `@for` to work, `NgFor` must be in the component's `imports` array"
     explanation: >
       `@for` вбудований у шаблонний синтаксис, тому імпортувати нічого не треба, а колекцією може бути будь-який
       ітерований об'єкт, не лише масив. Без `track` шаблон не скомпілюється, бо Angular не знав би, як зіставляти вузли.
+    explanation_en: >
+      `@for` is built into the template syntax, so nothing needs to be imported, and the collection can be any
+      iterable object, not only an array. Without `track` the template will not compile, because Angular would not
+      know how to match nodes.
     sources:
       - https://angular.dev/guide/templates/control-flow
       - https://angular.dev/api/core/@for
@@ -78,6 +109,8 @@ questions:
     level: junior
     type: single
     text: Що відрендерить цей шаблон Angular 22?
+    text_en: >
+      What will this Angular 22 template render?
     code:
       lang: typescript
       source: |
@@ -94,13 +127,21 @@ questions:
         export class Sw { v = signal<number | string>('1'); }
     options:
       - text: "`<i>str</i>`: значення порівнюється з кожним `@case` через `===`, тому рядок `'1'` не дорівнює числу `1`"
+        text_en: "`<i>str</i>`: the value is compared with each `@case` using `===`, so the string `'1'` does not equal the number `1`"
         correct: true
       - text: "`<i>one</i>`: порівняння нестроге, тож `'1'` збігається з першим `@case (1)` і блок завершується"
+        text_en: "`<i>one</i>`: the comparison is loose, so `'1'` matches the first `@case (1)` and the block ends"
       - text: "`<i>one</i>` і `<i>str</i>`: після першого збігу виконання продовжується далі, як у `switch` без `break`"
+        text_en: "`<i>one</i>` and `<i>str</i>`: after the first match execution continues, as in a `switch` without `break`"
       - text: "`<i>def</i>`: рядкове значення не можна порівнювати з числовими `@case`, тож вибирається `@default`"
+        text_en: "`<i>def</i>`: a string value cannot be compared with numeric `@case` blocks, so `@default` is chosen"
     explanation: >
       `@switch` порівнює вираз із виразами `@case` оператором `===`, а провалювання між гілками немає. Тому спрацьовує
       тільки другий `@case`. Нестрогого порівняння, як у деяких мовах, тут не буває.
+    explanation_en: >
+      `@switch` compares the expression with the `@case` expressions using the `===` operator, and there is no fall-through
+      between branches. So only the second `@case` fires. Unlike in some languages, there is no loose
+      comparison here.
     sources:
       - https://angular.dev/guide/templates/control-flow
 
@@ -109,6 +150,9 @@ questions:
     type: single
     text: >
       Angular 22. Батько передає значення так: `<app-greet name="Ann" />`. Що станеться під час створення `Greet`?
+    text_en: >
+      Angular 22. The parent passes the value like this: `<app-greet name="Ann" />`. What happens when `Greet` is
+      created?
     code:
       lang: typescript
       source: |
@@ -122,13 +166,21 @@ questions:
         }
     options:
       - text: "Виклик у конструкторі кине помилку NG0950: значення вхідного сигналу ще не встановлено"
+        text_en: "The call in the constructor throws error NG0950: the input signal value has not been set yet"
         correct: true
       - text: "У консоль потрапить `Ann`, бо значення з шаблону батька Angular підставляє до виклику конструктора"
+        text_en: "`Ann` will be logged, because Angular sets the value from the parent's template before the constructor call"
       - text: "У консоль потрапить `undefined`, бо сигнал без початкового значення повертає його до першого оновлення"
+        text_en: "`undefined` will be logged, because a signal without an initial value returns it until the first update"
       - text: "Шаблон не скомпілюється, бо читати `input.required` дозволено лише в шаблоні, а не в класі"
+        text_en: "The template will not compile, because `input.required` may be read only in the template, not in the class"
     explanation: >
       Інпути виставляються після створення екземпляра, тож у конструкторі обов'язковий вхідний сигнал ще порожній, а його читання
       кидає помилку. Читати значення безпечно в шаблоні, у `computed`, `effect` і з хука `ngOnInit`.
+    explanation_en: >
+      Inputs are set after the instance is created, so in the constructor a required input signal is still empty,
+      and reading it throws an error. Reading the value is safe in the template, in `computed`, in `effect`, and
+      from the `ngOnInit` hook.
     sources:
       - https://angular.dev/guide/components/inputs
 
@@ -138,6 +190,9 @@ questions:
     text: >
       Компонент не має жодних вхідних властивостей і містить вміст у `<ng-content />`. Які з перелічених хуків і в якому порядку
       викличуться під час першого прогону детекції змін?
+    text_en: >
+      The component has no input properties and contains content in `<ng-content />`. Which of the listed hooks are
+      called, and in what order, during the first change detection run?
     code:
       lang: typescript
       source: |
@@ -150,13 +205,21 @@ questions:
         }
     options:
       - text: "`init`, `check`, `content`, `view`: `ngOnChanges` не викликається, коли немає прив'язаних вхідних властивостей"
+        text_en: "`init`, `check`, `content`, `view`: `ngOnChanges` is not called when there are no bound input properties"
         correct: true
       - text: "`changes`, `init`, `check`, `content`, `view`: `ngOnChanges` завжди першим, навіть без вхідних властивостей"
+        text_en: "`changes`, `init`, `check`, `content`, `view`: `ngOnChanges` always comes first, even without input properties"
       - text: "`init`, `view`, `content`, `check`: хуки власного перегляду стоять раніше за хуки проєктованого вмісту"
+        text_en: "`init`, `view`, `content`, `check`: the hooks of the component's own view come before the projected content hooks"
       - text: "`check`, `init`, `content`, `view`: `ngDoCheck` викликається раніше за `ngOnInit` для кожного компонента"
+        text_en: "`check`, `init`, `content`, `view`: `ngDoCheck` is called before `ngOnInit` for every component"
     explanation: >
       `ngOnChanges` запускається лише тоді, коли змінилася прив'язана вхідна властивість, тож тут його не буде. Далі
       порядок фіксований: `ngOnInit`, `ngDoCheck`, потім хуки проєктованого вмісту, потім хуки власного перегляду.
+    explanation_en: >
+      `ngOnChanges` runs only when a bound input property has changed, so it will not be called here. After that the
+      order is fixed: `ngOnInit`, `ngDoCheck`, then the projected content hooks, then the component's own view
+      hooks.
     sources:
       - https://angular.dev/guide/components/lifecycle
 
@@ -166,6 +229,9 @@ questions:
     text: >
       Дочірній компонент оголошує `count = model(0)` і викликає `this.count.set(5)` по кліку. Яке значення матиме
       `c()` у батька після кліку?
+    text_en: >
+      A child component declares `count = model(0)` and calls `this.count.set(5)` on click. What value will `c()`
+      have in the parent after the click?
     code:
       lang: typescript
       source: |
@@ -183,13 +249,21 @@ questions:
         export class Host { c = signal(1); }
     options:
       - text: "`5`: двостороння прив'язка `[(count)]` записує нове значення моделі назад у сигнал `c`"
+        text_en: "`5`: the two-way binding `[(count)]` writes the model's new value back to the `c` signal"
         correct: true
       - text: "`1`: `set` у дочірньому змінює лише його локальну копію, а сигнал батька залишається недоторканим"
+        text_en: "`1`: `set` in the child changes only its local copy, and the parent's signal stays untouched"
       - text: "`0`: початкове значення `model(0)` перекриває значення, яке батько передав під час створення"
+        text_en: "`0`: the initial value of `model(0)` overrides the value the parent passed during creation"
       - text: "Помилка компіляції: двостороння прив'язка потребує окремого `output()` з назвою `countChange`"
+        text_en: "Compilation error: a two-way binding needs a separate `output()` named `countChange`"
     explanation: >
       `model()` оголошує і вхід, і подію зміни: Angular сам створює `countChange`. Запис у модель дочірнього компонента
       синтаксис `[(count)]` передає в записуваний сигнал батька. Для цього прив'язка має вказувати на `WritableSignal`.
+    explanation_en: >
+      `model()` declares both an input and a change event: Angular creates `countChange` itself. The `[(count)]`
+      syntax passes a write to the child's model into the parent's writable signal. For this, the binding must point
+      to a `WritableSignal`.
     sources:
       - https://angular.dev/guide/signals/model
 
@@ -199,18 +273,31 @@ questions:
     text: >
       Шаблон `Card` — `<h1><ng-content select="h2" /></h1><div><ng-content select=".body" /></div>`, слота без `select` немає.
       Які твердження правильні для `<app-card><h2>T</h2><p class="body">B</p><span>S</span>текст</app-card>`?
+    text_en: >
+      The `Card` template is `<h1><ng-content select="h2" /></h1><div><ng-content select=".body" /></div>`, with no
+      slot without `select`. Which statements are true for `<app-card><h2>T</h2><p
+      class="body">B</p><span>S</span>текст</app-card>`?
     options:
       - text: "Елемент `<h2>` потрапить усередину `<h1>` шаблону картки, а `<p class=\"body\">` — у `<div>`"
+        text_en: "The `<h2>` element will land inside the `<h1>` of the card template, and `<p class=\"body\">` inside the `<div>`"
         correct: true
       - text: "`<span>` і текстовий вузол «текст» у DOM не з'являться, бо їм не відповідає жоден слот"
+        text_en: "The `<span>` and the text node will not appear in the DOM, because no slot matches them"
         correct: true
       - text: "Якщо додати `<ng-content />` без `select`, `<span>` і текст потраплять саме в цей слот"
+        text_en: "If you add `<ng-content />` without `select`, the `<span>` and the text will end up in that very slot"
         correct: true
       - text: "`<span>` і текст додадуться в кінець останнього слота, тобто в `<div>`, де лежить `<p>`"
+        text_en: "The `<span>` and the text will be appended to the end of the last slot, that is, the `<div>` containing `<p>`"
       - text: "Збірка завершиться помилкою, бо у вмісті є вузли без відповідного слота в шаблоні картки"
+        text_en: "The build will fail, because the content has nodes with no matching slot in the card template"
     explanation: >
       Кожен проєктований вузол іде в перший слот, чий селектор йому підходить, а слот без `select` збирає решту. Якщо
       такого слота немає, зайвий вміст просто не рендериться: ні помилки, ні дописування в інші слоти не буде.
+    explanation_en: >
+      Each projected node goes to the first slot whose selector matches it, and a slot without `select` collects the
+      rest. If there is no such slot, the extra content is simply not rendered: no error, and no appending to other
+      slots.
     sources:
       - https://angular.dev/guide/components/content-projection
 
@@ -221,15 +308,27 @@ questions:
       Angular 22. `HeavyChart` — standalone-компонент, доданий в `imports` хоста й використаний у `@defer (on viewport)`.
       У білді окремого чанка для нього немає: він лежить в основному бандлі. У тому ж файлі хоста є рядок
       `chart = viewChild(HeavyChart);`. Що найімовірніше пояснює це?
+    text_en: >
+      Angular 22. `HeavyChart` is a standalone component added to the host's `imports` and used in `@defer (on
+      viewport)`. The build has no separate chunk for it: it sits in the main bundle. The same host file contains
+      the line `chart = viewChild(HeavyChart);`. What most likely explains this?
     options:
       - text: "Згадка `HeavyChart` поза блоком `@defer`, зокрема в запиті `viewChild`, змушує завантажувати залежність eagerly"
+        text_en: "A mention of `HeavyChart` outside the `@defer` block, including in a `viewChild` query, forces the dependency to load eagerly"
         correct: true
       - text: "`@defer` без блока `@placeholder` ніколи не виносить залежності в окремий чанк, бо не знає, що показати"
+        text_en: "`@defer` without an `@placeholder` block never moves dependencies into a separate chunk, because it does not know what to show"
       - text: "Компонент залишається в `imports` хоста, тому компілятор не може його відкласти, і запис треба прибрати з `imports`"
+        text_en: "The component remains in the host's `imports`, so the compiler cannot defer it, and the entry must be removed from `imports`"
       - text: "Відкладене завантаження працює лише разом із SSR, тому в клієнтському білді чанк не створюється"
+        text_en: "Deferred loading works only together with SSR, so no chunk is created in a client build"
     explanation: >
       Щоб залежність потрапила в окремий чанк, її не можна згадувати поза `@defer` у тому ж файлі, зокрема в `viewChild`.
       Запис в `imports` потрібен і для відкладених залежностей, а `@placeholder` необов'язковий.
+    explanation_en: >
+      For a dependency to end up in a separate chunk, it must not be referenced outside `@defer` in the same file,
+      including in `viewChild`. An entry in `imports` is needed for deferred dependencies too, and `@placeholder` is
+      optional.
     sources:
       - https://angular.dev/guide/templates/defer
 
@@ -239,15 +338,26 @@ questions:
     text: >
       Angular 22 із SSR. Віджет має виміряти ширину свого елемента й ініціалізувати бібліотеку графіків, яка звертається до `window`.
       Де це безпечно робити, щоб не падав рендер на сервері?
+    text_en: >
+      Angular 22 with SSR. A widget must measure its element's width and initialize a charting library that accesses
+      `window`. Where is it safe to do this so that server rendering does not crash?
     options:
       - text: "У колбеку `afterNextRender`: він виконується лише в браузері після першого рендеру, і DOM уже готовий"
+        text_en: "In an `afterNextRender` callback: it runs only in the browser after the first render, and the DOM is ready"
         correct: true
       - text: "У `ngAfterViewInit`: цей хук викликається лише в браузері, а сервер пропускає всі хуки перегляду"
+        text_en: "In `ngAfterViewInit`: this hook is called only in the browser, and the server skips all view hooks"
       - text: "У `ngOnInit`: серверний рендер викликає його до створення DOM, тому `window` там існує як порожня заглушка"
+        text_en: "In `ngOnInit`: server rendering calls it before the DOM is created, so `window` exists there as an empty stub"
       - text: "У конструкторі: перевірка в ньому гарантує, що код виконається один раз і тільки на клієнті"
+        text_en: "In the constructor: a check inside it guarantees the code runs once and only on the client"
     explanation: >
       Колбеки `afterNextRender` і `afterEveryRender` не виконуються ні під час SSR, ні під час prerender, тому звертатися до DOM і глобалів у них
       безпечно. Звичайні хуки життєвого циклу, зокрема `ngAfterViewInit`, під час SSR працюють так само, як у браузері.
+    explanation_en: >
+      The `afterNextRender` and `afterEveryRender` callbacks do not run during SSR or prerender, so it is safe to
+      touch the DOM and globals in them. Regular lifecycle hooks, including `ngAfterViewInit`, work during SSR the
+      same way as in the browser.
     sources:
       - https://angular.dev/guide/components/lifecycle
 
@@ -257,16 +367,27 @@ questions:
     text: >
       Шаблон `Panel`: `@if (open()) { <ng-content /> }`. Хост пише `<app-panel><app-report /></app-panel>`, а `open()`
       дорівнює `false`. Які твердження правильні?
+    text_en: >
+      The `Panel` template: `@if (open()) { <ng-content /> }`. The host writes `<app-panel><app-report /></app-panel>`,
+      and `open()` is `false`. Which statements are true?
     options:
       - text: "Екземпляр `Report` усе одно створюється, хоча його вузли в DOM не вставлено"
+        text_en: "The `Report` instance is still created, although its nodes are not inserted into the DOM"
         correct: true
       - text: "Для відкладеного створення `Panel` має приймати `TemplateRef` і вставляти його через `ngTemplateOutlet` під `@if`"
+        text_en: "For deferred creation, `Panel` must accept a `TemplateRef` and insert it via `ngTemplateOutlet` under `@if`"
         correct: true
       - text: "Щоразу, коли `open()` стає `true`, вміст створюється наново, а при `false` знищується разом із станом"
+        text_en: "Every time `open()` becomes `true`, the content is created anew, and on `false` it is destroyed along with its state"
       - text: "Створення `Report` відкладається, бо слот `ng-content` не потрапив у шаблон, поки `@if` хибний"
+        text_en: "`Report` creation is deferred, because the `ng-content` slot did not get into the template while `@if` is false"
     explanation: >
       Проєктований вміст належить шаблону батька: його створює хост незалежно від того, чи слот зараз у DOM. Умовний
       `ng-content` лише ховає вузли. Лінивість дає передача `ng-template`, який дочірній компонент сам вставляє, коли треба.
+    explanation_en: >
+      Projected content belongs to the parent's template: the host creates it regardless of whether the slot is
+      currently in the DOM. A conditional `ng-content` only hides the nodes. Laziness comes from passing an `ng-template`,
+      which the child component inserts itself when needed.
     sources:
       - https://angular.dev/guide/components/content-projection
 
@@ -277,14 +398,26 @@ questions:
       Таблиця перерисовується кожні 5 с новим масивом із API: об'єкти нові, а `id` ті самі. У рядках є `<input>`, і користувач
       втрачає фокус та введений текст. Шаблон: `@for (r of rows(); track r)`. Порядок рядків може змінюватися. Який `track`
       виправляє проблему коректно?
+    text_en: >
+      A table is redrawn every 5 s with a new array from the API: the objects are new, but the `id`s are the same.
+      The rows contain an `<input>`, and the user loses focus and typed text. The template: `@for (r of rows();
+      track r)`. The row order may change. Which `track` fixes the problem correctly?
     options:
       - text: "`track r.id`: стабільний ключ зберігає вузли DOM рядка, навіть коли порядок змінюється"
+        text_en: "`track r.id`: a stable key preserves the row's DOM nodes, even when the order changes"
         correct: true
       - text: "`track $index`: позиція в масиві не змінюється між оновленнями, тож усі вузли DOM лишаються на місці"
+        text_en: "`track $index`: the position in the array does not change between updates, so all DOM nodes stay in place"
       - text: "`track r.updatedAt`: мітка часу змінюється разом з даними, тож Angular оновлює лише змінені рядки"
+        text_en: "`track r.updatedAt`: the timestamp changes along with the data, so Angular updates only the changed rows"
       - text: "`track r`: порівняння за посиланням на об'єкт ловить кожну зміну даних і перерисовує лише потрібне"
+        text_en: "`track r`: comparison by object reference catches every data change and redraws only what is needed"
     explanation: >
       `track r` порівнює за посиланням, а нові об'єкти щоразу нові, тож усі рядки створюються заново. `$index` не руйнує
       DOM, але прив'язує стан `<input>` до позиції, а не до запису, і після перестановки введене опиниться не в тому рядку.
+    explanation_en: >
+      `track r` compares by reference, and new objects are always new, so all rows are created again. `$index` does
+      not destroy the DOM, but it ties the `<input>` state to the position instead of the record, and after a
+      reorder the typed text ends up in the wrong row.
     sources:
       - https://angular.dev/guide/templates/control-flow

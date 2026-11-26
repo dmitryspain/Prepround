@@ -3,12 +3,12 @@ title: Hooks
 title_en: Hooks
 description: useState, useEffect, useMemo/useCallback, useRef, власні хуки, правила хуків.
 description_en: useState, useEffect, useMemo/useCallback, useRef, custom hooks, rules of hooks.
-draft_en: true
 questions:
   - id: react-hooks-001
     level: junior
     type: single
     text: Скільки буде показано в кнопці після одного кліку (React 19)?
+    text_en: What will the button show after one click (React 19)?
     code:
       lang: jsx
       source: |
@@ -23,12 +23,18 @@ questions:
         }
     options:
       - text: "`1`: у цьому рендері `count` це `0`, тож усі виклики задають `1`"
+        text_en: "`1`: in this render `count` is `0`, so all the calls set `1`"
         correct: true
       - text: "`3`: кожен виклик `setCount` додає одиницю до актуального значення"
+        text_en: "`3`: each `setCount` call adds one to the current value"
       - text: "`0`: стан не оновиться, бо виклики йдуть поспіль в одному обробнику"
+        text_en: "`0`: the state won't update because the calls run back to back in one handler"
       - text: "`2`: перший виклик ігнорується, а решта два додають по одиниці"
+        text_en: "`2`: the first call is ignored and the other two add one each"
     explanation: >
       Значення `count` у межах одного рендеру незмінне, тому всі три виклики ставлять у чергу те саме `1`. Щоб додати три, потрібне функціональне оновлення `setCount(c => c + 1)`: тоді кожне бере результат попереднього.
+    explanation_en: >
+      The value of `count` is fixed within a single render, so all three calls queue the same `1`. To add three, you need an updater function, as in `setCount(c => c + 1)`: then each call takes the result of the previous one.
     sources:
       - https://react.dev/reference/react/useState#updating-state-based-on-the-previous-state
 
@@ -36,6 +42,7 @@ questions:
     level: junior
     type: single
     text: Компонент (React 19) збільшує `clicks.current` на кожному кліку й показує це значення в JSX. `clicks` створено через `useRef(0)`. Що побачить користувач одразу після кліку?
+    text_en: A component (React 19) increments `clicks.current` on every click and shows that value in JSX. `clicks` is created with `useRef(0)`. What will the user see right after a click?
     code:
       lang: jsx
       source: |
@@ -49,12 +56,18 @@ questions:
         }
     options:
       - text: "Напис не зміниться, бо запис у `ref.current` не запускає повторний рендер"
+        text_en: "The text won't change, because writing to `ref.current` doesn't trigger a re-render"
         correct: true
       - text: "Напис одразу покаже `1`, бо React стежить за змінами `ref.current`"
+        text_en: "The text will immediately show `1`, because React tracks changes to `ref.current`"
       - text: "Напис покаже `1` лише після повторного рендеру від `useEffect` без залежностей"
+        text_en: "The text will show `1` only after a re-render caused by `useEffect` without dependencies"
       - text: "React викине помилку, бо `ref.current` дозволено змінювати тільки в ефектах"
+        text_en: "React will throw an error, because `ref.current` may only be modified in Effects"
     explanation: >
       Зміна `ref.current` не повідомляє React, тож компонент не перемальовується, а JSX лишається зі значенням, яке було на момент останнього рендеру. Якщо значення має бути видимим, його зберігають у стані.
+    explanation_en: >
+      Changing `ref.current` doesn't notify React, so the component isn't re-rendered and the JSX keeps the value from the last render. If the value must be visible, store it in state.
     sources:
       - https://react.dev/reference/react/useRef#reference
 
@@ -62,17 +75,25 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про масив залежностей `useEffect` у React 19 правильні (поза `StrictMode`)?
+    text_en: Which statements about the `useEffect` dependency array in React 19 are true (outside `StrictMode`)?
     options:
       - text: "Без другого аргументу ефект запускається після кожного коміту компонента"
+        text_en: "Without a second argument, the Effect runs after every commit of the component"
         correct: true
       - text: "З порожнім масивом `[]` ефект запускається після першого коміту й не повторюється на оновленнях"
+        text_en: "With an empty array `[]`, the Effect runs after the first commit and doesn't repeat on updates"
         correct: true
       - text: "Кожна залежність порівнюється з попереднім значенням через `Object.is`"
+        text_en: "Each dependency is compared with its previous value using `Object.is`"
         correct: true
       - text: "З порожнім масивом `[]` ефект виконується ще до першого рендеру компонента"
+        text_en: "With an empty array `[]`, the Effect runs before the component's first render"
       - text: "Залежності порівнюються за вмістом, тому новий об'єкт із тими самими полями ефект не запустить"
+        text_en: "Dependencies are compared by content, so a new object with the same fields won't trigger the Effect"
     explanation: >
       Ефекти виконуються після коміту, а масив визначає, коли їх повторювати: відсутній — щоразу, `[]` — один раз, інакше — коли змінилася хоч одна залежність за `Object.is`. Порівняння поверхневе: новий об'єкт із тими самими полями вважається іншим значенням.
+    explanation_en: >
+      Effects run after the commit, and the array decides when they repeat: absent means every time, `[]` means once, otherwise whenever at least one dependency changed according to `Object.is`. The comparison is shallow: a new object with the same fields counts as a different value.
     sources:
       - https://react.dev/reference/react/useEffect#parameters
 
@@ -80,17 +101,25 @@ questions:
     level: junior
     type: multiple
     text: Які виклики хуків у компоненті порушують правила хуків?
+    text_en: Which Hook calls in a component break the Rules of Hooks?
     options:
       - text: "`useState` викликається всередині блоку `if (props.admin) { … }` в тілі компонента"
+        text_en: "`useState` is called inside an `if (props.admin) { … }` block in the component body"
         correct: true
       - text: "`useEffect` викликається нижче за рядок `if (!user) return null;` в тілі компонента"
+        text_en: "`useEffect` is called below the line `if (!user) return null;` in the component body"
         correct: true
       - text: "`useRef` викликається на кожній ітерації циклу `for (const item of items) { … }`"
+        text_en: "`useRef` is called on every iteration of the loop `for (const item of items) { … }`"
         correct: true
       - text: "`useState` на верхньому рівні власного хука `useCounter`, який викликають із компонента"
+        text_en: "`useState` at the top level of the custom Hook `useCounter`, which is called from a component"
       - text: "`useMemo` на верхньому рівні компонента перед першим `return`"
+        text_en: "`useMemo` at the top level of a component before the first `return`"
     explanation: >
       Хуки мають викликатися на верхньому рівні й у тому самому порядку за кожного рендеру, бо React зіставляє їх за порядком викликів. Умови, цикли й ранній `return` цей порядок ламають, а верхній рівень компонента чи власного хука дозволений.
+    explanation_en: >
+      Hooks must be called at the top level and in the same order on every render, because React matches them by call order. Conditions, loops, and an early `return` break that order, while the top level of a component or custom Hook is allowed.
     sources:
       - https://react.dev/reference/rules/rules-of-hooks#only-call-hooks-at-the-top-level
 
@@ -98,6 +127,7 @@ questions:
     level: middle
     type: single
     text: Компонент (React 19, без `StrictMode`) спершу рендериться з `id = 1`, потім із `id = 2`, потім його видаляють. Що буде в `log`?
+    text_en: A component (React 19, without `StrictMode`) first renders with `id = 1`, then with `id = 2`, then is removed. What will be in `log`?
     code:
       lang: jsx
       source: |
@@ -110,12 +140,18 @@ questions:
         }
     options:
       - text: "`setup 1`, `cleanup 1`, `setup 2`, `cleanup 2`"
+        text_en: "`setup 1`, `cleanup 1`, `setup 2`, `cleanup 2`"
         correct: true
       - text: "`setup 1`, `setup 2`, `cleanup 1`, `cleanup 2`"
+        text_en: "`setup 1`, `setup 2`, `cleanup 1`, `cleanup 2`"
       - text: "`setup 1`, `cleanup 2`, `setup 2`, `cleanup 2`"
+        text_en: "`setup 1`, `cleanup 2`, `setup 2`, `cleanup 2`"
       - text: "`setup 1`, `cleanup 1`, `setup 2`"
+        text_en: "`setup 1`, `cleanup 1`, `setup 2`"
     explanation: >
       Перед повторним запуском ефекту React викликає cleanup попереднього запуску, і той бачить старе значення `id`. Після видалення компонента cleanup викликається ще раз, уже для останнього запуску.
+    explanation_en: >
+      Before re-running an Effect, React calls the cleanup of the previous run, and that cleanup sees the old `id` value. After the component is removed, cleanup is called once more, for the last run.
     sources:
       - https://react.dev/reference/react/useEffect#parameters
 
@@ -123,6 +159,7 @@ questions:
     level: middle
     type: single
     text: Компонент (React 19) безперервно перерендерюється. Чому?
+    text_en: A component (React 19) re-renders endlessly. Why?
     code:
       lang: jsx
       source: |
@@ -136,12 +173,18 @@ questions:
         }
     options:
       - text: "`options` щоразу новий об'єкт, тож `Object.is` бачить нову залежність"
+        text_en: "`options` is a new object every time, so `Object.is` sees a new dependency"
         correct: true
       - text: "`setItems` в ефекті завжди запускає ефект повторно, незалежно від масиву залежностей"
+        text_en: "`setItems` in the Effect always re-runs the Effect, regardless of the dependency array"
       - text: "Залежностями можуть бути лише примітиви, тому React ігнорує масив і виконує ефект щоразу"
+        text_en: "Dependencies can only be primitives, so React ignores the array and runs the Effect every time"
       - text: "`load` повертає масив, а React за кожним записом нового масиву в стан скидає залежності ефекту"
+        text_en: "`load` returns an array, and each time a new array is written to state React resets the Effect's dependencies"
     explanation: >
       Новий об'єкт у кожному рендері означає нове посилання, а залежності порівнюються за `Object.is`. Ефект змінює стан, це знову рендер, нове `options` і так по колу. Лікується перенесенням об'єкта в ефект або залежністю від примітивів.
+    explanation_en: >
+      A new object on every render means a new reference, and dependencies are compared with `Object.is`. The Effect changes state, which causes another render, a new `options`, and so on in a loop. The fix is to move the object inside the Effect or depend on primitives.
     sources:
       - https://react.dev/reference/react/useEffect#removing-unnecessary-object-dependencies
 
@@ -149,6 +192,7 @@ questions:
     level: middle
     type: single
     text: Два компоненти в одному дереві (React 19) викликають власний хук `useCounter`. Після кліку на кнопку в `A` що покаже `B`?
+    text_en: Two components in the same tree (React 19) call the custom Hook `useCounter`. After a click on the button in `A`, what will `B` show?
     code:
       lang: jsx
       source: |
@@ -166,12 +210,18 @@ questions:
         }
     options:
       - text: "`B0`: кожен виклик хука має власний стан, `B` кліку не бачить"
+        text_en: "`B0`: each call of the Hook has its own state, `B` doesn't see the click"
         correct: true
       - text: "`B1`: стан хука спільний для всіх компонентів, що його викликають"
+        text_en: "`B1`: the Hook's state is shared by all components that call it"
       - text: "`B1`, але лише якщо обидва компоненти змонтовано під одним батьком"
+        text_en: "`B1`, but only if both components are mounted under the same parent"
       - text: "`B0` до наступного рендеру батька, а потім `B1`, коли React синхронізує хуки"
+        text_en: "`B0` until the parent's next render, and then `B1` once React synchronizes the Hooks"
     explanation: >
       Власний хук ділить між компонентами логіку, а не стан: `useState` усередині нього прив'язується до компонента, який хук викликає. Для спільного стану його піднімають до спільного предка або кладуть у контекст чи стор.
+    explanation_en: >
+      A custom Hook shares logic between components, not state: the `useState` inside it is tied to the component that calls the Hook. To share state, lift it to a common ancestor or put it in context or a store.
     sources:
       - https://react.dev/learn/reusing-logic-with-custom-hooks#custom-hooks-let-you-share-stateful-logic-not-state-itself
 
@@ -179,6 +229,7 @@ questions:
     level: middle
     type: single
     text: Компонент `List` (React 19, без React Compiler) обгортає фільтрацію в `useMemo` із залежностями `[rows, query]`, але батько передає `rows={data.map(toRow)}`. Що з кешем?
+    text_en: The `List` component (React 19, without React Compiler) wraps filtering in `useMemo` with dependencies `[rows, query]`, but the parent passes `rows={data.map(toRow)}`. What happens to the cache?
     code:
       lang: jsx
       source: |
@@ -191,12 +242,18 @@ questions:
         }
     options:
       - text: "Кеш марний: `.map()` щоразу дає новий масив, `rows` інший за `Object.is`"
+        text_en: "The cache is useless: `.map()` returns a new array every time, so `rows` differs by `Object.is`"
         correct: true
       - text: "Кеш працює, бо `useMemo` порівнює масиви поелементно, а самі елементи не змінилися"
+        text_en: "The cache works, because `useMemo` compares arrays element by element and the elements themselves haven't changed"
       - text: "Кеш працює, бо `useMemo` повторно викликає функцію лише тоді, коли змінюється `query`"
+        text_en: "The cache works, because `useMemo` calls the function again only when `query` changes"
       - text: "Кеш скидається лише тоді, коли змінюється довжина `rows`, тому фільтрація рідка"
+        text_en: "The cache is invalidated only when the length of `rows` changes, so filtering is rare"
     explanation: >
       `useMemo` порівнює залежності за `Object.is`, тобто за посиланням. Новий масив із `.map()` при кожному рендері батька робить кеш марним, тож стабільне посилання треба забезпечити там, де масив створюється.
+    explanation_en: >
+      `useMemo` compares dependencies with `Object.is`, that is, by reference. A new array from `.map()` on every parent render makes the cache useless, so a stable reference has to be provided where the array is created.
     sources:
       - https://react.dev/reference/react/useMemo#skipping-expensive-recalculations
       - https://react.dev/reference/react/useMemo#troubleshooting
@@ -205,14 +262,21 @@ questions:
     level: senior
     type: single
     text: Проєкт на React 19.3 збирається з увімкненим React Compiler. Для чого ручні `useMemo` / `useCallback` за такої збірки все ще мають сенс, за рекомендацією документації React?
+    text_en: A project on React 19.3 is built with React Compiler enabled. According to the React documentation, why do manual `useMemo` / `useCallback` still make sense with such a build?
     options:
       - text: "Щоб гарантувати стабільність значення, яке є залежністю ефекту, і не дати ефекту спрацьовувати зайвий раз"
+        text_en: "To guarantee the stability of a value that is an Effect dependency and keep the Effect from firing unnecessarily"
         correct: true
       - text: "Щоб увімкнути оптимізацію, бо компілятор мемоїзує лише значення, явно обгорнуті в ці хуки"
+        text_en: "To enable the optimization, because the compiler only memoizes values explicitly wrapped in these Hooks"
       - text: "Щоб працювали правила хуків, які компілятор не перевіряє для компонентів без `useMemo`"
+        text_en: "To make the Rules of Hooks work, which the compiler doesn't check for components without `useMemo`"
       - text: "Щоб кешувати результати між різними компонентами, адже кеш компілятора живе лише в межах одного рендеру"
+        text_en: "To cache results across different components, since the compiler's cache lives only within a single render"
     explanation: >
       Компілятор сам мемоїзує значення за аналізом коду, тож для нового коду документація радить покладатися на нього. Ручні хуки лишаються запасним виходом для точного контролю, наприклад коли значення стоїть у залежностях ефекту.
+    explanation_en: >
+      The compiler memoizes values on its own by analyzing the code, so for new code the documentation recommends relying on it. Manual Hooks remain an escape hatch for precise control, for example when a value is in an Effect's dependencies.
     sources:
       - https://react.dev/learn/react-compiler/introduction
 
@@ -220,6 +284,7 @@ questions:
     level: senior
     type: single
     text: Користувач швидко перемикає `userId` з `1` на `2`. Відповідь для `1` приходить пізніше за відповідь для `2`, і на екрані лишаються дані користувача `1`. Що виправляє причину (React 19)?
+    text_en: A user quickly switches `userId` from `1` to `2`. The response for `1` arrives later than the response for `2`, and the data of user `1` stays on screen. What fixes the cause (React 19)?
     code:
       lang: jsx
       source: |
@@ -232,12 +297,18 @@ questions:
         }, [userId]);
     options:
       - text: "Cleanup, що ігнорує застарілий запит (прапорець `ignore` чи `AbortController`)"
+        text_en: "A cleanup that ignores the stale request (an `ignore` flag or `AbortController`)"
         correct: true
       - text: "Прибрати `userId` із залежностей, щоб ефект виконався один раз і запити не конкурували"
+        text_en: "Remove `userId` from the dependencies so the Effect runs once and requests don't compete"
       - text: "Замінити `useEffect` на `useLayoutEffect`, щоб запит завершувався до малювання екрана"
+        text_en: "Replace `useEffect` with `useLayoutEffect` so the request finishes before the screen is painted"
       - text: "Обгорнути `fetchUser` у `useMemo`, щоб React скасував запит для попереднього `userId`"
+        text_en: "Wrap `fetchUser` in `useMemo` so React cancels the request for the previous `userId`"
     explanation: >
       Відповіді можуть повернутися не в порядку запитів, а ефект без cleanup застосує кожну. Cleanup із прапорцем `ignore` або скасуванням запиту відкидає результат, що вже не відповідає актуальним залежностям. Прибирання `userId` лише лишило б дані першого користувача назавжди.
+    explanation_en: >
+      Responses can return out of order, and an Effect without cleanup applies every one of them. A cleanup with an `ignore` flag or request cancellation discards a result that no longer matches the current dependencies. Removing `userId` would just leave the first user's data forever.
     sources:
       - https://react.dev/learn/synchronizing-with-effects#fetching-data
 
@@ -245,17 +316,25 @@ questions:
     level: senior
     type: multiple
     text: Які твердження про API `use` у React 19 правильні?
+    text_en: Which statements about the `use` API in React 19 are true?
     options:
       - text: "`use(Context)` можна викликати всередині `if`, на відміну від `useContext`"
+        text_en: "`use(Context)` can be called inside an `if`, unlike `useContext`"
         correct: true
       - text: "`use` дозволено викликати в умовах і циклах, але лише під час рендеру компонента чи хука"
+        text_en: "`use` can be called in conditions and loops, but only while a component or Hook is rendering"
         correct: true
       - text: "`use` не можна огортати в `try`/`catch`: помилку промісу обробляє Error Boundary"
+        text_en: "`use` can't be wrapped in `try`/`catch`: a Promise error is handled by an Error Boundary"
         correct: true
       - text: "`use` можна викликати в обробнику події, бо він, на відміну від хуків, не прив'язаний до рендеру"
+        text_en: "`use` can be called in an event handler, because, unlike Hooks, it isn't tied to rendering"
       - text: "Проміс, переданий у `use`, можна створювати прямо в рендері: React зберігає його між рендерами"
+        text_en: "A Promise passed to `use` can be created right in render: React keeps it between renders"
     explanation: >
       `use` виняток із правил хуків: він працює в умовах і циклах, але лише під час рендеру. Усередині нього призупинення реалізоване винятком, тому `try`/`catch` його ламає. Проміс має бути кешований, інакше новий екземпляр з'являтиметься кожного рендеру.
+    explanation_en: >
+      `use` is an exception to the Rules of Hooks: it works in conditions and loops, but only during rendering. Inside it, suspending is implemented with an exception, so `try`/`catch` breaks it. The Promise must be cached, otherwise a new instance appears on every render.
     sources:
       - https://react.dev/reference/react/use#caveats
       - https://react.dev/reference/react/use#reading-context-with-use
@@ -264,6 +343,7 @@ questions:
     level: senior
     type: single
     text: Ефект підключається до кімнати чату й показує сповіщення з поточною темою. Залежності `[roomId, theme]`, тому зміна теми перепідключає чат. Як це виправити в React 19.3, щоб підключення залежало лише від `roomId`, а сповіщення мало актуальну тему?
+    text_en: An Effect connects to a chat room and shows a notification with the current theme. The dependencies are `[roomId, theme]`, so a theme change reconnects the chat. How do you fix this in React 19.3 so that the connection depends only on `roomId` and the notification has the current theme?
     code:
       lang: jsx
       source: |
@@ -275,11 +355,17 @@ questions:
         }, [roomId, theme]);
     options:
       - text: "Винести виклик `notify` у `useEffectEvent` і викликати його з ефекту, а `theme` не додавати в залежності"
+        text_en: "Move the `notify` call into `useEffectEvent` and call it from the Effect, without adding `theme` to the dependencies"
         correct: true
       - text: "Прибрати `theme` із залежностей і вимкнути правило лінтера: замикання саме підхопить нову тему"
+        text_en: "Remove `theme` from the dependencies and disable the linter rule: the closure will pick up the new theme itself"
       - text: "Обгорнути колбек у `useCallback` із залежністю `[theme]` і передати його в залежності ефекту"
+        text_en: "Wrap the callback in `useCallback` with the dependency `[theme]` and pass it to the Effect's dependencies"
       - text: "Створити Effect Event через `useEffectEvent` і передати його дочірньому компоненту як проп"
+        text_en: "Create an Effect Event via `useEffectEvent` and pass it to a child component as a prop"
     explanation: >
       Effect Event читає найновіші пропси й стан, але не є реактивним значенням, тож не входить у залежності. Простий пропуск `theme` лишив би в замиканні стару тему, а `useCallback([theme])` усе одно змінювався б разом із нею. Effect Event можна викликати лише з ефектів або з інших Effect Events, а не з обробників чи дочірніх компонентів.
+    explanation_en: >
+      An Effect Event reads the latest props and state but isn't a reactive value, so it isn't in the dependencies. Simply omitting `theme` would leave the old theme in the closure, and `useCallback([theme])` would still change along with it. An Effect Event can only be called from Effects or other Effect Events, not from handlers or child components.
     sources:
       - https://react.dev/reference/react/useEffectEvent
