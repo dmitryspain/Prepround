@@ -1,3 +1,6 @@
 .DS_Store
 .idea/
 *.user
+
+# Agent reports: full agent reports passed between agents by path (token economy, 2026-11-26)
+backend/.claude/reports/

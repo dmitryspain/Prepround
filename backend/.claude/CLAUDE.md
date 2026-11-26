@@ -1,252 +1,86 @@
 # Prepround: підготовка до співбесід
 
-Тести для підготовки до співбесід. Людина вибирає напрям і стек, рівні, кількість питань і їх розподіл по темах. Потім проходить тест із таймером і бачить, які теми в неї провисають. MVP задеплоєно 2026-11-19: **https://prepround.pages.dev** (див. «Деплой»). Домен prepround.app ще не куплено.
+Тести для підготовки до співбесід. Людина вибирає напрям, стек, рівні, кількість питань і розподіл по темах, проходить тест із таймером і бачить, які теми провисають. Живе на **https://prepround.pages.dev** (API — `prepround-api.onrender.com`, БД — Neon), українською й англійською.
 
-- Специфікація продукту: `backend/.claude/pm/spec.md`. Це джерело правди для поведінки.
-- Рішення (ADR): `backend/.claude/pm/decisions/`. 001 — стек і архітектура, 002 — формат контенту, 003 — фронт в окремому репо `PreproundWeb`, 004 — джерела контенту і рубрика складності, 005 — деплой MVP, 006 — дві мови.
-- Беклог і дорожня карта: `backend/.claude/pm/backlog.md`.
+- Специфікація (джерело правди для поведінки): `backend/.claude/pm/spec.md`.
+- Рішення (ADR): `backend/.claude/pm/decisions/` — 001 стек і архітектура, 002 формат контенту, 003 фронт в окремому репо, 004 джерела контенту, 005 деплой, 006 дві мови.
+- Беклог: `backend/.claude/pm/backlog.md` (виконані картки — `backlog-archive.md`).
+- **Головна сесія** (не субагенти) веде роботу за `backend/.claude/pm/process.md`: «погнали», хвилі, деплой, git, економія токенів. Субагентам цей файл читати не треба.
 
-## «Погнали»: як головна сесія веде роботу
-
-Коли власник пише «погнали» (або «далі», «продовжуй»), головна сесія сама веде цикл агентів і зайвого не перепитує.
-
-**Нахил на розробку (рішення власника 2026-11-14, діє з PRP-014).** Більшу частину часу має займати розробка, а не перевірка й планування. `project-manager` не закриває кожну картку, а `tester` перевіряє пропорційно (див. `tester.md`, «Обсяг перевірки»).
-
-1. Прочитай блок «Готовність карток» на початку `backend/.claude/pm/backlog.md`.
-2. Візьми першу картку з «Готово для coder зараз». Якщо такої немає або блок не відповідає статусам карток, виклич `project-manager` у режимі «що далі?». Перед карткою з Областю `frontend` у новій сесії перевір запис у `PreproundWeb` пробним файлом. Якщо запис не вдався, зупинись: це PRP-013, п. 2б.
-3. Передай картку виконавцю з поля «Виконавець» (`coder` або `content-author`) повністю, дослівно, разом із полями. Якщо попередня картка лишила хвости, які стосуються цієї, додай їх приміткою головної сесії під карткою. Звіт виконавця разом із карткою передай `tester`.
-4. При `FAIL` передай виконавцю секцію «Для кодера» дослівно, потім знову `tester`. Максимум 3 кола.
-5. При `PASS` закрий картку **сама**, без `project-manager`:
-   - у `backlog.md` постав `done` і допиши під карткою «**Результат (дата):** PASS з N кола; тести: total X / failed 0» і «**Хвости:** …», куди скопіюй дослівно «Помічено поза скоупом» coder і «Зауваження» tester (або «немає»);
-   - онови «Готовність карток» (у роботі, готово, закрито);
-   - якщо хвіст стосується наступної картки, передай його coder приміткою (п. 3). Тексти інших карток не переписуй;
-   - якщо картка змінила команди, порти чи структуру, онови розділи «Команди» і «Структура» в цьому файлі.
-6. **`project-manager` кличеш лише коли:**
-   - закінчився етап дорожньої карти: режим «закриття етапу» (наздогнати хвости закритих карток, оновити наступні картки, knowledge і «Готовність»);
-   - картка не пройшла за 3 кола (ретро);
-   - хвіст змінює план, spec, контракт API або вимагає нової картки, а не лише примітки;
-   - «Готовність» порожня або не відповідає статусам.
-7. Переходь до наступної готової картки. Картки виконуй **послідовно**: команда одна на два репо, і паралельні coder конфліктують у файлах, портах і контракті.
-
-**Хвилі контенту (рішення власника 2026-11-15).** Наповнення тем іде хвилями, а не картками PM на кожну тему:
-- план хвиль — розділ «Хвилі контенту» в `backlog.md`; хвиля = **3** агенти `content-author` **паралельно** на моделі **Sonnet** (параметр `model: "sonnet"` у виклику), кожен на кількох темах по одній за раз (свої файли, конфліктів немає), по 12 питань на тему (4/4/4) за ADR 004. `tester` лишається на моделі головної сесії (Opus);
-- автори працюють у «Режимі хвилі» (`content-author.md`): без `import` і `dotnet test`. Автори й tester хвилі читають бриф `backend/.claude/pm/content-brief.md` замість цього файла й ADR 002/004 (рішення власника 2026-11-17, щоб не витрачати токени на старті кожного агента). Якщо змінюєш правила контенту в ADR чи тут, онови й бриф;
-- **Docker-образи (рішення власника 2026-11-17):** агенти запускають лише образи з таблиці «Запуск коду» в брифі, а `docker pull` / `docker build` не роблять. Перед хвилею головна сесія:
-  1. тягне відсутні образи;
-  2. перевіряє, що кожен справді запускається: `docker run --rm python:3.14 python -V`, `node:24-alpine node -v`, `eclipse-temurin:25 java -version`, `php:8.5-cli php -v`. Урок 2026-11-17: після заповненого диска `python:3.14` давав `exec format error`;
-  3. знімає список `docker images` і `docker ps -a` у scratchpad.
-
-  Після хвилі видаляє образи й контейнери, яких до хвилі не було і яких немає в таблиці;
-- коли всі автори хвилі завершили, головна сесія один раз: `validate` → `python3 .claude/tools/content-lint.py <теми хвилі> --urls` (рядки `✗` одразу повертає автору теми) → `import` (через `ConnectionStrings__Prepround`) → `dotnet test`; потім **два** `tester` паралельно, кожен на половині тем, з фактчеком хвилі (розділ «Фактчек хвилі» в брифі, ADR 004, розділ 8);
-- **Конвеєр (рішення власника 2026-11-17, з хвилі 3).** Замість схеми «усі автори → усі tester» з пунктів вище:
-  - **Черга тем** — у беклозі, «Хвилі контенту».
-  - **Слоти:** разом до 5 агентів одночасно. Співвідношення — за вузьким місцем: автор із брифом пише тему за 2–4 хв, а tester перевіряє її довше, тож зазвичай 2 `content-author` (Sonnet) і 3 `tester` (Opus).
-  - **Автор:** один запуск — одна тема. Щойно слот звільнився, слот бере наступну тему з черги.
-  - **Автор здав тему** → головна сесія запускає `content-lint <тема> --urls`. Рядки `✗` повертає тому самому автору через `SendMessage`, бо його контекст збережено. Чиста тема йде в чергу фактчеку.
-  - **Tester** бере 2–4 готові теми, згруповані за стеком. Перед його запуском головна сесія один раз на групу робить `validate` → `import` → `dotnet test`, але **на замороженій копії**, бо автори в цей час пишуть `content/`, а тести читають справжній контент (урок 2026-11-17: від прогону до прогону падало від 7 до 18 різних тестів). Порядок такий: `cp -R ../content <scratchpad>/content-snapshot` → `validate` і `import` цієї копії → `PREPROUND_TEST_CONTENT_DIR=<scratchpad>/content-snapshot dotnet test`.
-  - **ContentTool** агенти запускають лише з `--no-build`. Збирає головна сесія: паралельні збірки того самого проєкту ламають одна одну.
-- `FAIL` у темі → автору цієї теми секцію «Для кодера», далі той самий tester (до 3 кіл), решта хвилі не чекає;
-- **Чернетки (PRP-023, ADR 005, розділ 6).** Тема без PASS має `draft: true`. Нову тему автор створює одразу з цим рядком, а знімати його не має права. Усі `import` хвиль у dev-БД і на знімку йдуть з `--include-drafts`. Після PASS теми головна сесія видаляє рядок `draft: true` з її файлу. Прод-імпорт (без прапорця) запускає лише власник, на зупинках;
-- **Хвилі перекладу (ADR 006):**
-  - бриф — `backend/.claude/pm/translation-brief.md`, черга — «Хвилі перекладу» в беклозі;
-  - перед хвилею головна сесія копіює `../content` у `<scratchpad>/translation-base` (`rm -rf` і потім `cp -R`, інакше копія вкладеться всередину старої), і `content-lint` автора й tester іде з `--base <копія> --translation-only` (разом з `validate`: лінт не бачить дублів ключів);
-  - автор першою правкою ставить `draft_en: true`, головна сесія знімає позначку після PASS;
-  - імпорт на знімку має дати `Питання: додано 0, оновлено 0, деактивовано 0`.
-- **Дві мови (з PRP-029, 2026-11-21).** Нові питання й теми пишуться одразу українською та англійською (бриф контенту, «Дві мови»). Фікси вже опублікованих тем перевіряються `content-lint … --base <знімок до фіксу>`, щоб правка української не лишила англійську застарілою.
-- після PASS головна сесія оновлює «Хвилі контенту» в беклозі (тема → кількість, PASS) і бере наступну хвилю без зупинки. Зупинка — коли закінчились хвилі напряму (Backend, потім Frontend) або на `critical` у фактчеку.
-
-Зупинись і коротко напиши власнику (що зроблено, що далі, що потрібно від нього), коли:
-- наступна картка має «Виконавець: власник» або заблокована його кроком;
-- картка не пройшла за 3 кола;
-- агент повернув питання, без відповіді на яке рухатись не можна;
-- закінчився етап дорожньої карти: на ньому власник дивиться результат.
-
-Між картками власнику пиши лише один рядок: «PRP-NNN: PASS, беру PRP-MMM».
-
-## Структура (два репо, рішення 003)
+## Структура (два репо)
 
 | Де | Що там |
 |---|---|
 | `Prepround/backend/` | ASP.NET Core 10 Web API, PostgreSQL 18, `Prepround.slnx` |
-| `Prepround/content/` | питання в YAML: `content/<галузь>/field.yaml` і `content/<галузь>/topics/<тема>.yaml` |
-| `Prepround/backend/.claude/` | інструкції, агенти, spec, беклог, рішення — для **обох** репо (перенесено з кореня `Prepround/` 2026-11-17 на прохання власника) |
-| `PreproundWeb` (`/Users/dmitryspain/RiderProjects/PreproundWeb`) | окремий git-репо поруч: Angular 22 (веб). `ios/` відкладено (PRP-008) |
+| `Prepround/content/` | питання в YAML: `content/<галузь>/field.yaml`, `content/<галузь>/topics/<тема>.yaml` |
+| `Prepround/backend/.claude/` | інструкції, агенти, spec, беклог, рішення — для обох репо |
+| `/Users/dmitryspain/RiderProjects/PreproundWeb` | окремий git-репо: Angular 22 (веб); iOS відкладено (PRP-008) |
 
-Область картки `backend` / `content` → репо `Prepround`, `frontend` → репо `PreproundWeb`. Шляхи в картці відносно свого репо, а в міжрепозиторних картках і у звітах — з префіксом репо. Агенти працюють у `PreproundWeb` за абсолютними шляхами (доступ сесії до цієї теки — PRP-013).
-
-Поки не виконано PRP-007, репо `PreproundWeb` може не бути.
-
-**Сесію Claude Code запускаємо з `Prepround/backend/`.** Агентів і цей файл Claude Code бачить, лише коли `.claude/` лежить у теці запуску. Сесія, запущена з кореня `Prepround/`, агентів не знайде. Шляхи в документах, як і раніше, відносно кореня репо `Prepround/` (`content/…`, `backend/.claude/…`).
+Область картки `backend` / `content` → репо `Prepround`, `frontend` → `PreproundWeb` (працюй за абсолютними шляхами). Шляхи в картці — відносно свого репо, у звітах — з префіксом репо. Сесію запускаємо з `Prepround/backend/`, інакше Claude Code не бачить агентів.
 
 ## Продукт коротко (деталі в spec.md)
 
-- **Каталог:** галузь (IT) → шкала рівнів галузі → напрями (Backend, Frontend) → стеки (.NET, Java, Python, Node.js, Go, PHP; React, Angular, Vue).
-- **Стек** — лише набір тем за замовчуванням. Людина може додати будь-яку тему з каталогу галузі, тож фулстек (.NET + React) виходить сам собою.
-- **Теми належать галузі, а не стеку.** SQL, Docker, JavaScript пишемо один раз, а користуються ними кілька стеків.
-- **Рівні — це дані, а не код.** Упорядковану шкалу рівнів задає `field.yaml` галузі. Назв рівнів (Junior/Middle/Senior) у коді немає: щоб додати Architect чи «Кандидат наук», достатньо дописати рядок у YAML.
-- **Налаштування тесту:**
-  - рівні: один або кілька;
-  - кількість питань: 10–100;
-  - розподіл по темах: за замовчуванням порівну, сума має дорівнювати загальній кількості, максимум по темі дорівнює кількості активних питань теми на вибраних рівнях;
-  - таймер.
-- **Типи питань:**
-  - `single` — рівно 1 правильний варіант;
-  - `multiple` — щонайменше 2 правильних, зараховуємо лише повністю правильну відповідь.
-
-  Варіанти перемішуються. Пояснення в кожному питанні обов'язкове.
-- **«Перевірити»** на питанні показує, чи правильна відповідь, які варіанти правильні і пояснення, а потім **блокує** відповідь. Неперевірену відповідь можна змінювати до «Завершити тест».
-- **Таймер** один на весь тест і за замовчуванням увімкнений: 60 с × кількість питань. Його можна вимкнути. Коли час вийшов, тест завершується, а питання без відповіді рахуються неправильними.
-- **Результат:** загальний відсоток, розбивка по темах і розбір кожного питання.
-- **Реєстрації немає.** Історія результатів і «вже бачені» питання живуть на пристрої. Сервер нічого про користувача не зберігає.
-- **Вибір питань:** спершу ті, яких людина ще не бачила, потім, якщо їх не вистачає, уже бачені. Між темами питання перемішуються.
-- **Відповіді перевіряє клієнт.** Сервер віддає тест разом із правильними відповідями й поясненнями. Так задумано (рішення 001): обманювати тут можна лише себе.
-- **Контент** пише агент `content-author` за офіційною документацією (рішення 004), власник вибірково вичитує; лише YAML у `content/`. Застосунок читає питання тільки з бази, куди їх кладе `Prepround.ContentTool import` (рішення 002).
-- Інтерфейс і контент українською й англійською (ADR 006). Перемикач — у шапці й на «Налаштуваннях». Мова контенту передається як `?lang=` в API, а англійський тест бере лише перекладені питання.
+- Каталог: галузь (IT) → шкала рівнів → напрями (Backend, Frontend) → стеки. Стек — лише набір тем за замовчуванням; тему можна додати будь-яку. Теми належать галузі, не стеку.
+- **Рівні — дані, не код:** шкалу задає `field.yaml`; назв рівнів у коді немає.
+- Тест: рівні, 10–100 питань, розподіл по темах (максимум теми = активні питання на вибраних рівнях мовою сайту), таймер 60 с × питання. `single` — 1 правильний, `multiple` — ≥ 2, зараховуємо лише повністю правильну відповідь. Варіанти перемішуються, пояснення обов'язкове. «Перевірити» показує правильні варіанти й блокує відповідь.
+- Реєстрації немає: історія й «вже бачені» — на пристрої. Відповіді перевіряє клієнт (рішення 001).
+- Контент пише `content-author` за офіційною документацією (рішення 004); застосунок читає питання лише з БД, куди їх кладе `ContentTool import` (рішення 002).
+- Дві мови (ADR 006): інтерфейс і контент uk/en, мова контенту — `?lang=` в API; англійський тест бере лише перекладені питання.
 
 ## Архітектура бекенду
 
-Clean Architecture, CQRS-хендлери без MediatR, стандартний DI ASP.NET Core без Autofac (рішення 001).
-
-- `Prepround.Domain`: сутності `Field` (галузь), `Level`, `Direction`, `Stack`, `Topic`, `Question`, а також `Result` / `Error`. Від інфраструктури не залежить.
-- `Prepround.Application`: запити, команди й хендлери (`IQuery<T>` / `ICommand<T>` + `IQueryHandler` / `ICommandHandler` у `Abstractions/Messaging`), алгоритм вибору питань, валідація контенту, абстракції репозиторіїв.
-- `Prepround.Infrastructure`: EF Core + Npgsql (`PreproundContext`, міграції в `Migrations/`), репозиторії, читання YAML (YamlDotNet), імпорт контенту.
-- `Prepround.Api`: тонкі контролери (`handler.Handle(...)` → `Ok(result.Value)` / `BadRequest(result.Error)`), CORS, rate limiting, OpenAPI у Development.
-- `Prepround.ContentTool`: консоль із командами `validate <dir>` (без БД) і `import <dir>` (у БД).
-- `tests/Prepround.Tests`: xUnit v3. Мок-бібліотек немає, лише ручні фейки. Інтеграційні тести працюють через `WebApplicationFactory` і Testcontainers (Postgres).
+Clean Architecture, CQRS-хендлери без MediatR, стандартний DI (рішення 001).
+- `Prepround.Domain` — сутності й `Result`/`Error`; `Prepround.Application` — запити/команди/хендлери (`Abstractions/Messaging`), вибір питань, валідація контенту, абстракції репозиторіїв; `Prepround.Infrastructure` — EF Core + Npgsql, міграції, репозиторії, YAML, імпорт; `Prepround.Api` — тонкі контролери, CORS, rate limiting; `Prepround.ContentTool` — `validate` / `import`.
+- `tests/Prepround.Tests`: xUnit v3, ручні фейки без мок-бібліотек, інтеграційні — `WebApplicationFactory` + Testcontainers.
 
 ## Конвенції
 
-- Хендлер повертає `Result` / `Result<T>`. Помилка: `new Error("Area.Code", "Повідомлення українською.")`. Винятки лише для справді виняткових ситуацій.
-- Нова фіча — це `XxxQuery` / `XxxCommand` (record) + `XxxHandler` у папці фічі в Application + тонкий екшен у контролері.
-- Залежності передаються через конструктор у поля `private readonly _name`.
-- Коментарі й XML-doc пишемо англійською, коротко, пояснюємо «чому». Тексти інтерфейсу живуть лише в словниках `PreproundWeb/src/app/core/i18n/messages/` (uk і en). `Error.Message` API і повідомлення ContentTool лишаються українськими, бо вони для розробника: фронт показує свій текст за `code`.
-- **Нічого з каталогу не хардкодимо.** Галузі, рівні, напрями, стеки й теми беруться лише з контенту через БД. У `Prepround/backend/src` і `PreproundWeb/src` (крім тестів і фікстур) немає рядків `junior`, `middle`, `senior`, `dotnet`, `ef-core` тощо як ідентифікаторів каталогу. Підказки з CLI-командами (`dotnet ef database update`, `dotnet user-secrets set`) правило не порушують.
-- **Ідентифікатори контенту стабільні.** Id питання ніколи не змінюється й не використовується повторно. Питання, якого більше немає у файлах, імпорт позначає `IsActive = false` і не видаляє.
-- **Випадковість** лише через шов, який тести підміняють детермінованим (наприклад, `Random`, отриманий з DI).
-- **Час** зберігаємо й віддаємо в UTC (`timestamptz`).
-- **Доступ:** акаунтів немає, усі ендпоінти анонімні. Захист — rate limiting і ліміти розміру запиту. Персональних даних не зберігаємо.
-- **Секрети** (рядок підключення до БД) зберігаються лише в user-secrets або в змінних середовища. **Виняток (рішення власника 2026-11-14):** рядок підключення до локального dev-контейнера `prepround-postgres` лежить у `backend/src/Prepround.Api/appsettings.Development.json`, бо цей dev-пароль і так є в `docker-compose.yml`. В `appsettings.json` рядка підключення немає. Будь-яке інше середовище (деплой) отримує його лише зі змінних середовища або секретів. ContentTool `appsettings` не читає: йому рядок дає user-secrets або `ConnectionStrings__Prepround`.
-- Схему БД змінюємо тільки новою EF-міграцією. Старі міграції не редагуємо.
-- Пакети NuGet і npm додаємо лише ті, що дозволені карткою або рішенням 001. Версії NuGet лише в `backend/Directory.Packages.props` (CPM), у csproj `PackageReference` без `Version`. `backend/nuget.config` з єдиним джерелом nuget.org не прибираємо: без нього restore падає з NU1507 через глобальне джерело на машині.
+- Хендлер повертає `Result` / `Result<T>`; помилка `new Error("Area.Code", "Повідомлення українською.")`. Нова фіча = `XxxQuery`/`XxxCommand` (record) + `XxxHandler` у папці фічі + тонкий екшен. Залежності — через конструктор у `private readonly _name`.
+- Коментарі й XML-doc англійською, коротко, «чому». Тексти інтерфейсу — лише в `PreproundWeb/src/app/core/i18n/messages/` (uk, en); `Error.Message` і повідомлення ContentTool українською (для розробника).
+- **Нічого з каталогу не хардкодимо:** у `src` обох репо немає `junior`, `middle`, `dotnet`, `ef-core` тощо як ідентифікаторів.
+- Id контенту стабільні й не перевикористовуються; зникле питання імпорт деактивує. Випадковість — лише через шов з DI. Час — UTC (`timestamptz`). Акаунтів і персональних даних немає.
+- **Секрети** лише в user-secrets / змінних середовища (виняток: dev-рядок локального `prepround-postgres` в `appsettings.Development.json`). Агенти до Neon не ходять; прод перевіряють лише `curl` до публічних адрес.
+- Схему БД змінюємо лише новою EF-міграцією, старі не редагуємо. Пакети — лише дозволені карткою або рішенням 001; версії NuGet лише в `Directory.Packages.props`; `backend/nuget.config` не прибирати.
 
-## Фронтенд
+## Фронтенд (`PreproundWeb`, шляхи від його кореня; там свій CLAUDE.md)
 
-Живе в репо `PreproundWeb`, шляхи нижче відносно його кореня. Там же є `CLAUDE.md` з цими конвенціями (створює PRP-007).
+- Angular 22: standalone, сигнали, zoneless, Vitest, SCSS; без NgRx і UI-бібліотек. Кольори лише через токени тем (`var(--…)`); `matchMedia` — через токен `MEDIA`; верстка спершу під телефон.
+- HTTP і маппінг DTO — лише `core/api.service.ts`, моделі — `core/models.ts`; адреса API — токен `API_BASE_URL` (`environment.ts` / `environment.production.ts`). `ApiService` сам додає `lang`.
+- Локальні дані — лише через `core/storage.ts` (ключі `prepround.history.v1`, `prepround.prefs.v1`). Мову пише лише `PrefsService`; `navigator.languages` — через `BROWSER_LANGUAGES`.
+- Текст контенту не вставляємо через `[innerHTML]`; inline-код рендерить pipe, що спершу екранує.
+- **Правило контракту (рішення 003):** зміна ендпоінта/DTO/формату в тій самій картці оновлює бекенд і `api.service.ts`/`models.ts`; джерело — spec, розділ 5. Tester проганяє тести обох репо.
 
-- Angular 22 зі стандартними налаштуваннями CLI: standalone, сигнали, zoneless, Vitest, SCSS. Без NgRx, без UI-бібліотеки.
-- Теми Aurora / Daylight / Terminal + «Авто» (spec 3.6): набори токенів під `[data-theme]` у `src/styles/`, кольори в компонентах лише через токени (`var(--…)`), тему й акцент вибирає `PrefsService` (PRP-015). Системні налаштування (`matchMedia`) лише через DI-токен `MEDIA`. Верстка спершу під телефон.
-- Усі HTTP-виклики й маппінг DTO → модель живуть у `src/app/core/api.service.ts`, моделі в `src/app/core/models.ts`. Адресу API код бере лише через токен `API_BASE_URL` (`src/app/core/config.ts`). Значення для dev server і тестів лежить у `src/environments/environment.ts`, а для продакшн-збірки — у `src/environments/environment.production.ts`, який підставляють `fileReplacements` в `angular.json` (PRP-022).
-- Локальні дані (історія, «вже бачені», налаштування оформлення) зберігаються лише через `src/app/core/storage.ts` (DI-токен). Ключі мають версію: `prepround.history.v1`, `prepround.prefs.v1`. Єдиний виняток — `public/theme-init.js`: до старту Angular він лише читає `prepround.prefs.v1`, щоб не було спалаху теми.
-- Мова інтерфейсу (PRP-027):
-  - поле `language` у `prepround.prefs.v1` пише лише `PrefsService`;
-  - `<html lang>` ставить застосунок;
-  - доступні мови задають `languages` і `defaultLanguage` в `environment*.ts`;
-  - `ApiService` сам додає `lang` до кожного запиту;
-  - `navigator.languages` береться лише через `BROWSER_LANGUAGES`.
-- Текст із контенту не вставляємо через `[innerHTML]` як є. Inline-код у бектиках і блок `code` рендерить окремий pipe, який спершу екранує текст.
+## Порти
 
-**Правило контракту (між репо, рішення 003).** Будь-яка зміна ендпоінта, параметрів, DTO чи формату (назви полів JSON, nullable, дати) в тій самій картці оновлює і бекенд у `Prepround`, і `PreproundWeb/src/app/core/api.service.ts` / `models.ts`. Джерело контракту — spec, розділ 5. Tester проганяє `dotnet test` і `npx ng test --watch=false` в обох репо. Мовчки ламати фронт не можна.
+API `https://localhost:7120` (фронт ходить лише сюди) · Postgres `localhost:5433` (`prepround-postgres`) · dev server `http://localhost:4300`. API і dev server тримає запущеними головна сесія — другого екземпляра не запускай.
 
-## iOS (Capacitor): відкладено
-
-**Рішення власника 2026-11-14: iOS поки не робимо, без дати.** Мета — MVP у браузері. Картки з активного беклогу iOS не зачіпають: ні збірки `mobile`, ні `environment.mobile.ts`, ні `core/platform.ts`, ні `capacitor://localhost` у CORS. Усе відкладене зібрано в PRP-008 (розділ «Відкладено: iOS» у беклозі). Нижче — довідка на час, коли до iOS повернемось.
-
-- Той самий Angular-код у нативній оболонці Capacitor 8 (`PreproundWeb/ios/`, Swift Package Manager, iOS 17+). Bundle ID — `io.github.dmitryspain.prepround`.
-- **Збірка `mobile`** кладе файли в окрему теку `dist/mobile`, а `webDir` у `capacitor.config.ts` вказує саме туди. Тому веб-збірка ніколи не потрапить у застосунок (урок Outlay). Адреса API для неї — у `src/environments/environment.mobile.ts`.
-- **Платформні відмінності** робимо лише через `src/app/core/platform.ts` (DI-токени) і атрибут `html[data-native]`.
-- **Підпис:** безкоштовна Personal Team власника. Профіль діє 7 днів, на пристрої до 3 застосунків (Outlay вже займає одне місце). Push, TestFlight і App Store недоступні.
-- **CORS:** WebView шле запити з origin `capacitor://localhost`. Він має бути в `Cors:Origins`, інакше WebView відкидає всі відповіді API.
-- **Зв'язок із бекендом з iPhone:** через Tailscale Serve, як в Outlay, коли власник його налаштує. Симулятор ходить на `https://localhost:7120`, але для цього dev-сертифікат має бути доданий у симулятор (`xcrun simctl keychain <id> add-root-cert`).
-- **Згенероване:** `ios/App/App/public` і `ios/App/App/capacitor.config.json` створює `cap sync`. Їх не редагуємо й не комітимо.
-- **Симулятор:** застосунок симулятора на Xcode 27.x називається DeviceHub (`open -a DeviceHub`). На Xcode 27.1 `native-run` шукав Simulator.app, тож `cap run` завершувався з exit 1. На 27.2 це треба перевірити, а запускати надійніше через `xcrun simctl launch`.
-
-## Порти (не перетинаються з Outlay: 7016, 59192, 5432, 4200)
-
-| Що | Адреса |
-|---|---|
-| API | `https://localhost:7120`, `http://localhost:5120` |
-| PostgreSQL (Docker, контейнер `prepround-postgres`) | `localhost:5433` |
-| Angular dev server | `http://localhost:4300` |
-
-Фронт ходить лише на `https://localhost:7120`: `http://localhost:5120` під профілем `https` відповідає 307, а CORS-preflight через редирект не проходить.
-
-## Деплой (ADR 005, PRP-024; з 2026-11-19)
-
-| Що | Де |
-|---|---|
-| Фронт | **https://prepround.pages.dev**, Cloudflare Pages, проєкт `prepround`, репо `dmitryspain/PreproundUI`. Гілка `master`, команда збірки `npm run build`, тека `dist/web/browser`, Node з `.node-version` |
-| API | **https://prepround-api.onrender.com**, Render Free, сервіс `prepround-api`, репо `dmitryspain/Prepround`. Docker, Root Directory `backend`, Frankfurt, health check `/api/health` |
-| БД | Neon Free, Frankfurt, Postgres 18. БД `preprounddb`. Роль `preprounddb_owner` — для міграцій та імпорту; роль `prepround_reader` (лише `SELECT`) — для API |
-
-- **Деплой.** Push у `master` автоматично перезбирає обидва сервіси.
-- **Секрет лише один** — змінна Render `ConnectionStrings__Prepround` (роль читача). Не-секрети прод-конфігурації лежать у git: `backend/src/Prepround.Api/appsettings.Production.json` (CORS, заголовок IP клієнта `CF-Connecting-IP`) і `PreproundWeb/src/environments/environment.production.ts` (адреса API).
-- **Міграції.** Нову EF-міграцію власник застосовує в Neon **до** push коду, який від неї залежить.
-- **Імпорт у прод.** Запускає власник або головна сесія, якщо власник сам дав рядок підключення. Порядок такий:
-  - перед імпортом `git pull`;
-  - імпорт без `--include-drafts`, один раз, на зупинках хвиль і етапів;
-  - після імпорту smoke каталогу.
-- **Агенти до Neon не ходять.** Smoke проду — лише `curl` до публічних адрес.
-- **Холодний старт.** Render Free засинає після 15 хв без запитів. Пробудження займає ~25 с (виміряно 2026-11-20: Render 14 с + перший запит до БД 11 с). Фронт через 5 с показує підказку (PRP-022).
-
-## Команди (цільові: їх створюють картки каркаса; після закриття картки звіряй)
+## Команди
 
 ```bash
-# бекенд (з Prepround/backend/)
-open -a Docker                                                 # якщо демон не запущений; чекати, поки `docker info` не відповість
-docker compose up -d                                           # Postgres 18 на localhost:5433
-dotnet tool restore                                            # dotnet-ef 10 з локального маніфесту
-dotnet build
-dotnet test                                                    # xUnit v3 у режимі MTP (global.json); інтеграційним тестам потрібен Docker
-dotnet test -- --filter-class Prepround.Tests.Api.CorsTests     # фільтри MTP — після `--`; вивід `total/succeeded`, а не `Passed: N`
-dotnet run --project src/Prepround.Api --launch-profile https  # https://localhost:7120, OpenAPI: /openapi/v1.json
+# з Prepround/backend/
+docker compose up -d                       # Postgres на 5433
+dotnet build && dotnet test                # MTP: фільтри після `--`, напр. dotnet test -- --filter-class Prepround.Tests.Api.CorsTests
 dotnet ef migrations add <Name> --project src/Prepround.Infrastructure --startup-project src/Prepround.Api
-dotnet ef database update --project src/Prepround.Infrastructure --startup-project src/Prepround.Api
+dotnet run --no-build --project src/Prepround.ContentTool -- validate ../content          # 0 ок, 1 помилки, 2 аргументи
+dotnet run --no-build --project src/Prepround.ContentTool -- import ../content [--include-drafts]   # 3 — БД; рядок: ConnectionStrings__Prepround
+python3 .claude/tools/content-lint.py <тема…> | --all [--urls] [--base <копія content> [--translation-only]]
+# dev-рядок: ConnectionStrings__Prepround="Host=localhost;Port=5433;Database=prepround;Username=prepround;Password=prepround"
 
-# Docker-образ API (PRP-021, ADR 005; з backend/). Порт — зі змінної PORT (Render), без неї 8080; середовище Production
-docker build -t prepround-api .
-docker run --rm --name prepround-api -p 18080:8080 \
-  -e "ConnectionStrings__Prepround=Host=host.docker.internal;Port=5433;Database=prepround;Username=prepround;Password=prepround" \
-  prepround-api                                                # curl -s http://localhost:18080/api/health → {"status":"ok"}
-
-# контент (з backend/)
-dotnet run --project src/Prepround.ContentTool -- validate ../content   # exit 0 — валідний, 1 — помилки зі списком (stderr), 2 — немає теки або неправильні аргументи
-dotnet run --project src/Prepround.ContentTool -- import ../content     # ідемпотентний імпорт у БД; спершу `dotnet ef database update`. Exit 0 — ок, 1 — помилки контенту, 2 — аргументи, 3 — БД (немає рядка підключення, недоступна, незастосовані міграції). Без прапорця питання тем з `draft: true` не імпортуються (прод, PRP-023), а переклади мов з `draft_<мова>: true` не імпортуються. Підсумок має рядок `Переклади питань: додано N, оновлено M, видалено K` (PRP-026)
-dotnet run --project src/Prepround.ContentTool -- import ../content --include-drafts   # dev-БД і хвилі контенту: імпортує й чернетки; прапорець лише після теки
-python3 .claude/tools/content-lint.py <тема…> | --all [--urls]                          # довжини, дублі, заборонені варіанти; з перекладом ще й [en] (кирилиця, inline-код, повнота) і ` · en N/M`. Exit 0/1, 2 — аргументи
-python3 .claude/tools/content-lint.py <тема> --base <копія content> [--translation-only] # застарілий переклад («змінено uk без en»); з --translation-only — будь-яка зміна, крім *_en/draft_en, дає ✗ (хвилі перекладу, PRP-029)
-# рядок підключення: user-secrets, а змінна середовища ConnectionStrings__Prepround їх перекриває (агенти користуються саме нею й у user-secrets не пишуть)
-
-# фронт (з /Users/dmitryspain/RiderProjects/PreproundWeb)
-npm start                                                      # http://localhost:4300
-npx ng test --watch=false                                      # Vitest
-npm run build                                                  # веб → dist/web
-
-# iOS (відкладено, з'являться разом із PRP-008; з PreproundWeb)
-npm run build:mobile                                           # iOS → dist/mobile
-npm run ios:sync                                               # build:mobile + npx cap sync ios
-xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator \
-  -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
-xcrun simctl launch --console-pty <device-id> io.github.dmitryspain.prepround
+# з /Users/dmitryspain/RiderProjects/PreproundWeb
+npx ng test --watch=false && npm run build
 ```
 
-## Команда агентів (`backend/.claude/agents/`)
+ContentTool агенти запускають лише з `--no-build` (збирає головна сесія: паралельні збірки ламають одна одну).
+
+## Агенти й звіти
 
 | Агент | Роль |
 |---|---|
-| `project-manager` | розуміє продукт, придумує й пріоритизує задачі, веде `backend/.claude/pm/backlog.md`, накопичує знання в `backend/.claude/pm/knowledge.md` |
-| `coder` | пише продакшн-код рівно під задачу, без тестів і без розширення скоупу |
-| `content-author` | пише питання в `content/` за офіційною документацією, з рубрикою складності й перевіркою запуском (рішення 004); має WebFetch / WebSearch |
-| `tester` | перевіряє зміну, пише тести, фактчекає контент (має WebFetch / WebSearch), видає `PASS` / `FAIL` / `BLOCKED` і при `FAIL` повертає пункти для виконавця |
+| `coder` | продакшн-код рівно під картку, без тестів і без розширення скоупу |
+| `content-author` | питання в `content/` за офіційною документацією (рішення 004), перевірка запуском |
+| `tester` | перевіряє зміну, пише тести, фактчекає контент, вердикт PASS / FAIL / BLOCKED |
+| `project-manager` | планує й пріоритизує картки, веде беклог і `pm/knowledge.md` |
 
-Картки мають префікс `PRP-NNN`, а також поля «Область» (`backend`, `frontend`, `content` або комбінація; `frontend` = репо `PreproundWeb`) і «Платформа» (`web`, `ios`, `web+ios`) для карток, що зачіпають фронт. Картки з «Виконавець: власник» агентам не віддаємо.
-
-Субагенти не можуть викликати один одного, тому цикл веде головна сесія (див. «Погнали»).
-
-## Git
-
-Два репо, у кожного свій `.git`. **З 2026-11-21 (дозвіл власника) комітить і пушить головна сесія**: одразу після закриття картки (PASS) або теми хвилі, у гілку `master` обох репо, а міжрепозиторну картку — в обидва репо з тим самим `PRP-NNN` у повідомленні. Перед push:
-- `backend/` з новою EF-міграцією пушиться лише тоді, коли міграцію вже застосовано в Neon (розділ «Деплой»);
-- `PreproundWeb` з PRP-031 (англійська в проді) пушиться лише після прод-імпорту перекладу (PRP-032);
-- у коміт не потрапляють секрети (рядки Neon) і незавершена робота агентів, які ще працюють.
-
-Субагенти не роблять `git commit` / `push`; єдиний git-крок агента — `git init` без коміту в PRP-007. Звіт coder завжди містить список змінених файлів із префіксом репо: tester і власник орієнтуються за ним.
+- Картки — `PRP-NNN` з полями «Область» і «Платформа». Картки з «Виконавець: власник» агентам не дають.
+- **Звіти (економія токенів, рішення власника 2026-11-26):** повний звіт у форматі зі свого визначення агент пише у файл, який назвала головна сесія (за замовчуванням `backend/.claude/reports/<PRP-або-тема>-<роль>.md`, тека в `.gitignore`). Відповідь головній сесії — **коротка, до ~15 рядків**: вердикт, змінені файли, пункти FAIL / блокери, шлях до повного звіту. Вхідні дані (картку, звіт попереднього агента) агент читає з файлів за шляхами з промпта.
+- Субагенти не роблять `git commit` / `push`; комітить головна сесія.
