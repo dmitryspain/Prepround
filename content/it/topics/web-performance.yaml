@@ -3,5 +3,309 @@ title: Продуктивність і браузер
 title_en: Performance and the browser
 description: Рендеринг, reflow/repaint, Core Web Vitals, lazy loading, кешування, бандл.
 description_en: Rendering, reflow/repaint, Core Web Vitals, lazy loading, caching, bundle.
-draft: true
-questions: []
+questions:
+  - id: web-performance-001
+    level: junior
+    type: single
+    text: Яка метрика Core Web Vitals оцінює, наскільки швидко сторінка відгукується на взаємодії користувача (кліки, дотики, натискання клавіш) протягом візиту?
+    text_en: Which Core Web Vitals metric assesses how quickly a page responds to user interactions (clicks, taps, key presses) during a visit?
+    options:
+      - text: '`INP` (Interaction to Next Paint)'
+        text_en: '`INP` (Interaction to Next Paint)'
+        correct: true
+      - text: '`LCP` (Largest Contentful Paint)'
+        text_en: '`LCP` (Largest Contentful Paint)'
+      - text: '`CLS` (Cumulative Layout Shift)'
+        text_en: '`CLS` (Cumulative Layout Shift)'
+      - text: '`TTFB` (Time to First Byte)'
+        text_en: '`TTFB` (Time to First Byte)'
+    explanation: >
+      `INP` спостерігає затримку всіх взаємодій на сторінці й повідомляє одне значення, нижче за яке лежали майже всі. `LCP` вимірює швидкість завантаження найбільшого елемента, а `CLS` — візуальну стабільність; `TTFB` взагалі не входить до Core Web Vitals.
+    explanation_en: >
+      `INP` observes the latency of all interactions on the page and reports a single value that nearly all of them stayed below. `LCP` measures how fast the largest element loads and `CLS` measures visual stability; `TTFB` is not a Core Web Vital at all.
+    sources:
+      - https://web.dev/articles/inp
+      - https://web.dev/articles/vitals
+
+  - id: web-performance-002
+    level: junior
+    type: single
+    text: Що робить атрибут `loading="lazy"` на цьому `<img>`, який розташований далеко нижче першого екрана?
+    text_en: What does the `loading="lazy"` attribute do on this `<img>`, which sits far below the first screen?
+    code:
+      lang: html
+      source: |
+        <img src="gallery-12.jpg" alt="Photo" width="400" height="300" loading="lazy">
+    options:
+      - text: Браузер відкладає завантаження, доки зображення не наблизиться до області перегляду на розраховану відстань
+        text_en: The browser defers loading until the image comes within a calculated distance of the viewport
+        correct: true
+      - text: Браузер завантажує файл одразу, але відкладає його декодування до першого прокручування сторінки
+        text_en: The browser downloads the file right away but postpones decoding until the first scroll of the page
+      - text: Зображення завантажується лише після кліку користувача по порожньому місцю, де воно має з'явитися
+        text_en: The image loads only after the user clicks the empty spot where it is supposed to appear
+      - text: Браузер завантажує файл із найнижчим пріоритетом, але починає це відразу під час розбору сторінки
+        text_en: The browser fetches the file at the lowest priority but starts doing so immediately while parsing the page
+    explanation: >
+      `lazy` відкладає завантаження до наближення до вʼюпорту, тож зображення, які користувач може не побачити, не витрачають трафік. Різниця з пріоритетом: без `lazy` браузер усе одно завантажує нижчі зображення під час відкриття сторінки, хоч і з нижчим пріоритетом.
+    explanation_en: >
+      `lazy` defers loading until the image nears the viewport, so images the user may never see do not use bandwidth. This differs from priority: without `lazy` the browser still fetches below-the-fold images while the page loads, just at a lower priority.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#loading
+      - https://web.dev/articles/browser-level-image-lazy-loading
+
+  - id: web-performance-003
+    level: junior
+    type: multiple
+    text: Які твердження про директиви заголовка `Cache-Control` правильні?
+    text_en: Which statements about the `Cache-Control` header directives are true?
+    options:
+      - text: '`max-age=3600` дозволяє використовувати збережену відповідь як свіжу 3600 секунд без запиту до сервера'
+        text_en: '`max-age=3600` lets the stored response be used as fresh for 3600 seconds without asking the server'
+        correct: true
+      - text: '`no-cache` дозволяє зберегти відповідь, але перед кожним повторним використанням її треба перевірити на сервері'
+        text_en: '`no-cache` allows the response to be stored, but it must be validated with the server before every reuse'
+        correct: true
+      - text: '`no-store` забороняє кешам зберігати відповідь'
+        text_en: '`no-store` forbids caches from storing the response'
+        correct: true
+      - text: '`no-cache` забороняє будь-якому кешу зберігати відповідь на диску чи в памʼяті'
+        text_en: '`no-cache` forbids any cache from keeping the response on disk or in memory'
+      - text: '`public` змушує браузер перевіряти відповідь на сервері перед кожним використанням'
+        text_en: '`public` forces the browser to validate the response with the server before every use'
+    explanation: >
+      Назва `no-cache` оманлива: відповідь зберігається, але потребує перевірки перед повторним використанням. Справжню заборону зберігання дає `no-store`. `public` лише дозволяє зберігати відповідь і в спільних кешах.
+    explanation_en: >
+      The name `no-cache` is misleading: the response is stored but must be validated before reuse. The real ban on storing is `no-store`. `public` merely allows the response to be stored in shared caches too.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control
+      - https://web.dev/articles/http-cache
+
+  - id: web-performance-004
+    level: junior
+    type: single
+    text: Що таке tree shaking у збірці JavaScript-застосунку?
+    text_en: What is tree shaking in a JavaScript application build?
+    options:
+      - text: Вилучення з бандла невикористаних експортів завдяки статичній структурі `import` та `export` в ES-модулях
+        text_en: Removing unused exports from the bundle by relying on the static structure of ES module `import` and `export`
+        correct: true
+      - text: Стиснення готових файлів бандла алгоритмом gzip або Brotli перед відправкою клієнту
+        text_en: Compressing the finished bundle files with gzip or Brotli before sending them to the client
+      - text: Розбиття бандла на окремі чанки, які завантажуються за вимогою через динамічний `import()`
+        text_en: Splitting the bundle into separate chunks that are loaded on demand through a dynamic `import()`
+      - text: Скорочення імен локальних змінних і вилучення пробілів та коментарів із вихідного коду
+        text_en: Shortening local variable names and stripping whitespace and comments from the source code
+    explanation: >
+      Tree shaking — це видалення мертвого коду, що спирається на статичний аналіз `import`/`export`. Стиснення, поділ на чанки (code splitting) і мінімізація — окремі прийоми, які зменшують розмір або відкладають завантаження, але не видаляють невикористані експорти.
+    explanation_en: >
+      Tree shaking is dead-code elimination that relies on static analysis of `import`/`export`. Compression, splitting into chunks (code splitting) and minification are separate techniques that shrink or defer the download but do not remove unused exports.
+    sources:
+      - https://webpack.js.org/guides/tree-shaking/
+      - https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking
+
+  - id: web-performance-005
+    level: middle
+    type: single
+    text: Цикл виставляє ширину кожної картки, читаючи `offsetWidth` контейнера на кожній ітерації. Профайлер показує багато примусових перерахунків layout. Чому так і що виправить?
+    text_en: The loop sets each card's width and reads the container's `offsetWidth` on every iteration. The profiler shows many forced layout recalculations. Why, and what fixes it?
+    code:
+      lang: javascript
+      source: |
+        for (const card of cards) {
+          const w = list.offsetWidth;          // read
+          card.style.width = w / 2 + 'px';     // write
+        }
+    options:
+      - text: Кожне читання після запису змушує браузер синхронно перерахувати layout; прочитати `offsetWidth` один раз перед циклом
+        text_en: Each read after a write forces the browser to recompute layout synchronously; read `offsetWidth` once before the loop
+        correct: true
+      - text: Властивість `offsetWidth` повільна сама по собі; замінити її на `getBoundingClientRect().width`, яке не запускає layout
+        text_en: The `offsetWidth` property is slow by itself; replace it with `getBoundingClientRect().width`, which does not trigger layout
+      - text: Запис у `style.width` викликає лише repaint, тож проблему усуне винесення запису в окремий `setTimeout` на кожну картку
+        text_en: Writing `style.width` triggers only a repaint, so moving each write into its own `setTimeout` per card removes the problem
+      - text: Браузер повторно парсить CSS на кожній ітерації; перенести правило ширини в окремий `<style>` у `<head>`
+        text_en: The browser re-parses the CSS on every iteration; move the width rule into a separate `<style>` in the `<head>`
+    explanation: >
+      Після запису в `style` розмітка вважається застарілою, а читання геометрії (`offsetWidth`) змушує браузер перерахувати її негайно, і так на кожній ітерації (layout thrashing). `getBoundingClientRect()` теж потребує актуального layout, тому не рятує. Правильний порядок: спершу всі читання, потім усі записи.
+    explanation_en: >
+      After a write to `style` the layout is stale, and reading geometry (`offsetWidth`) forces the browser to recompute it immediately, on every iteration (layout thrashing). `getBoundingClientRect()` also needs up-to-date layout, so it does not help. The right order is all reads first, then all writes.
+    sources:
+      - https://web.dev/articles/avoid-large-complex-layouts-and-layout-thrashing
+
+  - id: web-performance-006
+    level: middle
+    type: single
+    text: Головне зображення вгорі сторінки є елементом LCP. Після додавання `loading="lazy"` LCP погіршився. Чому і що зробити?
+    text_en: The hero image at the top of the page is the LCP element. After adding `loading="lazy"` the LCP got worse. Why, and what should you do?
+    code:
+      lang: html
+      source: |
+        <img src="hero.jpg" alt="Hero" width="1200" height="600" loading="lazy">
+    options:
+      - text: Завантаження стартує лише після layout, коли відомо, що зображення у вʼюпорті; прибрати `lazy` і додати `fetchpriority="high"`
+        text_en: Loading starts only after layout confirms the image is in the viewport; drop `lazy` and add `fetchpriority="high"`
+        correct: true
+      - text: Атрибут `lazy` вимикає HTTP-кеш для цього файлу, тож прибрати `lazy` і додати `Cache-Control` для зображення
+        text_en: The `lazy` attribute disables the HTTP cache for this file, so drop `lazy` and add `Cache-Control` for the image
+      - text: Атрибути `width` і `height` затримують LCP, тому прибрати їх і лишити `loading="lazy"` без змін
+        text_en: The `width` and `height` attributes delay LCP, so remove them and keep `loading="lazy"` unchanged
+      - text: Браузер декодує lazy-зображення на головному потоці довше, тож додати `fetchpriority="low"` для вирівнювання
+        text_en: The browser decodes lazy images longer on the main thread, so add `fetchpriority="low"` to even things out
+    explanation: >
+      Lazy-ресурс не завантажується, доки layout не підтвердить, що він у вʼюпорті, тож завантаження стартує пізніше, ніж могло б. Зображення, які, ймовірно, видно одразу (особливо LCP), не варто робити lazy; `fetchpriority="high"` підвищує пріоритет LCP-зображення. `width`/`height` навпаки потрібні проти зсувів макета.
+    explanation_en: >
+      A lazy resource is not loaded until layout confirms it is in the viewport, so loading begins later than it could. Images likely visible at once (especially the LCP image) should not be lazy; `fetchpriority="high"` raises the priority of the LCP image. `width`/`height`, on the other hand, help against layout shifts.
+    sources:
+      - https://web.dev/articles/optimize-lcp
+      - https://web.dev/articles/fetch-priority
+
+  - id: web-performance-007
+    level: middle
+    type: single
+    text: Браузер має в кеші `/app.js` із `ETag` зі значенням `"v7"`, але `max-age` вже минув. Що станеться при наступному запиті, якщо файл на сервері не змінився?
+    text_en: The browser has `/app.js` cached with an `ETag` of `"v7"`, but its `max-age` has expired. What happens on the next request if the file on the server has not changed?
+    options:
+      - text: 'Браузер шле `If-None-Match: "v7"`, сервер відповідає `304` без тіла, і збережена копія знову свіжа'
+        text_en: 'The browser sends `If-None-Match: "v7"`, the server replies `304` with no body, and the stored copy is fresh again'
+        correct: true
+      - text: Браузер видаляє застарілу копію й надсилає звичайний запит, а сервер відповідає `200` з повним тілом файлу
+        text_en: The browser discards the stale copy and sends a plain request, and the server replies `200` with the full file body
+      - text: Браузер надсилає `If-None-Match`, а сервер відповідає `304 Not Modified` разом із повним тілом файлу
+        text_en: The browser sends `If-None-Match` and the server replies `304 Not Modified` together with the full file body
+      - text: Браузер надсилає `If-Match` із `"v7"`, і сервер відповідає `412 Precondition Failed`, бо файл не змінився
+        text_en: The browser sends `If-Match` with `"v7"`, and the server replies `412 Precondition Failed` because the file has not changed
+    explanation: >
+      Застаріла відповідь не відкидається: браузер перевіряє її умовним запитом з `If-None-Match`. Якщо `ETag` збігся, сервер повертає `304` без тіла, а кеш повторно використовує збережену копію. Повне тіло передається лише коли файл змінився.
+    explanation_en: >
+      A stale response is not discarded: the browser validates it with a conditional request carrying `If-None-Match`. If the `ETag` matches, the server returns `304` with no body and the cache reuses the stored copy. The full body is sent only when the file has changed.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching#validation
+      - https://web.dev/articles/http-cache
+
+  - id: web-performance-008
+    level: middle
+    type: multiple
+    text: Які твердження про Cumulative Layout Shift (`CLS`) правильні?
+    text_en: Which statements about Cumulative Layout Shift (`CLS`) are true?
+    options:
+      - text: Атрибути `width` і `height` на `<img>` дають браузеру зарезервувати місце до завантаження файлу
+        text_en: The `width` and `height` attributes on `<img>` let the browser reserve space before the file loads
+        correct: true
+      - text: Анімація через `transform` не викликає зсувів макета, на відміну від зміни `top` чи `height`
+        text_en: Animating with `transform` does not cause layout shifts, unlike changing `top` or `height`
+        correct: true
+      - text: Банер, вставлений угорі вже показаного контенту після завантаження, зсуває його й збільшує `CLS`
+        text_en: A banner inserted above already displayed content after load shifts it and increases `CLS`
+        correct: true
+      - text: '`CLS` вимірюється в мілісекундах і оцінює час до появи найбільшого елемента'
+        text_en: '`CLS` is measured in milliseconds and evaluates the time until the largest element appears'
+      - text: Зображення з `loading="lazy"` ніколи не спричиняють зсувів, навіть без заданих розмірів
+        text_en: Images with `loading="lazy"` never cause shifts, even when no dimensions are set
+    explanation: >
+      `CLS` оцінює неочікувані зсуви видимого вмісту, тож його зменшують резервуванням місця (розміри зображень, місце під вставки) і анімацією через `transform`. Це безрозмірна оцінка, а не час; час до найбільшого елемента — це `LCP`. Lazy-зображення без розмірів теж зсувають контент, коли завантажуються.
+    explanation_en: >
+      `CLS` scores unexpected shifts of visible content, so you reduce it by reserving space (image dimensions, room for inserted content) and animating with `transform`. It is a unitless score, not a time; time to the largest element is `LCP`. Lazy images without dimensions also shift content when they load.
+    sources:
+      - https://web.dev/articles/cls
+      - https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#loading
+
+  - id: web-performance-009
+    level: senior
+    type: single
+    text: SPA складається з `index.html` і файлів із хешем у назві, як-от `app.3f9c1a.js`. Після кожного деплою користувачі мають одразу отримувати нову версію, а кеш має працювати максимально. Яка схема `Cache-Control` підходить?
+    text_en: An SPA consists of `index.html` and files with a hash in the name, such as `app.3f9c1a.js`. After every deploy users must get the new version at once while the cache works as much as possible. Which `Cache-Control` scheme fits?
+    options:
+      - text: Для `index.html` — `no-cache` з перевіркою через `ETag`, для файлів із хешем — `max-age=31536000, immutable`
+        text_en: '`no-cache` with `ETag` validation for `index.html`, and `max-age=31536000, immutable` for the hashed files'
+        correct: true
+      - text: '`max-age=31536000, immutable` для всіх файлів, включно з `index.html`, а нову версію віддавати під тією самою назвою'
+        text_en: '`max-age=31536000, immutable` for all files including `index.html`, serving the new version under the same name'
+      - text: '`no-store` для всіх файлів, щоб після деплою браузер завжди завантажував усе заново з сервера'
+        text_en: '`no-store` for all files so that after a deploy the browser always downloads everything again from the server'
+      - text: '`max-age=31536000` для `index.html` і `no-cache` для файлів із хешем, бо їх назви змінюються'
+        text_en: '`max-age=31536000` for `index.html` and `no-cache` for the hashed files, since their names change'
+    explanation: >
+      Файли з хешем змінюють URL при зміні вмісту, тож їх можна кешувати на рік. `index.html` має фіксований URL і посилається на нові хеші, тому його перевіряють щоразу (`no-cache` + `ETag` дає дешевий `304`). Довгий `max-age` на `index.html` залишив би користувачів зі старою версією, а `no-store` марнує кеш.
+    explanation_en: >
+      Hashed files change their URL when the content changes, so they can be cached for a year. `index.html` has a fixed URL and points to the new hashes, so it is validated every time (`no-cache` + `ETag` gives a cheap `304`). A long `max-age` on `index.html` would leave users on the old version, and `no-store` wastes the cache.
+    sources:
+      - https://web.dev/articles/http-cache
+      - https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control
+
+  - id: web-performance-010
+    level: senior
+    type: multiple
+    text: Клік по кнопці «Фільтрувати» виконує синхронно 400 мс JavaScript, і `INP` сторінки поганий. Які зміни справді зменшують `INP`?
+    text_en: Clicking the "Filter" button runs 400 ms of synchronous JavaScript and the page's `INP` is poor. Which changes really reduce `INP`?
+    options:
+      - text: Розбити роботу на менші завдання з поверненням керування головному потоку між ними, наприклад через `setTimeout`
+        text_en: Break the work into smaller tasks and yield to the main thread between them, for example with `setTimeout`
+        correct: true
+      - text: Спершу оновити інтерфейс, а некритичну роботу виконати вже після відмальовування кадру
+        text_en: Update the interface first and run the non-critical work only after the frame has been painted
+        correct: true
+      - text: Винести важкі обчислення у Web Worker, щоб вони не блокували головний потік
+        text_en: Move the heavy computation into a Web Worker so it does not block the main thread
+        correct: true
+      - text: Додати `loading="lazy"` до всіх зображень сторінки, щоб браузер менше завантажував під час кліку
+        text_en: Add `loading="lazy"` to all images on the page so the browser loads less during the click
+      - text: Додати `fetchpriority="high"` до тега `<script>` з обробником, щоб браузер виконував його швидше
+        text_en: Add `fetchpriority="high"` to the `<script>` tag holding the handler so the browser runs it faster
+    explanation: >
+      `INP` страждає, коли головний потік зайнятий довгим завданням і браузер не може відмалювати результат кліку. Допомагають розбиття завдань, відкладання некритичного й винесення роботи у worker. `loading="lazy"` і `fetchpriority` впливають на завантаження ресурсів, а не на виконання вже завантаженого обробника.
+    explanation_en: >
+      `INP` suffers when the main thread is busy with a long task and the browser cannot paint the result of the click. Breaking up tasks, deferring non-critical work and moving work to a worker all help. `loading="lazy"` and `fetchpriority` affect resource loading, not the execution of an already loaded handler.
+    sources:
+      - https://web.dev/articles/optimize-inp
+      - https://web.dev/articles/inp
+
+  - id: web-performance-011
+    level: senior
+    type: single
+    text: 'Після додавання `"sideEffects": false` у `package.json` застосунку (webpack 5, production) зникли стилі, що підключаються рядком `import ''./button.css'';`. Чому?'
+    text_en: 'After adding `"sideEffects": false` to the app''s `package.json` (webpack 5, production), the styles pulled in by the line `import ''./button.css'';` disappeared. Why?'
+    options:
+      - text: Прапорець заявляє, що файли без побічних ефектів, тож модуль, імпортований заради ефекту, відкидається; перелічити `*.css`
+        text_en: The flag declares files free of side effects, so a module imported for its effect gets dropped; list `*.css`
+        correct: true
+      - text: Прапорець `sideEffects` вимикає лоадери для CSS у production-режимі, тому `style-loader` треба підключити повторно в конфігурації
+        text_en: The `sideEffects` flag turns off CSS loaders in production mode, so `style-loader` has to be wired in again
+      - text: Tree shaking працює лише з `export`, а `import` без імені завжди видаляється в production, і від прапорця це не залежить
+        text_en: Tree shaking works only with `export`, and a bare `import` without a name is always removed regardless of the flag
+      - text: Прапорець змушує webpack обробляти кожен файл як CommonJS, а CSS-імпорти там не підтримуються
+        text_en: The flag makes webpack treat every file as CommonJS, where CSS imports are not supported
+    explanation: >
+      `"sideEffects": false` повідомляє збирачу, що файли «чисті» й безпечні для видалення, якщо їхні експорти не використано. CSS, підключений лише заради ефекту, не має використаних експортів, тож його відкидають. Файли з побічними ефектами перелічують масивом, напр. `["*.css"]`.
+    explanation_en: >
+      `"sideEffects": false` tells the bundler the files are "pure" and safe to prune when their exports are unused. CSS imported only for its effect has no used exports, so it is dropped. Files with side effects are listed in an array, e.g. `["*.css"]`.
+    sources:
+      - https://webpack.js.org/guides/tree-shaking/
+
+  - id: web-performance-012
+    level: senior
+    type: single
+    text: Панель виїжджає анімацією `left` від `-300px` до `0` і смикається на слабких телефонах. Чому і яка заміна найдешевша для браузера?
+    text_en: A panel slides in by animating `left` from `-300px` to `0` and stutters on low-end phones. Why, and what is the cheapest replacement for the browser?
+    code:
+      lang: css
+      source: |
+        .panel { position: fixed; left: -300px; transition: left 0.3s; }
+        .panel.open { left: 0; }
+    options:
+      - text: 'Зміна `left` щокадру запускає layout і paint; `transform: translateX()` обробляє композитор без перерахунку layout'
+        text_en: 'Changing `left` every frame triggers layout and paint; `transform: translateX()` is handled by the compositor without recomputing layout'
+        correct: true
+      - text: Властивість `left` анімується лише на головному потоці JavaScript, тож треба замінити `transition` на `requestAnimationFrame`
+        text_en: The `left` property can only be animated on the JavaScript main thread, so replace `transition` with `requestAnimationFrame`
+      - text: Зміна `left` запускає лише repaint, тому замінити її на `margin-left`, що змінює тільки колір пікселів
+        text_en: Changing `left` triggers only a repaint, so replace it with `margin-left`, which changes just the pixel colors
+      - text: Швидкість залежить від тривалості, тож зменшити `0.3s` до `0.05s`, і перерахунків layout не буде зовсім
+        text_en: Speed depends on the duration, so reduce `0.3s` to `0.05s` and no layout recalculations will happen at all
+    explanation: >
+      Зміна геометричної властивості, як `left`, змушує браузер перераховувати layout і перемальовувати на кожному кадрі. Лише `transform` і `opacity` композитор може обробляти сам, тож анімація через `transform` не торкається layout і paint. `margin-left` теж змінює layout, а коротша тривалість не прибирає роботу з кадру.
+    explanation_en: >
+      Changing a geometric property like `left` makes the browser recompute layout and repaint on every frame. Only `transform` and `opacity` can be handled by the compositor, so animating with `transform` touches neither layout nor paint. `margin-left` also changes layout, and a shorter duration does not remove the per-frame work.
+    sources:
+      - https://web.dev/articles/stick-to-compositor-only-properties-and-manage-layer-count
+      - https://web.dev/articles/cls

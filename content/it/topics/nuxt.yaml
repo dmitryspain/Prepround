@@ -3,5 +3,309 @@ title: Nuxt
 title_en: Nuxt
 description: SSR/SSG, файлова маршрутизація, data fetching, модулі.
 description_en: SSR/SSG, file-based routing, data fetching, modules.
-draft: true
-questions: []
+questions:
+  - id: nuxt-001
+    level: junior
+    type: single
+    text: Який файл у проєкті Nuxt 4 створить динамічний маршрут `/blog/hello-world`, де `hello-world` — довільний slug?
+    text_en: Which file in a Nuxt 4 project creates a dynamic route `/blog/hello-world`, where `hello-world` is an arbitrary slug?
+    options:
+      - text: '`app/pages/blog/[slug].vue`'
+        text_en: '`app/pages/blog/[slug].vue`'
+        correct: true
+      - text: '`app/pages/blog/:slug.vue`'
+        text_en: '`app/pages/blog/:slug.vue`'
+      - text: '`app/routes/blog/[slug].vue`'
+        text_en: '`app/routes/blog/[slug].vue`'
+      - text: '`app/components/blog/[slug].vue`'
+        text_en: '`app/components/blog/[slug].vue`'
+    explanation: >
+      Nuxt будує маршрути з файлів у `app/pages/`, а квадратні дужки в імені позначають динамічний параметр, доступний як `useRoute().params.slug`. Синтаксис із двокрапкою для імен файлів не працює, а компоненти з `app/components/` маршрутів не створюють.
+    explanation_en: >
+      Nuxt builds routes from files in `app/pages/`, and square brackets in the file name mark a dynamic parameter available as `useRoute().params.slug`. The colon syntax does not work for file names, and components in `app/components/` never create routes.
+    sources:
+      - https://nuxt.com/docs/4.x/guide/directory-structure/app/pages
+  - id: nuxt-002
+    level: junior
+    type: single
+    text: Де в проєкті Nuxt 4 треба створити файл, щоб отримати серверний маршрут `GET /api/health`?
+    text_en: Where in a Nuxt 4 project should you create a file to get a server route `GET /api/health`?
+    options:
+      - text: '`server/api/health.get.ts` у корені проєкту, поряд з `app/`'
+        text_en: '`server/api/health.get.ts` in the project root, next to `app/`'
+        correct: true
+      - text: '`app/server/api/health.get.ts` усередині теки `app/`'
+        text_en: '`app/server/api/health.get.ts` inside the `app/` directory'
+      - text: '`app/pages/api/health.get.vue` як сторінка без шаблону'
+        text_en: '`app/pages/api/health.get.vue` as a page without a template'
+      - text: '`public/api/health.get.ts` у теці статичних файлів'
+        text_en: '`public/api/health.get.ts` in the static files directory'
+    explanation: >
+      Серверні обробники Nitro живуть у `server/` у корені проєкту, а не в `app/`. Тека `api/` додає префікс `/api`, а суфікс `.get` обмежує маршрут методом GET.
+    explanation_en: >
+      Nitro server handlers live in `server/` in the project root, not in `app/`. The `api/` folder adds the `/api` prefix, and the `.get` suffix restricts the route to the GET method.
+    sources:
+      - https://nuxt.com/docs/4.x/guide/directory-structure/server
+  - id: nuxt-003
+    level: junior
+    type: single
+    text: >
+      У `<script setup>` сторінки Nuxt 4 з увімкненим SSR написано код нижче. Яка проблема в такому способі завантаження даних?
+    text_en: >
+      The code below is in the `<script setup>` of a Nuxt 4 page with SSR enabled. What is the problem with this way of loading data?
+    code:
+      lang: ts
+      source: |
+        const posts = await $fetch('/api/posts')
+    options:
+      - text: Запит виконається двічі, на сервері під час рендеру і ще раз у браузері під час гідратації
+        text_en: 'It runs twice: on the server during rendering and in the browser on hydration'
+        correct: true
+      - text: '`$fetch` не може викликати серверні маршрути самого застосунку'
+        text_en: '`$fetch` cannot call the application''s own server routes'
+      - text: Результат працює лише в браузері, тож під час SSR змінна `posts` буде `undefined`
+        text_en: The result works only in the browser, so `posts` is `undefined` during server-side rendering
+      - text: Nuxt забороняє `$fetch` у `setup` і кидає помилку під час збірки
+        text_en: Nuxt forbids `$fetch` in `setup` and throws an error at build time
+    explanation: >
+      `$fetch` не переносить результат із сервера в браузер, тому під час гідратації запит повторюється, що збільшує час до інтерактивності й може давати розбіжності. Для даних у компонентах призначені `useFetch` і `useAsyncData`: вони передають відповідь у payload.
+    explanation_en: >
+      `$fetch` does not carry its result from the server to the browser, so the request is repeated during hydration, which increases time to interactivity and can cause mismatches. `useFetch` and `useAsyncData` exist for component data because they pass the response in the payload.
+    sources:
+      - https://nuxt.com/docs/4.x/getting-started/data-fetching
+  - id: nuxt-004
+    level: junior
+    type: multiple
+    text: Які твердження про автоімпорти в Nuxt 4 правильні?
+    text_en: Which statements about auto-imports in Nuxt 4 are correct?
+    options:
+      - text: Компоненти з `app/components/` можна використовувати в шаблонах без `import`
+        text_en: Components from `app/components/` can be used in templates without an `import`
+        correct: true
+      - text: Функції, експортовані з `app/utils/`, доступні без явного імпорту
+        text_en: Functions exported from `app/utils/` are available without an explicit import
+        correct: true
+      - text: API Vue на кшталт `ref` і `computed` доступні без `import` з `vue`
+        text_en: Vue APIs such as `ref` and `computed` are available without an `import` from `vue`
+        correct: true
+      - text: Функції з `server/utils/` автоматично доступні також у компонентах із `app/`
+        text_en: Functions from `server/utils/` are automatically available in components under `app/` as well
+      - text: Будь-який `.ts`-файл усередині `app/` автоматично імпортується в усі компоненти
+        text_en: Any `.ts` file inside `app/` is automatically imported into every component
+    explanation: >
+      Nuxt автоматично імпортує компоненти, composables, утиліти й API Vue зі стандартних тек, причому у збірку потрапляє лише використане. Утиліти з `server/utils/` автоімпортуються тільки в коді теки `server/`, а довільні файли в `app/` поза спеціальними теками не підключаються.
+    explanation_en: >
+      Nuxt auto-imports components, composables, utilities and Vue APIs from its standard directories, and only what is used ends up in the build. Utilities from `server/utils/` are auto-imported only in code inside `server/`, and arbitrary files in `app/` outside the special directories are not picked up.
+    sources:
+      - https://nuxt.com/docs/4.x/guide/concepts/auto-imports
+  - id: nuxt-005
+    level: middle
+    type: single
+    text: >
+      Що станеться в Nuxt 4 після кліку на кнопку, яка збільшує `page.value`?
+    text_en: >
+      What happens in Nuxt 4 after a click on a button that increments `page.value`?
+    code:
+      lang: ts
+      source: |
+        const page = ref(1)
+        const { data } = await useFetch('/api/items', {
+          query: { page },
+        })
+    options:
+      - text: '`useFetch` помітить зміну реактивної опції `query` і сам повторить запит із `page=2`'
+        text_en: '`useFetch` notices the change in the reactive `query` option and re-runs the request with `page=2`'
+        correct: true
+      - text: Нічого, доки не викликати `refresh()` вручну, бо `useFetch` виконується лише раз при створенні компонента
+        text_en: Nothing until `refresh()` is called manually, because `useFetch` runs only once when the component is created
+      - text: Запит повториться, але зі старим `page=1`, бо `query` зафіксовано в момент виклику
+        text_en: The request re-runs, but with the old `page=1`, because `query` is captured at call time
+      - text: Nuxt повністю перезавантажить сторінку, щоб заново виконати серверний рендер
+        text_en: Nuxt reloads the whole page to run the server render again
+    explanation: >
+      Опції `useFetch`, передані як `ref`, обчислювані значення чи getter, відстежуються, і зміна будь-якої з них запускає повторний запит. Вимкнути це можна через `watch: false`. Проблема «застарілого» значення виникає, коли URL зібрано рядком у момент виклику.
+    explanation_en: >
+      `useFetch` options passed as a `ref`, a computed value or a getter are watched, and a change in any of them triggers a new request. You can opt out with `watch: false`. The stale-value problem appears when the URL is built as a string at call time.
+    sources:
+      - https://nuxt.com/docs/4.x/api/composables/use-fetch#reactive-fetch-options
+  - id: nuxt-006
+    level: middle
+    type: single
+    text: >
+      Застосунок Nuxt 4 зібрано один раз у Docker-образ. У `nuxt.config.ts` є `runtimeConfig: { public: { apiBase: '' } }`. Як змінити `apiBase` на проді без перезбирання?
+    text_en: >
+      A Nuxt 4 app is built once into a Docker image. `nuxt.config.ts` has `runtimeConfig: { public: { apiBase: '' } }`. How do you change `apiBase` in production without rebuilding?
+    options:
+      - text: Запустити контейнер зі змінною середовища `NUXT_PUBLIC_API_BASE`
+        text_en: Start the container with the environment variable `NUXT_PUBLIC_API_BASE`
+        correct: true
+      - text: Запустити контейнер зі змінною середовища `API_BASE`
+        text_en: Start the container with the environment variable `API_BASE`
+      - text: Запустити контейнер зі змінною середовища `NUXT_API_BASE`
+        text_en: Start the container with the environment variable `NUXT_API_BASE`
+      - text: Змінити значення в `nuxt.config.ts` у контейнері, оскільки конфіг перечитується при кожному запиті
+        text_en: Edit the value in `nuxt.config.ts` inside the container, because the config is re-read on every request
+    explanation: >
+      Значення `runtimeConfig` можна перевизначити змінною середовища, назва якої починається з `NUXT_`, для ключів із `public` — з `NUXT_PUBLIC_`, далі ім'я у верхньому регістрі зі `_` між словами. Ключ має бути оголошений у `nuxt.config`, а сам файл конфігурації під час роботи вже не читається.
+    explanation_en: >
+      `runtimeConfig` values can be overridden by an environment variable whose name starts with `NUXT_`, and for keys under `public` with `NUXT_PUBLIC_`, followed by the upper-cased name with `_` between words. The key must be declared in `nuxt.config`, and the config file itself is no longer read at runtime.
+    sources:
+      - https://nuxt.com/docs/4.x/guide/going-further/runtime-config#environment-variables
+  - id: nuxt-007
+    level: middle
+    type: multiple
+    text: Які твердження про теку `server/` у Nuxt 4 правильні?
+    text_en: Which statements about the `server/` directory in Nuxt 4 are correct?
+    options:
+      - text: Файл `server/api/ping.ts` обслуговує адресу `/api/ping` для будь-якого методу
+        text_en: The file `server/api/ping.ts` serves the path `/api/ping` for any method
+        correct: true
+      - text: Файл `server/routes/health.ts` обслуговує адресу `/health` без префікса `/api` у шляху
+        text_en: The file `server/routes/health.ts` serves the path `/health` without the `/api` prefix
+        correct: true
+      - text: Файл `server/api/test.get.ts` відповідає лише на запити методом GET
+        text_en: The file `server/api/test.get.ts` responds only to GET requests
+        correct: true
+      - text: Обробники з `server/middleware/` запускаються лише для адрес, що починаються з `/api`
+        text_en: Handlers in `server/middleware/` run only for paths that start with `/api`
+      - text: Код із `server/api/` вбудовується в клієнтський бандл, щоб працювати й без сервера
+        text_en: Code from `server/api/` is embedded into the client bundle so it works without a server too
+    explanation: >
+      Тека `api/` додає префікс `/api`, `routes/` його не додає, а суфікс `.get`, `.post` тощо обмежує метод. Серверний middleware виконується на кожен запит перед іншими маршрутами, а код `server/` лишається в серверній збірці Nitro.
+    explanation_en: >
+      The `api/` folder adds the `/api` prefix, `routes/` does not, and a suffix such as `.get` or `.post` restricts the method. Server middleware runs on every request before other routes, and the `server/` code stays in the Nitro server build.
+    sources:
+      - https://nuxt.com/docs/4.x/guide/directory-structure/server
+  - id: nuxt-008
+    level: middle
+    type: single
+    text: Чим модуль Nuxt із масиву `modules` у `nuxt.config.ts` принципово відрізняється від плагіна з `app/plugins/`?
+    text_en: How does a Nuxt module from the `modules` array in `nuxt.config.ts` fundamentally differ from a plugin in `app/plugins/`?
+    options:
+      - text: Модуль виконується на старті Nuxt і змінює проєкт, а плагін — під час створення застосунку Vue
+        text_en: A module runs at Nuxt startup and changes the project, a plugin runs when the Vue app is created
+        correct: true
+      - text: Модуль виконується в браузері після гідратації сторінки, а плагін — лише на сервері під час рендеру сторінки
+        text_en: A module runs in the browser after hydration of the page, a plugin runs only on the server during rendering
+      - text: Модуль завжди є npm-пакетом, а плагін може бути лише локальним файлом проєкту
+        text_en: A module is always an npm package, while a plugin can only be a local project file
+      - text: Модуль підключається лише в режимі розробки на dev-сервері, а плагін потрапляє й у production-збірку
+        text_en: A module is loaded only in development mode on the dev server, a plugin also lands in the production build
+    explanation: >
+      Модулі — це функції, які послідовно запускаються на старті Nuxt (для dev і для збірки) і можуть розширювати його через Nuxt Kit. Плагіни ж підключаються під час створення застосунку Vue й працюють у браузері та/або на сервері під час рендеру. Модуль може бути і локальним файлом, і пакетом.
+    explanation_en: >
+      Modules are functions that run sequentially when Nuxt starts (for dev and for the build) and can extend it through Nuxt Kit. Plugins, in contrast, are loaded when the Vue app is created and run in the browser and/or on the server during rendering. A module can be either a local file or a package.
+    sources:
+      - https://nuxt.com/docs/4.x/guide/modules
+      - https://nuxt.com/docs/4.x/guide/directory-structure/app/plugins
+  - id: nuxt-009
+    level: senior
+    type: single
+    text: >
+      У Nuxt 4 з SSR розробник додав файл `app/composables/useUser.ts` (код нижче). На проді користувачі зрідка бачать профіль іншої людини, а пам'ять сервера повільно росте. Яка причина і яке виправлення?
+    text_en: >
+      A developer added `app/composables/useUser.ts` (code below) to a Nuxt 4 app with SSR. In production users occasionally see another person's profile, and server memory slowly grows. What is the cause and the fix?
+    code:
+      lang: ts
+      source: |
+        const user = ref<User | null>(null)
+
+        export function useUser() {
+          return user
+        }
+    options:
+      - text: 'Модульний `ref` спільний для всіх запитів на сервері; стан треба тримати через `useState(''user'')`'
+        text_en: 'A module-level `ref` is shared by all server requests; keep the state with `useState(''user'')`'
+        correct: true
+      - text: '`ref` не серіалізується в payload, тому браузер отримує порожній стан; достатньо замінити його на `reactive`'
+        text_en: 'A `ref` is not serialized into the payload, so the browser gets an empty state; replacing it with `reactive` is enough'
+      - text: Composables зі теки `app/composables/` кешуються Nitro на рівні маршруту, тож треба вимкнути кеш через `routeRules`
+        text_en: Composables from `app/composables/` are cached by Nitro per route, so the cache must be turned off via `routeRules`
+      - text: Функція `useUser` викликається двічі на запит, тому слід обгорнути її в `defineNuxtPlugin`
+        text_en: The `useUser` function is called twice per request, so it should be wrapped in `defineNuxtPlugin`
+    explanation: >
+      Код поза `setup()` виконується один раз за життя серверного процесу, тож модульний `ref` стає спільним для всіх запитів: це витік даних між користувачами й джерело росту пам'яті. `useState` з унікальним ключем зберігає стан для кожного запиту окремо й передає його в браузер у payload.
+    explanation_en: >
+      Code outside `setup()` runs once per server process lifetime, so a module-level `ref` becomes shared by all requests: data leaks between users and memory grows. `useState` with a unique key keeps state per request and hands it to the browser in the payload.
+    sources:
+      - https://nuxt.com/docs/4.x/getting-started/state-management
+  - id: nuxt-010
+    level: senior
+    type: single
+    text: >
+      Nuxt 4, пошук за введенням: на кожне натискання клавіші викликається `refresh()` з `useAsyncData` (параметри `dedupe` не змінено, обробник передає `signal` у `$fetch`). Що відбувається, коли новий `refresh()` стартує, поки попередній запит ще виконується?
+    text_en: >
+      Nuxt 4, search as you type: every keystroke calls `refresh()` from `useAsyncData` (the `dedupe` option is unchanged and the handler passes `signal` to `$fetch`). What happens when a new `refresh()` starts while the previous request is still pending?
+    code:
+      lang: ts
+      source: |
+        const q = ref('')
+        const { data, refresh } = await useAsyncData(
+          'search',
+          (_nuxtApp, { signal }) => $fetch('/api/search', { query: { q: q.value }, signal }),
+        )
+    options:
+      - text: Попередній запит скасовується через `signal`, і в `data` потрапляє лише результат останнього виклику
+        text_en: The previous request is aborted through `signal`, and only the result of the latest call lands in `data`
+        correct: true
+      - text: Новий виклик ігнорується, доки не завершиться попередній, тож `data` показує результат першого запиту
+        text_en: The new call is ignored until the previous one finishes, so `data` shows the result of the first request
+      - text: Усі запити виконуються паралельно, а `data` отримує відповідь того, що завершився останнім
+        text_en: All requests run in parallel, and `data` gets the response of whichever finishes last
+      - text: Запити стають у чергу й виконуються по одному в порядку виклику
+        text_en: Requests are queued and run one at a time in call order
+    explanation: >
+      Типове значення `dedupe` — `'cancel'`: новий виклик з тим самим ключем перериває попередній, а `signal` обробника скасовується, тому `$fetch` справді зупиняє запит. Без передачі `signal` запит у мережі завершився б, але результат усе одно відкинули б.
+    explanation_en: >
+      The default `dedupe` value is `'cancel'`: a new call with the same key supersedes the previous one and the handler's `signal` is aborted, so `$fetch` really stops the request. Without passing `signal` the network request would still finish, but its result would be discarded.
+    sources:
+      - https://nuxt.com/docs/4.x/api/composables/use-async-data#make-your-handler-abortable
+  - id: nuxt-011
+    level: senior
+    type: multiple
+    text: Які твердження про `useAsyncData` і `useFetch` у Nuxt 4.6 правильні?
+    text_en: Which statements about `useAsyncData` and `useFetch` in Nuxt 4.6 are correct?
+    options:
+      - text: '`data` за замовчуванням — `shallowRef`, тож зміна вкладеної властивості на місці не викличе оновлення без заміни `data.value` або `deep: true`'
+        text_en: '`data` is a `shallowRef` by default, so mutating a nested property in place will not trigger updates without replacing `data.value` or setting `deep: true`'
+        correct: true
+      - text: Виклики з однаковим ключем ділять між собою ті самі `data`, `error` і `status`
+        text_en: Calls with the same key share the same `data`, `error` and `status`
+        correct: true
+      - text: Без опції `default` початкове значення `data` — `undefined`, а не `null`
+        text_en: Without the `default` option the initial value of `data` is `undefined`, not `null`
+        correct: true
+      - text: Для однакового ключа кожен виклик може мати власну функцію-обробник, і Nuxt це не відстежує
+        text_en: For the same key each call may have its own handler function, and Nuxt does not track this
+      - text: '`data` за замовчуванням глибоко реактивний (`deep: true`), тому мутації вкладених полів завжди помітні'
+        text_en: '`data` is deeply reactive by default (`deep: true`), so mutations of nested fields are always noticed'
+    explanation: >
+      У Nuxt 4 `data` — це `shallowRef`, початкові `data` і `error` дорівнюють `undefined`, а виклики з одним ключем ділять стан. Опції `handler`, `deep`, `transform`, `pick`, `getCachedData`, `default` і `middleware` мають збігатися для одного ключа, інакше Nuxt попереджає.
+    explanation_en: >
+      In Nuxt 4 `data` is a `shallowRef`, the initial `data` and `error` are `undefined`, and calls with the same key share state. The `handler`, `deep`, `transform`, `pick`, `getCachedData`, `default` and `middleware` options must match for one key, otherwise Nuxt warns.
+    sources:
+      - https://nuxt.com/docs/4.x/api/composables/use-async-data#shared-state-and-option-consistency
+      - https://nuxt.com/docs/4.x/getting-started/upgrade
+  - id: nuxt-012
+    level: senior
+    type: single
+    text: >
+      У Nuxt 4 є `runtimeConfig: { apiSecret: '', public: { apiBase: '' } }`. Компонент викликає `fetch(`${cfg.apiBase}/data`, { headers: { Authorization: cfg.apiSecret } })`, де `cfg = useRuntimeConfig()`. Під час SSR усе працює, а після клієнтської навігації API відповідає 401. Яка причина і правильне виправлення?
+    text_en: >
+      A Nuxt 4 app has `runtimeConfig: { apiSecret: '', public: { apiBase: '' } }`. A component calls `fetch(`${cfg.apiBase}/data`, { headers: { Authorization: cfg.apiSecret } })`, where `cfg = useRuntimeConfig()`. Everything works during SSR, but after client-side navigation the API responds with 401. What is the cause and the right fix?
+    options:
+      - text: У браузері `apiSecret` недоступний, бо клієнту віддаються лише ключі з `public`; виклик API з секретом треба винести в серверний маршрут
+        text_en: '`apiSecret` is unavailable in the browser, which gets only `public` keys; move the call into a server route'
+        correct: true
+      - text: Після навігації Nuxt скидає `runtimeConfig` до значень за замовчуванням, тож секрет треба повторно читати через `useState`
+        text_en: After navigation Nuxt resets `runtimeConfig` to its defaults, so the secret must be re-read through `useState`
+      - text: Секрет читається лише з файла `.env` на етапі збірки, тому змінну треба задати до `nuxt build`
+        text_en: The secret is read only from the `.env` file at build time, so the variable must be set before `nuxt build`
+      - text: Заголовок `Authorization` браузер ніколи не передає в міждоменних запитах, тож треба використати cookie
+        text_en: The browser never sends the `Authorization` header on cross-origin requests, so a cookie must be used
+    explanation: >
+      Приватні ключі `runtimeConfig` існують лише на сервері, а клієнт отримує тільки `public` (і `app`), тому в браузері `cfg.apiSecret` порожнє. Щоб не розкривати секрет, браузер має викликати власний маршрут `server/api/`, який у `useRuntimeConfig(event)` бере секрет і сам звертається до зовнішнього API.
+    explanation_en: >
+      Private `runtimeConfig` keys exist only on the server, while the client receives just `public` (and `app`), so `cfg.apiSecret` is empty in the browser. To avoid exposing the secret, the browser should call your own `server/api/` route, which reads the secret with `useRuntimeConfig(event)` and calls the external API itself.
+    sources:
+      - https://nuxt.com/docs/4.x/guide/going-further/runtime-config

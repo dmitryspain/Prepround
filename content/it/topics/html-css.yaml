@@ -3,6 +3,360 @@ title: HTML і CSS
 title_en: HTML and CSS
 description: Семантика, доступність, box model, flexbox, grid, каскад і специфічність, адаптивність.
 description_en: Semantics, accessibility, box model, flexbox, grid, cascade and specificity, responsive design.
-draft: true
 icon: html5
-questions: []
+questions:
+  - id: html-css-001
+    level: junior
+    type: single
+    text: Чим нативний `<button>` кращий за `<div>` з обробником `click` для дії «Зберегти»?
+    text_en: Why is a native `<button>` better than a `<div>` with a `click` handler for a "Save" action?
+    options:
+      - text: Він отримує фокус через Tab, активується клавішами Enter і Пробіл та має для скринридера роль кнопки
+        text_en: It gets focus via Tab, activates with Enter and Space, and has the button role for screen readers
+        correct: true
+      - text: Він відрізняється лише виглядом за замовчуванням, а поведінка з клавіатури в обох елементів однакова
+        text_en: It differs only in its default look, while keyboard behavior is the same for both elements
+      - text: Він блокує повторні кліки, доки обробник попереднього кліку не завершиться
+        text_en: It blocks repeated clicks until the handler of the previous click has finished
+      - text: Подія `click` для `<div>` спрацьовує лише від миші, тому дотик на телефоні ігнорується
+        text_en: The `click` event on a `<div>` fires only from a mouse, so a tap on a phone is ignored
+    explanation: >
+      Нативна кнопка за замовчуванням фокусується, реагує на Enter і Пробіл та експонується як `button`. Для `<div>` усе це довелося б дописувати вручну (`tabindex`, `role`, обробник клавіш). Дотик `click` викликає і для `<div>`, тож остання відповідь хибна.
+    explanation_en: >
+      A native button is focusable by default, responds to Enter and Space, and is exposed as `button`. A `<div>` would need all of this added by hand (`tabindex`, `role`, a key handler). Touch does trigger `click` on a `<div>`, so the last option is wrong.
+    sources:
+      - https://www.w3.org/WAI/ARIA/apg/patterns/button/
+      - https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button
+
+  - id: html-css-002
+    level: junior
+    type: single
+    text: Скільки пікселів по горизонталі займає border box блоку (без `margin`) зі стандартним значенням `box-sizing`?
+    text_en: How many pixels wide is the border box of this block (excluding `margin`) with the default `box-sizing` value?
+    code:
+      lang: css
+      source: |
+        .box {
+          width: 200px;
+          padding: 20px;
+          border: 5px solid;
+          margin: 10px;
+        }
+    options:
+      - text: 250px
+        text_en: 250px
+        correct: true
+      - text: 200px
+        text_en: 200px
+      - text: 230px
+        text_en: 230px
+      - text: 270px
+        text_en: 270px
+    explanation: >
+      За `content-box` `width` задає лише контент: 200 + 2 × 20 (padding) + 2 × 5 (border) = 250px. 270px вийшло б, лише якби додати ще й `margin`, але він не входить до border box.
+    explanation_en: >
+      With `content-box`, `width` sets only the content: 200 + 2 × 20 (padding) + 2 × 5 (border) = 250px. 270px would require adding `margin`, which is not part of the border box.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing
+      - https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/Box_model
+
+  - id: html-css-003
+    level: junior
+    type: single
+    text: Яка властивість центрує дочірні елементи цього flex-контейнера по горизонталі?
+    text_en: Which property centers the children of this flex container horizontally?
+    code:
+      lang: css
+      source: |
+        .col {
+          display: flex;
+          flex-direction: column;
+          height: 300px;
+        }
+    options:
+      - text: '`align-items: center`'
+        text_en: '`align-items: center`'
+        correct: true
+      - text: '`justify-content: center`'
+        text_en: '`justify-content: center`'
+      - text: '`justify-items: center`'
+        text_en: '`justify-items: center`'
+      - text: '`text-align: center`'
+        text_en: '`text-align: center`'
+    explanation: >
+      За `flex-direction: column` головна вісь вертикальна, тож `justify-content` центрує по вертикалі, а поперечну вісь (горизонталь) вирівнює `align-items`. `justify-items` у flexbox ігнорується.
+    explanation_en: >
+      With `flex-direction: column` the main axis is vertical, so `justify-content` centers vertically, while the cross axis (horizontal) is aligned by `align-items`. `justify-items` is ignored in flexbox.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout/Aligning_items_in_a_flex_container
+      - https://developer.mozilla.org/en-US/docs/Web/CSS/justify-items
+
+  - id: html-css-004
+    level: junior
+    type: multiple
+    text: Які твердження про зв'язок `<label>` з полем форми правильні?
+    text_en: Which statements about associating a `<label>` with a form field are true?
+    options:
+      - text: '`<label for="email">` зв''язується з полем, у якого `id="email"`'
+        text_en: '`<label for="email">` is associated with the field that has `id="email"`'
+        correct: true
+      - text: Поле, вкладене всередину `<label>`, зв'язується з ним і без атрибута `for`
+        text_en: A field nested inside a `<label>` is associated with it even without the `for` attribute
+        correct: true
+      - text: Клік по тексту `<label>` активує пов'язане поле, наприклад ставить у нього фокус
+        text_en: Clicking the `<label>` text activates the associated field, for example by focusing it
+        correct: true
+      - text: Атрибут `for` має містити значення `name` поля, а не його `id`
+        text_en: The `for` attribute must hold the field's `name` value, not its `id`
+      - text: Атрибут `placeholder` повністю замінює `<label>` для скринридерів
+        text_en: The `placeholder` attribute fully replaces a `<label>` for screen readers
+    explanation: >
+      Зв'язок буває явним (`for` + `id`) і неявним (вкладення), а клік по мітці передає активацію полю. `for` посилається на `id`, а не на `name`; `placeholder` зникає під час введення й не є надійною назвою поля.
+    explanation_en: >
+      The association can be explicit (`for` + `id`) or implicit (nesting), and clicking the label passes activation to the field. `for` refers to `id`, not `name`; `placeholder` disappears while typing and is not a reliable field name.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/label
+      - https://html.spec.whatwg.org/multipage/forms.html#the-label-element
+
+  - id: html-css-005
+    level: middle
+    type: single
+    text: Який колір матиме `<p class="note">` усередині `<section class="card">`, якщо всі три правила лежать в одному стилі саме в такому порядку?
+    text_en: What color will `<p class="note">` inside `<section class="card">` have, if all three rules are in the same stylesheet in exactly this order?
+    code:
+      lang: css
+      source: |
+        p { color: blue; }
+        .card p { color: green; }
+        p.note { color: red; }
+    options:
+      - text: Червоний
+        text_en: Red
+        correct: true
+      - text: Зелений
+        text_en: Green
+      - text: Синій
+        text_en: Blue
+      - text: Браузер сам вибирає один із кольорів
+        text_en: The browser picks one of the colors on its own
+    explanation: >
+      Специфічність `.card p` і `p.note` однакова, (0,1,1): по одному класу й одному елементу. Синє правило слабше, а при рівній специфічності перемагає пізніше оголошене, тобто `p.note`.
+    explanation_en: >
+      `.card p` and `p.note` have equal specificity, (0,1,1): one class and one element each. The blue rule is weaker, and with equal specificity the later declared rule wins, which is `p.note`.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_cascade/Specificity
+
+  - id: html-css-006
+    level: middle
+    type: single
+    text: Який колір матиме `<h1 id="title">` і чому?
+    text_en: What color will `<h1 id="title">` have, and why?
+    code:
+      lang: css
+      source: |
+        @layer base, theme;
+
+        @layer theme {
+          #title { color: red; }
+        }
+
+        h1 { color: blue; }
+    options:
+      - text: Синій, бо непошарові стилі перемагають шарові, а специфічність не порівнюється
+        text_en: Blue, because styles outside any layer beat layered normal styles regardless of specificity
+        correct: true
+      - text: Червоний, бо селектор за `id` має більшу специфічність, а шар лише групує правила
+        text_en: Red, because the `id` selector has higher specificity and a layer only groups rules
+      - text: Червоний, бо шар `theme` оголошено пізніше за правило `h1`
+        text_en: Red, because the `theme` layer is declared later than the `h1` rule
+      - text: Синій, бо шар `base` порожній і тому перекриває `theme`
+        text_en: Blue, because the `base` layer is empty and therefore overrides `theme`
+    explanation: >
+      Для звичайних (не `!important`) декларацій непошарові стилі мають вищий пріоритет за будь-який шар, і специфічність між ними не порівнюють. Тому `h1` перемагає `#title`, хоча специфічність другого більша.
+    explanation_en: >
+      For normal (non-`!important`) declarations, unlayered styles take precedence over any layer, and specificity is not compared between them. So `h1` wins over `#title` even though the latter has higher specificity.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/CSS/@layer
+      - https://www.w3.org/TR/css-cascade-5/#cascade-sort
+
+  - id: html-css-007
+    level: middle
+    type: multiple
+    text: 'Два сусідні блоки з `display: block` у звичайному потоці мають `margin-bottom: 20px` (верхній) і `margin-top: 30px` (нижній). Які твердження правильні?'
+    text_en: 'Two adjacent `display: block` siblings in normal flow have `margin-bottom: 20px` (upper) and `margin-top: 30px` (lower). Which statements are true?'
+    options:
+      - text: Відстань між блоками дорівнює 30px, бо вертикальні відступи згортаються до більшого
+        text_en: The gap between the blocks is 30px, because vertical margins collapse to the larger one
+        correct: true
+      - text: Якби це були flex-елементи колонкового контейнера, відступи не згортались би
+        text_en: If these were flex items of a column container, the margins would not collapse
+        correct: true
+      - text: Відступи між сусідніми `inline-block` елементами не згортаються
+        text_en: Margins between adjacent `inline-block` elements do not collapse
+        correct: true
+      - text: Відстань дорівнює 50px, бо відступи сусідніх блоків завжди додаються
+        text_en: The gap is 50px, because margins of adjacent blocks always add up
+      - text: Згортання не відбудеться, якщо в блоків різний `padding`
+        text_en: Collapsing will not happen if the blocks have different `padding`
+    explanation: >
+      Вертикальні margin сусідніх блоків потоку згортаються до більшого (30px). Flex-елементи, grid-елементи й `inline-block` у згортанні не беруть участі. Власний `padding` блоків сусідське згортання не блокує, воно важливе лише для відступів між батьком і першою чи останньою дитиною.
+    explanation_en: >
+      Vertical margins of adjacent in-flow blocks collapse to the larger one (30px). Flex items, grid items, and `inline-block` elements do not take part in collapsing. The blocks' own `padding` does not block sibling collapsing; it matters only for margins between a parent and its first or last child.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_box_model/Mastering_margin_collapsing
+      - https://www.w3.org/TR/CSS2/box.html#collapsing-margins
+
+  - id: html-css-008
+    level: middle
+    type: single
+    text: Контейнер завширшки 700px містить 2 елементи. Якою буде ширина кожного?
+    text_en: A 700px wide container holds 2 items. What will the width of each item be?
+    code:
+      lang: css
+      source: |
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 0;
+          width: 700px;
+        }
+    options:
+      - text: 350px, бо порожня третя колонка згортається, а дві наявні ділять простір
+        text_en: 350px, because the empty third track collapses and the two remaining ones share the space
+        correct: true
+      - text: 233.33px, бо створюються три колонки, а третя лишається порожньою
+        text_en: 233.33px, because three tracks are created and the third stays empty
+      - text: 200px, бо це мінімум у `minmax`, а решта простору лишається вільною
+        text_en: 200px, because that is the `minmax` minimum and the rest of the space stays free
+      - text: 700px, бо в `auto-fit` кожен елемент займає весь рядок
+        text_en: 700px, because with `auto-fit` each item takes the whole row
+    explanation: >
+      У 700px вміщається три колонки по 200px, але `auto-fit` згортає порожні доріжки до нуля, тож 1fr ділить 700px між двома: по 350px. Результат 233.33px дав би `auto-fill`, який лишає порожню доріжку.
+    explanation_en: >
+      Three 200px tracks fit into 700px, but `auto-fit` collapses empty tracks to zero, so 1fr splits 700px between two: 350px each. 233.33px would be the result of `auto-fill`, which keeps the empty track.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fill_and_auto-fit
+      - https://www.w3.org/TR/css-grid-1/#auto-repeat
+
+  - id: html-css-009
+    level: senior
+    type: single
+    text: У картці довгий заголовок не обрізається трикрапкою, а розпирає рядок за межі контейнера. Що виправить це мінімальною зміною?
+    text_en: In a card, a long title is not truncated with an ellipsis but stretches the row beyond its container. What is the minimal fix?
+    code:
+      lang: css
+      source: |
+        .row   { display: flex; width: 300px; }
+        .cell  { flex: 1; }
+        .title {
+          display: block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        /* <div class="row"><div class="cell">
+             <span class="title">Very long unbroken heading…</span>
+           </div></div> */
+    options:
+      - text: 'Додати `.cell { min-width: 0; }`, бо flex-елемент не стискається менше за свій min-content'
+        text_en: 'Add `.cell { min-width: 0; }`, since a flex item won''t shrink below its min-content'
+        correct: true
+      - text: 'Додати `.title { width: 100%; }`, щоб заголовок займав усю ширину батьківської комірки'
+        text_en: 'Add `.title { width: 100%; }` so the title takes the full width of its parent cell'
+      - text: 'Замінити `flex: 1` на `flex: 1 1 auto`, щоб комірці дозволили стискатися'
+        text_en: 'Replace `flex: 1` with `flex: 1 1 auto` so the cell is allowed to shrink'
+      - text: 'Додати `.cell { flex-shrink: 1; }`, бо за замовчуванням стискання вимкнене'
+        text_en: 'Add `.cell { flex-shrink: 1; }`, because shrinking is off by default'
+    explanation: >
+      Для flex-елемента з `overflow: visible` значення `min-width: auto` дорівнює min-content, а для тексту з `nowrap` це вся його довжина, тож `.cell` не стискається. `min-width: 0` це знімає. `flex-shrink` уже дорівнює 1, а `width: 100%` рахується від розпертого батька.
+    explanation_en: >
+      For a flex item with `overflow: visible`, `min-width: auto` equals the min-content size, which for `nowrap` text is its full length, so `.cell` cannot shrink. `min-width: 0` removes this. `flex-shrink` is already 1, and `width: 100%` is computed against the stretched parent.
+    sources:
+      - https://www.w3.org/TR/css-flexbox-1/#min-size-auto
+      - https://developer.mozilla.org/en-US/docs/Web/CSS/min-width
+
+  - id: html-css-010
+    level: senior
+    type: multiple
+    text: Які способи візуально ховають елемент, але лишають його в дереві доступності, тож скринридер його озвучить?
+    text_en: Which techniques hide an element visually but leave it in the accessibility tree, so a screen reader will announce it?
+    options:
+      - text: '`opacity: 0` на самому елементі'
+        text_en: '`opacity: 0` on the element itself'
+        correct: true
+      - text: 'Винесення за екран через `position: absolute; left: -9999px`'
+        text_en: 'Off-screen via `position: absolute; left: -9999px`'
+        correct: true
+      - text: 'Патерн `sr-only`: `position: absolute`, 1px, `overflow: hidden`, `clip-path`'
+        text_en: 'The `sr-only` pattern: `position: absolute`, 1px, `overflow: hidden`, `clip-path`'
+        correct: true
+      - text: '`visibility: hidden`, застосований до самого елемента'
+        text_en: '`visibility: hidden` applied directly to the element itself'
+      - text: '`display: none`, застосований до самого елемента'
+        text_en: '`display: none` applied directly to the element itself'
+    explanation: >
+      `opacity`, зсув за межі екрана й `sr-only` змінюють лише малювання, а вузол лишається в дереві доступності. `display: none` і `visibility: hidden` прибирають елемент з дерева.
+    explanation_en: >
+      `opacity`, off-screen positioning, and `sr-only` change only painting, while the node stays in the accessibility tree. `display: none` and `visibility: hidden` remove the element from the tree.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/CSS/visibility
+      - https://web.dev/articles/hiding-and-updating-content
+
+  - id: html-css-011
+    level: senior
+    type: single
+    text: Картка лежить в `<aside>` завширшки 600px у широкому вікні, але `@container` ніколи не застосовується. Чому?
+    text_en: A card sits in a 600px wide `<aside>` in a wide window, but the `@container` rule never applies. Why?
+    code:
+      lang: css
+      source: |
+        .card { display: grid; gap: 1rem; }
+
+        @container (min-width: 400px) {
+          .card { grid-template-columns: 120px 1fr; }
+        }
+    options:
+      - text: Жоден предок не має `container-type`, тож запит не знає, відносно чого міряти
+        text_en: No ancestor has `container-type`, so the query has nothing to measure against
+        correct: true
+      - text: '`@container` порівнюється з шириною вікна браузера, а не з шириною найближчого предка'
+        text_en: '`@container` is compared with the browser window width, not with the width of the nearest ancestor'
+      - text: Контейнером запиту може бути лише сам елемент, до якого застосовано стилі
+        text_en: The query container can only be the very element the styles are applied to
+      - text: '`@container` працює лише всередині блоку `@media` з тією самою умовою'
+        text_en: '`@container` works only inside an `@media` block with the same condition'
+    explanation: >
+      Запит розміру шукає найближчого предка з `container-type` (наприклад `inline-size`). Якщо такого немає, умова не виконується. Сам елемент не може бути власним контейнером, тож `container-type` треба поставити на `<aside>` чи обгортку.
+    explanation_en: >
+      A size query looks for the nearest ancestor with `container-type` (for example `inline-size`). If there is none, the condition is not met. An element cannot be its own query container, so `container-type` must be set on the `<aside>` or a wrapper.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries
+      - https://www.w3.org/TR/css-conditional-5/#container-queries
+
+  - id: html-css-012
+    level: senior
+    type: single
+    text: 'Випадне меню з `z-index: 9999` ховається під банером, хоча в банера `z-index: 1`. Банер іде в DOM після `.header` і візуально накладається на меню. Чому так?'
+    text_en: 'A dropdown menu with `z-index: 9999` is hidden under a banner with `z-index: 1`. The banner comes after `.header` in the DOM and visually overlaps the menu. Why?'
+    code:
+      lang: css
+      source: |
+        .header { position: relative; opacity: 0.99; }
+        .menu   { position: absolute; top: 100%; z-index: 9999; }
+        .banner { position: relative; z-index: 1; margin-top: -20px; }
+    options:
+      - text: '`opacity` < 1 створює для `.header` контекст нашарування: 9999 діє лише всередині, а сам `.header` має рівень 0'
+        text_en: '`opacity` below 1 makes `.header` a stacking context: 9999 counts only inside it, and `.header` itself sits at level 0'
+        correct: true
+      - text: '`z-index` працює лише разом із `position: fixed`, тож значення 9999 ігнорується'
+        text_en: '`z-index` works only together with `position: fixed`, so the value 9999 is ignored'
+      - text: Максимальне значення `z-index` обмежене 1000, тому 9999 скидається до 1, а далі вирішує порядок елементів у DOM
+        text_en: The maximum `z-index` value is capped at 1000, so 9999 is reset to 1 and then the order of elements in the DOM decides
+      - text: Абсолютно позиціоновані елементи завжди малюються під відносно позиціонованими
+        text_en: Absolutely positioned elements are always painted below relatively positioned ones
+    explanation: >
+      Значення `opacity` менше за 1 створює контекст нашарування, і `z-index` меню діє лише в ньому. Назовні `.header` поводиться як позиціонований елемент з рівнем 0, тому банер з `z-index: 1` лежить вище. Прибрати проблему можна, не створюючи контекст на `.header`, або підняти `z-index` самого `.header`.
+    explanation_en: >
+      An `opacity` value below 1 creates a stacking context, and the menu's `z-index` only counts inside it. Outwardly `.header` behaves as a positioned element at level 0, so the banner with `z-index: 1` is above it. The fix is to avoid creating a context on `.header`, or to raise the `z-index` of `.header` itself.
+    sources:
+      - https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_positioned_layout/Understanding_z-index/Stacking_context
