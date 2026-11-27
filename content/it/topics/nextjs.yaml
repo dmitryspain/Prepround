@@ -3,13 +3,13 @@ title: Next.js
 title_en: Next.js
 description: App Router, SSR/SSG/ISR, Server Components, маршрутизація.
 description_en: App Router, SSR/SSG/ISR, Server Components, routing.
-draft: true
 icon: nextdotjs
 questions:
   - id: nextjs-001
     level: junior
     type: single
     text: 'У Next.js 16 (App Router) файл `app/page.tsx` без жодних директив має такий вигляд. Що станеться?'
+    text_en: In Next.js 16 (App Router), the file `app/page.tsx` has no directives and looks like this. What happens?
     code:
       lang: tsx
       source: |
@@ -21,12 +21,18 @@ questions:
         }
     options:
       - text: 'Збірка видасть помилку: компонент серверний, а стан потребує `''use client''`'
+        text_en: 'The build fails with an error: the component is a Server Component, and state requires `''use client''`'
         correct: true
       - text: 'Усе працює: сервер відрендерить `0`, а після гідрації кнопка стане інтерактивною сама, бо React додасть обробник'
+        text_en: 'Everything works: the server renders `0`, and after hydration the button becomes interactive on its own, because React attaches the handler'
       - text: 'Сторінка відрендериться, але на сервері `useState` завжди повертатиме початкове значення, а кліки обробить браузер'
+        text_en: The page renders, but on the server `useState` always returns the initial value, and the browser handles the clicks
       - text: 'Працює лише в режимі розробки, а `next build` для production мовчки вимкне стан'
+        text_en: It works only in development mode, while `next build` for production silently disables the state
     explanation: >
       У App Router компоненти за замовчуванням є Server Components: вони виконуються на сервері й не можуть мати стану чи обробників подій. Щоб використовувати `useState` або `onClick`, файл позначають директивою `'use client'`.
+    explanation_en: >
+      In the App Router, components are Server Components by default: they run on the server and cannot have state or event handlers. To use `useState` or `onClick`, mark the file with the `'use client'` directive.
     sources:
       - https://nextjs.org/docs/app/getting-started/server-and-client-components
 
@@ -34,6 +40,7 @@ questions:
     level: junior
     type: single
     text: 'Сторінка `app/blog/[slug]/page.tsx` у Next.js 16 читає параметр маршруту так. Що з цим не так?'
+    text_en: In Next.js 16, the page `app/blog/[slug]/page.tsx` reads the route parameter like this. What is wrong with it?
     code:
       lang: tsx
       source: |
@@ -42,12 +49,18 @@ questions:
         }
     options:
       - text: 'З Next.js 15 `params` є Promise, тож сторінка має бути `async`, а значення читають через `await params`'
+        text_en: Since Next.js 15, `params` is a Promise, so the page must be `async` and the value is read via `await params`
         correct: true
       - text: '`params` доступні лише в Client Components, тому потрібна директива `''use client''` угорі файлу'
+        text_en: '`params` is available only in Client Components, so the `''use client''` directive is needed at the top of the file'
       - text: 'Параметр динамічного сегмента читають не з `params`, а лише через хук `useSearchParams`'
+        text_en: A dynamic segment parameter is not read from `params` but only through the `useSearchParams` hook
       - text: 'Значення `slug` приходить масивом рядків, тому треба писати `params.slug[0]`'
+        text_en: The `slug` value arrives as an array of strings, so you must write `params.slug[0]`
     explanation: >
       Починаючи з Next.js 15 `params` (і `searchParams`) передаються як Promise, а в 16 синхронний доступ уже не підтримується. Сторінку роблять `async` і розгортають значення через `await`. `useSearchParams` читає query-рядок, а не сегменти шляху.
+    explanation_en: >
+      Starting with Next.js 15, `params` (and `searchParams`) are passed as a Promise, and in 16 synchronous access is no longer supported. You make the page `async` and unwrap the value with `await`. `useSearchParams` reads the query string, not path segments.
     sources:
       - https://nextjs.org/docs/app/api-reference/file-conventions/page
       - https://nextjs.org/blog/next-16
@@ -56,14 +69,21 @@ questions:
     level: junior
     type: single
     text: 'У теці маршруту `app/dashboard/` лежать `page.tsx` та `loading.tsx`. Що робить `loading.tsx` у Next.js 16?'
+    text_en: The route folder `app/dashboard/` contains `page.tsx` and `loading.tsx`. What does `loading.tsx` do in Next.js 16?
     options:
       - text: 'Автоматично обгортає сторінку сегмента в Suspense, і його вміст показується, поки сторінка вантажиться'
+        text_en: 'It automatically wraps the segment''s page in Suspense, and its content is shown while the page is loading'
         correct: true
       - text: 'Виконується на клієнті один раз після гідрації й завантажує дані, які потім передає в `page.tsx`'
+        text_en: It runs on the client once after hydration and loads data, which it then passes to `page.tsx`
       - text: 'Блокує навігацію до сегмента, доки сервер не збере весь HTML, і тільки тоді показує сторінку'
+        text_en: It blocks navigation to the segment until the server has built the whole HTML, and only then shows the page
       - text: 'Визначає, які ресурси браузер має попередньо завантажити, і не рендерить жодного інтерфейсу'
+        text_en: It defines which resources the browser should preload, and renders no UI at all
     explanation: >
       `loading.tsx` — це fallback для автоматичної межі Suspense навколо `page.tsx` і вкладених сегментів. Користувач одразу бачить стан завантаження, а готовий вміст стримиться, коли дані будуть доступні. Файл нічого не завантажує сам.
+    explanation_en: >
+      `loading.tsx` is the fallback for an automatic Suspense boundary around `page.tsx` and nested segments. The user sees a loading state right away, and the finished content is streamed in when the data is ready. The file does not load anything itself.
     sources:
       - https://nextjs.org/docs/app/api-reference/file-conventions/loading
 
@@ -71,14 +91,21 @@ questions:
     level: junior
     type: single
     text: 'Два сусідні маршрути (`/a` і `/b`) використовують спільний `layout.tsx` з клієнтським компонентом, що має `useState`. Що станеться зі станом при переході `/a` → `/b` у Next.js 16 (App Router)?'
+    text_en: Two sibling routes (`/a` and `/b`) share a `layout.tsx` containing a client component with `useState`. What happens to the state when navigating `/a` → `/b` in Next.js 16 (App Router)?
     options:
       - text: 'Стан збережеться: layout не перемонтовується між сторінками'
+        text_en: 'The state is preserved: the layout does not remount between pages'
         correct: true
       - text: 'Стан скинеться, бо layout створюється наново для кожної нової сторінки сегмента'
+        text_en: The state is reset, because the layout is created anew for every new page of the segment
       - text: 'Стан збережеться лише якщо його окремо записати в `localStorage`, інакше React його відкине'
+        text_en: The state is preserved only if you separately write it to `localStorage`, otherwise React discards it
       - text: 'Стан збережеться, але layout перемонтується, і всі його ефекти запустяться ще раз'
+        text_en: The state is preserved, but the layout remounts and all its effects run again
     explanation: >
       Layout спільний для кількох сторінок: при навігації він зберігає стан, лишається інтерактивним і не рендериться повторно. Саме тому, щоб скидати стан на кожну навігацію, використовують `template.tsx`.
+    explanation_en: >
+      A layout is shared by several pages: during navigation it preserves state, stays interactive, and does not re-render. That is why `template.tsx` is used when you need to reset state on every navigation.
     sources:
       - https://nextjs.org/docs/app/getting-started/layouts-and-pages
       - https://nextjs.org/docs/app/api-reference/file-conventions/template
@@ -87,15 +114,22 @@ questions:
     level: middle
     type: multiple
     text: 'Серверний компонент у Next.js 16 передає props клієнтському компоненту. Які значення можна передати?'
+    text_en: In Next.js 16, a Server Component passes props to a Client Component. Which values can be passed?
     options:
       - text: 'Звичайний об''єкт із полями-рядками та числами, створений на сервері'
+        text_en: A plain object with string and number fields, created on the server
         correct: true
       - text: 'Server Action, оголошену з директивою `''use server''`, як значення пропа'
+        text_en: 'A Server Action declared with the `''use server''` directive, as a prop value'
         correct: true
       - text: 'Стрілкову функцію-обробник, створену прямо в серверному компоненті'
+        text_en: An arrow function handler created directly in the Server Component
       - text: 'Екземпляр власного класу з методами, створений на сервері'
+        text_en: An instance of a custom class with methods, created on the server
     explanation: >
       Props між межами сервер-клієнт мусять бути серіалізовними React: прості об'єкти й примітиви проходять, а Server Action передається як посилання на серверну функцію. Звичайні функції та екземпляри класів серіалізувати не можна, тож збірка або рендер завершаться помилкою.
+    explanation_en: >
+      Props crossing the server-client boundary must be serializable by React: plain objects and primitives pass, and a Server Action is passed as a reference to a server function. Ordinary functions and class instances cannot be serialized, so the build or render fails with an error.
     sources:
       - https://nextjs.org/docs/app/getting-started/server-and-client-components
 
@@ -103,14 +137,21 @@ questions:
     level: middle
     type: single
     text: 'У Next.js 16 у `app/shop/layout.tsx` кидається помилка під час рендеру, а поруч лежить `app/shop/error.tsx`. Чому цей `error.tsx` її не перехопить і що з цим робити?'
+    text_en: In Next.js 16, an error is thrown during render in `app/shop/layout.tsx`, and `app/shop/error.tsx` sits next to it. Why does this `error.tsx` not catch it, and what should be done?
     options:
       - text: 'Межа з `error.tsx` стоїть нижче layout, тож помилку ловить `error.tsx` батьківського сегмента'
+        text_en: The `error.tsx` boundary sits below the layout, so the error is caught by the `error.tsx` of the parent segment
         correct: true
       - text: '`error.tsx` ловить лише помилки з Server Components, а layout завжди є клієнтським компонентом і тому виключений'
+        text_en: '`error.tsx` catches only errors from Server Components, and a layout is always a Client Component, so it is excluded'
       - text: '`error.tsx` ловить лише помилки зі Server Actions і запитів `fetch`, тож помилки рендеру обробляють через `try/catch`'
+        text_en: '`error.tsx` catches only errors from Server Actions and `fetch` requests, so render errors are handled with `try/catch`'
       - text: 'Перехоплення запрацює, якщо в `layout.tsx` додати директиву `''use client''` угорі файлу'
+        text_en: 'Catching starts to work if you add the `''use client''` directive at the top of `layout.tsx`'
     explanation: >
       `error.tsx` вставляє межу помилки всередину layout: вона огортає `loading`, `not-found`, `page` і вкладені layout. Layout та template вище в тому ж сегменті лишаються поза нею, тож їхні помилки піднімаються до `error.tsx` вищого сегмента (для кореневого layout — `global-error.tsx`). Сам `error.tsx` при цьому завжди має бути клієнтським компонентом.
+    explanation_en: >
+      `error.tsx` places an error boundary inside the layout: it wraps `loading`, `not-found`, `page`, and nested layouts. The layout and template above it in the same segment stay outside it, so their errors bubble up to the `error.tsx` of a higher segment (for the root layout, `global-error.tsx`). `error.tsx` itself must always be a Client Component.
     sources:
       - https://nextjs.org/docs/app/api-reference/file-conventions/error
 
@@ -118,6 +159,7 @@ questions:
     level: middle
     type: single
     text: 'У Next.js 16 (без Cache Components) сторінка `app/blog/[slug]/page.tsx` експортує `generateStaticParams`, що повертає `[{ slug: ''a'' }, { slug: ''b'' }]`, і `export const dynamicParams = false`. Що побачить користувач на `/blog/c` після `next build` і `next start`?'
+    text_en: 'In Next.js 16 (without Cache Components), the page `app/blog/[slug]/page.tsx` exports `generateStaticParams` returning `[{ slug: ''a'' }, { slug: ''b'' }]` and `export const dynamicParams = false`. What does the user see at `/blog/c` after `next build` and `next start`?'
     code:
       lang: tsx
       source: |
@@ -128,12 +170,18 @@ questions:
         }
     options:
       - text: 'Відповідь 404, бо віддаються лише шляхи, повернені з `generateStaticParams`'
+        text_en: A 404 response, because only the paths returned from `generateStaticParams` are served
         correct: true
       - text: 'Сторінку відрендерить сервер на запит і закешує, як це було б без `dynamicParams`'
+        text_en: The server renders the page on request and caches it, as it would without `dynamicParams`
       - text: 'Збірка впаде, бо `dynamicParams = false` заборонено разом із `generateStaticParams`'
+        text_en: The build fails, because `dynamicParams = false` is not allowed together with `generateStaticParams`
       - text: 'Відкриється найближчий `loading.tsx`, а після ревалідації сторінка підміниться на справжню'
+        text_en: The nearest `loading.tsx` opens, and after revalidation the page is replaced with the real one
     explanation: >
       За замовчуванням невідомі параметри рендеряться на запит і кешуються. `dynamicParams = false` вимикає це: обслуговуються тільки шляхи з `generateStaticParams`, решта дає 404.
+    explanation_en: >
+      By default, unknown params are rendered on demand and cached. `dynamicParams = false` turns that off: only the paths from `generateStaticParams` are served, and everything else returns 404.
     sources:
       - https://nextjs.org/docs/app/api-reference/functions/generate-static-params
 
@@ -141,17 +189,25 @@ questions:
     level: middle
     type: multiple
     text: 'Команда мігрує застосунок на Next.js 16 і має файл автентифікаційного перехоплення запитів. Які твердження про `proxy` правильні?'
+    text_en: A team is migrating an app to Next.js 16 and has a file that intercepts requests for authentication. Which statements about `proxy` are true?
     options:
       - text: 'Файл називається `proxy.ts`, а `middleware.ts` у 16 позначено застарілим і перейменованим'
+        text_en: The file is named `proxy.ts`, and `middleware.ts` is deprecated and renamed in 16
         correct: true
       - text: 'Файл виконується на сервері до завершення запиту й може переписувати, перенаправляти або змінювати заголовки'
+        text_en: The file runs on the server before the request completes and can rewrite, redirect, or modify headers
         correct: true
       - text: 'За замовчуванням він працює в Node.js runtime, а опцію `runtime` у ньому задати не можна'
+        text_en: It runs in the Node.js runtime by default, and the `runtime` option cannot be set in it
         correct: true
       - text: 'Він працює лише в Edge runtime, тому не може імпортувати модулі, що потребують Node.js API'
+        text_en: It runs only in the Edge runtime, so it cannot import modules that need Node.js APIs
       - text: 'Файл виконується лише під час `next build`, а під час запитів на сервері не запускається'
+        text_en: The file runs only during `next build` and is not executed for requests on the server
     explanation: >
       У Next.js 16 `middleware` перейменовано на `proxy`, і за замовчуванням він працює в Node.js runtime без можливості змінити `runtime`. Для Edge лишається застарілий `middleware.ts`. Тому твердження про «лише Edge» хибне.
+    explanation_en: >
+      In Next.js 16, `middleware` is renamed to `proxy`, and by default it runs in the Node.js runtime with no way to change `runtime`. The deprecated `middleware.ts` remains for Edge. So the "Edge only" statement is false.
     sources:
       - https://nextjs.org/docs/app/api-reference/file-conventions/proxy
       - https://nextjs.org/blog/next-16
@@ -160,6 +216,7 @@ questions:
     level: senior
     type: single
     text: 'У Next.js 16 з `cacheComponents: true` у кореневому `layout.tsx` компонент `Nav` читає `(await cookies())` і не обгорнутий у `<Suspense>`. Що станеться і як це виправляють?'
+    text_en: 'In Next.js 16 with `cacheComponents: true`, the `Nav` component in the root `layout.tsx` reads `(await cookies())` and is not wrapped in `<Suspense>`. What happens, and how is it fixed?'
     code:
       lang: tsx
       source: |
@@ -173,12 +230,18 @@ questions:
         }
     options:
       - text: 'Це блокувальний маршрут: його не можна передрендерити в статичну оболонку, тож `Nav` обгортають у `<Suspense>` з fallback'
+        text_en: 'It is a blocking route: it cannot be prerendered into a static shell, so `Nav` is wrapped in `<Suspense>` with a fallback'
         correct: true
       - text: 'Next.js мовчки кешує результат `cookies()` у статичній оболонці, тож усі відвідувачі бачать першу тему'
+        text_en: Next.js silently caches the `cookies()` result in the static shell, so all visitors see the first theme
       - text: 'Next.js автоматично вставить невидиму межу `<Suspense>` навколо `Nav`, тож жодних змін у коді не потрібно'
+        text_en: Next.js automatically inserts an invisible `<Suspense>` boundary around `Nav`, so no code changes are needed
       - text: '`cookies()` у таких компонентах просто повертає порожнє значення під час prerender, а дані дістаються після гідрації'
+        text_en: '`cookies()` in such components simply returns an empty value during prerender, and the data is fetched after hydration'
     explanation: >
       З Cache Components Next.js передрендерює статичну оболонку, а все, що читає дані запиту (`cookies()`, `headers()`, `searchParams`) без кешу, має бути за межею `<Suspense>`. Без неї маршрут блокується, і framework вказує обгорнути такий читач у `<Suspense>` або перенести його нижче. Тоді оболонка статична, а динамічна частина стримиться на запит.
+    explanation_en: >
+      With Cache Components, Next.js prerenders a static shell, and anything that reads request data (`cookies()`, `headers()`, `searchParams`) without a cache must be behind a `<Suspense>` boundary. Without one the route blocks, and the framework tells you to wrap such a reader in `<Suspense>` or move it lower. Then the shell is static and the dynamic part streams in on request.
     sources:
       - https://nextjs.org/docs/app/getting-started/caching
 
@@ -186,6 +249,7 @@ questions:
     level: senior
     type: single
     text: 'Next.js 16, `cacheComponents: true`. Розробник додав `''use cache''` до функції, яка всередині читає `(await cookies()).get(''session'')`, щоб закешувати дані користувача. Що станеться і що правильно?'
+    text_en: 'Next.js 16, `cacheComponents: true`. A developer added `''use cache''` to a function that reads `(await cookies()).get(''session'')` inside, to cache user data. What happens, and what is the right approach?'
     code:
       lang: ts
       source: |
@@ -196,12 +260,18 @@ questions:
         }
     options:
       - text: 'Виклик завершиться помилкою: `cookies()` читають ззовні й передають аргументом'
+        text_en: 'The call fails with an error: `cookies()` is read outside and passed as an argument'
         correct: true
       - text: 'Результат закешується на всіх користувачів, бо значення cookie не входить до ключа кешу функції'
+        text_en: 'The result is cached for all users, because the cookie value is not part of the function''s cache key'
       - text: 'Усе працює: Next.js бере cookie з поточного запиту й сам додає їх до ключа кешу'
+        text_en: 'Everything works: Next.js takes the cookie from the current request and adds it to the cache key itself'
       - text: 'Помилка виникає лише під час `next build`, а в продакшні під `next start` код працює нормально й кешує'
+        text_en: The error occurs only during `next build`, while in production under `next start` the code works fine and caches
     explanation: >
       Кешовані функції не можуть звертатися до `cookies()`, `headers()` чи `searchParams`, і обмеження стосується також допоміжних функцій у стеку викликів. Прочитане значення передають як аргумент: тоді воно стає частиною ключа кешу, і кожен користувач має власний запис. На динамічному маршруті помилка може з'явитися лише під час запиту, тож проходження збірки нічого не гарантує.
+    explanation_en: >
+      Cached functions cannot access `cookies()`, `headers()`, or `searchParams`, and the restriction also applies to helper functions in the call stack. The value you read is passed as an argument: then it becomes part of the cache key, and each user gets their own entry. On a dynamic route the error may appear only at request time, so a passing build guarantees nothing.
     sources:
       - https://nextjs.org/docs/app/api-reference/directives/use-cache
 
@@ -209,16 +279,24 @@ questions:
     level: senior
     type: multiple
     text: 'Команда додає в Next.js 16 Server Action `deleteInvoice(id)` у файлі з `''use server''`; кнопку показують лише адмінам. Які твердження про безпеку правильні?'
+    text_en: 'In Next.js 16, a team adds a Server Action `deleteInvoice(id)` in a file with `''use server''`; the button is shown only to admins. Which statements about security are true?'
     options:
       - text: 'Дію можна викликати прямим POST-запитом поза UI, тож права перевіряють усередині самої дії'
+        text_en: The action can be invoked by a direct POST request outside the UI, so permissions are checked inside the action itself
         correct: true
       - text: 'Аргумент `id` приходить від клієнта, тому його валідують, як вхідні дані будь-якого публічного ендпоінта'
+        text_en: The `id` argument comes from the client, so it is validated like input to any public endpoint
         correct: true
       - text: 'Прихована кнопка для не-адмінів достатня, бо без неї клієнт не отримає ідентифікатор дії'
+        text_en: Hiding the button from non-admins is enough, because without it the client never gets the action identifier
       - text: 'Перевірки ролі в `layout.tsx` вистачає, бо layout виконується перед кожною навігацією'
+        text_en: A role check in `layout.tsx` is enough, because the layout runs before every navigation
       - text: 'Дію можна викликати лише з форми на тій самій сторінці, де вона оголошена'
+        text_en: The action can be invoked only from a form on the same page where it is declared
     explanation: >
       Server Functions доступні через прямі POST-запити, не лише через UI, тому автентифікацію й авторизацію перевіряють у кожній з них. Layout не перерендерюється під час навігації, тож перевірка сесії в ньому не виконується на кожному переході. Прихована кнопка нічого не захищає.
+    explanation_en: >
+      Server Functions are reachable through direct POST requests, not only through the UI, so authentication and authorization are checked inside each of them. A layout does not re-render on navigation, so a session check in it does not run on every transition. A hidden button protects nothing.
     sources:
       - https://nextjs.org/docs/app/getting-started/mutating-data
       - https://nextjs.org/docs/app/guides/authentication
@@ -227,14 +305,21 @@ questions:
     level: senior
     type: single
     text: 'У Next.js 16 Server Action створює допис і одразу робить `redirect` на сторінку, що рендерить список із даними з тегом `posts` (`cacheTag(''posts'')`). Користувач має одразу побачити свій допис, а не застарілий список. Що викликати в дії?'
+    text_en: 'In Next.js 16, a Server Action creates a post and immediately calls `redirect` to a page that renders a list with data tagged `posts` (`cacheTag(''posts'')`). The user must see their post right away, not a stale list. What should the action call?'
     options:
       - text: '`updateTag(''posts'')`: він одразу вичерпує кеш за тегом, тож наступний рендер чекає свіжі дані'
+        text_en: '`updateTag(''posts'')`: it expires the tagged cache immediately, so the next render waits for fresh data'
         correct: true
       - text: '`revalidateTag(''posts'', ''max'')`: він віддасть застарілий список і оновить кеш у фоні'
+        text_en: '`revalidateTag(''posts'', ''max'')`: it serves the stale list and refreshes the cache in the background'
       - text: '`updateTag(''posts'')` у route handler: він працює скрізь, де можна викликати серверний код'
+        text_en: '`updateTag(''posts'')` in a route handler: it works anywhere server code can be called'
       - text: '`cacheLife(''max'')` у дії: він скидає кеш за тегом і одразу готує свіжий список'
+        text_en: '`cacheLife(''max'')` in the action: it clears the tagged cache and immediately prepares a fresh list'
     explanation: >
       `updateTag` призначено для сценарію read-your-own-writes і він працює лише в Server Actions: старий запис одразу вичерпується, тому наступний запит блокується до свіжих даних. `revalidateTag` із профілем `'max'` використовує stale-while-revalidate, тож перший перегляд може показати застарілий список. `cacheLife` задає час життя запису, а не інвалідує його.
+    explanation_en: >
+      `updateTag` is meant for read-your-own-writes and works only in Server Actions: the old entry is expired immediately, so the next request blocks until fresh data is ready. `revalidateTag` with the `'max'` profile uses stale-while-revalidate, so the first view may show a stale list. `cacheLife` sets an entry's lifetime and does not invalidate it.
     sources:
       - https://nextjs.org/docs/app/api-reference/functions/updateTag
       - https://nextjs.org/docs/app/api-reference/functions/revalidateTag

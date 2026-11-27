@@ -3,12 +3,12 @@ title: Дані й роутинг
 title_en: Data and routing
 description: TanStack Query, React Router, кешування запитів, Suspense.
 description_en: TanStack Query, React Router, query caching, Suspense.
-draft: true
 questions:
   - id: react-data-routing-001
     level: junior
     type: single
     text: Компонент (TanStack Query 5) працює з `userId`, який змінився з `1` на `2`. Що станеться?
+    text_en: A component (TanStack Query 5) works with a `userId` that changed from `1` to `2`. What happens?
     code:
       lang: jsx
       source: |
@@ -21,12 +21,18 @@ questions:
         }
     options:
       - text: "Хук виконає `queryFn` для нового ключа `['user', 2]`, а дані `['user', 1]` лишаться в кеші окремим записом"
+        text_en: "The hook runs `queryFn` for the new key `['user', 2]`, while the `['user', 1]` data stays in the cache as a separate entry"
         correct: true
       - text: "Хук нічого не запитає, бо запис `user` уже є в кеші, доки не викликати `refetch()` вручну"
+        text_en: "The hook requests nothing, because the `user` entry is already cached, until `refetch()` is called manually"
       - text: "Хук перезапише запис `['user', 1]` новими даними, тож старий запис зникне з кешу одразу"
+        text_en: "The hook overwrites the `['user', 1]` entry with the new data, so the old entry disappears from the cache immediately"
       - text: "Хук повторить запит із `userId = 1`, бо `queryFn` замикає значення з першого рендеру"
+        text_en: "The hook repeats the request with `userId = 1`, because `queryFn` closes over the value from the first render"
     explanation: >
       Елементи `queryKey` працюють як залежності: кеш ключується за ними, і новий ключ означає окремий запис з власним запитом. Старий запис лишається й видаляється лише збирачем сміття після `gcTime`.
+    explanation_en: >
+      The `queryKey` elements work like dependencies: the cache is keyed by them, so a new key means a separate entry with its own request. The old entry stays and is removed by garbage collection only after `gcTime`.
     sources:
       - https://tanstack.com/query/latest/docs/framework/react/guides/query-keys
 
@@ -34,14 +40,21 @@ questions:
     level: junior
     type: single
     text: Дані `useQuery` (TanStack Query 5) уже є в кеші, і саме йде фоновий перезапит. Які значення мають `isPending` та `isFetching`?
+    text_en: The `useQuery` data (TanStack Query 5) is already cached and a background refetch is in progress. What are the values of `isPending` and `isFetching`?
     options:
       - text: "`isPending` дорівнює `false`, `isFetching` дорівнює `true`"
+        text_en: "`isPending` is `false`, `isFetching` is `true`"
         correct: true
       - text: "`isPending` дорівнює `true`, `isFetching` дорівнює `true`"
+        text_en: "`isPending` is `true`, `isFetching` is `true`"
       - text: "`isPending` дорівнює `true`, `isFetching` дорівнює `false`"
+        text_en: "`isPending` is `true`, `isFetching` is `false`"
       - text: "Обидва дорівнюють `false`, доки перезапит не завершиться"
+        text_en: "Both are `false` until the refetch finishes"
     explanation: >
       `isPending` означає, що даних ще немає (статус `pending`), а `isFetching` показує, що `queryFn` виконується просто зараз. Коли дані вже є, фоновий перезапит лишає статус `success`, тож `isPending` хибний, а `isFetching` істинний.
+    explanation_en: >
+      `isPending` means there is no data yet (the `pending` status), while `isFetching` shows that `queryFn` is running right now. When data already exists, a background refetch keeps the `success` status, so `isPending` is false and `isFetching` is true.
     sources:
       - https://tanstack.com/query/latest/docs/framework/react/guides/queries#fetchstatus
       - https://tanstack.com/query/latest/docs/framework/react/guides/background-fetching-indicators
@@ -50,6 +63,7 @@ questions:
     level: junior
     type: single
     text: Дочірній маршрут описано в `children` (React Router 8, data mode). Де відрендериться `UserPage` для адреси `/users/5`?
+    text_en: A child route is declared in `children` (React Router 8, data mode). Where is `UserPage` rendered for the URL `/users/5`?
     code:
       lang: jsx
       source: |
@@ -62,12 +76,18 @@ questions:
         ]);
     options:
       - text: "У тому місці `UsersLayout`, де стоїть `<Outlet />`"
+        text_en: "Where `UsersLayout` places `<Outlet />`"
         correct: true
       - text: "Замість `UsersLayout`, який для такої адреси взагалі не рендериться"
+        text_en: "Instead of `UsersLayout`, which is not rendered at all for this URL"
       - text: "Наприкінці `UsersLayout`, автоматично після всього його вмісту"
+        text_en: "At the end of `UsersLayout`, automatically after all of its content"
       - text: "У `UsersLayout` як проп `children`, який компонент має вивести сам"
+        text_en: "Inside `UsersLayout` as the `children` prop, which the component must output itself"
     explanation: >
       Батьківський маршрут рендерить дочірній там, де в його компоненті розміщено `<Outlet />`. Без `Outlet` дочірній маршрут збігається з адресою, але на екрані не з'являється. Автоматичного дописування в кінець немає.
+    explanation_en: >
+      A parent route renders its child where its component places `<Outlet />`. Without `Outlet`, the child route matches the URL but does not appear on screen. There is no automatic appending to the end.
     sources:
       - https://reactrouter.com/api/components/Outlet
 
@@ -75,15 +95,22 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про `Suspense` у React 19 правильні?
+    text_en: Which statements about `Suspense` in React 19 are true?
     options:
       - text: "Він показує `fallback`, поки дочірній компонент чекає, наприклад на проміс у `use` або ледачий `lazy`-компонент"
+        text_en: "It shows `fallback` while a child component is waiting, for example on a promise in `use` or a `lazy` component"
         correct: true
       - text: "Найближча зовнішня межа `Suspense` над компонентом, що чекає, показує свій `fallback`, а решта дерева лишається"
+        text_en: "The nearest outer `Suspense` boundary above the waiting component shows its `fallback`, and the rest of the tree stays"
         correct: true
       - text: "Він сам стежить за `fetch`, який запущено всередині `useEffect`, і показує `fallback` до його завершення"
+        text_en: "It automatically tracks a `fetch` started inside `useEffect` on its own and shows `fallback` until that request completes"
       - text: "Він ловить помилку відхиленого промісу й замість `fallback` показує повідомлення про помилку"
+        text_en: "It catches the error of a rejected promise and shows a built-in error message in place of the `fallback`"
     explanation: >
       `Suspense` реагує лише на «призупинення» під час рендеру: `use`, `lazy` та інтеграції, що його підтримують. Завантаження в ефекті він не бачить, а помилки обробляє окремий Error Boundary.
+    explanation_en: >
+      `Suspense` reacts only to suspension during rendering: `use`, `lazy`, and integrations that support it. It does not see loading in an effect, and errors are handled by a separate Error Boundary.
     sources:
       - https://react.dev/reference/react/Suspense
 
@@ -91,6 +118,7 @@ questions:
     level: middle
     type: single
     text: "Сторінка A показує список через `useQuery` зі `staleTime: 60_000` і типовим `gcTime` (TanStack Query 5). Дані завантажено, користувач перейшов на сторінку B, а через 10 секунд повернувся. Що відбудеться?"
+    text_en: 'Page A shows a list via `useQuery` with `staleTime: 60_000` and the default `gcTime` (TanStack Query 5). The data is loaded, the user navigates to page B and comes back 10 seconds later. What happens?'
     code:
       lang: jsx
       source: |
@@ -104,12 +132,18 @@ questions:
         }
     options:
       - text: "Список з'явиться одразу з кешу, а `fetchTodos` не викличеться, бо дані ще свіжі"
+        text_en: "The list appears immediately from the cache, and `fetchTodos` is not called, because the data is still fresh"
         correct: true
       - text: "Список з'явиться одразу з кешу, а `fetchTodos` викличеться у фоні для оновлення"
+        text_en: "The list appears immediately from the cache, and `fetchTodos` is called in the background to refresh it"
       - text: "Кеш очиститься одразу після розмонтування, тож `fetchTodos` запуститься, а до відповіді буде спінер"
+        text_en: "The cache is cleared right after unmounting, so `fetchTodos` runs and a spinner shows until the response"
       - text: "Список не з'явиться, доки не завершиться новий запит, бо кеш монтування не зберігається"
+        text_en: "The list does not appear until a new request completes, because the cache is not kept after unmounting"
     explanation: >
-      Запис без активних спостерігачів живе в кеші ще `gcTime` (типово 5 хвилин), а `staleTime` 60 секунд ще не минув, тож дані вважаються свіжими. Фоновий перезапит при монтуванні був би лише за `staleTime: 0`.
+      Запис без активних спостерігачів живе в кеші ще `gcTime` (типово 5 хвилин), а `staleTime` 60 секунд ще не минув, тож дані вважаються свіжими. Фоновий перезапит при монтуванні був би, лише якби `staleTime` уже минув (як за типового `0`).
+    explanation_en: >
+      An entry with no active observers stays in the cache for another `gcTime` (5 minutes by default), and the 60-second `staleTime` has not elapsed, so the data counts as fresh. A background refetch on mount would happen only once `staleTime` has elapsed (as with the default `0`).
     sources:
       - https://tanstack.com/query/latest/docs/framework/react/guides/caching
       - https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults
@@ -118,15 +152,22 @@ questions:
     level: middle
     type: multiple
     text: "Що робить `queryClient.invalidateQueries({ queryKey: ['todos'] })` після мутації (TanStack Query 5)?"
+    text_en: 'What does `queryClient.invalidateQueries({ queryKey: [''todos''] })` do after a mutation (TanStack Query 5)?'
     options:
       - text: "Позначає застарілими всі запити, чий ключ починається з `['todos']`, зокрема `['todos', 5]`"
+        text_en: "Marks as stale all queries whose key starts with `['todos']`, including `['todos', 5]`"
         correct: true
       - text: "Негайно перезапитує ті з них, на які зараз підписані змонтовані компоненти"
+        text_en: "Immediately refetches those of them that mounted components are currently subscribed to"
         correct: true
       - text: "Видаляє знайдені записи з кешу, тож наступний рендер починає з порожнього стану"
+        text_en: "Removes the matched entries from the cache, so the next render starts from an empty state"
       - text: "Негайно перезапитує всі збіжні записи, також ті, на які зараз ніхто не підписаний"
+        text_en: "Immediately refetches all matched entries, including those nobody is currently subscribed to"
     explanation: >
       Метод лише скидає свіжість збіжних записів. Активні перезапитуються одразу, а неактивні просто лишаються застарілими й оновляться при наступному використанні. Дані з кешу він не прибирає.
+    explanation_en: >
+      The method only resets the freshness of matched entries. Active ones are refetched right away, while inactive ones simply stay stale and update on next use. It does not remove data from the cache.
     sources:
       - https://tanstack.com/query/latest/docs/framework/react/guides/query-invalidation
 
@@ -134,6 +175,7 @@ questions:
     level: middle
     type: single
     text: React Router 8, data mode. Loader маршруту `d` кидає помилку, у самого `d` немає `ErrorBoundary`, а в батьківського маршруту `/` він є. Що побачить користувач?
+    text_en: React Router 8, data mode. The loader of route `d` throws an error, `d` itself has no `ErrorBoundary`, and its parent route `/` does. What does the user see?
     code:
       lang: jsx
       source: |
@@ -153,12 +195,18 @@ questions:
         ]);
     options:
       - text: "`RootError` замість усього вмісту маршруту `/`, разом з рамкою `Layout`"
+        text_en: "`RootError` in place of the entire content of route `/`, including the `Layout` frame"
         correct: true
       - text: "`Layout` лишиться на екрані, а в його `<Outlet />` з'явиться `RootError`"
+        text_en: "`Layout` stays on screen, and `RootError` appears in its `<Outlet />`"
       - text: "`Details` відрендериться з `undefined` від `useLoaderData()`, а помилка піде в консоль"
+        text_en: "`Details` renders with `undefined` from `useLoaderData()`, and the error goes to the console"
       - text: "Порожній екран, бо без власного `ErrorBoundary` у `d` помилка не обробляється"
+        text_en: "An empty screen, because without its own `ErrorBoundary` in `d` the error is not handled"
     explanation: >
       Помилка loader'а піднімається до найближчого маршруту, який має `ErrorBoundary`, і той замінює весь його UI, а не лише дочірню частину. Тому рамка `Layout` зникає разом з `<Outlet />`. Щоб її зберегти, `ErrorBoundary` ставлять на сам дочірній маршрут.
+    explanation_en: >
+      A loader error bubbles up to the nearest route that has an `ErrorBoundary`, and that boundary replaces its whole UI, not just the child part. So the `Layout` frame disappears together with `<Outlet />`. To keep it, put an `ErrorBoundary` on the child route itself.
     sources:
       - https://reactrouter.com/how-to/error-boundary
 
@@ -166,6 +214,7 @@ questions:
     level: middle
     type: single
     text: Профіль для `id = 1` уже на екрані (React 19). Що побачить користувач після кліку, поки дані для `id = 2` вантажаться? `Profile` читає закешований проміс через `use`.
+    text_en: The profile for `id = 1` is already on screen (React 19). What does the user see after the click while the data for `id = 2` loads? `Profile` reads a cached promise via `use`.
     code:
       lang: jsx
       source: |
@@ -184,12 +233,18 @@ questions:
         }
     options:
       - text: "Старий профіль для `id = 1`, а `Spinner` не з'являється, доки не готові нові дані"
+        text_en: "The old profile for `id = 1`, and `Spinner` does not appear until the new data is ready"
         correct: true
       - text: "Одразу `Spinner`, бо будь-яке призупинення всередині `Suspense` показує `fallback`"
+        text_en: "`Spinner` immediately, because any suspension inside `Suspense` shows `fallback`"
       - text: "Порожню область, бо `startTransition` ховає старий вміст, поки не готовий новий"
+        text_en: "An empty area, because `startTransition` hides the old content until the new one is ready"
       - text: "Профіль для `id = 2` з порожніми полями, які заповняться після завершення запиту"
+        text_en: "The profile for `id = 2` with empty fields that fill in after the request completes"
     explanation: >
       Оновлення в `startTransition` не пропускає вже показаний вміст назад до `fallback`: React чекає й тримає старий екран. Без переходу оновлення стану показало б `Spinner`.
+    explanation_en: >
+      An update inside `startTransition` does not send already revealed content back to `fallback`: React waits and keeps the old screen. Without a transition, the state update would show `Spinner`.
     sources:
       - https://react.dev/reference/react/Suspense#preventing-already-revealed-content-from-hiding
 
@@ -197,17 +252,25 @@ questions:
     level: senior
     type: multiple
     text: Мутація перемикає `done` у задачі, а UI оновлюється оптимістично записом у кеш `['todos']` в `onMutate` (TanStack Query 5). Що треба зробити, щоб не було гонок і розбіжностей із сервером?
+    text_en: A mutation toggles `done` on a task, and the UI updates optimistically by writing to the `['todos']` cache in `onMutate` (TanStack Query 5). What must be done to avoid races and divergence from the server?
     options:
       - text: "Спершу викликати `cancelQueries` для `['todos']`, щоб запит, який уже летить, не перезаписав оптимістичне значення"
+        text_en: "First call `cancelQueries` for `['todos']`, so an in-flight request does not overwrite the optimistic value"
         correct: true
       - text: "Зберегти знімок попередніх даних і в `onError` повернути його через `setQueryData`"
+        text_en: "Save a snapshot of the previous data and restore it in `onError` via `setQueryData`"
         correct: true
       - text: "Викликати `invalidateQueries` в `onSettled`, щоб після успіху чи помилки узгодити кеш із сервером"
+        text_en: "Call `invalidateQueries` in `onSettled` to reconcile the cache with the server after success or failure"
         correct: true
       - text: "Нічого не скасовувати, бо `setQueryData` сам зупиняє запити, що вже виконуються для цього ключа"
+        text_en: "Cancel nothing, because `setQueryData` itself stops requests already running for this key"
       - text: "Нічого не відкочувати: після помилки мутації `useMutation` сам повертає кеш у стан до `onMutate`"
+        text_en: "Roll back nothing: after a mutation error, `useMutation` itself returns the cache to its state before `onMutate`"
     explanation: >
       Бібліотека не знає, що ви змінили кеш вручну: відповідь запиту, який уже летить, затре оптимізм без `cancelQueries`, а відкат після помилки пишеться самостійно зі збереженого знімка. Фінальний `invalidateQueries` у `onSettled` усуває розбіжності, що лишились.
+    explanation_en: >
+      The library does not know you changed the cache manually: the response of an in-flight request would wipe the optimistic value without `cancelQueries`, and the rollback after an error is written by hand from the saved snapshot. The final `invalidateQueries` in `onSettled` removes any remaining divergence.
     sources:
       - https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates
 
@@ -215,6 +278,7 @@ questions:
     level: senior
     type: single
     text: Дашборд (TanStack Query 5) відкривається повільно. Два запити по ~300 мс незалежні, але сторінка з'являється через ~600 мс. У чому причина і що робити?
+    text_en: A dashboard (TanStack Query 5) opens slowly. Two requests of ~300 ms are independent, but the page appears after ~600 ms. What is the cause and what should be done?
     code:
       lang: jsx
       source: |
@@ -229,12 +293,18 @@ questions:
         }
     options:
       - text: "Перший хук призупиняє рендер, тож другий стартує після нього; обидва запити віддайте одному `useSuspenseQueries`"
+        text_en: "The first hook suspends rendering, so the second starts after it; pass both queries to one `useSuspenseQueries`"
         correct: true
       - text: "Обидва хуки стартують одночасно, а 600 мс це сума двох повторних рендерів компонента; допоможе `React.memo`"
+        text_en: "Both hooks start at once, and 600 ms is the sum of two component re-renders; `React.memo` would help"
       - text: "Другий хук не запускається, доки `Dashboard` призупинено, тож для нього потрібен параметр `enabled: false`"
+        text_en: "The second hook does not run while `Dashboard` is suspended, so it needs the `enabled: false` option"
       - text: "Однаковий `queryFn`-шаблон змушує запити виконуватися по черзі; допоможуть різні `gcTime`"
+        text_en: "An identical `queryFn` pattern makes the requests run one by one; different `gcTime` values would help"
     explanation: >
       `useSuspenseQuery` кидає проміс на першому ж виклику, тому код нижче не виконується, поки не прийдуть дані, і виходить водоспад. `useSuspenseQueries` реєструє обидва запити за один виклик, тож вони йдуть паралельно (також можна префетчити заздалегідь).
+    explanation_en: >
+      `useSuspenseQuery` throws a promise on its very first call, so the code below does not run until the data arrives, producing a waterfall. `useSuspenseQueries` registers both queries in one call, so they run in parallel (you can also prefetch ahead of time).
     sources:
       - https://tanstack.com/query/latest/docs/framework/react/guides/suspense
       - https://tanstack.com/query/latest/docs/framework/react/reference/useSuspenseQueries
@@ -243,14 +313,21 @@ questions:
     level: senior
     type: single
     text: У продакшні сторінка (TanStack Query 5, налаштувань `retry` немає) після відповіді 404 від API близько 7 секунд показує спінер, перш ніж з'являється помилка. Чому так і що змінити?
+    text_en: In production, a page (TanStack Query 5, no `retry` settings) shows a spinner for about 7 seconds after a 404 response from the API before the error appears. Why, and what should change?
     options:
       - text: "Типово `retry` дорівнює 3 для будь-якої помилки з паузами 1, 2 і 4 с; задайте `retry` функцією, що не повторює 4xx"
+        text_en: "By default `retry` is 3 for any error, with delays of 1, 2 and 4 s; set `retry` to a function that does not retry 4xx"
         correct: true
       - text: "Типово повтор лише для мережевих помилок, а 404 повторюється через `staleTime`; задайте `staleTime: Infinity`"
+        text_en: "By default only network errors are retried, and a 404 is retried after `staleTime`; set `staleTime: Infinity`"
       - text: "Це `refetchOnWindowFocus` повторює запит після помилки; його слід вимкнути в клієнті"
+        text_en: "It is `refetchOnWindowFocus` that repeats the request after an error; it should be disabled in the client"
       - text: "Помилка зберігається в кеші `gcTime` секунд і лише потім показується; зменшіть `gcTime` до нуля"
+        text_en: "The error is kept in the cache for `gcTime` seconds and only then shown; reduce `gcTime` to zero"
     explanation: >
       Для запитів `retry` типово 3 з експоненційною затримкою (1 с, 2 с, 4 с), і бібліотека не відрізняє 404 від тимчасового збою. Загальна пауза ≈ 7 с, поки статус не стане `error`. Передайте `retry: (count, err) => …`, який відмовляється повторювати клієнтські помилки.
+    explanation_en: >
+      For queries, `retry` defaults to 3 with exponential backoff (1 s, 2 s, 4 s), and the library does not distinguish a 404 from a transient failure. The total wait is about 7 s before the status becomes `error`. Pass `retry: (count, err) => …` that refuses to retry client errors.
     sources:
       - https://tanstack.com/query/latest/docs/framework/react/guides/query-retries
 
@@ -258,6 +335,7 @@ questions:
     level: senior
     type: single
     text: React Router 8, data mode. Маршрут `/` та його дочірній `/c` мають loader'и по 100 мс. Порівняйте з варіантом без loader'ів, де батьківський компонент вантажить дані в `useEffect` і до їх прибуття показує спінер замість `<Outlet />`. Яка відмінність при переході на `/c`?
+    text_en: React Router 8, data mode. Route `/` and its child `/c` have loaders of 100 ms each. Compare this with a variant without loaders, where the parent component loads data in `useEffect` and shows a spinner instead of `<Outlet />` until it arrives. What is the difference when navigating to `/c`?
     code:
       lang: jsx
       source: |
@@ -271,12 +349,18 @@ questions:
         ]);
     options:
       - text: "Loader'и стартують паралельно до рендеру (≈100 мс), а в ефектах дочірній запит починається після батьківського (≈200 мс)"
+        text_en: "Loaders start in parallel before rendering (≈100 ms), while with effects the child request starts after the parent's (≈200 ms)"
         correct: true
       - text: "Loader дочірнього маршруту чекає завершення батьківського, тож загальний час такий самий, як і в ефектному варіанті"
+        text_en: "The child route loader waits for the parent loader to finish, so the total time equals the effect variant"
       - text: "Loader'и стартують лише після першого рендеру `Parent`, але далі виконуються паралельно, на відміну від ефектів"
+        text_en: "Loaders start only after the first render of `Parent`, but then run in parallel, unlike effects"
       - text: "Паралельність дається, лише якщо батьківський loader сам викличе дочірній loader через `Promise.all`"
+        text_en: "Parallelism happens only if the parent loader itself calls the child loader via `Promise.all`"
     explanation: >
       На навігації роутер зіставляє всі збіжні маршрути й запускає їхні loader'и одночасно, а рендер починає, коли дані готові. Запит у ефекті стартує лише після рендеру компонента, а якщо `Parent` не віддає `<Outlet />`, `Child` змонтується й запустить свій запит пізніше.
+    explanation_en: >
+      On navigation, the router finds all matching routes and starts their loaders at the same time, and begins rendering when the data is ready. An effect request starts only after the component renders, and if `Parent` does not return `<Outlet />`, `Child` mounts and starts its own request later.
     sources:
       - https://reactrouter.com/start/data/route-object#loader
       - https://reactrouter.com/explanation/state-management

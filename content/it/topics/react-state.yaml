@@ -3,20 +3,26 @@ title: Стан у React
 title_en: State in React
 description: Context, Redux Toolkit, Zustand, підйом стану.
 description_en: Context, Redux Toolkit, Zustand, lifting state up.
-draft: true
 questions:
   - id: react-state-001
     level: junior
     type: single
     text: Два сусідні компоненти (React 19) мають показувати той самий текст фільтра, а один із них його редагує. Де слід зберігати цей стан?
+    text_en: "Two sibling components (React 19) must show the same filter text, and one of them edits it. Where should this state live?"
     options:
       - text: "У найближчому спільному предку обох компонентів, а значення й обробник зміни передати їм пропами"
+        text_en: "In their closest common ancestor, passing the value and the change handler down to both as props"
         correct: true
       - text: "У кожному компоненті свій `useState`, а синхронізувати значення через `useEffect`"
+        text_en: "In each component's own `useState`, kept in sync with `useEffect`"
       - text: "У змінній на рівні модуля: вона спільна для обох, а зміна автоматично перемальовує всіх, хто її імпортує"
+        text_en: "In a module-level variable: it is shared by both, and changing it automatically re-renders everything that imports it"
       - text: "У тому компоненті, що редагує, а сусід читає його стан напряму через `ref`"
+        text_en: "In the editing component, with the sibling reading its state directly through a `ref`"
     explanation: >
       Дані, потрібні кільком компонентам, піднімають до їхнього найближчого спільного предка й спускають пропами. Змінна модуля не запускає рендер при зміні, а дубльований стан із синхронізацією в ефекті дає зайві рендери й розбіжності.
+    explanation_en: >
+      Data needed by several components is lifted to their closest common ancestor and passed down as props. A module variable does not trigger a render when it changes, and duplicated state synchronized in an effect causes extra renders and mismatches.
     sources:
       - https://react.dev/learn/sharing-state-between-components
 
@@ -24,6 +30,7 @@ questions:
     level: junior
     type: single
     text: Що відрендерить `Badge` (React 19), якщо над ним у дереві немає жодного провайдера `ThemeContext`?
+    text_en: "What does `Badge` (React 19) render if there is no `ThemeContext` provider above it in the tree?"
     code:
       lang: jsx
       source: |
@@ -39,12 +46,18 @@ questions:
         }
     options:
       - text: "`light`: без провайдера `useContext` повертає значення за замовчуванням із `createContext`"
+        text_en: "`light`: without a provider, `useContext` returns the default value passed to `createContext`"
         correct: true
       - text: "Порожній `span`: без провайдера `useContext` повертає `undefined`"
+        text_en: "An empty `span`: without a provider, `useContext` returns `undefined`"
       - text: "Нічого: `useContext` кидає помилку, що провайдер не знайдено"
+        text_en: "Nothing: `useContext` throws an error saying the provider was not found"
       - text: "`null`: без провайдера контекст порожній, а `createContext` значення не зберігає"
+        text_en: "`null`: without a provider the context is empty, and `createContext` does not store a value"
     explanation: >
       Аргумент `createContext` є значенням за замовчуванням: його отримує компонент, над яким немає відповідного провайдера. Помилки в React не буде, її кидають лише власні обгортки на кшталт `useTheme`, якщо автор їх так написав.
+    explanation_en: >
+      The argument of `createContext` is the default value: a component with no matching provider above it receives that value. React does not throw an error here; only custom wrappers such as `useTheme` do, if their author wrote them that way.
     sources:
       - https://react.dev/reference/react/createContext#createcontext
       - https://react.dev/learn/passing-data-deeply-with-context
@@ -53,6 +66,7 @@ questions:
     level: junior
     type: single
     text: Чи допустимий такий редʼюсер у Redux Toolkit 2.14 і що відбувається з `state`?
+    text_en: "Is this reducer valid in Redux Toolkit 2.14, and what happens to `state`?"
     code:
       lang: js
       source: |
@@ -67,12 +81,18 @@ questions:
         });
     options:
       - text: "Допустимий: `state` є чернеткою Immer, яка фіксує зміни й дає нову незмінну копію масиву"
+        text_en: "Valid: `state` is an Immer draft that records changes and yields a new immutable copy"
         correct: true
       - text: "Недопустимий: `push` змінює вихідний масив, і Redux не побачить нового стану"
+        text_en: "Invalid: `push` mutates the original array, so Redux will not see a new state"
       - text: "Допустимий лише в production-збірці, а в режимі розробки Redux кидає виняток"
+        text_en: "Valid only in a production build, while in development mode Redux throws an exception on every such push"
       - text: "Недопустимий: у `createSlice` редʼюсер зобов'язаний повертати новий масив через `concat`"
+        text_en: "Invalid: in `createSlice` a reducer must return a new array via `concat`"
     explanation: >
       `createSlice` обгортає редʼюсери в Immer, тому «мутація» чернетки перетворюється на оновлену копію, а оригінал лишається цілим. Поза Immer така мутація справді зламала б Redux.
+    explanation_en: >
+      `createSlice` wraps reducers in Immer, so "mutating" the draft turns into an updated copy while the original stays intact. Outside Immer, such a mutation would indeed break Redux.
     sources:
       - https://redux-toolkit.js.org/usage/immer-reducers
 
@@ -80,15 +100,22 @@ questions:
     level: junior
     type: multiple
     text: Які твердження про сховище Zustand 5 правильні?
+    text_en: "Which statements about a Zustand 5 store are true?"
     options:
       - text: "`create` повертає хук для читання стану, провайдер для нього не потрібен"
+        text_en: "`create` returns a hook for reading the state, and no provider is needed for it"
         correct: true
       - text: "`set({ count: 1 })` зберігає інші поля стану: новий об'єкт зливається з поточним"
+        text_en: "`set({ count: 1 })` keeps the other state fields: the new object is merged into the current one"
         correct: true
       - text: "`set({ count: 1 })` видаляє інші поля стану, бо замінює весь об'єкт стану"
+        text_en: "`set({ count: 1 })` removes the other state fields because it replaces the whole state object"
       - text: "Хук сховища працює лише всередині `<StoreProvider>`, інакше кидає помилку під час рендеру"
+        text_en: "The store hook works only inside `<StoreProvider>` and otherwise throws an error during render"
     explanation: >
       Zustand зберігає стан у замиканні модуля, тож хук доступний будь-де без провайдера. Виклик `set` за замовчуванням поверхнево зливає частковий об'єкт зі станом; повна заміна можлива лише з другим аргументом `true`.
+    explanation_en: >
+      Zustand keeps state in a module closure, so the hook is available anywhere without a provider. By default, `set` shallowly merges the partial object into the state; a full replacement is possible only with `true` as the second argument.
     sources:
       - https://zustand.docs.pmnd.rs/learn/getting-started/introduction
       - https://zustand.docs.pmnd.rs/learn/guides/updating-state
@@ -97,6 +124,7 @@ questions:
     level: middle
     type: single
     text: Після кліку по кнопці в `App` (React 19) компонент `Profile`, обгорнутий у `memo`, перерендерюється? Чому?
+    text_en: "After a click on the button in `App` (React 19), does `Profile`, wrapped in `memo`, re-render? Why?"
     code:
       lang: jsx
       source: |
@@ -119,12 +147,18 @@ questions:
         });
     options:
       - text: "Так: `{ user }` щоразу новий об'єкт, а зміна `value` за `Object.is` оновлює споживача попри `memo`"
+        text_en: "Yes: `{ user }` is a new object each render, so `value` changes by `Object.is` despite `memo`"
         correct: true
       - text: "Ні: `memo` порівнює пропи, а в `Profile` їх немає, тож рендер завжди пропускається"
+        text_en: "No: `memo` compares props, and `Profile` has none, so the render is always skipped"
       - text: "Ні: React порівнює вміст `value` поверхнево, а `user` лишився тим самим об'єктом"
+        text_en: "No: React compares the contents of `value` shallowly, and `user` is still the same object"
       - text: "Так, але лише якщо `Profile` у JSX читає `tick`, бо інакше React не бачить зміни"
+        text_en: "Yes, but only if `Profile` reads `tick` in its JSX, because otherwise React does not see the change"
     explanation: >
       `memo` не захищає від оновлень через контекст: щойно `value` змінюється за `Object.is`, споживач рендериться. Новий літерал `{ user }` на кожному рендері `App` цю умову виконує, тому значення варто мемоізувати через `useMemo`.
+    explanation_en: >
+      `memo` does not protect against updates coming through context: as soon as `value` changes by `Object.is`, the consumer renders. The new `{ user }` literal on every render of `App` meets that condition, so the value should be memoized with `useMemo`.
     sources:
       - https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
 
@@ -132,6 +166,7 @@ questions:
     level: middle
     type: single
     text: Що станеться при виклику `slice.reducer(undefined, slice.actions.bump())` у Redux Toolkit 2.14?
+    text_en: "What happens when `slice.reducer(undefined, slice.actions.bump())` is called in Redux Toolkit 2.14?"
     code:
       lang: js
       source: |
@@ -147,12 +182,18 @@ questions:
         });
     options:
       - text: "Виняток: редʼюсер і змінив чернетку, і повернув нове значення, а Immer дозволяє лише одне з двох"
+        text_en: "An exception: the reducer both modified the draft and returned a value, and Immer allows only one"
         correct: true
       - text: "Результат `{ n: 100 }`: повернене значення має пріоритет, а зміна чернетки ігнорується"
+        text_en: "The result is `{ n: 100 }`: the returned value takes priority, and the draft change is ignored"
       - text: "Результат `{ n: 101 }`: Immer застосовує мутацію, а потім поверх неї повернений об'єкт"
+        text_en: "The result is `{ n: 101 }`: Immer applies the mutation, and then the returned object on top of it"
       - text: "Результат `{ n: 1 }`: `return` у редʼюсері `createSlice` ігнорується, враховується лише мутація"
+        text_en: "The result is `{ n: 1 }`: a `return` in a `createSlice` reducer is ignored, and only the mutation counts"
     explanation: >
       Редʼюсер Immer має або змінити чернетку, або повернути нове значення, але не обидва способи одразу, і Immer кидає помилку про це. Тому варіант із пріоритетом повернутого значення хибний: порушення виявляється, а не розв'язується мовчки.
+    explanation_en: >
+      An Immer reducer must either modify the draft or return a new value, but not both at once, and Immer throws an error about it. That is why the option where the returned value takes priority is wrong: the violation is detected, not silently resolved.
     sources:
       - https://redux-toolkit.js.org/usage/immer-reducers#returning-new-state-from-reducers
 
@@ -160,6 +201,7 @@ questions:
     level: middle
     type: single
     text: Що станеться з цим компонентом у Zustand 5.1, якщо сховище містить поля `a` і `b`, і як це виправити?
+    text_en: "What happens with this component in Zustand 5.1 if the store has fields `a` and `b`, and how do you fix it?"
     code:
       lang: jsx
       source: |
@@ -171,12 +213,18 @@ questions:
         }
     options:
       - text: "Селектор щоразу повертає новий об'єкт, і у v5 це зациклює рендер; селектор обгортають у `useShallow`"
+        text_en: "The selector returns a new object each time, looping the render in v5; wrap it in `useShallow`"
         correct: true
       - text: "Працює, але рендериться при зміні будь-якого поля сховища; на `View` слід додати `memo`"
+        text_en: "It works, but renders on a change of any store field; add `memo` to `View`"
       - text: "Кидає помилку, що селектор має повертати примітив; потрібно читати кожне поле окремим хуком із `s.a`"
+        text_en: "It throws an error saying the selector must return a primitive; read each field with a separate hook using `s.a`"
       - text: "Працює без проблем: v5 за замовчуванням порівнює результат селектора поверхнево"
+        text_en: "It works with no problems: v5 compares the selector result shallowly by default"
     explanation: >
       У Zustand 5 селектор, що повертає нове посилання на кожен виклик, спричиняє нескінченні оновлення. `useShallow` порівнює вміст результату поверхнево й повертає стабільне посилання; читати кожне поле окремим хуком теж можна, але помилки про примітиви немає.
+    explanation_en: >
+      In Zustand 5, a selector that returns a new reference on every call causes endless updates. `useShallow` compares the contents of the result shallowly and returns a stable reference; reading each field with a separate hook also works, but there is no error about primitives.
     sources:
       - https://zustand.docs.pmnd.rs/reference/migrations/migrating-to-v5
       - https://zustand.docs.pmnd.rs/reference/hooks/use-shallow
@@ -185,6 +233,7 @@ questions:
     level: middle
     type: single
     text: Компонент (React 19, react-redux 9) читає список невиконаних задач так. Яка в нього проблема і що її усуває?
+    text_en: "A component (React 19, react-redux 9) reads the list of pending tasks like this. What is the problem and what fixes it?"
     code:
       lang: jsx
       source: |
@@ -196,12 +245,18 @@ questions:
         }
     options:
       - text: "`filter` щоразу дає новий масив, а `useSelector` порівнює через `===`, тож рендер іде після кожної дії; допоможе `createSelector`"
+        text_en: "`filter` makes a new array every time and `useSelector` uses `===`, so every action re-renders it; `createSelector` helps"
         correct: true
       - text: "`useSelector` порівнює масиви поверхнево, тож проблеми немає, а `createSelector` потрібен лише для читабельності коду"
+        text_en: "`useSelector` compares arrays shallowly, so there is no problem, and `createSelector` is only for code readability"
       - text: "Селектор не може містити `filter`: похідні дані обчислюють лише в редʼюсері й кладуть у стан"
+        text_en: "A selector cannot contain `filter`: derived data is computed only in the reducer and put into the state"
       - text: "Компонент рендериться лише при зміні `todos`, але `createSelector` прибирає й ці рендери"
+        text_en: "The component re-renders only when `todos` changes, but `createSelector` removes even those renders"
     explanation: >
       Селектор, що повертає нове посилання, змушує `useSelector` вважати результат зміненим після кожної дії стору. `createSelector` кешує результат за вхідними значеннями й повертає те саме посилання, доки `state.todos` не змінився.
+    explanation_en: >
+      A selector that returns a new reference makes `useSelector` consider the result changed after every store action. `createSelector` memoizes the result by its input values and returns the same reference until `state.todos` changes.
     sources:
       - https://react-redux.js.org/api/hooks#equality-comparisons-and-updates
       - https://redux.js.org/usage/deriving-data-selectors
@@ -210,15 +265,22 @@ questions:
     level: senior
     type: multiple
     text: Які твердження про Context у React 19 правильні?
+    text_en: "Which statements about Context in React 19 are true?"
     options:
       - text: "Споживач `useContext` рендериться при зміні `value` за `Object.is`, навіть читаючи лише одне поле"
+        text_en: "A `useContext` consumer re-renders when `value` changes by `Object.is`, even if it reads only one field"
         correct: true
       - text: "Окремий контекст дій зі стабільними функціями звільняє компоненти, що лише викликають дії, від рендеру при зміні стану"
+        text_en: "A separate actions context with stable functions spares components that only call actions from re-rendering when the state changes"
         correct: true
       - text: "Обгортання споживача в `React.memo` не дає оновленню через контекст дійти до нього, бо пропи не змінилися"
+        text_en: "Wrapping a consumer in `React.memo` stops a context update from reaching it, because its props did not change"
       - text: "Деструктуризація `const { user } = useContext(Ctx)` підписує компонент лише на зміну поля `user`, а інші поля `value` ігноруються"
+        text_en: "Destructuring `const { user } = useContext(Ctx)` subscribes the component only to changes of the `user` field, and other `value` fields are ignored"
     explanation: >
       Контекст не має селекторів: підписка стосується всього `value`, тож `memo` її не блокує, а деструктуризація нічого не звужує. Тому часті зміни тримають в окремому контексті від стабільних дій на кшталт `dispatch`.
+    explanation_en: >
+      Context has no selectors: the subscription covers the whole `value`, so `memo` does not block it and destructuring narrows nothing. That is why frequently changing state is kept in a separate context from stable actions such as `dispatch`.
     sources:
       - https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
       - https://react.dev/learn/scaling-up-with-reducer-and-context
@@ -227,16 +289,23 @@ questions:
     level: senior
     type: multiple
     text: Які твердження про стандартні middleware, що додає `configureStore` у Redux Toolkit 2.14, правильні?
+    text_en: "Which statements about the default middleware that `configureStore` adds in Redux Toolkit 2.14 are true?"
     options:
       - text: "`serializableCheck` у режимі розробки пише в консоль помилку, коли в стані чи дії є `Date`, а сама дія все одно виконується"
+        text_en: "In development, `serializableCheck` logs an error to the console when the state or an action contains a `Date`, but the action still runs"
         correct: true
       - text: "`immutableCheck` у режимі розробки виявляє мутацію стану поза редʼюсером"
+        text_en: "In development, `immutableCheck` detects a state mutation made outside a reducer"
         correct: true
       - text: "У production-збірці стандартний набір не містить ні `serializableCheck`, ні `immutableCheck`"
+        text_en: "In a production build, the default set contains neither `serializableCheck` nor `immutableCheck`"
         correct: true
       - text: "`serializableCheck` кидає виняток і скасовує дію, якщо в ній є значення, яке не можна серіалізувати"
+        text_en: "`serializableCheck` throws an exception and cancels the action if it contains a value that cannot be serialized"
     explanation: >
-      Обидві перевірки існують лише для розробки: вони лише попереджають у консолі й нічого не блокують. Тому «виняток зі скасуванням дії» хибний, а в production їхній код у збірку стандартного набору не потрапляє.
+      `serializableCheck` лише пише помилку в консоль і дію не блокує, тому «виняток зі скасуванням дії» хибний. `immutableCheck` натомість кидає помилку, щойно виявить мутацію. Обидві перевірки працюють лише в режимі розробки: у production стандартний набір їх не містить.
+    explanation_en: >
+      `serializableCheck` only logs an error to the console and does not block the action, so "an exception that cancels the action" is wrong. `immutableCheck`, by contrast, throws an error as soon as it detects a mutation. Both checks run only in development: in production the default set does not include them.
     sources:
       - https://redux-toolkit.js.org/api/getDefaultMiddleware
       - https://redux.js.org/faq/organizing-state#can-i-put-functions-promises-or-other-non-serializable-items-in-my-store-state
@@ -245,6 +314,7 @@ questions:
     level: senior
     type: single
     text: Що виведе цей код (Redux Toolkit 2.14) і як перехопити помилку санки?
+    text_en: "What does this code print (Redux Toolkit 2.14), and how do you catch the thunk's error?"
     code:
       lang: js
       source: |
@@ -260,12 +330,18 @@ questions:
         }
     options:
       - text: "`ok`: проміс `dispatch` не відхиляється, а дає rejected-дію; виняток повертає `.unwrap()`"
+        text_en: "`ok`: the `dispatch` promise is not rejected but resolves with a rejected action; `.unwrap()` re-throws the error"
         correct: true
       - text: "`caught`: виняток із payload creator проходить крізь `await dispatch`"
+        text_en: "`caught`: the exception from the payload creator passes through `await dispatch`"
       - text: "Нічого: проміс відхиляється поза `try`, і Node завершує процес через unhandled rejection"
+        text_en: "Nothing: the promise is rejected outside `try`, and Node ends the process because of an unhandled rejection"
       - text: "`ok`: помилку в цьому випадку ковтає Immer, а `.unwrap()` повертає лише `payload`"
+        text_en: "`ok`: Immer swallows the error in this case, and `.unwrap()` returns only the `payload`"
     explanation: >
       Санка, створена `createAsyncThunk`, завжди завершується промісом з дією `fulfilled` або `rejected`, а не відхиленням. Щоб отримати виняток у `try/catch`, треба викликати `.unwrap()` на промісі, який повертає `dispatch`.
+    explanation_en: >
+      A thunk created with `createAsyncThunk` always settles as a promise with a `fulfilled` or `rejected` action, never a rejection. To get the exception in `try/catch`, call `.unwrap()` on the promise that `dispatch` returns.
     sources:
       - https://redux-toolkit.js.org/api/createAsyncThunk#unwrapping-result-actions
 
@@ -273,13 +349,20 @@ questions:
     level: senior
     type: single
     text: Застосунок на Next.js (App Router) тримає Zustand 5.1 стор, створений через `create` на рівні модуля. Після запуску користувачі зрідка бачать на сервері дані інших користувачів, збережені в сторі під час SSR. У чому причина і що рекомендує документація Zustand?
+    text_en: "A Next.js (App Router) app keeps a Zustand 5.1 store created with `create` at module level. After launch, users occasionally see other users' data on the server, left in the store during SSR. What is the cause, and what does the Zustand documentation recommend?"
     options:
       - text: "Модуль на сервері спільний для запитів; створювати стор на запит через `createStore` і віддавати через контекст"
+        text_en: "The module is shared between server requests; create the store per request with `createStore` and provide it via context"
         correct: true
       - text: "`create` у Zustand 5 кешує стан у `localStorage` між запитами; треба вимкнути middleware `persist` у сторі"
+        text_en: "`create` in Zustand 5 caches state in `localStorage` between requests; turn off the `persist` middleware in the store"
       - text: "Серверні компоненти реально рендеряться в браузері, тому стор спільний між вкладками; потрібен `BroadcastChannel`"
+        text_en: "Server components actually render in the browser, so the store is shared between tabs; a `BroadcastChannel` is needed"
       - text: "Селектор без `useShallow` повертає стан чужого рендеру; слід обгорнути кожен селектор"
+        text_en: "A selector without `useShallow` returns another render's state; wrap every selector"
     explanation: >
       Модульний синглтон на сервері переживає окремі запити, тому стан потрапляє до різних користувачів. Документація Zustand радить для SSR створювати сховище на кожен запит через `createStore` і передавати його компонентам через контекст.
+    explanation_en: >
+      A module-level singleton on the server outlives individual requests, so state leaks between users. The Zustand documentation recommends creating the store per request with `createStore` and passing it to components via context.
     sources:
       - https://zustand.docs.pmnd.rs/learn/guides/nextjs
