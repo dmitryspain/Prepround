@@ -3,6 +3,356 @@ title: Тестування фронтенду
 title_en: Frontend testing
 description: Юніт-тести (Vitest, Jest), Testing Library, e2e (Playwright), моки.
 description_en: Unit tests (Vitest, Jest), Testing Library, e2e (Playwright), mocks.
-draft: true
 icon: jest
-questions: []
+questions:
+  - id: frontend-testing-001
+    level: junior
+    type: single
+    text: Після закриття діалогу в DOM не має лишитися елемента з текстом `Error`. Яка перевірка Testing Library для цього коректна?
+    text_en: "After a dialog closes, no element with the text `Error` must remain in the DOM. Which Testing Library check is correct for this?"
+    options:
+      - text: "`expect(screen.queryByText('Error')).toBeNull()`, бо `queryBy` повертає `null`, коли збігів немає"
+        text_en: "`expect(screen.queryByText('Error')).toBeNull()`, because `queryBy` returns `null` when nothing matches"
+        correct: true
+      - text: "`expect(screen.getByText('Error')).toBeNull()`, бо `getBy` повертає `null` для відсутнього елемента"
+        text_en: "`expect(screen.getByText('Error')).toBeNull()`, because `getBy` returns `null` for a missing element"
+      - text: "`expect(await screen.findByText('Error')).toBeNull()`, бо `findBy` дочекається зникнення елемента"
+        text_en: "`expect(await screen.findByText('Error')).toBeNull()`, because `findBy` waits for the element to disappear"
+      - text: "`expect(screen.getAllByText('Error')).toHaveLength(0)`, бо `getAllBy` повертає порожній масив"
+        text_en: "`expect(screen.getAllByText('Error')).toHaveLength(0)`, because `getAllBy` returns an empty array"
+    explanation: >
+      `queryBy…` призначений для перевірки відсутності: без збігів він повертає `null`. `getBy…` і `getAllBy…` без збігів кидають помилку, а `findBy…` чекає появи елемента й так само падає, якщо його немає.
+    explanation_en: >
+      `queryBy…` is meant for asserting absence: with no match it returns `null`. `getBy…` and `getAllBy…` throw when nothing matches, and `findBy…` waits for the element to appear and fails the same way if it never does.
+    sources:
+      - https://testing-library.com/docs/queries/about/#types-of-queries
+
+  - id: frontend-testing-002
+    level: junior
+    type: single
+    text: Кнопка `Save` з'являється в DOM із затримкою, після завантаження даних. Що зробить Playwright, виконуючи цей рядок?
+    text_en: "The `Save` button appears in the DOM with a delay, after data loads. What does Playwright do when it runs this line?"
+    code:
+      lang: ts
+      source: |
+        await page.getByRole('button', { name: 'Save' }).click();
+    options:
+      - text: "Дочекається, поки кнопка стане видимою, стабільною, увімкненою й не перекритою, і лише тоді клікне"
+        text_en: "It waits until the button is visible, stable, enabled, and not covered, and only then clicks"
+        correct: true
+      - text: "Одразу кине помилку, бо елемента ще немає в DOM, якщо перед кліком не викликати `waitForSelector`"
+        text_en: "It throws at once because the element is not in the DOM yet, unless `waitForSelector` is called before the click"
+      - text: "Клікне в координати, де кнопка має опинитися за макетом, не перевіряючи, чи вона вже відрендерилась"
+        text_en: "It clicks at the coordinates where the button should end up, without checking that it has rendered yet"
+      - text: "Спершу дочекається стану `networkidle` для сторінки, а вже потім шукатиме кнопку й клікне"
+        text_en: "It first waits for the page to reach `networkidle`, and only then looks for the button and clicks"
+    explanation: >
+      Дії Playwright мають автоочікування: перед кліком перевіряються видимість, стабільність, можливість отримати подію й увімкненість, а повторні спроби тривають до таймауту. Окремий `waitForSelector` для цього не потрібен.
+    explanation_en: >
+      Playwright actions auto-wait: before a click it checks visibility, stability, that the element can receive events, and that it is enabled, retrying until the timeout. A separate `waitForSelector` is not needed for this.
+    sources:
+      - https://playwright.dev/docs/actionability
+
+  - id: frontend-testing-003
+    level: junior
+    type: single
+    text: Яким запитом Testing Library, за рекомендованим пріоритетом, варто шукати кнопку «Submit» насамперед?
+    text_en: "Which Testing Library query should you try first, according to the recommended priority, to find a “Submit” button?"
+    options:
+      - text: "`getByRole('button', { name: 'Submit' })`, бо відбиває те, як елемент бачать користувачі й допоміжні технології"
+        text_en: "`getByRole('button', { name: 'Submit' })`, because it reflects how users and assistive technologies perceive the element"
+        correct: true
+      - text: "`getByTestId('submit-btn')`, бо атрибут `data-testid` не змінюється при зміні тексту, класів чи розмітки компонента"
+        text_en: "`getByTestId('submit-btn')`, because the `data-testid` attribute does not change when the text, classes, or markup change"
+      - text: "`getByText('Submit')`, бо запит за видимим текстом найближчий до того, що бачить користувач на екрані"
+        text_en: "`getByText('Submit')`, because a query by visible text is closest to what the user sees on the screen"
+      - text: "`container.querySelector('button.primary')`, бо CSS-селектор найточніше вказує на елемент"
+        text_en: "`container.querySelector('button.primary')`, because a CSS selector points at the element most precisely"
+    explanation: >
+      Testing Library радить починати з `getByRole`: він працює через дерево доступності, а `name` фільтрує за доступною назвою. `getByText` лежить нижче в пріоритеті, а `getByTestId` — запасний варіант, коли інакше елемент не знайти.
+    explanation_en: >
+      Testing Library recommends starting with `getByRole`: it works through the accessibility tree, and `name` filters by accessible name. `getByText` ranks lower, and `getByTestId` is a fallback for when nothing else can find the element.
+    sources:
+      - https://testing-library.com/docs/queries/about/#priority
+
+  - id: frontend-testing-004
+    level: junior
+    type: multiple
+    text: У Vitest 5 є об'єкт `user`. Які з перевірок пройдуть?
+    text_en: "In Vitest 5 there is an object `user`. Which of these assertions will pass?"
+    code:
+      lang: ts
+      source: |
+        const user = { id: 1 };
+    options:
+      - text: "`expect(user).toEqual({ id: 1 })` порівнює структуру"
+        text_en: "`expect(user).toEqual({ id: 1 })`, which compares structure"
+        correct: true
+      - text: "`expect(user).toStrictEqual({ id: 1 })` теж порівнює структуру й тип"
+        text_en: "`expect(user).toStrictEqual({ id: 1 })`, which also compares structure and type"
+        correct: true
+      - text: "`expect(user).toBe(user)` перевіряє, що це той самий об'єкт"
+        text_en: "`expect(user).toBe(user)`, which checks that it is the same object"
+        correct: true
+      - text: "`expect(user).toBe({ id: 1 })` порівнює об'єкти за вмістом"
+        text_en: "`expect(user).toBe({ id: 1 })`, which compares objects by content"
+      - text: "`expect({ id: 1, tag: undefined }).toStrictEqual(user)` ігнорує ключ `tag`"
+        text_en: "`expect({ id: 1, tag: undefined }).toStrictEqual(user)`, which ignores the `tag` key"
+    explanation: >
+      `toBe` порівнює за посиланням (`Object.is`), тому новий літерал із тим самим вмістом не проходить, а той самий об'єкт проходить. `toEqual` і `toStrictEqual` порівнюють вміст, але `toStrictEqual` враховує ключі зі значенням `undefined`, тому останній варіант падає.
+    explanation_en: >
+      `toBe` compares by reference (`Object.is`), so a new literal with the same content fails while the same object passes. `toEqual` and `toStrictEqual` compare content, but `toStrictEqual` takes keys with the value `undefined` into account, so the last option fails.
+    sources:
+      - https://vitest.dev/api/expect#tostrictequal
+      - https://vitest.dev/api/expect#tobe
+
+  - id: frontend-testing-005
+    level: middle
+    type: single
+    text: "У Vitest 5 цей тест падає з `ReferenceError: Cannot access 'fake' before initialization` усередині фабрики `vi.mock`. У чому причина й що робити?"
+    text_en: "In Vitest 5 this test fails with `ReferenceError: Cannot access 'fake' before initialization` inside the `vi.mock` factory. What is the cause and what should you do?"
+    code:
+      lang: ts
+      source: |
+        import { test, expect, vi } from 'vitest';
+        import { name } from './mod';
+
+        const fake = 'mocked';
+        vi.mock('./mod', () => ({ name: fake }));
+
+        test('uses the mock', () => {
+          expect(name).toBe('mocked');
+        });
+    options:
+      - text: "`vi.mock` піднімається нагору файла й виконується до оголошення `fake`; значення треба створити через `vi.hoisted` і взяти з нього"
+        text_en: "`vi.mock` is hoisted to the top of the file and runs before `fake` is declared; create the value with `vi.hoisted` and use it from there"
+        correct: true
+      - text: "Фабрика `vi.mock` виконується асинхронно, тому її треба зробити `async` і повертати `await import('./mod')`"
+        text_en: "The `vi.mock` factory runs asynchronously, so it must be made `async` and return `await import('./mod')`"
+      - text: "Змінні у фабриці дозволені лише з префіксом `mock`, тому достатньо перейменувати `fake` на `mockFake`"
+        text_en: "Variables in the factory are allowed only with the `mock` prefix, so renaming `fake` to `mockFake` is enough"
+      - text: "Імпорт `./mod` виконується раніше за `vi.mock`, тож модуль слід підключати лише динамічним `import()` після виклику"
+        text_en: "The import of `./mod` runs before `vi.mock`, so the module must be loaded only with a dynamic `import()` after the call"
+    explanation: >
+      Vitest піднімає `vi.mock` над рештою коду файла, тож `const fake` ще в «мертвій зоні», коли фабрика читає його при імпорті `./mod`. Значення, потрібні фабриці, створюють у `vi.hoisted`, бо цей виклик піднімається так само. Правило префікса `mock` — із Jest.
+    explanation_en: >
+      Vitest hoists `vi.mock` above the rest of the file, so `const fake` is still in its temporal dead zone when the factory reads it during the import of `./mod`. Values the factory needs are created in `vi.hoisted`, which is hoisted the same way. The `mock` prefix rule comes from Jest.
+    sources:
+      - https://vitest.dev/api/vi#vi-mock
+      - https://vitest.dev/api/vi#vi-hoisted
+
+  - id: frontend-testing-006
+    level: middle
+    type: multiple
+    text: Тест у Vitest 5 з `@testing-library/user-event` v14 і `fireEvent` викликає дії на кнопці та полі введення. Які твердження правильні?
+    text_en: "A Vitest 5 test uses `@testing-library/user-event` v14 and `fireEvent` on a button and a text input. Which statements are true?"
+    code:
+      lang: ts
+      source: |
+        fireEvent.click(button);
+        await userEvent.click(button);
+        await userEvent.type(input, 'a');
+    options:
+      - text: "`fireEvent.click` відправляє єдину DOM-подію `click`, без подій вказівника й фокуса"
+        text_en: "`fireEvent.click` dispatches only the single DOM event `click`, with no pointer or focus events"
+        correct: true
+      - text: "`userEvent.click` перед `click` відправляє `pointerdown`, `mousedown`, `pointerup`, `mouseup` і переводить фокус на кнопку"
+        text_en: "`userEvent.click` dispatches `pointerdown`, `mousedown`, `pointerup`, `mouseup` before `click` and moves focus to the button"
+        correct: true
+      - text: "`userEvent.type` для символу `a` відправляє `keydown`, `keypress`, `input` і `keyup`"
+        text_en: "`userEvent.type` for the character `a` dispatches `keydown`, `keypress`, `input`, and `keyup`"
+        correct: true
+      - text: "`userEvent.click` виконується синхронно, тому `await` перед ним не потрібен"
+        text_en: "`userEvent.click` runs synchronously and returns nothing, so `await` before it is not needed"
+      - text: "`fireEvent.click` і `userEvent.click` відправляють однаковий набір подій, просто перший швидший"
+        text_en: "`fireEvent.click` and `userEvent.click` dispatch the same set of events, the first one is just faster"
+    explanation: >
+      `fireEvent` лише диспатчить одну подію, а `user-event` імітує повну взаємодію з кількох подій і додатковими перевірками по ходу. У v14 його API асинхронне, тож результат треба чекати через `await`.
+    explanation_en: >
+      `fireEvent` only dispatches a single event, while `user-event` simulates a full interaction made of several events plus checks along the way. In v14 its API is asynchronous, so every call must be used with `await`.
+    sources:
+      - https://testing-library.com/docs/user-event/intro#differences-from-fireevent
+      - https://testing-library.com/docs/user-event/utility#type
+
+  - id: frontend-testing-007
+    level: middle
+    type: single
+    text: Що зафіксує `fn.mock.calls` у Vitest 5 після виконання цього тесту?
+    text_en: "What will `fn.mock.calls` record in Vitest 5 after this test runs?"
+    code:
+      lang: ts
+      source: |
+        function debounce(fn, ms) {
+          let t;
+          return (...args) => {
+            clearTimeout(t);
+            t = setTimeout(() => fn(...args), ms);
+          };
+        }
+
+        test('debounce', () => {
+          vi.useFakeTimers();
+          const fn = vi.fn();
+          const debounced = debounce(fn, 300);
+          debounced(1);
+          debounced(2);
+          debounced(3);
+          vi.advanceTimersByTime(300);
+          console.log(fn.mock.calls);
+        });
+    options:
+      - text: "`[[3]]`, бо кожен виклик скидає таймер, і після 300 мс спрацьовує лише останній"
+        text_en: "`[[3]]`, because each call resets the timer and only the last one fires after 300 ms"
+        correct: true
+      - text: "`[[1], [2], [3]]`, бо кожен `setTimeout` лишається в черзі й спрацьовує після просування годинника"
+        text_en: "`[[1], [2], [3]]`, because each `setTimeout` stays in the queue and fires once the clock advances"
+      - text: "`[]`, бо фейкові таймери спрацьовують лише після `vi.runAllTimers()`, а `advanceTimersByTime` їх не виконує"
+        text_en: "`[]`, because fake timers fire only after `vi.runAllTimers()`, and `advanceTimersByTime` does not run them"
+      - text: "`[[1]]`, бо перший таймер установлено раніше, і він досягає 300 мс першим"
+        text_en: "`[[1]]`, because the first timer was set earlier and reaches 300 ms first"
+    explanation: >
+      `clearTimeout` у `debounce` скасовує попередні таймери, тож у черзі лишається один таймер із аргументом `3`. `vi.advanceTimersByTime(300)` виконує всі таймери, що настали за ці 300 мс, тому `fn` викликається один раз.
+    explanation_en: >
+      `clearTimeout` in `debounce` cancels the earlier timers, so only one timer remains in the queue, with the argument `3`. `vi.advanceTimersByTime(300)` runs every timer that comes due within those 300 ms, so `fn` is called once.
+    sources:
+      - https://vitest.dev/api/vi#vi-advancetimersbytime
+      - https://vitest.dev/guide/mocking/timers
+
+  - id: frontend-testing-008
+    level: middle
+    type: single
+    text: "Після кліку список підвантажується з API за 1–2 с, і тест Playwright часто падає з `Expected: 3, Received: 0`. Як це виправити?"
+    text_en: "After a click the list loads from an API in 1–2 s, and a Playwright test often fails with `Expected: 3, Received: 0`. How do you fix it?"
+    code:
+      lang: ts
+      source: |
+        await page.getByRole('button', { name: 'Load' }).click();
+        expect(await page.getByRole('listitem').count()).toBe(3);
+    options:
+      - text: "Замінити на `await expect(page.getByRole('listitem')).toHaveCount(3)`: перевірка повторюється до успіху чи таймауту"
+        text_en: "Replace it with `await expect(page.getByRole('listitem')).toHaveCount(3)`, which retries until it passes or times out"
+        correct: true
+      - text: "Додати `await page.waitForTimeout(2000)` перед `count()`, бо `click()` повертається ще до фактичного натискання кнопки в браузері"
+        text_en: "Add `await page.waitForTimeout(2000)` before `count()`, because `click()` returns before the button is actually pressed in the browser"
+      - text: "Створювати локатор заново перед кожним `count()`, бо перший виклик кешує порожній результат"
+        text_en: "Re-create the locator before every `count()`, because the first call caches an empty result"
+      - text: "Замінити `toBe(3)` на `toEqual(3)`, бо `toBe` не вміє порівнювати числа, що прийшли з сервера"
+        text_en: "Replace `toBe(3)` with `toEqual(3)`, because `toBe` cannot compare numbers that came from a server"
+    explanation: >
+      `count()` повертає число одразу, а `toBe` — неповторювана перевірка, тому вона бачить стан до завершення запиту. Web-first перевірка `toHaveCount` перечитує сторінку, доки умова не виконається. Фіксована пауза лише маскує проблему й сповільнює тест.
+    explanation_en: >
+      `count()` returns a number immediately and `toBe` is a non-retrying assertion, so it sees the state before the request finishes. The web-first `toHaveCount` re-reads the page until the condition holds. A fixed pause only hides the problem and slows the test down.
+    sources:
+      - https://playwright.dev/docs/test-assertions#auto-retrying-assertions
+      - https://playwright.dev/docs/best-practices#use-web-first-assertions
+
+  - id: frontend-testing-009
+    level: senior
+    type: single
+    text: Набір із 200 e2e-тестів Playwright 1.65 логіниться через UI в кожному тесті. Це додає близько 5 с на тест і впирається в ліміт спроб входу. Що вибрати, не втрачаючи ізоляції тестів?
+    text_en: "A suite of 200 Playwright 1.65 e2e tests logs in through the UI in every test. That adds about 5 s per test and hits the login attempt limit. What do you choose without losing test isolation?"
+    options:
+      - text: "Setup-проєкт, що логіниться раз і зберігає `storageState` у файл; тестові проєкти залежать від нього й беруть цей стан"
+        text_en: "A setup project that logs in once and saves `storageState` to a file; test projects depend on it and use that state"
+        correct: true
+      - text: "Один спільний `page`, створений у `beforeAll`, на всі тести файла, щоб сесія жила між ними без повторного входу"
+        text_en: "One shared `page` created in `beforeAll` for all tests of a file, so the session survives between them with no repeated login"
+      - text: "Вимкнути паралельність через `workers: 1`, бо тоді cookie й `localStorage` одного тесту лишаються доступними наступному"
+        text_en: "Turn off parallelism with `workers: 1`, because then one test's cookies and `localStorage` stay available to the next one"
+      - text: "Логінитися в першому тесті, а решту тестів писати так, щоб вони читали його cookie з диска через `fs` у власному коді"
+        text_en: "Log in in the first test and write the rest so that they read its cookies from disk through `fs` in their own code"
+    explanation: >
+      Playwright створює новий `BrowserContext` на кожен тест, і `storageState` дає змогу ініціалізувати його збереженими cookie та сховищем, не логінячись знову. Спільний `page` або залежність від порядку тестів ламає ізоляцію, а `workers: 1` її не змінює, бо контекст у кожного тесту й так свій.
+    explanation_en: >
+      Playwright creates a new `BrowserContext` for every test, and `storageState` lets it start with saved cookies and storage without logging in again. A shared `page` or dependence on test order breaks isolation, while `workers: 1` changes nothing about it, since every test has its own context anyway.
+    sources:
+      - https://playwright.dev/docs/auth#basic-shared-account-in-all-tests
+      - https://playwright.dev/docs/browser-contexts
+
+  - id: frontend-testing-010
+    level: senior
+    type: multiple
+    text: "У CI для Playwright 1.65 задано `retries: 2` і `trace: 'on-first-retry'`. Які твердження про цю конфігурацію правильні?"
+    text_en: "CI for Playwright 1.65 sets `retries: 2` and `trace: 'on-first-retry'`. Which statements about this configuration are true?"
+    options:
+      - text: "Після падіння тесту Playwright відкидає worker-процес разом із браузером, і повтор іде в новому процесі"
+        text_en: "After a test fails, Playwright discards the worker process along with the browser, and the retry runs in a new process"
+        correct: true
+      - text: "Тест, що впав у першому запуску, але пройшов при повторі, звіт позначає як flaky, а не як passed"
+        text_en: "A test that failed on the first run but passed on a retry is reported as flaky, not as passed"
+        correct: true
+      - text: "Trace записується під час першого повтору, але не під час першого запуску й не під час другого повтору"
+        text_en: "A trace is recorded during the first retry, but not during the first run or the second retry"
+        correct: true
+      - text: "Повтор виконується в тому самому worker-процесі й браузері, тож стан першої спроби зберігається"
+        text_en: "The retry runs in the same worker process and browser, so state from the first attempt is preserved"
+      - text: "Trace зберігає саме перший запуск, що впав, тому записаний файл показує початкову причину падіння"
+        text_en: "The trace captures the failed first run itself, so the recorded file shows the original cause of the failure"
+    explanation: >
+      Playwright починає повтор у свіжому worker-процесі, щоб падіння не вплинуло на здорові тести, а тест, що пройшов лише при повторі, категоризує як flaky. Режим `on-first-retry` вмикає trace лише на першому повторі, тож перший запуск у ньому не записується.
+    explanation_en: >
+      Playwright starts a retry in a fresh worker process so that a failure cannot affect healthy tests, and it categorizes a test that passed only on a retry as flaky. The `on-first-retry` mode records a trace only on the first retry, so the first run is not captured in it.
+    sources:
+      - https://playwright.dev/docs/test-retries#failures
+      - https://playwright.dev/docs/trace-viewer-intro#recording-a-trace
+
+  - id: frontend-testing-011
+    level: senior
+    type: single
+    text: У Vitest 5 з `@testing-library/dom` текст з'являється через `setTimeout(…, 50)`, але тест висне до таймауту. Чому і що робити?
+    text_en: "In Vitest 5 with `@testing-library/dom` the text appears through `setTimeout(…, 50)`, yet the test hangs until its timeout. Why, and what should you do?"
+    code:
+      lang: ts
+      source: |
+        test('shows Done', async () => {
+          vi.useFakeTimers();
+          render();
+          setTimeout(() => showDone(), 50);
+          await screen.findByText('Done');
+        });
+    options:
+      - text: "Фейковий годинник стоїть, тож не настають ні таймер на 50 мс, ні повтори `findBy`; задати `shouldAdvanceTime: true` або викликати `vi.advanceTimersByTime(50)`"
+        text_en: "The fake clock stands still, so neither the 50 ms timer nor the `findBy` retries come due; set `shouldAdvanceTime: true` or call `vi.advanceTimersByTime(50)`"
+        correct: true
+      - text: "`findBy` не підтримує елементи, додані через `setTimeout`, тож потрібен `waitFor` із власним `MutationObserver`, який ловить зміни DOM незалежно від таймерів"
+        text_en: "`findBy` does not support elements added through `setTimeout`, so use `waitFor` with your own `MutationObserver`, which catches DOM changes independently of timers"
+      - text: "Фейкові таймери вимикають `MutationObserver` у jsdom, тому зміни DOM не відстежуються, доки таймери не вимкнено викликом `vi.useRealTimers()`"
+        text_en: "Fake timers disable `MutationObserver` in jsdom, so DOM changes are not tracked until the timers are turned off with `vi.useRealTimers()`"
+      - text: "Типовий таймаут `findBy` складає 50 мс, тож текст, що з'являється рівно на цій межі, ніколи не встигає потрапити в перевірку вчасно"
+        text_en: "The default `findBy` timeout is 50 ms, so text that appears exactly at that boundary is never caught by the check in time"
+    explanation: >
+      `vi.useFakeTimers()` підмінює `setTimeout` і `setInterval` для всього коду тесту, зокрема для повторів і таймауту, якими `findBy` чекає елемент. Поки фейковий час ніхто не просуває, не спрацьовує ні таймер із `showDone`, ні жоден повтор `findBy`, тож тест висить до таймауту самого Vitest. `shouldAdvanceTime: true` змушує фейковий час іти разом із реальним, а `vi.advanceTimersByTime(50)` перед `await` виконує таймер одразу.
+    explanation_en: >
+      `vi.useFakeTimers()` replaces `setTimeout` and `setInterval` for all code in the test, including the retries and the timeout that `findBy` uses to wait for the element. While nothing advances the fake time, neither the `showDone` timer nor any `findBy` retry fires, so the test hangs until Vitest's own timeout. `shouldAdvanceTime: true` makes fake time move along with real time, and `vi.advanceTimersByTime(50)` before the `await` runs the timer at once.
+    sources:
+      - https://testing-library.com/docs/using-fake-timers
+      - https://vitest.dev/api/vi#vi-usefaketimers
+
+  - id: frontend-testing-012
+    level: senior
+    type: single
+    text: "Компонент показує підказку, коли текст обрізано. Юніт-тест у Vitest 5 із `environment: 'jsdom'` задає вузький контейнер із довгим текстом, але підказка не з'являється. Чому і яке рішення розумне?"
+    text_en: "A component shows a tooltip when its text is truncated. A Vitest 5 unit test with `environment: 'jsdom'` uses a narrow container with long text, yet the tooltip never appears. Why, and what is a sensible solution?"
+    code:
+      lang: ts
+      source: |
+        function isTruncated(el: HTMLElement) {
+          return el.scrollWidth > el.clientWidth;
+        }
+    options:
+      - text: "jsdom не виконує розкладки, тому обидві величини дорівнюють нулю; перевіряти це в справжньому браузері (e2e чи browser mode) або підміняти геттери"
+        text_en: "jsdom does no layout, so both values are zero; check this in a real browser (e2e or browser mode) or stub the getters"
+        correct: true
+      - text: "jsdom обчислює розміри лише після наступного кадру, тому перед перевіркою треба зробити `await` на `requestAnimationFrame`"
+        text_en: "jsdom computes sizes only after the next frame, so you must `await` a `requestAnimationFrame` before the check"
+      - text: "Тест має читати `offsetWidth`, бо у jsdom він повертає реальну ширину, на відміну від `scrollWidth` і `clientWidth`"
+        text_en: "The test should read `offsetWidth`, because in jsdom it returns the real width, unlike `scrollWidth` and `clientWidth`"
+      - text: "jsdom бере розміри лише з елементів, прикріплених до `document.body` через `attachTo`, а звичайний `render` їх не прикріплює"
+        text_en: "jsdom takes sizes only from elements attached to `document.body` through `attachTo`, and a plain `render` does not attach them"
+    explanation: >
+      jsdom реалізує DOM, але не розкладку: багато властивостей, пов'язаних із геометрією (`scrollWidth`, `clientWidth`, `getBoundingClientRect()`), повертають нулі, тож умова `0 > 0` завжди хибна. Тести, залежні від справжньої верстки, запускають у браузері (Playwright, browser mode), а в jsdom підміняють значення через `Object.defineProperty`.
+    explanation_en: >
+      jsdom implements the DOM but not layout: many geometry-related properties (`scrollWidth`, `clientWidth`, `getBoundingClientRect()`) return zeros, so the condition `0 > 0` is always false. Tests that depend on real layout run in a browser (Playwright, browser mode), while in jsdom the values are stubbed with `Object.defineProperty`.
+    sources:
+      - https://github.com/jsdom/jsdom#unimplemented-parts-of-the-web-platform
+      - https://vitest.dev/guide/browser/why
