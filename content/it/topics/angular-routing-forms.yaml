@@ -3,6 +3,333 @@ title: Роутинг і форми
 title_en: Routing and forms
 description: Роутер, guards, resolvers, lazy loading, reactive forms, валідація.
 description_en: Router, guards, resolvers, lazy loading, reactive forms, validation.
-draft: true
 icon: angular
-questions: []
+questions:
+  - id: angular-routing-forms-001
+    level: junior
+    type: single
+    text: 'Що робить `loadComponent: () => import(''./admin'').then(m => m.Admin)` у конфігурації маршруту Angular 22?'
+    text_en: 'What does `loadComponent: () => import(''./admin'').then(m => m.Admin)` do in an Angular 22 route configuration?'
+    options:
+      - text: Завантажує код компонента окремим чанком лише тоді, коли користувач уперше переходить на цей маршрут
+        text_en: Loads the component code as a separate chunk only when the user first navigates to this route
+        correct: true
+      - text: Завантажує компонент у фоні одразу після старту застосунку, щоб перехід був миттєвим
+        text_en: Loads the component in the background right after the app starts, so navigation is instant
+      - text: Створює екземпляр компонента під час реєстрації маршрутів і зберігає його в кеші роутера
+        text_en: Creates a component instance when routes are registered and keeps it in the router cache
+      - text: Компілює шаблон компонента в браузері замість того, щоб зібрати його на етапі білду
+        text_en: Compiles the component template in the browser instead of building it at build time
+    explanation: >
+      Динамічний `import()` змушує збирач винести компонент в окремий чанк, а роутер викликає `loadComponent` лише під час першого переходу на маршрут. Фонове завантаження дає окрема стратегія попереднього завантаження (preloading), а не сама наявність `loadComponent`.
+    explanation_en: >
+      The dynamic `import()` makes the bundler put the component into a separate chunk, and the router calls `loadComponent` only on the first navigation to the route. Background loading comes from a separate preloading strategy, not from `loadComponent` itself.
+    sources:
+      - https://angular.dev/guide/routing/loading-strategies
+  - id: angular-routing-forms-002
+    level: junior
+    type: single
+    text: 'Що станеться, коли неавторизований користувач переходить на маршрут із `canActivate: [authGuard]` (Angular 22)?'
+    text_en: 'What happens when an unauthenticated user navigates to a route with `canActivate: [authGuard]` (Angular 22)?'
+    code:
+      lang: typescript
+      source: |
+        export const authGuard: CanActivateFn = () => {
+          const auth = inject(AuthService);
+          const router = inject(Router);
+          return auth.isLoggedIn() ? true : router.createUrlTree(['/login']);
+        };
+    options:
+      - text: Поточна навігація скасовується, а роутер перенаправляє користувача на `/login`
+        text_en: The current navigation is canceled and the router redirects the user to `/login`
+        correct: true
+      - text: Навігація блокується, користувач лишається на попередній сторінці без жодного редіректу
+        text_en: Navigation is blocked and the user stays on the previous page with no redirect at all
+      - text: Guard кидає помилку, бо `inject` не можна викликати всередині функції, що не є конструктором
+        text_en: The guard throws an error because `inject` cannot be called inside a function that is not a constructor
+      - text: Спершу активується захищений маршрут, а перенаправлення на `/login` відбувається після його рендеру
+        text_en: The protected route activates first, and the redirect to `/login` happens after it renders
+    explanation: >
+      Guard може повернути `UrlTree`, і тоді роутер скасовує поточну навігацію та виконує нову на цей URL. Звичайне `false` справді лише блокує перехід, але тут повертається `UrlTree`. Виклик `inject` у функціональному guard дозволений, бо роутер виконує його в контексті ін'єкції.
+    explanation_en: >
+      A guard can return a `UrlTree`, and the router then cancels the current navigation and navigates to that URL instead. A plain `false` would only block the transition, but here a `UrlTree` is returned. Calling `inject` in a functional guard is allowed because the router runs it in an injection context.
+    sources:
+      - https://angular.dev/guide/routing/route-guards
+  - id: angular-routing-forms-003
+    level: junior
+    type: single
+    text: Що виведе цей код (Angular 22, typed forms)?
+    text_en: What does this code print (Angular 22, typed forms)?
+    code:
+      lang: typescript
+      source: |
+        const email = new FormControl('a@b.c');
+        const name = new FormControl('Ann', { nonNullable: true });
+        email.reset();
+        name.reset();
+        console.log(email.value, name.value);
+    options:
+      - text: '`null Ann`'
+        text_en: '`null Ann`'
+        correct: true
+      - text: '`a@b.c Ann`'
+        text_en: '`a@b.c Ann`'
+      - text: '`undefined Ann`'
+        text_en: '`undefined Ann`'
+      - text: '`null null`'
+        text_en: '`null null`'
+    explanation: >
+      Звичайний `FormControl` після `reset()` отримує `null`, тому його тип — `string | null`. З `nonNullable: true` контрол повертається до початкового значення `'Ann'`, і тип лишається `string`.
+    explanation_en: >
+      A regular `FormControl` becomes `null` after `reset()`, which is why its type is `string | null`. With `nonNullable: true` the control returns to its initial value `'Ann'`, and the type stays `string`.
+    sources:
+      - https://angular.dev/guide/forms/typed-forms
+  - id: angular-routing-forms-004
+    level: junior
+    type: multiple
+    text: Які твердження про синхронні валідатори reactive forms (`ValidatorFn`) в Angular 22 правильні?
+    text_en: Which statements about synchronous validators in reactive forms (`ValidatorFn`) in Angular 22 are true?
+    options:
+      - text: Для валідного значення валідатор повертає `null`
+        text_en: For a valid value, the validator returns `null`
+        correct: true
+      - text: Для невалідного значення валідатор повертає об'єкт, ключі якого з'являються в `control.errors`
+        text_en: For an invalid value, the validator returns an object whose keys appear in `control.errors`
+        correct: true
+      - text: Валідатор повертає `true` для валідного значення і `false` для невалідного
+        text_en: The validator returns `true` for a valid value and `false` for an invalid one
+      - text: Валідатор кидає виняток, який Angular перехоплює й записує в `control.errors`
+        text_en: The validator throws an exception that Angular catches and stores in `control.errors`
+    explanation: >
+      Функція-валідатор повертає `ValidationErrors | null`: `null` означає, що помилок немає, а об'єкт описує знайдені помилки й потрапляє в `control.errors`. Булевого результату валідатор не повертає, а кинутий виняток Angular не перетворює на помилку валідації.
+    explanation_en: >
+      A validator function returns `ValidationErrors | null`: `null` means there are no errors, and an object describes the errors found and ends up in `control.errors`. A validator does not return a boolean, and Angular does not turn a thrown exception into a validation error.
+    sources:
+      - https://angular.dev/guide/forms/form-validation
+      - https://angular.dev/api/forms/ValidatorFn
+  - id: angular-routing-forms-005
+    level: middle
+    type: single
+    text: Скільки разів викличеться асинхронний валідатор і який статус матиме контрол після кожного `console.log` (Angular 22)?
+    text_en: How many times is the async validator called, and what status does the control have after each `console.log` (Angular 22)?
+    code:
+      lang: typescript
+      source: |
+        let calls = 0;
+        const unique: AsyncValidatorFn = () => {
+          calls++;
+          return of(null);
+        };
+        const name = new FormControl('', {
+          validators: [Validators.required],
+          asyncValidators: [unique],
+        });
+        console.log(calls, name.status);
+        name.setValue('Ann');
+        console.log(calls, name.status);
+    options:
+      - text: '`0 INVALID`, потім `1 VALID`'
+        text_en: '`0 INVALID`, then `1 VALID`'
+        correct: true
+      - text: '`1 INVALID`, потім `2 VALID`'
+        text_en: '`1 INVALID`, then `2 VALID`'
+      - text: '`0 PENDING`, потім `1 VALID`'
+        text_en: '`0 PENDING`, then `1 VALID`'
+      - text: '`1 PENDING`, потім `2 PENDING`'
+        text_en: '`1 PENDING`, then `2 PENDING`'
+    explanation: >
+      Асинхронні валідатори запускаються лише тоді, коли всі синхронні вже пройшли, щоб не робити дорогих запитів для явно хибного значення. Порожній рядок не проходить `required`, тому `unique` не викликається, а статус `INVALID`. Після `setValue('Ann')` синхронна перевірка успішна, валідатор виконується, і `of(null)` одразу дає `VALID`.
+    explanation_en: >
+      Async validators run only after all synchronous validators pass, so that no expensive request is made for an obviously invalid value. An empty string fails `required`, so `unique` is not called and the status is `INVALID`. After `setValue('Ann')` the synchronous check passes, the validator runs, and `of(null)` yields `VALID` right away.
+    sources:
+      - https://angular.dev/guide/forms/form-validation
+  - id: angular-routing-forms-006
+    level: middle
+    type: single
+    text: 'Маршрут `admin` має `loadChildren` і `canActivate: [adminGuard]`; для звичайного користувача guard повертає `false` (Angular 22). Що правильно щодо чанка з дочірніми маршрутами?'
+    text_en: 'The `admin` route has `loadChildren` and `canActivate: [adminGuard]`, and the guard returns `false` for a regular user (Angular 22). What is true about the chunk with the child routes?'
+    options:
+      - text: Чанк усе одно завантажується, бо `canActivate` виконується після зіставлення маршруту; щоб цього уникнути, потрібен `canMatch`
+        text_en: The chunk is still downloaded because `canActivate` runs after the route is matched; avoiding that takes `canMatch`
+        correct: true
+      - text: Чанк не завантажується, бо роутер спершу виконує всі `canActivate`, а вже потім викликає `loadChildren`
+        text_en: The chunk is not downloaded because the router runs all `canActivate` guards first and only then calls `loadChildren`
+      - text: Чанк не завантажується, бо `false` від будь-якого guard автоматично скасовує всі відкладені `import()` застосунку
+        text_en: The chunk is not downloaded because `false` from any guard automatically cancels all pending `import()` calls in the app
+      - text: Чанк завантажується завжди, бо `canMatch` працює лише з `loadComponent` і не підтримує `loadChildren`
+        text_en: The chunk is always downloaded because `canMatch` works only with `loadComponent` and does not support `loadChildren`
+    explanation: >
+      Щоб перевірити `canActivate`, роутер має спершу зіставити URL із маршрутом, а для `loadChildren` це означає завантажити дочірню конфігурацію. `canMatch` виконується на етапі зіставлення: коли він повертає `false`, маршрут вважається незбіжним, `loadChildren` не викликається, а роутер шукає інший збіг.
+    explanation_en: >
+      To evaluate `canActivate`, the router must first match the URL to the route, and for `loadChildren` that means loading the child configuration. `canMatch` runs during matching: when it returns `false`, the route counts as not matching, `loadChildren` is not called, and the router looks for another match.
+    sources:
+      - https://angular.dev/guide/routing/route-guards
+      - https://angular.dev/api/router/CanMatch
+  - id: angular-routing-forms-007
+    level: middle
+    type: multiple
+    text: Який результат дає цей `FormGroup` (Angular 22)? Які твердження правильні?
+    text_en: What does this `FormGroup` produce (Angular 22)? Which statements are true?
+    code:
+      lang: typescript
+      source: |
+        const form = new FormGroup({
+          name: new FormControl('Ann', { nonNullable: true }),
+          role: new FormControl(
+            { value: 'admin', disabled: true },
+            { nonNullable: true },
+          ),
+        });
+    options:
+      - text: '`form.value` дорівнює `{ name: ''Ann'' }`, вимкнений контрол `role` до значення не потрапляє'
+        text_en: '`form.value` is `{ name: ''Ann'' }`, the disabled control `role` is left out of the value'
+        correct: true
+      - text: '`form.getRawValue()` повертає `{ name: ''Ann'', role: ''admin'' }` разом із вимкненим контролом'
+        text_en: '`form.getRawValue()` returns `{ name: ''Ann'', role: ''admin'' }` together with the disabled control'
+        correct: true
+      - text: '`form.value` містить `role: ''admin''`, бо вимкнений контрол лише блокує ввід у полі'
+        text_en: '`form.value` contains `role: ''admin''` because a disabled control only blocks input in the field'
+      - text: '`form.getRawValue()` теж пропускає вимкнений `role`, так само як і `form.value`, бо обидва ігнорують такі контроли'
+        text_en: '`form.getRawValue()` also skips the disabled `role`, just like `form.value`, since both ignore such controls'
+    explanation: >
+      Вимкнені контроли виключаються зі значення групи (`value`) та з валідації, тому `value` містить лише `name`. `getRawValue()` повертає значення всіх контролів, зокрема вимкнених, — його використовують, коли треба відправити поле `disabled` на сервер.
+    explanation_en: >
+      Disabled controls are excluded from the group's `value` and from validation, so `value` contains only `name`. `getRawValue()` returns the values of all controls, including disabled ones, which is what you use when a `disabled` field must be sent to the server.
+    sources:
+      - https://angular.dev/api/forms/FormGroup
+      - https://angular.dev/guide/forms/typed-forms
+  - id: angular-routing-forms-008
+    level: middle
+    type: single
+    text: Resolver повертає дані, але компонент завжди бачить порожній `user()` (Angular 22). Чому?
+    text_en: The resolver returns data, but the component always sees an empty `user()` (Angular 22). Why?
+    code:
+      lang: typescript
+      source: |
+        export const routes: Routes = [
+          { path: 'users/:id', component: UserPage, resolve: { user: userResolver } },
+        ];
+
+        bootstrapApplication(App, { providers: [provideRouter(routes)] });
+
+        @Component({ template: '{{ user()?.name }}' })
+        class UserPage {
+          user = input<User>();
+        }
+    options:
+      - text: У `provideRouter` немає `withComponentInputBinding()`, тож роутер не пише дані маршруту у входи компонента
+        text_en: '`provideRouter` lacks `withComponentInputBinding()`, so the router does not write route data into component inputs'
+        correct: true
+      - text: 'Функція `input()` не працює з роутером: для даних resolver-ів потрібен лише декоратор `@Input()` на властивості'
+        text_en: 'The `input()` function does not work with the router: resolver data requires the `@Input()` decorator on a property'
+      - text: Resolver мусить повертати `Observable<User>`, а значення, повернуте синхронно чи через `Promise`, роутер ігнорує
+        text_en: The resolver must return an `Observable<User>`, and the router ignores a value returned synchronously or as a `Promise`
+      - text: Ключ у `resolve` має називатися `data`, і лише тоді роутер передасть його у вхід компонента
+        text_en: The key in `resolve` must be named `data`, and only then does the router pass it to the component input
+    explanation: >
+      Без `withComponentInputBinding()` роутер не прив'язує параметри, query-параметри й дані resolver-ів до входів компонента; їх можна прочитати лише з `ActivatedRoute`. З цією функцією вхід `user` (і `id`) отримує значення автоматично, а ім'я входу має збігатися з ключем у `resolve`.
+    explanation_en: >
+      Without `withComponentInputBinding()` the router does not bind route params, query params, or resolver data to component inputs; they can only be read from `ActivatedRoute`. With that feature, the `user` input (and `id`) is filled automatically, and the input name must match the key in `resolve`.
+    sources:
+      - https://angular.dev/guide/routing/data-resolvers
+  - id: angular-routing-forms-009
+    level: senior
+    type: single
+    text: 'Форма реєстрації має асинхронний валідатор унікальності імені (HTTP-запит). Кнопка `Save` має `[disabled]="form.invalid"`, але користувачі інколи надсилають форму з іменем, яке сервер потім відхиляє. Що відбувається (Angular 22)?'
+    text_en: 'A signup form has an async uniqueness validator for the username (an HTTP request). The `Save` button has `[disabled]="form.invalid"`, but users sometimes submit a username the server later rejects. What is going on (Angular 22)?'
+    options:
+      - text: 'Поки йде валідація, статус `PENDING`: форма ще не `invalid`, тому кнопка активна; слід перевіряти `form.valid`'
+        text_en: 'While validation runs, the status is `PENDING`: the form is not `invalid` yet, so the button is enabled; check `form.valid`'
+        correct: true
+      - text: Angular оновлює `invalid` лише в наступному циклі change detection, тому кнопка відстає від реального стану на один тік
+        text_en: Angular updates `invalid` only in the next change detection cycle, so the button lags one tick behind the real state
+      - text: Асинхронні валідатори враховуються лише після події `blur` поля, тому до втрати фокусу форма завжди `valid`
+        text_en: Async validators are taken into account only after the `blur` event, so until focus is lost the form is always `valid`
+      - text: Подія `ngSubmit` ігнорує атрибут `disabled` кнопки, тож форму можна надіслати, навіть коли кнопку вимкнено
+        text_en: The `ngSubmit` event ignores the button's `disabled` attribute and always submits the form, even if the button is disabled
+    explanation: >
+      Під час асинхронної валідації контрол має статус `PENDING`, який не є ні `VALID`, ні `INVALID`: `invalid` і `valid` обидва дорівнюють `false`. Тому `[disabled]="form.invalid"` пропускає цей момент, а надійна умова — `[disabled]="!form.valid"` (вимкнена й під час `PENDING`).
+    explanation_en: >
+      During async validation a control has the `PENDING` status, which is neither `VALID` nor `INVALID`: `valid` and `invalid` are both `false`. So `[disabled]="form.invalid"` lets this moment through, while `[disabled]="!form.valid"` is a reliable condition (the button is disabled during `PENDING` too).
+    sources:
+      - https://angular.dev/guide/forms/form-validation
+      - https://angular.dev/api/forms/AbstractControl
+  - id: angular-routing-forms-010
+    level: senior
+    type: multiple
+    text: 'Маршрут має `resolve` із запитом профілю. Користувач переходить між URL, а компонент `UserPage` перевикористовується (Angular 22, налаштування за замовчуванням, якщо не вказано інше). Які твердження правильні?'
+    text_en: 'A route has a `resolve` that fetches a profile. The user moves between URLs, and the `UserPage` component is reused (Angular 22, default settings unless stated otherwise). Which statements are true?'
+    code:
+      lang: typescript
+      source: |
+        const routes: Routes = [
+          {
+            path: 'users/:id',
+            component: UserPage,
+            resolve: { user: userResolver },
+          },
+        ];
+    options:
+      - text: Перехід `/users/1` → `/users/1?tab=2` не запускає `userResolver` повторно
+        text_en: Navigating `/users/1` → `/users/1?tab=2` does not run `userResolver` again
+        correct: true
+      - text: Перехід `/users/1` → `/users/2` запускає `userResolver` знову
+        text_en: Navigating `/users/1` → `/users/2` runs `userResolver` again
+        correct: true
+      - text: 'З `runGuardsAndResolvers: ''always''` перехід `/users/1` → `/users/1?tab=2` запускає `userResolver` знову'
+        text_en: 'With `runGuardsAndResolvers: ''always''`, navigating `/users/1` → `/users/1?tab=2` runs `userResolver` again'
+        correct: true
+      - text: Будь-яка зміна query-параметра запускає `userResolver` знову, бо він пов'язаний з усім URL
+        text_en: Any query parameter change runs `userResolver` again because it is tied to the whole URL
+      - text: 'З `runGuardsAndResolvers: ''always''` guards і resolver-и запускаються лише за зміни частини шляху'
+        text_en: 'With `runGuardsAndResolvers: ''always''`, guards and resolvers run only when a path segment changes'
+    explanation: >
+      Типове значення `runGuardsAndResolvers` — `paramsChange`: guards і resolver-и повторюються, коли змінюються параметри шляху, але не query-параметри. Тому дані профілю не оновлюються при зміні `?tab`, а при зміні `:id` оновлюються. `'always'` запускає їх на кожну навігацію, що зачіпає цей маршрут.
+    explanation_en: >
+      The default `runGuardsAndResolvers` is `paramsChange`: guards and resolvers rerun when path params change, but not query params. So profile data is not refreshed when `?tab` changes, but it is when `:id` changes. `'always'` runs them on every navigation that touches this route.
+    sources:
+      - https://angular.dev/api/router/Route
+      - https://angular.dev/api/router/RunGuardsAndResolvers
+  - id: angular-routing-forms-011
+    level: senior
+    type: single
+    text: 'Асинхронний валідатор робить `http.get(...)` на кожну зміну значення. Користувач швидко вводить `a`, потім `ab`, поки запит для `a` ще виконується (Angular 22, `updateOn: ''change''`). Що станеться із запитом для `a`?'
+    text_en: 'An async validator makes `http.get(...)` on every value change. The user quickly types `a`, then `ab`, while the request for `a` is still in flight (Angular 22, `updateOn: ''change''`). What happens to the request for `a`?'
+    options:
+      - text: Angular відписується від попередньої асинхронної валідації, тож `HttpClient` скасовує запит, а статус визначає лише результат для `ab`
+        text_en: Angular unsubscribes from the previous async validation, so `HttpClient` cancels the request and only the result for `ab` determines the status
+        correct: true
+      - text: Запит для `a` завершується, а його відповідь ставиться в чергу й застосовується перед результатом для `ab`
+        text_en: The request for `a` completes, and its response is queued and applied before the result for `ab`
+      - text: Запит для `a` завершується, і його відповідь може перезаписати статус, який уже встановила валідація для `ab`
+        text_en: The request for `a` completes, and its response may overwrite the status already set by the validation for `ab`
+      - text: Angular не запускає валідацію для `ab`, доки не завершиться валідація для `a`, і тому запитів завжди не більше одного
+        text_en: Angular does not start validation for `ab` until the validation for `a` finishes, so there is never more than one request
+    explanation: >
+      При кожній зміні значення контрол відписується від попереднього спостережуваного, що ще не завершився, тому застарілий результат ніколи не потрапляє у статус. `HttpClient` скасовує запит при відписці. Але новий запит усе одно стартує на кожну зміну, тож щоб зменшити їх кількість, використовують `updateOn: 'blur'` або власну затримку (debounce) у валідаторі.
+    explanation_en: >
+      On every value change the control unsubscribes from the previous observable that has not completed, so a stale result never reaches the status. `HttpClient` cancels the request on unsubscribe. A new request still starts on every change, so to reduce their number you use `updateOn: 'blur'` or your own debounce inside the validator.
+    sources:
+      - https://angular.dev/guide/forms/form-validation
+  - id: angular-routing-forms-012
+    level: senior
+    type: single
+    text: Застосунок Angular 22 має 40 lazy-маршрутів. На мобільних мережах потрібно фоново завантажувати лише 3 найімовірніші, а решту — на вимогу. Що вибрати?
+    text_en: An Angular 22 app has 40 lazy routes. On mobile networks only the 3 most likely routes should be preloaded in the background, and the rest on demand. What should you choose?
+    options:
+      - text: 'Власну `PreloadingStrategy`, що викликає `load()` лише для маршрутів із `data: { preload: true }`'
+        text_en: 'A custom `PreloadingStrategy` that calls `load()` only for routes with `data: { preload: true }`'
+        correct: true
+      - text: '`withPreloading(PreloadAllModules)` і `canMatch` на 37 маршрутах, щоб решта не завантажувалась у фоні'
+        text_en: '`withPreloading(PreloadAllModules)` plus `canMatch` on 37 routes so that the rest are not loaded in the background'
+      - text: 'Опцію `preload: true` у `loadComponent` кожного з трьох маршрутів, яку роутер зчитує автоматично'
+        text_en: 'A `preload: true` option in `loadComponent` of each of the three routes, which the router reads automatically'
+      - text: Власний `canActivate` на трьох маршрутах, що завантажує їхній чанк через `import()` у фоні під час старту
+        text_en: A custom `canActivate` on the three routes that loads their chunk through `import()` in the background at startup
+    explanation: >
+      `PreloadingStrategy` отримує кожен lazy-маршрут і функцію `load`: стратегія сама вирішує, викликати її чи повернути `EMPTY`. Саме так реалізують вибіркове завантаження за прапорцем у `data`. `PreloadAllModules` завантажує все одразу після початкової навігації, а опції `preload` у `loadComponent` не існує.
+    explanation_en: >
+      A `PreloadingStrategy` receives each lazy route and a `load` function: the strategy itself decides whether to call it or return `EMPTY`. This is how selective loading by a flag in `data` is implemented. `PreloadAllModules` loads everything right after the initial navigation, and there is no `preload` option in `loadComponent`.
+    sources:
+      - https://angular.dev/guide/routing/customizing-route-behavior
+      - https://angular.dev/api/router/PreloadingStrategy

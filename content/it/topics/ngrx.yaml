@@ -3,5 +3,450 @@ title: NgRx
 title_en: NgRx
 description: Store, actions, reducers, effects, selectors, SignalStore.
 description_en: Store, actions, reducers, effects, selectors, SignalStore.
-draft: true
-questions: []
+questions:
+  - id: ngrx-001
+    level: junior
+    type: single
+    text: Що має робити reducer у NgRx Store?
+    text_en: What must a reducer in NgRx Store do?
+    options:
+      - text: Повертати новий об'єкт стану на основі поточного стану й action, не змінюючи старий
+        text_en: Return a new state object based on the current state and the action without changing the old one
+        correct: true
+      - text: Викликати HTTP-API і записувати відповідь у стан, коли надходить action
+        text_en: Call the HTTP API and write the response into the state when an action arrives
+      - text: Змінювати наявний об'єкт стану на місці, а Store сам сповістить підписників
+        text_en: Modify the existing state object in place and let the Store notify subscribers itself
+      - text: Диспатчити наступний action одразу після того, як оновить стан
+        text_en: Dispatch the next action right after it updates the state
+    explanation: >
+      Reducer — чиста синхронна функція: з однакових вхідних даних вона дає однаковий результат і не має побічних
+      ефектів. Для роботи з HTTP призначені effects, а зміна старого об'єкта на місці ламає порівняння за
+      посиланням, на якому тримаються селектори й сповіщення.
+    explanation_en: >
+      A reducer is a pure synchronous function: the same input gives the same output and there are no side effects.
+      HTTP work belongs in effects, and mutating the old object in place breaks the reference comparison that
+      selectors and change notifications rely on.
+    sources:
+      - https://ngrx.io/guide/store/reducers
+  - id: ngrx-002
+    level: junior
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: ts
+      source: |
+        const increment = createAction('[Counter] Increment');
+        const reset = createAction('[Counter] Reset');
+
+        const reducer = createReducer(
+          { count: 0 },
+          on(increment, (state) => ({ ...state, count: state.count + 1 })),
+          on(reset, () => ({ count: 0 })),
+        );
+
+        let state = reducer(undefined, { type: '@@init' });
+        state = reducer(state, increment());
+        state = reducer(state, increment());
+        state = reducer(state, { type: '[Other] Unknown' });
+        console.log(state);
+    options:
+      - text: '`{ count: 2 }`'
+        text_en: '`{ count: 2 }`'
+        correct: true
+      - text: '`{ count: 0 }`'
+        text_en: '`{ count: 0 }`'
+      - text: '`{ count: 3 }`'
+        text_en: '`{ count: 3 }`'
+      - text: '`undefined`'
+        text_en: '`undefined`'
+    explanation: >
+      Початковий стан `{ count: 0 }`, два `increment` дають `count: 2`. Невідомий action не має обробника `on`, тому
+      reducer повертає поточний стан без змін, а не скидає його й не повертає `undefined`.
+    explanation_en: >
+      The initial state is `{ count: 0 }` and two `increment` actions give `count: 2`. An unknown action has no `on`
+      handler, so the reducer returns the current state unchanged instead of resetting it or returning `undefined`.
+    sources:
+      - https://ngrx.io/guide/store/reducers
+  - id: ngrx-003
+    level: junior
+    type: multiple
+    text: Які твердження про NgRx Store правильні?
+    text_en: Which statements about NgRx Store are true?
+    options:
+      - text: Action — це простий об'єкт з `type`, що описує подію, а те, як зміниться стан, вирішує reducer
+        text_en: An action is a plain object with a `type` that describes an event, and the reducer decides how the state changes
+        correct: true
+      - text: Селектори — чисті функції, які читають або обчислюють частини дерева стану
+        text_en: Selectors are pure functions that read or derive pieces of the state tree
+        correct: true
+      - text: Роботу з побічними ефектами, наприклад HTTP-запити, виносять в effects, а не в reducers
+        text_en: Side-effect work such as HTTP requests goes into effects, not into reducers
+        correct: true
+      - text: Reducer може викликати `store.dispatch`, щоб запустити інший action після зміни стану
+        text_en: A reducer may call `store.dispatch` to start another action after the state change
+      - text: Присвоєння властивості в об'єкті, отриманому із селектора, оновлює стан у Store
+        text_en: Assigning a property on an object returned by a selector updates the state in the Store
+    explanation: >
+      Store тримає єдине дерево стану: action лише описує подію, reducer повертає новий стан, селектор читає його,
+      а побічні ефекти живуть в effects. Reducer має бути чистим, тому диспатч з нього не робиться, а зміна
+      об'єкта із селектора не потрапляє в Store.
+    explanation_en: >
+      The Store holds a single state tree: an action only describes an event, a reducer returns the new state, a
+      selector reads it, and side effects live in effects. A reducer must be pure, so it does not dispatch, and
+      mutating an object from a selector does not reach the Store.
+    sources:
+      - https://ngrx.io/guide/store
+      - https://ngrx.io/guide/store/reducers
+  - id: ngrx-004
+    level: junior
+    type: single
+    text: Що виведе цей код (NgRx SignalStore 22, код виконується в контексті ін'єкції)?
+    text_en: What does this code print (NgRx SignalStore 22, run in an injection context)?
+    code:
+      lang: ts
+      source: |
+        const CounterStore = signalStore(
+          { providedIn: 'root' },
+          withState({ count: 0 }),
+          withComputed(({ count }) => ({
+            double: computed(() => count() * 2),
+          })),
+          withMethods((store) => ({
+            increment(): void {
+              patchState(store, { count: store.count() + 1 });
+            },
+          })),
+        );
+
+        const store = inject(CounterStore);
+        store.increment();
+        store.increment();
+        console.log(store.count(), store.double());
+    options:
+      - text: '`2 4`'
+        text_en: '`2 4`'
+        correct: true
+      - text: '`0 0`'
+        text_en: '`0 0`'
+      - text: '`2 2`'
+        text_en: '`2 2`'
+      - text: '`1 2`'
+        text_en: '`1 2`'
+    explanation: >
+      `withState` робить `count` сигналом, `patchState` двічі збільшує його до 2, а `double` у `withComputed` —
+      обчислюваний сигнал, що перераховується з нового значення й дає 4. Значення читають викликом сигналу.
+    explanation_en: >
+      `withState` exposes `count` as a signal, `patchState` raises it to 2 over two calls, and `double` from
+      `withComputed` is a computed signal that recalculates from the new value and gives 4. Values are read by
+      calling the signal.
+    sources:
+      - https://ngrx.io/guide/signals/signal-store
+  - id: ngrx-005
+    level: middle
+    type: single
+    text: Скільки разів виконається projector-функція цього селектора?
+    text_en: How many times does the projector function of this selector run?
+    code:
+      lang: ts
+      source: |
+        let runs = 0;
+        const selectItems = (s: { items: string[]; filter: string }) => s.items;
+        const selectFilter = (s: { items: string[]; filter: string }) => s.filter;
+
+        const selectVisible = createSelector(selectItems, selectFilter, (items, filter) => {
+          runs++;
+          return items.filter((i) => i.includes(filter));
+        });
+
+        const s1 = { items: ['a', 'ab'], filter: 'a', page: 1 };
+        selectVisible(s1);
+        selectVisible({ ...s1, page: 2 });
+        selectVisible({ ...s1, filter: 'b' });
+        console.log(runs);
+    options:
+      - text: '`2`'
+        text_en: '`2`'
+        correct: true
+      - text: '`1`'
+        text_en: '`1`'
+      - text: '`3`'
+        text_en: '`3`'
+      - text: '`0`'
+        text_en: '`0`'
+    explanation: >
+      Перший виклик рахує значення. У другому змінилося лише поле `page`, яке не читає жоден вхідний селектор,
+      тому результати вхідних селекторів ті самі, і береться кеш. У третьому змінився `filter`, тож projector
+      виконується вдруге.
+    explanation_en: >
+      The first call computes the value. In the second only `page` changed, which no input selector reads, so the
+      input selector results are the same and the cached value is returned. In the third `filter` changed, so the
+      projector runs a second time.
+    sources:
+      - https://ngrx.io/guide/store/selectors
+  - id: ngrx-006
+    level: middle
+    type: single
+    text: Що станеться, коли задиспатчити `refresh()` у застосунку з цим effect (NgRx 22)?
+    text_en: What happens when `refresh()` is dispatched in an app with this effect (NgRx 22)?
+    code:
+      lang: ts
+      source: |
+        const refresh = createAction('[Data] Refresh');
+
+        export const refreshEffect = createEffect(
+          () =>
+            inject(Actions).pipe(
+              ofType(refresh),
+              tap(() => console.log('refresh handled')),
+              map(() => refresh()),
+            ),
+          { functional: true },
+        );
+    options:
+      - text: Effect диспатчить `refresh()` у відповідь на кожен `refresh()`, тож виникає нескінченний цикл
+        text_en: The effect dispatches `refresh()` in response to every `refresh()`, which creates an infinite loop
+        correct: true
+      - text: Effect спрацьовує один раз, бо `Actions` пропускає action, тип якого збігається з щойно обробленим
+        text_en: The effect runs once because `Actions` skips an action whose type matches the one just handled
+      - text: Застосунок не збирається, бо вхідний і вихідний action мають однаковий тип
+        text_en: The app does not compile because the input and output actions have the same type
+      - text: 'Action із поверненого потоку не диспатчиться, бо без `dispatch: false` effect лише логує'
+        text_en: 'The action from the returned stream is not dispatched, because without `dispatch: false` the effect only logs'
+    explanation: >
+      За замовчуванням effect диспатчить кожен action, який повертає його потік. Якщо він повертає той самий
+      action, що слухає, кожна обробка породжує наступну, і цикл не зупиняється. NgRx такого повтору не
+      відфільтровує, тому або повертають інший action, або ставлять `dispatch: false`.
+    explanation_en: >
+      By default an effect dispatches every action its stream emits. If it emits the same action it listens to,
+      each handling triggers the next one and the loop never ends. NgRx does not filter such repeats, so you
+      return a different action or set `dispatch: false`.
+    sources:
+      - https://ngrx.io/guide/eslint-plugin/rules/avoid-cyclic-effects
+      - https://ngrx.io/guide/effects
+  - id: ngrx-007
+    level: middle
+    type: single
+    text: >
+      Поле пошуку диспатчить action `[Search] Query` на кожне натискання клавіші, а effect викликає API. Старі
+      відповіді не мають перезаписувати результат останнього запиту, а запити, що ще летять, треба скасувати. Який
+      оператор вибрати для розгортання вкладеного Observable в effect?
+    text_en: >
+      A search box dispatches a `[Search] Query` action on every keystroke and an effect calls the API. Old
+      responses must not overwrite the result of the latest query, and requests still in flight must be cancelled.
+      Which operator should flatten the inner Observable in the effect?
+    options:
+      - text: '`switchMap`: новий action відписується від попереднього внутрішнього Observable'
+        text_en: '`switchMap`: a new action unsubscribes from the previous inner Observable'
+        correct: true
+      - text: '`mergeMap`: усі запити виконуються паралельно, а відповіді приходять у довільному порядку'
+        text_en: '`mergeMap`: all requests run in parallel and responses arrive in arbitrary order'
+      - text: '`concatMap`: запити ставляться в чергу, і кожен виконується лише після завершення попереднього'
+        text_en: '`concatMap`: requests are queued and each one runs only after the previous one completes'
+      - text: '`exhaustMap`: поки йде один запит, усі нові action ігноруються до його завершення'
+        text_en: '`exhaustMap`: while one request is running, every new action is ignored until it completes'
+    explanation: >
+      `switchMap` скасовує попередню підписку, коли приходить новий action, тож у стан потрапляє лише відповідь
+      на останній запит. `mergeMap` залишає всі запити активними, `concatMap` обробляє всі по черзі, а `exhaustMap`
+      відкидає найновіший запит, що для пошуку якраз небажано.
+    explanation_en: >
+      `switchMap` cancels the previous subscription when a new action arrives, so only the response to the latest
+      query reaches the state. `mergeMap` keeps all requests active, `concatMap` processes them all in turn, and
+      `exhaustMap` drops the newest query, which is exactly what search must avoid.
+    sources:
+      - https://rxjs.dev/api/index/function/switchMap
+      - https://ngrx.io/guide/effects/operators
+  - id: ngrx-008
+    level: middle
+    type: multiple
+    text: >
+      Які твердження про SignalStore (NgRx 22) правильні? Стор створено з
+      `withState({ filter: { query: '', order: 'asc' }, isLoading: false })` і типовими параметрами.
+    text_en: >
+      Which statements about a SignalStore (NgRx 22) are true? The store is created with
+      `withState({ filter: { query: '', order: 'asc' }, isLoading: false })` and default options.
+    options:
+      - text: '`store.filter.query` доступний як сигнал, бо вкладений об''єкт стану стає `DeepSignal`'
+        text_en: '`store.filter.query` is available as a signal because the nested state object becomes a `DeepSignal`'
+        correct: true
+      - text: Компонент не може оновлювати стан ззовні через `patchState`, бо стан захищений від зовнішніх змін
+        text_en: A component cannot update the state from outside with `patchState` because the state is protected
+        correct: true
+      - text: '`patchState(store, { filter: { query: ''x'' } })` замінює весь об''єкт `filter`, і `order` зникає'
+        text_en: '`patchState(store, { filter: { query: ''x'' } })` replaces the whole `filter` object and `order` is lost'
+        correct: true
+      - text: '`patchState` є методом екземпляра, тому в компоненті можна викликати `store.patchState(...)`'
+        text_en: '`patchState` is an instance method, so a component can call `store.patchState(...)` directly'
+      - text: Сигнали з `withComputed` стають частиною стану, і `patchState` може їх перезаписати
+        text_en: Signals from `withComputed` become part of the state, and `patchState` can overwrite them
+    explanation: >
+      Об'єктні властивості стану стають `DeepSignal`, а типовий захист стану вимагає оновлювати його методами
+      стора. `patchState` — окрема функція, яка лише неглибоко зливає верхній рівень, тому вкладений об'єкт
+      треба оновлювати цілим. Обчислювані сигнали в стан не входять.
+    explanation_en: >
+      Object properties of the state become `DeepSignal`s, and the default state protection requires updating it
+      through store methods. `patchState` is a standalone function that only merges the top level shallowly, so a
+      nested object must be replaced whole. Computed signals are not part of the state.
+    sources:
+      - https://ngrx.io/guide/signals/signal-store
+      - https://ngrx.io/guide/signals/signal-state#updating-state
+  - id: ngrx-009
+    level: senior
+    type: single
+    text: >
+      Таблиця з сотнями рядків у шаблоні кожного рядка викликає метод, який створює селектор за допомогою
+      фабрики. Профайлер показує, що projector перераховується постійно. Що виведе спрощений приклад і що це
+      пояснює?
+    text_en: >
+      A table with hundreds of rows calls a method in each row's template that builds a selector with a factory.
+      The profiler shows the projector recalculating constantly. What does the simplified example print and what
+      does it explain?
+    code:
+      lang: ts
+      source: |
+        let runs = 0;
+        const selectItems = (s: { items: string[] }) => s.items;
+        const byId = (id: string) =>
+          createSelector(selectItems, (items) => {
+            runs++;
+            return items.find((i) => i === id);
+          });
+
+        const state = { items: ['a', 'b'] };
+        byId('a')(state);
+        byId('a')(state);
+        const shared = byId('b');
+        shared(state);
+        shared(state);
+        console.log(runs);
+    options:
+      - text: '`3`: кожен новий екземпляр має порожній кеш, тож мемоізація працює лише на збереженому `shared`'
+        text_en: '`3`: each new instance has an empty cache, so memoization only works on the stored `shared`'
+        correct: true
+      - text: '`2`: кеш спільний для всіх селекторів, створених однією фабрикою, і `state` той самий'
+        text_en: '`2`: the cache is shared by all selectors built by one factory, and `state` is the same'
+      - text: '`1`: projector виконується один раз, бо об''єкт `state` не змінювався між викликами'
+        text_en: '`1`: the projector runs once because the `state` object did not change between calls'
+      - text: '`4`: селектори з параметром не мемоізуються, тому projector виконується на кожен виклик'
+        text_en: '`4`: selectors with a parameter are not memoized, so the projector runs on every call'
+    explanation: >
+      Мемоізація зберігається в самому екземплярі селектора, і він пам'ятає лише останні аргументи. Кожен виклик
+      `byId('a')` будує новий селектор з порожнім кешем, тому projector виконується двічі, а повторні виклики
+      збереженого `shared` беруть кеш (разом 3). Селектор з фабрики створюють один раз і зберігають.
+    explanation_en: >
+      Memoization lives in the selector instance itself, and it remembers only the latest arguments. Each
+      `byId('a')` call builds a new selector with an empty cache, so the projector runs twice, while repeated calls
+      to the stored `shared` use the cache (3 in total). A factory selector should be created once and stored.
+    sources:
+      - https://ngrx.io/guide/store/selectors
+  - id: ngrx-010
+    level: senior
+    type: single
+    text: >
+      Effect (NgRx 22, налаштування за замовчуванням) обробляє `[Data] Load` через
+      `switchMap(() => http.get(...).pipe(map(loadSuccess)))`, `catchError` немає ніде. Під час збою бекенду
+      запити падають знову й знову. Що відбувається?
+    text_en: >
+      An effect (NgRx 22, default settings) handles `[Data] Load` with
+      `switchMap(() => http.get(...).pipe(map(loadSuccess)))` and has no `catchError` anywhere. During a backend
+      outage the requests keep failing. What happens?
+    options:
+      - text: Помилки йдуть в `ErrorHandler`, effect підписується заново, але після ліміту зупиняється
+        text_en: Errors go to `ErrorHandler` and the effect resubscribes, but after a limit it stops
+        correct: true
+      - text: Effect завершується вже після першої помилки, і всі наступні `[Data] Load` ігноруються до перезапуску застосунку
+        text_en: The effect completes after the very first error, and every later `[Data] Load` is ignored until the app restarts
+      - text: NgRx перетворює кожну помилку на failure-action, який можуть обробити reducers, тож стан оновлюється
+        text_en: NgRx turns every error into a failure action that reducers can handle, so the state is updated
+      - text: Effect підписується заново після кожної помилки без обмеження, тож помилки лише логуються в консоль
+        text_en: The effect resubscribes after every error without a limit, so errors are only logged to the console
+    explanation: >
+      З версії 8 помилка в основному потоці effect іде в `ErrorHandler`, а effect підписується заново, але за
+      замовчуванням лише до 10 помилок. Після цього він мовчки зупиняється. Тому `catchError` ставлять усередині
+      вкладеного Observable й повертають failure-action, тоді основний потік не помирає.
+    explanation_en: >
+      Since version 8 an error in the effect's main stream goes to `ErrorHandler` and the effect resubscribes, but
+      by default only up to 10 errors. After that it stops silently. That is why `catchError` goes inside the
+      inner Observable and returns a failure action, so the main stream never dies.
+    sources:
+      - https://ngrx.io/guide/effects/lifecycle#resubscribe-on-error
+      - https://ngrx.io/guide/effects#handling-errors
+  - id: ngrx-011
+    level: senior
+    type: multiple
+    text: Які твердження про обробку action у NgRx Store та Effects правильні?
+    text_en: Which statements about action processing in NgRx Store and Effects are true?
+    options:
+      - text: Reducers обробляють action першими, effects після них, тож effect бачить уже оновлений стан
+        text_en: Every dispatched action is processed by reducers first and only then by effects, so an effect sees the already updated state
+        correct: true
+      - text: Action, який effect повертає зі свого потоку, диспатчиться в Store і знову проходить через reducers
+        text_en: An action an effect emits from its stream is dispatched to the Store and goes through the reducers again
+        correct: true
+      - text: 'Effect з `{ dispatch: false }` не диспатчить результат потоку, тож підходить для логування чи навігації'
+        text_en: 'An effect with `{ dispatch: false }` does not dispatch what its stream emits, which suits logging or navigation'
+        correct: true
+      - text: Effect може не пустити action до reducers, якщо поверне порожній Observable замість action
+        text_en: An effect can keep an action away from the reducers by returning an empty Observable
+      - text: Action, диспатчений з effect, обробляють лише інші effects, бо reducers уже опрацювали початковий action
+        text_en: An action dispatched from an effect is handled only by other effects because the reducers already processed the original
+    explanation: >
+      Порядок гарантований: reducers, потім effects, тому effect не може ні скасувати, ні пропустити action повз
+      reducers. Нові action від effect проходять той самий шлях, що й будь-які інші, а `dispatch: false` вимикає
+      диспатч результату потоку.
+    explanation_en: >
+      The order is guaranteed: reducers first, then effects, so an effect can neither cancel an action nor bypass
+      the reducers. New actions from an effect follow the same path as any other action, and `dispatch: false`
+      turns off dispatching of the stream's result.
+    sources:
+      - https://ngrx.io/guide/store
+      - https://ngrx.io/guide/effects
+  - id: ngrx-012
+    level: senior
+    type: single
+    text: >
+      Компонент з `OnPush` читає `selectDoubled` через `store.selectSignal`, але перемальовується навіть тоді,
+      коли змінюється лише сусідня гілка стану. Що виведе приклад і чому це так?
+    text_en: >
+      An `OnPush` component reads `selectDoubled` through `store.selectSignal` but re-renders even when only a
+      sibling branch of the state changes. What does the example print and why does this happen?
+    code:
+      lang: ts
+      source: |
+        type S = { items: number[]; other: number };
+
+        const good = createSelector(
+          (s: S) => s.items,
+          (items) => items.map((n) => n * 2),
+        );
+        const bad = createSelector(
+          (s: S) => s.items.filter((n) => n > 0),
+          (items) => items.map((n) => n * 2),
+        );
+
+        const items = [1, 2];
+        const a: S = { items, other: 1 };
+        const b: S = { items, other: 2 };
+        console.log(good(a) === good(b), bad(a) === bad(b));
+    options:
+      - text: '`true false`: вхідний селектор `bad` щоразу повертає новий масив, тож projector перераховується'
+        text_en: '`true false`: the input selector of `bad` returns a new array each time, so the projector recalculates'
+        correct: true
+      - text: '`true true`: обидва селектори мемоізуються, бо `items` є тим самим масивом в обох станах'
+        text_en: '`true true`: both selectors are memoized because `items` is the same array in both states'
+      - text: '`false false`: projector, що викликає `map`, завжди повертає новий масив, тож мемоізація марна'
+        text_en: '`false false`: a projector that calls `map` always returns a new array, so memoization is pointless'
+      - text: '`false true`: перший селектор перераховується, бо змінилося поле `other` поза `items`'
+        text_en: '`false true`: the first selector recalculates because the `other` field outside `items` changed'
+    explanation: >
+      Мемоізація порівнює результати вхідних селекторів за посиланням. `filter` у вхідному селекторі щоразу дає
+      новий масив, тож projector виконується на кожну зміну стану й повертає нове посилання, яке перемальовує
+      компонент. Фільтрацію переносять у projector, а вхідні селектори лишають простими читаннями.
+    explanation_en: >
+      Memoization compares the results of the input selectors by reference. `filter` in the input selector yields
+      a new array every time, so the projector runs on every state change and returns a new reference that
+      re-renders the component. Move filtering into the projector and keep input selectors as plain reads.
+    sources:
+      - https://ngrx.io/guide/store/selectors
+      - https://ngrx.io/guide/eslint-plugin/rules/avoid-mapping-selectors

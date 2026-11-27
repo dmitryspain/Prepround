@@ -3,5 +3,339 @@ title: RxJS
 title_en: RxJS
 description: Observable, оператори, subjects, higher-order mapping, відписка.
 description_en: Observable, operators, subjects, higher-order mapping, unsubscribing.
-draft: true
-questions: []
+questions:
+  - id: rxjs-001
+    level: junior
+    type: single
+    text: Що виведе цей код (RxJS 7.8)?
+    text_en: What does this code print (RxJS 7.8)?
+    code:
+      lang: javascript
+      source: |
+        import { Observable } from 'rxjs';
+
+        const source$ = new Observable(subscriber => {
+          console.log('run');
+          subscriber.next(1);
+        });
+
+        console.log('before');
+    options:
+      - text: Лише `before`
+        text_en: Only `before`
+        correct: true
+      - text: '`run`, а потім `before`'
+        text_en: '`run`, then `before`'
+      - text: '`before`, а потім `run`'
+        text_en: '`before`, then `run`'
+      - text: Лише `run`
+        text_en: Only `run`
+    explanation: >
+      `Observable` лінивий: функція підписки виконується лише під час виклику `subscribe()`. Тут підписки немає, тож `run` не з'являється взагалі, а не відкладається на потім.
+    explanation_en: >
+      An `Observable` is lazy: its subscribe function runs only when `subscribe()` is called. There is no subscription here, so `run` is never printed, not just postponed.
+    sources:
+      - https://rxjs.dev/guide/observable#subscribing-to-observables
+  - id: rxjs-002
+    level: junior
+    type: single
+    text: Що виведе цей код (RxJS 7.8)?
+    text_en: What does this code print (RxJS 7.8)?
+    code:
+      lang: javascript
+      source: |
+        import { of, filter, map } from 'rxjs';
+
+        of(1, 2, 3, 4)
+          .pipe(
+            filter(x => x % 2 === 1),
+            map(x => x * 10)
+          )
+          .subscribe(v => console.log(v));
+    options:
+      - text: '`10` і `30`'
+        text_en: '`10` and `30`'
+        correct: true
+      - text: '`20` і `40`'
+        text_en: '`20` and `40`'
+      - text: '`1` і `3`'
+        text_en: '`1` and `3`'
+      - text: '`10`, `20`, `30` і `40`'
+        text_en: '`10`, `20`, `30` and `40`'
+    explanation: >
+      Оператори в `pipe()` виконуються по черзі для кожного значення: `filter` залишає непарні `1` і `3`, а `map` множить їх на 10. Парні значення відсіюються ще до `map`.
+    explanation_en: >
+      Operators in `pipe()` run in order for each value: `filter` keeps the odd values `1` and `3`, then `map` multiplies them by 10. The even values are dropped before `map`.
+    sources:
+      - https://rxjs.dev/guide/operators#piping
+  - id: rxjs-003
+    level: junior
+    type: multiple
+    text: Які твердження про `BehaviorSubject` у RxJS 7.8 правильні?
+    text_en: Which statements about `BehaviorSubject` in RxJS 7.8 are true?
+    options:
+      - text: Його конструктор вимагає початкове значення
+        text_en: Its constructor requires an initial value
+        correct: true
+      - text: Новий підписник одразу отримує поточне (останнє) значення
+        text_en: A new subscriber immediately receives the current (latest) value
+        correct: true
+      - text: Виклик `next()` передає значення всім наявним підписникам
+        text_en: Calling `next()` pushes the value to all current subscribers
+        correct: true
+      - text: Новий підписник отримує всі раніше випущені значення
+        text_en: A new subscriber receives all values emitted earlier
+      - text: Новий підписник чекає на наступний `next()`
+        text_en: A new subscriber waits for the next `next()` call first
+    explanation: >
+      `BehaviorSubject` зберігає лише останнє значення й віддає його кожному новому підписнику одразу, тому початкове значення обов'язкове. Повторення всієї історії — це `ReplaySubject`.
+    explanation_en: >
+      `BehaviorSubject` keeps only the latest value and gives it to each new subscriber immediately, which is why an initial value is required. Replaying the whole history is what `ReplaySubject` does.
+    sources:
+      - https://rxjs.dev/guide/subject#behaviorsubject
+  - id: rxjs-004
+    level: junior
+    type: single
+    text: Що робить виклик `subscription.unsubscribe()` у RxJS?
+    text_en: What does calling `subscription.unsubscribe()` do in RxJS?
+    options:
+      - text: Зупиняє доставку значень цьому спостерігачеві й звільняє ресурси
+        text_en: Stops delivering values to this observer and releases resources
+        correct: true
+      - text: Завершує сам `Observable` для всіх його підписників
+        text_en: Completes the `Observable` itself for all of its subscribers
+      - text: Викликає `complete` спостерігача, після чого значень більше немає
+        text_en: Calls the observer's `complete` callback, after which no values arrive
+      - text: Знищує `Observable`, і на нього вже не можна підписатися повторно
+        text_en: Destroys the `Observable`, so it can no longer be subscribed to again
+    explanation: >
+      `unsubscribe()` стосується лише однієї підписки: виконання зупиняється, а функція очищення, яку повернув `Observable`, викликається. Колбек `complete` при цьому не викликається, а на той самий `Observable` можна підписатися знову.
+    explanation_en: >
+      `unsubscribe()` affects only one subscription: the execution stops and the teardown function returned by the `Observable` runs. The `complete` callback is not called, and the same `Observable` can be subscribed to again.
+    sources:
+      - https://rxjs.dev/guide/subscription
+  - id: rxjs-005
+    level: middle
+    type: single
+    text: Що виведе цей код (RxJS 7.8)?
+    text_en: What does this code print (RxJS 7.8)?
+    code:
+      lang: javascript
+      source: |
+        import { of, timer, map, switchMap } from 'rxjs';
+
+        of(1, 2)
+          .pipe(
+            switchMap(x => timer(10).pipe(map(() => x)))
+          )
+          .subscribe(v => console.log(v));
+    options:
+      - text: Лише `2`
+        text_en: Only `2`
+        correct: true
+      - text: '`1`, а потім `2`'
+        text_en: '`1`, then `2`'
+      - text: '`2`, а потім `1`'
+        text_en: '`2`, then `1`'
+      - text: Лише `1`
+        text_en: Only `1`
+    explanation: >
+      `of(1, 2)` видає обидва значення синхронно. Коли надходить `2`, `switchMap` відписується від внутрішнього таймера для `1`, який ще не спрацював, і чекає лише на таймер для `2`.
+    explanation_en: >
+      `of(1, 2)` emits both values synchronously. When `2` arrives, `switchMap` unsubscribes from the inner timer for `1`, which has not fired yet, and waits only for the timer for `2`.
+    sources:
+      - https://rxjs.dev/api/operators/switchMap
+  - id: rxjs-006
+    level: middle
+    type: single
+    text: Що виведе цей код (RxJS 7.8)?
+    text_en: What does this code print (RxJS 7.8)?
+    code:
+      lang: javascript
+      source: |
+        import { of, timer, map, concatMap } from 'rxjs';
+
+        of(1, 2)
+          .pipe(
+            concatMap(x => timer(x === 1 ? 30 : 10).pipe(map(() => x)))
+          )
+          .subscribe(v => console.log(v));
+    options:
+      - text: '`1`, а потім `2`'
+        text_en: '`1`, then `2`'
+        correct: true
+      - text: '`2`, а потім `1`'
+        text_en: '`2`, then `1`'
+      - text: Лише `2`
+        text_en: Only `2`
+      - text: Лише `1`
+        text_en: Only `1`
+    explanation: >
+      `concatMap` підписується на наступний внутрішній Observable лише після завершення попереднього, тому порядок зберігається, хоч таймер для `2` коротший. З `mergeMap` результат був би `2`, а потім `1`.
+    explanation_en: >
+      `concatMap` subscribes to the next inner Observable only after the previous one completes, so the order is kept even though the timer for `2` is shorter. With `mergeMap` the result would be `2`, then `1`.
+    sources:
+      - https://rxjs.dev/api/operators/concatMap
+  - id: rxjs-007
+    level: middle
+    type: multiple
+    text: Які твердження про cold-Observable і мультикастинг у RxJS 7.8 правильні?
+    text_en: Which statements about cold Observables and multicasting in RxJS 7.8 are true?
+    options:
+      - text: Кожна підписка на cold-Observable окремо виконує його функцію підписки
+        text_en: Each subscription to a cold Observable runs its subscribe function separately
+        correct: true
+      - text: '`Subject` передає кожне значення всім підписникам, не повторюючи виробника'
+        text_en: A `Subject` passes each value to all subscribers without re-running the producer
+        correct: true
+      - text: '`share()` дає одночасним підписникам одну спільну підписку на джерело'
+        text_en: '`share()` gives concurrent subscribers one shared subscription to the source'
+        correct: true
+      - text: Звичайний `Subject` повторює пізнім підписникам усі раніші значення
+        text_en: A plain `Subject` replays all earlier values to late subscribers
+      - text: Оператор `map` у `pipe()` перетворює cold-Observable на hot
+        text_en: The `map` operator in `pipe()` turns a cold Observable into a hot one
+    explanation: >
+      Cold-Observable створює виробника значень на кожну підписку, а `Subject` і `share()` дають одне виконання на багатьох підписників. Звичайний `Subject` нічого не зберігає (це робить `ReplaySubject`), а `map` лише додає крок і не змінює спосіб підписки.
+    explanation_en: >
+      A cold Observable creates the producer for each subscription, while a `Subject` and `share()` give one execution to many subscribers. A plain `Subject` stores nothing (that is `ReplaySubject`), and `map` only adds a step without changing how subscription works.
+    sources:
+      - https://rxjs.dev/guide/subject#multicasted-observables
+      - https://rxjs.dev/api/operators/share
+  - id: rxjs-008
+    level: middle
+    type: single
+    text: Що виведе цей код (RxJS 7.8)?
+    text_en: What does this code print (RxJS 7.8)?
+    code:
+      lang: javascript
+      source: |
+        import { of, map, catchError } from 'rxjs';
+
+        of(1, 2, 3)
+          .pipe(
+            map(x => {
+              if (x === 2) throw new Error('boom');
+              return x;
+            }),
+            catchError(() => of(-1))
+          )
+          .subscribe({
+            next: v => console.log(v),
+            complete: () => console.log('done')
+          });
+    options:
+      - text: '`1`, `-1`, `done`'
+        text_en: '`1`, `-1`, `done`'
+        correct: true
+      - text: '`1`, `-1`, `3`, `done`'
+        text_en: '`1`, `-1`, `3`, `done`'
+      - text: '`1`, `done`'
+        text_en: '`1`, `done`'
+      - text: '`1`, а потім неперехоплена помилка `boom`'
+        text_en: '`1`, then an unhandled `boom` error'
+    explanation: >
+      Помилка в `map` завершує вихідний потік, тож `3` вже не надійде. `catchError` підміняє його на `of(-1)`, який видає `-1` і завершується, тому з'являється `done`.
+    explanation_en: >
+      The error in `map` terminates the source stream, so `3` never arrives. `catchError` replaces it with `of(-1)`, which emits `-1` and completes, so `done` is printed.
+    sources:
+      - https://rxjs.dev/api/operators/catchError
+  - id: rxjs-009
+    level: senior
+    type: single
+    text: >
+      Кнопка «Зберегти» кидає POST-запит у `click$.pipe(...)`. Якщо користувач швидко клікає ще раз, поки перший запит не завершився, нові кліки треба ігнорувати, а не ставити в чергу. Який оператор вибрати (RxJS 7.8)?
+    text_en: >
+      A "Save" button sends a POST request inside `click$.pipe(...)`. If the user clicks again before the first request finishes, the new clicks must be ignored rather than queued. Which operator should you use (RxJS 7.8)?
+    options:
+      - text: '`exhaustMap`: поки внутрішній запит активний, нові кліки відкидаються'
+        text_en: '`exhaustMap`: while the inner request is active, new clicks are dropped'
+        correct: true
+      - text: '`switchMap`: скасовує перший запит і відправляє POST для нового кліку'
+        text_en: '`switchMap`: cancels the first request and sends a POST for the new click'
+      - text: '`concatMap`: ставить кліки в чергу й відправляє POST для кожного по черзі'
+        text_en: '`concatMap`: queues the clicks and sends a POST for each one in turn'
+      - text: '`mergeMap`: відправляє POST для кожного кліку паралельно без обмежень'
+        text_en: '`mergeMap`: sends a POST for each click in parallel without limits'
+    explanation: >
+      `exhaustMap` ігнорує зовнішні значення, доки попередній внутрішній Observable не завершився. `switchMap` відмовився б від відповіді першого запиту, який сервер, імовірно, вже обробляє, а `concatMap` і `mergeMap` збережуть усі кліки і створять дублікати.
+    explanation_en: >
+      `exhaustMap` ignores outer values until the previous inner Observable completes. `switchMap` would discard the response of the first request, which the server is probably already processing, while `concatMap` and `mergeMap` would keep every click and create duplicates.
+    sources:
+      - https://rxjs.dev/api/operators/exhaustMap
+  - id: rxjs-010
+    level: senior
+    type: single
+    text: >
+      У typeahead написано `query$.pipe(switchMap(q => http.get(q)), catchError(() => of([])))`. Після першої HTTP-помилки пошук перестає реагувати на введення. Яка зміна це виправляє (RxJS 7.8)?
+    text_en: >
+      A typeahead is written as `query$.pipe(switchMap(q => http.get(q)), catchError(() => of([])))`. After the first HTTP error, search stops reacting to input. Which change fixes this (RxJS 7.8)?
+    options:
+      - text: Перенести `catchError` у внутрішній `pipe` запиту, всередину `switchMap`
+        text_en: Move `catchError` into the request's inner `pipe`, inside `switchMap`
+        correct: true
+      - text: Замінити `switchMap` на `mergeMap`, щоб помилка не доходила до `catchError`
+        text_en: Replace `switchMap` with `mergeMap` so the error does not reach `catchError`
+      - text: Додати після `catchError` оператор `share()`, щоб потік не закривався
+        text_en: Add `share()` after `catchError` so the stream is not closed
+      - text: Додати `finalize` перед `catchError`, щоб він знову підписувався на `query$`
+        text_en: Add `finalize` before `catchError` so it resubscribes to `query$`
+    explanation: >
+      Помилка внутрішнього запиту проходить у зовнішній потік, і `catchError` на зовнішньому рівні підміняє весь потік на `of([])`, який завершується, тому введення вже не обробляється. Якщо перехопити помилку всередині `switchMap`, зовнішній потік лишається живим, а кожен запит обробляється окремо.
+    explanation_en: >
+      An inner request error propagates into the outer stream, and an outer `catchError` replaces the whole stream with `of([])`, which completes, so input is no longer processed. If the error is caught inside `switchMap`, the outer stream stays alive and each request is handled separately.
+    sources:
+      - https://rxjs.dev/api/operators/catchError
+      - https://rxjs.dev/api/operators/switchMap
+  - id: rxjs-011
+    level: senior
+    type: multiple
+    text: >
+      Які твердження про `shareReplay` і `share` у RxJS 7.8 правильні для довгоживучого джерела (наприклад, таймера, який видає значення безкінечно)?
+    text_en: >
+      Which statements about `shareReplay` and `share` in RxJS 7.8 are true for a long-lived source (for example, a timer that emits forever)?
+    options:
+      - text: '`shareReplay(1)` без `refCount` лишає підписку на джерело після відписки всіх підписників'
+        text_en: '`shareReplay(1)` without `refCount` keeps the source subscription after all subscribers unsubscribe'
+        correct: true
+      - text: '`shareReplay({ bufferSize: 1, refCount: true })` відписується від джерела, коли підписників більше немає'
+        text_en: '`shareReplay({ bufferSize: 1, refCount: true })` unsubscribes from the source when no subscribers remain'
+        correct: true
+      - text: Якщо джерело завершилось, `shareReplay(1)` віддає пізнім підписникам збережене значення без повторної підписки
+        text_en: If the source has completed, `shareReplay(1)` gives late subscribers the stored value without resubscribing
+        correct: true
+      - text: '`shareReplay(1)` віддає пізньому підписникові всі значення від початку роботи джерела'
+        text_en: '`shareReplay(1)` gives a late subscriber every value since the source started'
+      - text: Після завершення джерела `share()` без аргументів віддає новим підписникам збережене останнє значення
+        text_en: After the source completes, `share()` with no arguments gives new subscribers the stored last value
+    explanation: >
+      Без `refCount` `shareReplay` тримає джерело живим, що для нескінченного джерела означає витік. Буфер зберігає лише `bufferSize` останніх значень, а `share()` після завершення джерела скидається, тож новий підписник знову запускає джерело, а не отримує старе значення.
+    explanation_en: >
+      Without `refCount`, `shareReplay` keeps the source alive, which for an infinite source means a leak. The buffer holds only the last `bufferSize` values, and `share()` resets after the source completes, so a new subscriber starts the source again instead of getting an old value.
+    sources:
+      - https://rxjs.dev/api/operators/shareReplay
+      - https://rxjs.dev/api/operators/share
+  - id: rxjs-012
+    level: senior
+    type: single
+    text: >
+      Потрібно завантажити 10 000 записів за id, причому на сервер не має одночасно надходити більше 5 запитів, а порядок результатів не важливий. Що вибрати (RxJS 7.8)?
+    text_en: >
+      You must fetch 10,000 records by id, with no more than 5 requests in flight at once, and the order of results does not matter. What should you choose (RxJS 7.8)?
+    options:
+      - text: '`mergeMap(id => http.get(id), 5)`: другий аргумент обмежує кількість активних внутрішніх Observable'
+        text_en: '`mergeMap(id => http.get(id), 5)`: the second argument caps the number of active inner Observables'
+        correct: true
+      - text: '`concatMap(id => http.get(id))`: він запускає по 5 запитів одночасно'
+        text_en: '`concatMap(id => http.get(id))`: it runs 5 requests at a time'
+      - text: '`exhaustMap(id => http.get(id))`: він ставить зайві id у чергу, поки зайняті п''ять слотів'
+        text_en: '`exhaustMap(id => http.get(id))`: it queues the extra ids while five slots are busy'
+      - text: '`mergeMap(id => http.get(id))` без другого аргументу: він сам обмежує паралельність п''ятьма'
+        text_en: '`mergeMap(id => http.get(id))` with no second argument: it limits concurrency to five on its own'
+    explanation: >
+      Другий аргумент `mergeMap` — це `concurrent`: понад ліміт значення чекають у буфері, поки звільниться слот. `concatMap` — це `mergeMap` з лімітом 1, `exhaustMap` відкидає зайве, а `mergeMap` без аргументу запустить усі 10 000 запитів одразу.
+    explanation_en: >
+      The second argument of `mergeMap` is `concurrent`: values over the limit wait in a buffer until a slot frees up. `concatMap` is `mergeMap` with a limit of 1, `exhaustMap` drops the extras, and `mergeMap` with no argument starts all 10,000 requests at once.
+    sources:
+      - https://rxjs.dev/api/operators/mergeMap
+      - https://rxjs.dev/api/operators/concatMap

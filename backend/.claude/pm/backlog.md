@@ -26,7 +26,7 @@
 
 - **Backend:** 42 теми, 504 питання, PASS, uk+en.
 - **Frontend опубліковано** (PASS, uk+en): `angular-components`, `react-core`, `react-hooks`, `vue-core`, `vue-composition-api`.
-- **Frontend відновлено 2026-11-27 (слово власника):** база лінту — знімок scratchpad `base-fe`. Коло 1: автори додають англійську в `angular-di`, `angular-change-detection`, `pinia` (+ фікс 003/006/012), далі фактчек трійки; потім `vue-router`, `react-state`, `nextjs`, `react-data-routing`, потім нові теми (спершу Angular: `rxjs`, `ngrx`, `angular-routing-forms`).
+- **Frontend відновлено 2026-11-27 (слово власника):** PASS uk+en і без `draft` (закомічено, **ще не в проді — потрібен прод-імпорт**): `angular-di`, `angular-change-detection`, `pinia`, `vue-router`, `react-state`, `nextjs`, `react-data-routing` (звіти `reports/fe-*`). Фактчек: `rxjs`, `ngrx`, `angular-routing-forms` (написані uk+en). Пишуться: `html-css`, `nuxt`. Не почато: `web-performance`, `frontend-testing`. Angular 22: OnPush типовий (бриф).
 - **Frontend — чернетки (`draft: true`), пауза з 2026-11-18** (`critical` у `pinia-003`, ліміт API):
   - написано, чекають фактчеку або правок: `angular-change-detection`, `angular-di`, `nextjs`, `pinia` (FAIL коло 1: 003 critical, 006, 012), `react-data-routing`, `react-state`, `vue-router` — по 12 питань, лише українською; при відновленні додати англійську (бриф контенту, «Дві мови»);
   - не почато: `angular-routing-forms`, `frontend-testing`, `html-css`, `ngrx`, `nuxt`, `rxjs`, `web-performance`.
