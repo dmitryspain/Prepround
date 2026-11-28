@@ -3,6 +3,7 @@ title: Стан у React
 title_en: State in React
 description: Context, Redux Toolkit, Zustand, підйом стану.
 description_en: Context, Redux Toolkit, Zustand, lifting state up.
+icon: redux
 questions:
   - id: react-state-001
     level: junior

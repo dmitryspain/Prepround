@@ -3,6 +3,7 @@ title: RxJS
 title_en: RxJS
 description: Observable, оператори, subjects, higher-order mapping, відписка.
 description_en: Observable, operators, subjects, higher-order mapping, unsubscribing.
+icon: reactivex
 questions:
   - id: rxjs-001
     level: junior

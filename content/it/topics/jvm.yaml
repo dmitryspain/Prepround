@@ -3,6 +3,7 @@ title: JVM, пам'ять і GC
 title_en: JVM, memory and GC
 description: heap/stack, class loading, збирачі сміття, JIT, тюнінг.
 description_en: Heap/stack, class loading, garbage collectors, JIT, tuning.
+icon: cpu
 questions:
   - id: jvm-001
     level: junior

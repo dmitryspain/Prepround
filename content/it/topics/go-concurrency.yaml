@@ -3,6 +3,7 @@ title: Горутини й канали
 title_en: Goroutines and channels
 description: Goroutines, channels, select, sync, context, data race.
 description_en: Goroutines, channels, select, sync, context, data race.
+icon: gitmerge
 questions:
   - id: go-concurrency-001
     level: junior

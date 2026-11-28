@@ -3,6 +3,7 @@ title: Azure
 title_en: Azure
 description: App Service, Functions, Azure SQL, Service Bus, Key Vault, Entra ID.
 description_en: App Service, Functions, Azure SQL, Service Bus, Key Vault, Entra ID.
+icon: cloud
 questions:
   - id: azure-001
     level: junior

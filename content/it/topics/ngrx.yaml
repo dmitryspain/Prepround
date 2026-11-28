@@ -3,6 +3,7 @@ title: NgRx
 title_en: NgRx
 description: Store, actions, reducers, effects, selectors, SignalStore.
 description_en: Store, actions, reducers, effects, selectors, SignalStore.
+icon: ngrx
 questions:
   - id: ngrx-001
     level: junior

@@ -3,6 +3,7 @@ title: Тестування в PHP
 title_en: Testing in PHP
 description: PHPUnit, моки, data providers.
 description_en: PHPUnit, mocks, data providers.
+icon: flaskconical
 questions:
   - id: phpunit-001
     level: junior
