@@ -361,3 +361,340 @@ questions:
       The pool first creates threads up to `corePoolSize`, then prefers queuing, and adds a thread beyond the core only when the queue cannot accept the task. An unbounded `LinkedBlockingQueue` never fills up, so the pool never goes beyond 2 threads. The run showed `threads=2`, and with `ArrayBlockingQueue(2)` it showed four threads and rejections after overflow.
     sources:
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ThreadPoolExecutor.html
+  - id: java-concurrency-013
+    level: junior
+    type: single
+    text: Що станеться під час виконання цього коду в `main` (Java 25)?
+    text_en: "What happens when this code runs in `main` (Java 25)?"
+    code:
+      lang: java
+      source: |
+        Object lock = new Object();
+        lock.wait();
+    options:
+      - text: "`IllegalMonitorStateException`, бо `wait()` викликано без володіння монітором `lock`"
+        text_en: "`IllegalMonitorStateException`, because `wait()` was called without owning the monitor of `lock`"
+        correct: true
+      - text: "Потік заблокується назавжди, бо ніхто не викличе `notify()` на цьому `lock`"
+        text_en: "The thread blocks forever, because nobody will call `notify()` on this `lock`"
+      - text: "`InterruptedException` одразу, бо потік `main` не має права чекати на об'єкті"
+        text_en: "`InterruptedException` right away, because the `main` thread is not allowed to wait on an object"
+      - text: "Помилка компіляції, бо `wait()` дозволено викликати лише всередині блоку `synchronized`"
+        text_en: "A compile error, because `wait()` may only be called inside a `synchronized` block"
+    explanation: >
+      `wait()`, `notify()` і `notifyAll()` потрібно викликати, тримаючи монітор цього самого об'єкта, інакше під час виконання кидається `IllegalMonitorStateException`. Компілятор такої вимоги не перевіряє, тому це помилка часу виконання, а не компіляції.
+    explanation_en: >
+      `wait()`, `notify()` and `notifyAll()` must be called while holding the monitor of that same object, otherwise `IllegalMonitorStateException` is thrown at run time. The compiler does not check this requirement, so it is a run-time error rather than a compile error.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#wait()
+  - id: java-concurrency-014
+    level: junior
+    type: multiple
+    text: Які твердження про завершення `ExecutorService` правильні (Java 25)?
+    text_en: "Which statements about shutting down an `ExecutorService` are true (Java 25)?"
+    options:
+      - text: "Після `shutdown()` нові завдання не приймаються, а вже подані (і ті, що в черзі) ще виконуються"
+        text_en: "After `shutdown()` new tasks are rejected, while already submitted ones (including queued ones) still run"
+        correct: true
+      - text: "`shutdownNow()` повертає список завдань, що чекали в черзі й так і не почали виконання"
+        text_en: "`shutdownNow()` returns the list of tasks that were waiting in the queue and never started"
+        correct: true
+      - text: "`shutdown()` блокує поточний потік, доки всі подані завдання не завершаться"
+        text_en: "`shutdown()` blocks the current thread until all submitted tasks have finished"
+      - text: "`shutdownNow()` гарантовано зупиняє завдання, що вже виконуються, навіть якщо вони ігнорують переривання"
+        text_en: "`shutdownNow()` is guaranteed to stop tasks that are already running, even if they ignore interruption"
+    explanation: >
+      `shutdown()` лише ініціює впорядковане закриття й не чекає: для очікування викликають `awaitTermination`. `shutdownNow()` лише намагається зупинити виконувані завдання (зазвичай через переривання), тому завдання, що ігнорує переривання, продовжить працювати.
+    explanation_en: >
+      `shutdown()` only initiates an orderly shutdown and does not wait; to wait you call `awaitTermination`. `shutdownNow()` merely attempts to stop running tasks (typically via interruption), so a task that ignores interruption keeps running.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ExecutorService.html#shutdown()
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ExecutorService.html#shutdownNow()
+  - id: java-concurrency-015
+    level: junior
+    type: single
+    text: Що поверне `await` у цьому коді і чому (Java 25)?
+    text_en: "What does `await` return in this code, and why (Java 25)?"
+    code:
+      lang: java
+      source: |
+        var latch = new CountDownLatch(2);
+        new Thread(latch::countDown).start();
+        boolean ok = latch.await(300, TimeUnit.MILLISECONDS);
+        System.out.println(ok);
+    options:
+      - text: "`false`: лічильник лишився на 1, тож за тайм-аут очікування не завершилось"
+        text_en: "`false`: the count stayed at 1, so the wait did not complete within the timeout"
+        correct: true
+      - text: "`true`: достатньо одного `countDown()`, щоб `await` відпустив потік"
+        text_en: "`true`: a single `countDown()` is enough for `await` to release the thread"
+      - text: "`true`: після тайм-ауту `CountDownLatch` сам скидає лічильник у нуль"
+        text_en: "`true`: after the timeout `CountDownLatch` resets the counter to zero by itself"
+      - text: "`InterruptedException`: `await` з тайм-аутом завжди завершується винятком"
+        text_en: "`InterruptedException`: `await` with a timeout always ends with an exception"
+    explanation: >
+      `await` відпускає потоки лише коли лічильник досягає нуля; якщо за відведений час цього не сталося, метод повертає `false`. Лічильник сам не змінюється від плину часу.
+    explanation_en: >
+      `await` releases threads only when the count reaches zero; if that does not happen within the allotted time, the method returns `false`. The count does not change by itself as time passes.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CountDownLatch.html#await(long,java.util.concurrent.TimeUnit)
+  - id: java-concurrency-016
+    level: junior
+    type: single
+    text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
+    code:
+      lang: java
+      source: |
+        Thread t = new Thread(() -> {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                System.out.println(Thread.currentThread().isInterrupted());
+            }
+        });
+        t.start();
+        t.interrupt();
+        t.join();
+    options:
+      - text: "`false`: прапорець переривання скидається, коли кидається `InterruptedException`"
+        text_en: "`false`: the interrupt flag is cleared when `InterruptedException` is thrown"
+        correct: true
+      - text: "`true`: прапорець лишається піднятим, доки його не скинуть вручну"
+        text_en: "`true`: the flag stays raised until it is cleared manually"
+      - text: "Нічого: `sleep` ігнорує переривання й спить усі 5 секунд"
+        text_en: "Nothing: `sleep` ignores interruption and sleeps the full 5 seconds"
+      - text: "`IllegalThreadStateException`: переривати можна лише потік, що вже заснув"
+        text_en: "`IllegalThreadStateException`: only a thread that is already asleep can be interrupted"
+    explanation: >
+      `sleep` реагує на переривання, кидаючи `InterruptedException`, і при цьому скидає статус переривання. Тому в `catch` `isInterrupted()` дає `false`, а щоб не втратити сигнал, потік має знову викликати `Thread.currentThread().interrupt()`.
+    explanation_en: >
+      `sleep` reacts to interruption by throwing `InterruptedException` and clears the interrupt status at the same time. So inside `catch` `isInterrupted()` is `false`, and to avoid losing the signal the code should call `Thread.currentThread().interrupt()` again.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Thread.html#interrupt()
+  - id: java-concurrency-017
+    level: middle
+    type: single
+    text: Що виведе останній рядок і чому (Java 25)?
+    text_en: "What does the last line print, and why (Java 25)?"
+    code:
+      lang: java
+      source: |
+        var lock = new ReentrantLock();
+        Thread t = new Thread(() -> {
+            lock.lock();
+            throw new RuntimeException("fail");
+        });
+        t.start();
+        t.join();
+        System.out.println(lock.tryLock());
+    options:
+      - text: "`false`: `ReentrantLock` не звільняється сам, тож його слід знімати в `finally`"
+        text_en: "`false`: a `ReentrantLock` is not released automatically, so it must be unlocked in `finally`"
+        correct: true
+      - text: "`true`: замок звільняється, коли потік-власник завершується, як і монітор у `synchronized`"
+        text_en: "`true`: the lock is released when the owning thread ends, just like a monitor in `synchronized`"
+      - text: "`true`: виняток у потоці автоматично викликає `unlock()` для всіх його замків"
+        text_en: "`true`: an exception in the thread automatically calls `unlock()` for all of its locks"
+      - text: "`IllegalMonitorStateException`: `tryLock()` не можна викликати з іншого потоку"
+        text_en: "`IllegalMonitorStateException`: `tryLock()` cannot be called from another thread"
+    explanation: >
+      Монітор `synchronized` знімається компілятором при будь-якому виході з блоку, а `ReentrantLock` треба знімати явно, зазвичай у `finally`. Тут `unlock()` не викликано, тож замок лишається за завершеним потоком і `tryLock()` у `main` повертає `false`.
+    explanation_en: >
+      A `synchronized` monitor is released on any exit from the block, while a `ReentrantLock` must be released explicitly, usually in `finally`. Here `unlock()` is never called, so the lock stays held by the finished thread and `tryLock()` in `main` returns `false`.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/locks/ReentrantLock.html
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/locks/Lock.html
+  - id: java-concurrency-018
+    level: middle
+    type: multiple
+    text: Які твердження про `ThreadLocal` у потоках пулу правильні (Java 25)?
+    text_en: "Which statements about `ThreadLocal` in pool threads are true (Java 25)?"
+    options:
+      - text: "Значення одного завдання може побачити наступне на тому самому потоці пулу без `remove()`"
+        text_en: "One task's value can be seen by the next task on the same pool thread without `remove()`"
+        correct: true
+      - text: "Кожен потік має власну копію, тож `set` в одному не змінює значення в інших"
+        text_en: "Each thread has its own copy, so `set` in one does not change the value in others"
+        correct: true
+      - text: "Значення очищується автоматично щойно завдання, що його встановило, завершується"
+        text_en: "The value is cleared automatically when the task that set it finishes"
+      - text: "Потік пулу бачить значення, яке встановив потік, що подав завдання через `submit`"
+        text_en: "A pool thread sees the value that the submitting thread set before calling `submit`"
+    explanation: >
+      `ThreadLocal` прив'язаний до потоку, а не до завдання, а потоки пулу живуть довго й виконують багато завдань. Тому «залишки» попереднього завдання витікають у наступне, і значення треба знімати в `finally` через `remove()`.
+    explanation_en: >
+      A `ThreadLocal` is bound to the thread, not to the task, and pool threads live long and run many tasks. So leftovers of a previous task leak into the next one, and the value should be removed in `finally` with `remove()`.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/ThreadLocal.html
+  - id: java-concurrency-019
+    level: middle
+    type: single
+    text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
+    code:
+      lang: java
+      source: |
+        public static void main(String[] args) {
+            CompletableFuture.supplyAsync(() -> {
+                try { Thread.sleep(500); } catch (InterruptedException e) { }
+                System.out.println("done");
+                return 1;
+            });
+            System.out.println("main end");
+        }
+    options:
+      - text: "Лише `main end`: потоки спільного пулу — демони, тож JVM завершується до `done`"
+        text_en: "Only `main end`: threads of the common pool are daemons, so the JVM exits before `done`"
+        correct: true
+      - text: "`main end`, потім `done`: JVM чекає на всі запущені `CompletableFuture`"
+        text_en: "`main end`, then `done`: the JVM waits for all running `CompletableFuture`s"
+      - text: "`main end`, потім `done`, а JVM не завершується, бо пул не закрито"
+        text_en: "`main end`, then `done`, and the JVM does not exit, because the pool is not closed"
+      - text: "Лише `done`: `main` завершується лише після виконання асинхронного завдання"
+        text_en: "Only `done`: `main` ends only after the asynchronous task has run"
+    explanation: >
+      Без явного `Executor` асинхронні методи `CompletableFuture` працюють у `ForkJoinPool.commonPool()`, чиї потоки є демонами. Коли завершується останній недемонічний потік (`main`), JVM виходить, не чекаючи; тож результат треба дочекатися через `join()` чи `get()`.
+    explanation_en: >
+      Without an explicit `Executor`, the asynchronous methods of `CompletableFuture` run in `ForkJoinPool.commonPool()`, whose threads are daemons. When the last non-daemon thread (`main`) ends, the JVM exits without waiting, so the result must be awaited with `join()` or `get()`.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html#supplyAsync(java.util.function.Supplier)
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ForkJoinPool.html#commonPool()
+  - id: java-concurrency-020
+    level: middle
+    type: single
+    text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
+    code:
+      lang: java
+      source: |
+        try (var ex = Executors.newFixedThreadPool(2)) {
+            ex.submit(() -> {
+                try { Thread.sleep(300); } catch (InterruptedException e) { }
+                System.out.println("task");
+            });
+        }
+        System.out.println("after");
+    options:
+      - text: "`task`, потім `after`: `close()` чекає завершення поданих завдань"
+        text_en: "`task`, then `after`: `close()` waits for the submitted tasks to finish"
+        correct: true
+      - text: "`after`, потім `task`: `close()` лише забороняє нові завдання й одразу повертається"
+        text_en: "`after`, then `task`: `close()` only forbids new tasks and returns immediately"
+      - text: "Лише `after`: `close()` перериває завдання, що виконуються"
+        text_en: "Only `after`: `close()` interrupts the tasks that are running"
+      - text: "Код не скомпілюється: `ExecutorService` не можна оголошувати в `try`-with-resources"
+        text_en: "The code does not compile: an `ExecutorService` cannot be declared in `try`-with-resources"
+    explanation: >
+      `ExecutorService` реалізує `AutoCloseable`; типова реалізація `close()` викликає `shutdown()` і чекає завершення завдань через `awaitTermination`. Тому `after` друкується лише після `task`, а явний `shutdown()` без очікування такої гарантії не дає.
+    explanation_en: >
+      `ExecutorService` implements `AutoCloseable`; the default `close()` calls `shutdown()` and waits for the tasks with `awaitTermination`. So `after` is printed only once `task` has finished, which a bare `shutdown()` without waiting does not guarantee.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ExecutorService.html#close()
+  - id: java-concurrency-021
+    level: senior
+    type: multiple
+    text: >-
+      У сервісі (Java 25) паралельні стріми й `CompletableFuture.supplyAsync(...)` без `executor` блокують потік на HTTP-викликах, і весь сервіс повільнішає. Які твердження правильні?
+    text_en: "In a service (Java 25), parallel streams and `CompletableFuture.supplyAsync(...)` without an `executor` block the thread on HTTP calls, and the whole service slows down. Which statements are true?"
+    options:
+      - text: "Вони ділять один `ForkJoinPool.commonPool()`, тож блокування в одному місці забирає потоки в інших"
+        text_en: "They share one `ForkJoinPool.commonPool()`, so blocking in one place takes threads away from the others"
+        correct: true
+      - text: "Пул не компенсує блокуючий ввід-вивід, тому завдання можуть голодувати в черзі"
+        text_en: "The pool does not compensate for blocking I/O, so tasks may starve in the queue"
+        correct: true
+      - text: "Пул сам додає потік на кожен блокуючий виклик HTTP, тож голодування бути не може"
+        text_en: "The pool adds a thread for every blocking HTTP call by itself, so starvation cannot occur"
+      - text: "Кожен `parallel()` стрім створює власний пул потоків, тож блокування одного не впливає на інші"
+        text_en: "Each `parallel()` stream creates its own thread pool, so blocking in one does not affect the others"
+    explanation: >
+      Спільний пул має малу кількість потоків, розраховану на CPU-завдання, а виклики, що блокуються на вводі-виводі, не компенсуються автоматично (це вміє лише `ManagedBlocker`). Виправлення — власний `Executor` для блокуючих завдань або віртуальні потоки.
+    explanation_en: >
+      The common pool has a small number of threads sized for CPU-bound work, and calls that block on I/O are not compensated automatically (only `ManagedBlocker` supports that). The fix is a dedicated `Executor` for blocking tasks or virtual threads.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ForkJoinPool.html
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/CompletableFuture.html
+  - id: java-concurrency-022
+    level: senior
+    type: single
+    text: >-
+      Продюсер швидко подає завдання в цей пул (Java 25). Що відбудеться із завданнями, коли потік пулу й черга зайняті, і який це дає ефект?
+    text_en: "A producer quickly submits tasks to this pool (Java 25). What happens to tasks when the pool thread and the queue are both busy, and what is the effect?"
+    code:
+      lang: java
+      source: |
+        var pool = new ThreadPoolExecutor(
+            1, 1, 0, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(1),
+            new ThreadPoolExecutor.CallerRunsPolicy());
+    options:
+      - text: "Їх виконує сам потік, що викликав `execute`, і це гальмує продюсера без втрати завдань"
+        text_en: "The thread that called `execute` runs them itself, which slows the producer down without losing tasks"
+        correct: true
+      - text: "Кидається `RejectedExecutionException`, і продюсер має сам повторити подання завдання"
+        text_en: "`RejectedExecutionException` is thrown, and the producer has to resubmit the task itself"
+      - text: "Завдання тихо відкидаються, а продюсер продовжує працювати зі своєю швидкістю"
+        text_en: "The tasks are silently discarded, and the producer keeps working at its own pace"
+      - text: "Пул створює додатковий потік понад `maximumPoolSize`, доки черга не звільниться"
+        text_en: "The pool creates an extra thread beyond `maximumPoolSize` until the queue frees up"
+    explanation: >
+      `CallerRunsPolicy` виконує відхилене завдання в потоці, що викликав `execute`, тому продюсер сам зайнятий і подає нові завдання повільніше, — це проста зворотна реакція (backpressure). `RejectedExecutionException` кидає типова `AbortPolicy`, а понад `maximumPoolSize` пул не росте.
+    explanation_en: >
+      `CallerRunsPolicy` runs the rejected task in the thread that called `execute`, so the producer is busy itself and submits new tasks more slowly, which is simple feedback control (backpressure). `RejectedExecutionException` comes from the default `AbortPolicy`, and the pool never grows beyond `maximumPoolSize`.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ThreadPoolExecutor.CallerRunsPolicy.html
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/ThreadPoolExecutor.html
+  - id: java-concurrency-023
+    level: senior
+    type: single
+    text: >-
+      Лічильник метрик оновлюють десятки потоків у гарячому шляху, а читають рідко (Java 25). `AtomicLong` показує високу конкуренцію на одній комірці. Що обрати і яка ціна?
+    text_en: "A metrics counter is updated by dozens of threads on a hot path and read rarely (Java 25). `AtomicLong` shows high contention on a single cell. What should be chosen, and what is the cost?"
+    options:
+      - text: "`LongAdder`: оновлення йдуть у кілька комірок, але `sum()` не атомарний знімок, а пам'яті більше"
+        text_en: "`LongAdder`: updates go to several cells, but `sum()` is no atomic snapshot and memory use is higher"
+        correct: true
+      - text: "`volatile long` із `c++`: `volatile` робить інкремент атомарним, а комірок немає зовсім"
+        text_en: "`volatile long` with `c++`: `volatile` makes the increment atomic, and there are no cells at all"
+      - text: "`synchronized` на лічильнику: монітор у JVM завжди швидший за CAS під високою конкуренцією за всіх потоків"
+        text_en: "`synchronized` on the counter: a monitor in the JVM is always faster than CAS under high contention with all threads"
+      - text: "`LongAdder`: він дає точне значення в кожну мить читання, а різниця лише в API"
+        text_en: "`LongAdder`: it gives the exact value at every instant of reading, and the difference is only in the API"
+    explanation: >
+      За високої конкуренції `LongAdder` має суттєво вищу пропускну здатність, бо розносить оновлення по кількох комірках, але витрачає більше пам'яті, а `sum()` під час паралельних оновлень не є атомарним знімком. `volatile` не робить `c++` атомарним, а монітор під конкуренцією не швидший.
+    explanation_en: >
+      Under high contention `LongAdder` has significantly higher throughput because it spreads updates over several cells, but it uses more memory, and `sum()` during concurrent updates is not an atomic snapshot. `volatile` does not make `c++` atomic, and a monitor under contention is not faster.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/concurrent/atomic/LongAdder.html
+  - id: java-concurrency-024
+    level: senior
+    type: single
+    text: >-
+      Команда замінює `ThreadLocal` із контекстом запиту на `ScopedValue` у сервісі на віртуальних потоках (Java 25). Що правильно про цей код?
+    text_en: "A team replaces a request-context `ThreadLocal` with `ScopedValue` in a service on virtual threads (Java 25). What is true about this code?"
+    code:
+      lang: java
+      source: |
+        static final ScopedValue<String> USER = ScopedValue.newInstance();
+
+        ScopedValue.where(USER, "alice").run(() ->
+            System.out.println(USER.get()));
+        System.out.println(USER.isBound());
+    options:
+      - text: "Друкує `alice`, потім `false`: значення діє лише під час `run`, і воно незмінне в цій прив'язці"
+        text_en: "Prints `alice`, then `false`: the value exists only during `run`, and it is immutable within this binding"
+        correct: true
+      - text: "Друкує `alice`, потім `true`: прив'язка живе до кінця потоку, як у `ThreadLocal`"
+        text_en: "Prints `alice`, then `true`: the binding lives until the end of the thread, as with `ThreadLocal`"
+      - text: "Не запуститься без `--enable-preview`, бо `ScopedValue` у Java 25 ще preview-API"
+        text_en: "Will not run without `--enable-preview`, because `ScopedValue` is still a preview API in Java 25"
+      - text: "Друкує `alice`, а далі в тому самому потоці можна викликати `USER.set(...)` для зміни значення"
+        text_en: "Prints `alice`, and later in the same thread `USER.set(...)` can be called to change the value"
+    explanation: >
+      `ScopedValue` прив'язують лише на час виконання `run`/`call`, а метода `set` у нього немає: нове значення задають вкладеною прив'язкою. Після виходу `isBound()` повертає `false`, а `get()` кидає `NoSuchElementException`. Scoped Values стали остаточним API в Java 25 (JEP 506).
+    explanation_en: >
+      A `ScopedValue` is bound only for the duration of `run`/`call` and has no `set` method: a new value is given by a nested binding. After leaving, `isBound()` returns `false` and `get()` throws `NoSuchElementException`. Scoped Values became a final API in Java 25 (JEP 506).
+    sources:
+      - https://openjdk.org/jeps/506
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/ScopedValue.html

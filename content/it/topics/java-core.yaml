@@ -375,3 +375,397 @@ questions:
     sources:
       - https://openjdk.org/jeps/395
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html#copyOf(java.util.Collection)
+  - id: java-core-013
+    level: junior
+    type: single
+    text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
+    code:
+      lang: java
+      source: |
+        Integer a = 127, b = 127;
+        Integer c = 128, d = 128;
+        System.out.println(a == b);
+        System.out.println(c == d);
+        System.out.println(c.equals(d));
+    options:
+      - text: "`true`, `false`, `true`"
+        text_en: "`true`, `false`, `true`"
+        correct: true
+      - text: "`true`, `true`, `true`"
+        text_en: "`true`, `true`, `true`"
+      - text: "`false`, `false`, `true`"
+        text_en: "`false`, `false`, `true`"
+      - text: "`true`, `false`, `false`"
+        text_en: "`true`, `false`, `false`"
+    explanation: >
+      Автопакування викликає `Integer.valueOf`, який повторно використовує закешовані об'єкти для значень від -128 до 127, тож `a == b` порівнює одне й те саме посилання.
+      Для 128 створюються два різні об'єкти, і `==` дає `false`, а `equals` порівнює значення, тому повертає `true`. Обгортки порівнюють через `equals`.
+    explanation_en: >
+      Autoboxing calls `Integer.valueOf`, which reuses cached objects for values from -128 to 127, so `a == b` compares the same reference.
+      For 128 two different objects are created and `==` gives `false`, while `equals` compares values and returns `true`. Wrapper objects should be compared with `equals`.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Integer.html#valueOf(int)
+  - id: java-core-014
+    level: junior
+    type: single
+    text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
+    code:
+      lang: java
+      source: |
+        Stream.of(1, 2, 3)
+              .peek(x -> System.out.println("peek " + x))
+              .map(x -> x * 2);
+        System.out.println("after");
+    options:
+      - text: "Лише `after`: без термінальної операції конвеєр не виконується"
+        text_en: "Only `after`: no terminal operation, so the pipeline never runs"
+        correct: true
+      - text: "`peek 1`, `peek 2`, `peek 3`, потім `after`"
+        text_en: "`peek 1`, `peek 2`, `peek 3`, then `after`"
+      - text: "Спершу `after`, потім `peek 1`, `peek 2`, `peek 3`"
+        text_en: "First `after`, then `peek 1`, `peek 2`, `peek 3`"
+      - text: "Помилка компіляції, бо результат `map` не використано"
+        text_en: "A compile error, because the result of `map` is not used"
+    explanation: >
+      Проміжні операції `Stream` ліниві: вони лише описують конвеєр, а обробка елементів починається, коли викликано термінальну операцію (`collect`, `forEach`, `count` тощо).
+      Тут її немає, тож `peek` не спрацьовує жодного разу; компілятор не вимагає використовувати результат.
+    explanation_en: >
+      Intermediate `Stream` operations are lazy: they only describe the pipeline, and elements start being processed when a terminal operation (`collect`, `forEach`, `count`, and so on) is invoked.
+      There is none here, so `peek` never runs; the compiler does not require the result to be used.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/stream/package-summary.html#StreamOps
+  - id: java-core-015
+    level: junior
+    type: multiple
+    text: Що може містити оголошення інтерфейсу в Java 25?
+    text_en: "What can an interface declaration contain in Java 25?"
+    options:
+      - text: "Метод `default` із тілом"
+        text_en: "A `default` method with a body"
+        correct: true
+      - text: "Приватний метод із тілом для спільної логіки `default`-методів"
+        text_en: "A private method with a body for logic shared by `default` methods"
+        correct: true
+      - text: "Нестатичне поле, яке кожна реалізація зберігає окремо"
+        text_en: "A non-static field stored separately per implementation"
+      - text: "Конструктор для ініціалізації стану реалізацій"
+        text_en: "A constructor initializing implementation state"
+    explanation: >
+      Із Java 8 інтерфейс може мати `default`- і `static`-методи, а з Java 9 — приватні методи, які виносять спільний код.
+      Поля інтерфейсу завжди неявно `public static final` (константи), а конструкторів в інтерфейсах немає, бо вони не мають власного стану екземпляра.
+    explanation_en: >
+      Since Java 8 an interface can have `default` and `static` methods, and since Java 9 private methods that extract shared code.
+      Interface fields are always implicitly `public static final` (constants), and interfaces have no constructors because they have no instance state of their own.
+    sources:
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-9.html#jls-9.4
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-9.html#jls-9.3
+  - id: java-core-016
+    level: junior
+    type: single
+    text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
+    code:
+      lang: java
+      source: |
+        System.out.println(1 + 2 + "a" + 1 + 2);
+    options:
+      - text: "`3a12`"
+        text_en: "`3a12`"
+        correct: true
+      - text: "`12a12`"
+        text_en: "`12a12`"
+      - text: "`3a3`"
+        text_en: "`3a3`"
+      - text: "`1+2a1+2`"
+        text_en: "`1+2a1+2`"
+    explanation: >
+      Оператор `+` виконується зліва направо: `1 + 2` — ще додавання чисел і дає `3`, а після цього з рядком `"a"` усе далі є конкатенацією, тож `1` і `2` дописуються як цифри.
+      Варіант `3a3` помилково припускає, що числа після рядка знову додаються.
+    explanation_en: >
+      The `+` operator is evaluated left to right: `1 + 2` is still numeric addition and gives `3`, and after meeting the string `"a"` everything further is concatenation, so `1` and `2` are appended as digits.
+      The `3a3` option wrongly assumes that numbers after the string are added together again.
+    sources:
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.18.1
+  - id: java-core-017
+    level: middle
+    type: single
+    text: Що станеться під час виконання цього коду (Java 25)?
+    text_en: "What happens when this code runs (Java 25)?"
+    code:
+      lang: java
+      source: |
+        Map<String, Integer> m = Stream.of("a", "b", "a")
+            .collect(Collectors.toMap(s -> s, s -> 1));
+    options:
+      - text: "Буде викинуто `IllegalStateException` через дублікат ключа `a`"
+        text_en: "`IllegalStateException` is thrown because of the duplicate key `a`"
+        correct: true
+      - text: "Мапа міститиме `a=1` і `b=1`, бо пізніше значення замінює раніше"
+        text_en: "The map will contain `a=1` and `b=1`, because the later value replaces the earlier one"
+      - text: "Мапа міститиме `a=2` і `b=1`, бо однакові ключі підсумовуються"
+        text_en: "The map will contain `a=2` and `b=1`, because equal keys are summed"
+      - text: "Буде викинуто `NullPointerException`, бо мапа ще не створена"
+        text_en: "`NullPointerException` is thrown because the map has not been created yet"
+    explanation: >
+      `toMap` із двома аргументами не вміє об'єднувати значення однакових ключів і кидає `IllegalStateException` з повідомленням про дублікат.
+      Щоб злити значення, передають третій аргумент, функцію злиття, наприклад `Integer::sum`; для групування за ключем використовують `groupingBy`.
+    explanation_en: >
+      `toMap` with two arguments cannot merge values of equal keys and throws `IllegalStateException` with a duplicate-key message.
+      To merge values you pass a third argument, a merge function such as `Integer::sum`; for grouping by key you use `groupingBy`.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/stream/Collectors.html#toMap(java.util.function.Function,java.util.function.Function)
+  - id: java-core-018
+    level: middle
+    type: single
+    text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
+    code:
+      lang: java
+      source: |
+        class Base {
+            Base() { init(); }
+            void init() { System.out.println("Base"); }
+        }
+        class Der extends Base {
+            String s = "x";
+            Der() { super(); System.out.println("Der " + s); }
+            @Override void init() { System.out.println("init " + s); }
+        }
+        new Der();
+    options:
+      - text: "`init null`, потім `Der x`"
+        text_en: "`init null`, then `Der x`"
+        correct: true
+      - text: "`init x`, потім `Der x`"
+        text_en: "`init x`, then `Der x`"
+      - text: "`Base`, потім `Der x`"
+        text_en: "`Base`, then `Der x`"
+      - text: "`NullPointerException` у конструкторі `Base`"
+        text_en: "`NullPointerException` in the `Base` constructor"
+    explanation: >
+      Конструктор `Base` виконується до ініціалізаторів полів `Der`, але виклик `init()` є віртуальним і потрапляє в перевизначений метод підкласу.
+      Поле `s` ще має значення за замовчуванням `null`, а конкатенація `null` з рядком виняток не кидає. Через цю пастку з конструктора не викликають перевизначувані методи.
+    explanation_en: >
+      The `Base` constructor runs before the `Der` field initializers, but the `init()` call is virtual and lands in the subclass override.
+      The field `s` still has its default value `null`, and concatenating `null` with a string does not throw. This trap is why overridable methods are not called from constructors.
+    sources:
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-12.html#jls-12.5
+  - id: java-core-019
+    level: middle
+    type: multiple
+    text: >-
+      Які твердження про `Arrays.asList(array)` і `List.of(...)` правильні (Java 25)?
+    text_en: "Which statements about `Arrays.asList(array)` and `List.of(...)` are true (Java 25)?"
+    code:
+      lang: java
+      source: |
+        String[] arr = {"a", "b"};
+        List<String> l = Arrays.asList(arr);
+        l.set(0, "z");
+    options:
+      - text: "Після `l.set(0, \"z\")` перший елемент масиву `arr` теж стає `\"z\"`"
+        text_en: "After `l.set(0, \"z\")` the first element of the array `arr` also becomes `\"z\"`"
+        correct: true
+      - text: "`List.of(\"a\", null)` кидає `NullPointerException`"
+        text_en: "`List.of(\"a\", null)` throws `NullPointerException`"
+        correct: true
+      - text: "`l.add(\"c\")` розширює список і заодно масив `arr` до трьох елементів"
+        text_en: "`l.add(\"c\")` grows the list and the array `arr` to three elements"
+      - text: "`List.of(\"a\", \"b\").set(0, \"z\")` змінює елемент без винятку"
+        text_en: "`List.of(\"a\", \"b\").set(0, \"z\")` changes the element without an exception"
+    explanation: >
+      `Arrays.asList` повертає список фіксованого розміру, що є «вікном» над масивом: `set` пише в масив, а `add` і `remove` кидають `UnsupportedOperationException`.
+      `List.of` повністю незмінний, тому `set` теж кидає виняток, і він не приймає `null`.
+    explanation_en: >
+      `Arrays.asList` returns a fixed-size list that is a "window" over the array: `set` writes through to the array, while `add` and `remove` throw `UnsupportedOperationException`.
+      `List.of` is fully unmodifiable, so `set` throws as well, and it rejects `null`.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Arrays.html#asList(T...)
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html#unmodifiable
+  - id: java-core-020
+    level: middle
+    type: single
+    text: Що виведе програма (Java 25)?
+    text_en: "What does the program print (Java 25)?"
+    code:
+      lang: java
+      source: |
+        static String compute() {
+            System.out.println("computed");
+            return "d";
+        }
+        String r = Optional.of("v").orElse(compute());
+        System.out.println(r);
+    options:
+      - text: "`computed`, потім `v`"
+        text_en: "`computed`, then `v`"
+        correct: true
+      - text: "Лише `v`, бо значення в `Optional` є"
+        text_en: "Only `v`, because the `Optional` has a value"
+      - text: "`v`, потім `computed`"
+        text_en: "`v`, then `computed`"
+      - text: "Лише `computed`, бо `orElse` завжди повертає свій аргумент"
+        text_en: "Only `computed`, because `orElse` always returns its argument"
+    explanation: >
+      Аргумент `orElse` обчислюється ще до виклику методу, незалежно від того, чи є значення в `Optional`, тому `compute()` виконується завжди.
+      Для дорогого або побічного значення за замовчуванням використовують `orElseGet(() -> compute())`, який викликає постачальник лише для порожнього `Optional`.
+    explanation_en: >
+      The argument of `orElse` is evaluated before the method is called, regardless of whether the `Optional` has a value, so `compute()` always runs.
+      For an expensive or side-effecting default you use `orElseGet(() -> compute())`, which invokes the supplier only for an empty `Optional`.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Optional.html#orElseGet(java.util.function.Supplier)
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.12.4.2
+  - id: java-core-021
+    level: senior
+    type: single
+    text: >-
+      До `sealed`-інтерфейсу додали третій дозволений підтип `Tri`. Що станеться з цим `switch` у Java 25?
+    text_en: "A third permitted subtype `Tri` was added to a `sealed` interface. What happens to this `switch` in Java 25?"
+    code:
+      lang: java
+      source: |
+        sealed interface Shape permits Circle, Square, Tri {}
+        record Circle(double r) implements Shape {}
+        record Square(double s) implements Shape {}
+        record Tri(double s) implements Shape {}
+
+        static double area(Shape s) {
+            return switch (s) {
+                case Circle c -> Math.PI * c.r() * c.r();
+                case Square q -> q.s() * q.s();
+            };
+        }
+    options:
+      - text: "Помилка компіляції: `switch` не покриває всі можливі значення"
+        text_en: "A compile error: the `switch` does not cover all possible values"
+        correct: true
+      - text: "Код скомпілюється, а для `Tri` під час виконання повернеться `0.0`"
+        text_en: "The code compiles, and for `Tri` it returns `0.0` at run time"
+      - text: "Код скомпілюється з попередженням, а для `Tri` виникне `MatchException`"
+        text_en: "The code compiles with a warning, and `Tri` causes a `MatchException`"
+      - text: "Код скомпілюється, бо `Tri` потрапляє в гілку найближчого підтипу"
+        text_en: "The code compiles, because `Tri` falls into the branch of the nearest subtype"
+    explanation: >
+      Вираз `switch` має бути вичерпним, а для запечатаної ієрархії компілятор знає повний перелік підтипів і відхиляє `switch` без гілки для `Tri` та без `default`.
+      Тому для таких ієрархій `default` не пишуть: без нього додавання підтипу одразу підсвічує всі місця, які треба оновити.
+    explanation_en: >
+      A `switch` expression must be exhaustive, and for a sealed hierarchy the compiler knows the full list of subtypes and rejects a `switch` with no branch for `Tri` and no `default`.
+      That is why `default` is not written for such hierarchies: without it, adding a subtype immediately points to every place that needs updating.
+    sources:
+      - https://openjdk.org/jeps/409
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.28.1
+  - id: java-core-022
+    level: senior
+    type: single
+    text: >-
+      Список цілих відсортовано компаратором-різницею, але порядок хибний: `Integer.MIN_VALUE` опинився в кінці, а не на початку. Чому (Java 25)?
+    text_en: "A list of integers was sorted with a subtraction comparator, but the order is wrong: `Integer.MIN_VALUE` ended up at the end instead of the start. Why (Java 25)?"
+    code:
+      lang: java
+      source: |
+        List<Integer> li = new ArrayList<>(
+            List.of(Integer.MAX_VALUE, -2, 5, Integer.MIN_VALUE, 1));
+        li.sort((x, y) -> x - y);
+        // [2147483647, -2, 1, 5, -2147483648]
+    options:
+      - text: "Різниця переповнює `int`, знак результату хибний; потрібен `Integer.compare`"
+        text_en: "The difference overflows `int`, so the sign is wrong; `Integer.compare` is needed"
+        correct: true
+      - text: "`List.sort` нестабільний, тому порядок рівних елементів довільний"
+        text_en: "`List.sort` is unstable, so the order of equal elements is arbitrary"
+      - text: "Лямбда порівнює об'єкти `Integer` за посиланням, а не за значенням"
+        text_en: "The lambda compares `Integer` objects by reference, not by value"
+      - text: "Компаратор має повертати лише `-1`, `0` або `1`, а різниця повертає інші числа"
+        text_en: "A comparator must return only `-1`, `0` or `1`, and the difference returns other numbers"
+    explanation: >
+      Для `MAX_VALUE - (-2)` і подібних пар різниця виходить за межі `int` і змінює знак, тож компаратор порушує транзитивність, а результат сортування стає непередбачуваним.
+      Правильно писати `Integer.compare(x, y)` або `Comparator.naturalOrder()`. Сортування стабільне, а в лямбді `-` розпаковує значення, а не порівнює посилання. Важливий лише знак результату компаратора, а не його величина.
+    explanation_en: >
+      For pairs like `MAX_VALUE - (-2)` the difference goes beyond the `int` range and flips sign, so the comparator violates transitivity and the sort result becomes unpredictable.
+      The correct form is `Integer.compare(x, y)` or `Comparator.naturalOrder()`. The sort is stable, and in the lambda `-` unboxes values rather than comparing references. Only the sign of the comparator result matters, not its magnitude.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Comparator.html
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Integer.html#compare(int,int)
+  - id: java-core-023
+    level: senior
+    type: multiple
+    text: >-
+      Ресурс у `try-with-resources` кидає виняток із `close()`. Які твердження правильні (Java 25)?
+    text_en: "A resource in `try-with-resources` throws an exception from `close()`. Which statements are true (Java 25)?"
+    code:
+      lang: java
+      source: |
+        class R implements AutoCloseable {
+            public void close() { throw new IllegalStateException("close"); }
+        }
+        try (R r = new R()) {
+            throw new RuntimeException("body");
+        } catch (Exception e) {
+            // e.getMessage(), e.getSuppressed()
+        }
+    options:
+      - text: "У `catch` потрапляє виняток `body`, а виняток `close` лежить у `getSuppressed()`"
+        text_en: "`catch` receives the `body` exception, and the `close` exception is in `getSuppressed()`"
+        correct: true
+      - text: "Якщо тіло `try` завершилось нормально, виняток із `close()` викидається як основний"
+        text_en: "If the `try` body completes normally, the exception from `close()` is thrown as the primary one"
+        correct: true
+      - text: "Виняток із `close()` замінює виняток тіла, тож `body` безповоротно втрачається"
+        text_en: "The exception from `close()` replaces the body exception, so `body` is lost for good"
+      - text: "`getSuppressed()` порожній, бо `close()` виконується вже після завершення `catch`"
+        text_en: "`getSuppressed()` is empty, because `close()` runs only after `catch` has finished"
+    explanation: >
+      Якщо основний виняток уже є, `try-with-resources` додає винятки закриття через `addSuppressed`, тож першопричина не губиться; у `try-finally` ручний `close()` у `finally` міг би її затерти.
+      Без основного винятку помилка `close()` стає основною. Закриття відбувається до виконання `catch`.
+    explanation_en: >
+      If a primary exception already exists, `try-with-resources` attaches close exceptions via `addSuppressed`, so the root cause is not lost; in `try-finally` a manual `close()` in `finally` could overwrite it.
+      Without a primary exception, the `close()` error becomes the primary one. Closing happens before `catch` runs.
+    sources:
+      - https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.20.3.1
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Throwable.html#addSuppressed(java.lang.Throwable)
+  - id: java-core-024
+    level: senior
+    type: single
+    text: >-
+      Підклас додає поле й розширює `equals`. Що поверне цей код і що це означає для контракту `equals` (Java 25)?
+    text_en: "A subclass adds a field and extends `equals`. What does this code return and what does it mean for the `equals` contract (Java 25)?"
+    code:
+      lang: java
+      source: |
+        class P {
+            int x;
+            P(int x) { this.x = x; }
+            @Override public boolean equals(Object o) { return o instanceof P p && p.x == x; }
+            @Override public int hashCode() { return x; }
+        }
+        class CP extends P {
+            String c;
+            CP(int x, String c) { super(x); this.c = c; }
+            @Override public boolean equals(Object o) {
+                return o instanceof CP p && p.x == x && p.c.equals(c);
+            }
+            @Override public int hashCode() { return x; }
+        }
+        P p = new P(1);
+        CP cp = new CP(1, "red");
+        // p.equals(cp) ?   cp.equals(p) ?
+    options:
+      - text: "`true` і `false`: порушено симетричність, тож `equals` непридатний"
+        text_en: "`true` and `false`: symmetry is violated, so `equals` is broken"
+        correct: true
+      - text: "`true` і `true`: `CP` успадковує `P`, тому порівняння завжди рівне"
+        text_en: "`true` and `true`: `CP` inherits from `P`, so the comparison is always equal"
+      - text: "`false` і `false`: різні класи ніколи не бувають рівними"
+        text_en: "`false` and `false`: objects of different classes are never equal"
+      - text: "`false` і `true`: `equals` викликається в іншому порядку аргументів"
+        text_en: "`false` and `true`: `equals` is called with the arguments in the other order"
+    explanation: >
+      `p.equals(cp)` перевіряє лише `x`, тож `true`, а `cp.equals(p)` вимагає, щоб аргумент був `CP`, тож `false`. Контракт `equals` вимагає симетричності: `a.equals(b)` тоді й лише тоді, коли `b.equals(a)`.
+      Якщо підклас додає значущі поля, симетрію зберігають через `getClass()`, композицію замість успадкування або `record`.
+    explanation_en: >
+      `p.equals(cp)` checks only `x`, so it is `true`, while `cp.equals(p)` requires the argument to be a `CP`, so it is `false`. The `equals` contract requires symmetry: `a.equals(b)` if and only if `b.equals(a)`.
+      When a subclass adds significant fields, symmetry is preserved through `getClass()`, composition instead of inheritance, or a `record`.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)

@@ -334,3 +334,365 @@ questions:
       Boot orders sources by precedence: configuration files (first from the jar, then external ones) are overridden by environment variables, and those by command-line arguments. So `APP_MODE` overrides both files. There is no value conflict: the source with higher precedence wins.
     sources:
       - https://docs.spring.io/spring-boot/reference/features/external-config.html
+  - id: spring-boot-013
+    level: junior
+    type: single
+    text: >-
+      У контексті є два біни типу `Sender` (`mail` і `sms`), а `Notifier` просить один `Sender` через конструктор. Що станеться під час старту Spring Boot 4.1 і як це виправити?
+    text_en: "The context has two beans of type `Sender` (`mail` and `sms`), and `Notifier` asks for one `Sender` through its constructor. What happens at startup of Spring Boot 4.1 and how do you fix it?"
+    code:
+      lang: java
+      source: |
+        interface Sender { }
+
+        @Component class Mail implements Sender { }
+        @Component class Sms implements Sender { }
+
+        @Service
+        class Notifier {
+            Notifier(Sender sender) { }
+        }
+    options:
+      - text: "Старт упаде з `NoUniqueBeanDefinitionException`; допоможе `@Primary` на біні або `@Qualifier` у параметрі"
+        text_en: "Startup fails with `NoUniqueBeanDefinitionException`; `@Primary` on a bean or `@Qualifier` on the parameter helps"
+        correct: true
+      - text: "Spring візьме бін, оголошений першим у пакеті, а другий мовчки проігнорує"
+        text_en: "Spring takes the bean declared first in the package and silently ignores the second one"
+      - text: "У `Notifier` потрапить бін, створений останнім, бо пізніша реєстрація перекриває ранішу"
+        text_en: "`Notifier` receives the bean created last, because a later registration overrides the earlier one"
+      - text: "Spring передасть в конструктор обидва біни як `List<Sender>`, якщо тип параметра не змінювати"
+        text_en: "Spring passes both beans to the constructor as a `List<Sender>` even if the parameter type is not changed"
+    explanation: >
+      Коли кандидатів кілька і жоден не позначено як основний, контейнер не вгадує, а кидає `NoUniqueBeanDefinitionException`. Вибір задають `@Primary` на одному з бінів або `@Qualifier` на точці ін'єкції. Колекцію отримують лише тоді, коли параметр сам оголошено як `List<Sender>`.
+    explanation_en: >
+      When there are several candidates and none is marked as primary, the container does not guess and throws `NoUniqueBeanDefinitionException`. The choice is made with `@Primary` on one of the beans or `@Qualifier` at the injection point. A collection is injected only when the parameter itself is declared as `List<Sender>`.
+    sources:
+      - https://docs.spring.io/spring-framework/reference/core/beans/annotation-config/autowired.html
+      - https://docs.spring.io/spring-framework/reference/core/beans/annotation-config/autowired-primary.html
+  - id: spring-boot-014
+    level: junior
+    type: multiple
+    text: Звідки Spring MVC (Spring Boot 4.1) бере значення параметрів цього методу для запиту `GET /orders/7?page=3` із заголовком `X-Tenant`?
+    text_en: "Where does Spring MVC (Spring Boot 4.1) take the values of this method's parameters from for the request `GET /orders/7?page=3` with an `X-Tenant` header?"
+    code:
+      lang: java
+      source: |
+        @GetMapping("/orders/{id}")
+        Order get(@PathVariable long id,
+                  @RequestParam(defaultValue = "1") int page,
+                  @RequestHeader("X-Tenant") String tenant) { /* ... */ }
+    options:
+      - text: "`id` — із сегмента шляху `{id}` в URL, тобто `7`"
+        text_en: "`id` comes from the `{id}` path segment of the URL, that is `7`"
+        correct: true
+      - text: "`page` — із query-рядка, а без нього — `1`"
+        text_en: "`page` comes from the query string, or `1` without it"
+        correct: true
+      - text: "`tenant` — із заголовка запиту `X-Tenant`"
+        text_en: "`tenant` comes from the `X-Tenant` request header"
+        correct: true
+      - text: "`id` — із `?id=`, а шлях лише вибирає метод"
+        text_en: "`id` comes from `?id=`, and the path only picks the method"
+    explanation: >
+      `@PathVariable` зв'язує параметр зі змінною шаблону шляху, `@RequestParam` — з параметром запиту (значення за замовчуванням діє, коли його немає), `@RequestHeader` — із заголовком. Змінну шляху не підміняє query-параметр з тим самим іменем.
+    explanation_en: >
+      `@PathVariable` binds a parameter to a URI template variable, `@RequestParam` to a query parameter (the default applies when it is absent), and `@RequestHeader` to a header. A query parameter with the same name does not replace the path variable.
+    sources:
+      - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods/requestheader.html
+      - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods/requestparam.html
+  - id: spring-boot-015
+    level: junior
+    type: single
+    text: Яке значення отримає `maxRetries` у Spring Boot 4.1, якщо в `application.properties` лише `app.max-retries=5`?
+    text_en: "What value will `maxRetries` get in Spring Boot 4.1 if `application.properties` contains only `app.max-retries=5`?"
+    code:
+      lang: java
+      source: |
+        @ConfigurationProperties(prefix = "app")
+        record AppProps(int maxRetries) { }
+
+        @SpringBootApplication
+        @ConfigurationPropertiesScan
+        class Application { }
+    options:
+      - text: "`5`: прив'язка поблажлива, тож `max-retries` у файлі відповідає `maxRetries` у класі"
+        text_en: "`5`: binding is relaxed, so `max-retries` in the file matches `maxRetries` in the class"
+        correct: true
+      - text: "`0`: ім'я у файлі має збігатися з полем буквально, тобто бути `app.maxRetries`"
+        text_en: "`0`: the name in the file must match the field literally, that is `app.maxRetries`"
+      - text: "`0`: для запису-`record` прив'язка властивостей із файлів не працює взагалі"
+        text_en: "`0`: property binding from files does not work at all for a `record`"
+      - text: "Старт завершиться помилкою про невідому властивість `app.max-retries`"
+        text_en: "Startup fails with an error about the unknown property `app.max-retries`"
+    explanation: >
+      Boot прив'язує властивості за правилами relaxed binding: рекомендований у файлах kebab-case `max-retries` відповідає полю `maxRetries`. Записи (`record`) підтримуються як класи властивостей із прив'язкою через конструктор.
+    explanation_en: >
+      Boot binds properties using relaxed binding rules: the kebab-case `max-retries` recommended in files matches the field `maxRetries`. Records (`record`) are supported as properties classes with constructor binding.
+    sources:
+      - https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.typesafe-configuration-properties.relaxed-binding
+  - id: spring-boot-016
+    level: junior
+    type: single
+    text: У проєкт Spring Boot 4.1 додано Actuator, інших налаштувань немає. Які його кінцеві точки доступні за HTTP?
+    text_en: "Actuator is added to a Spring Boot 4.1 project, with no other configuration. Which of its endpoints are available over HTTP?"
+    options:
+      - text: "Лише `health`; решту відкривають через `management.endpoints.web.exposure.include`"
+        text_en: "Only `health`; the rest are opened through `management.endpoints.web.exposure.include`"
+        correct: true
+      - text: "Усі, окрім `shutdown`, бо його вимкнено; решта доступна без налаштування"
+        text_en: "All except `shutdown`, because it is disabled; the rest are available without configuration"
+      - text: "Жодна: Actuator вмикає HTTP-доступ, лише якщо в проєкті є Spring Security"
+        text_en: "None: Actuator enables HTTP access only when Spring Security is on the project"
+      - text: "`health` та `info` разом із `metrics`, бо це мінімальний набір для моніторингу"
+        text_en: "`health` and `info` together with `metrics`, because this is the minimal set for monitoring"
+    explanation: >
+      За замовчуванням через веб відкрито лише `health`: решта точок може існувати, але не експонується. Список розширюють властивістю `management.endpoints.web.exposure.include`, а чутливі точки варто захищати.
+    explanation_en: >
+      By default only `health` is exposed over the web: the other endpoints may exist but are not exposed. The list is extended with the `management.endpoints.web.exposure.include` property, and sensitive endpoints should be secured.
+    sources:
+      - https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.exposing
+  - id: spring-boot-017
+    level: middle
+    type: single
+    text: >-
+      Скільки екземплярів `Dep` існуватиме в контексті Spring Boot 4.1 з цією конфігурацією?
+    text_en: "How many `Dep` instances will exist in the Spring Boot 4.1 context with this configuration?"
+    code:
+      lang: java
+      source: |
+        @Configuration(proxyBeanMethods = false)
+        class Wiring {
+            @Bean Dep dep() { return new Dep(); }
+            @Bean Svc a() { return new Svc(dep()); }
+            @Bean Svc b() { return new Svc(dep()); }
+        }
+    options:
+      - text: "Три: бін `dep` і по новому в `a` та `b`, бо виклики повз контейнер"
+        text_en: "Three: the `dep` bean plus a new one in `a` and `b`, as calls bypass the container"
+        correct: true
+      - text: "Один: `dep()` усередині `@Configuration` завжди повертає singleton-бін"
+        text_en: "One: `dep()` inside `@Configuration` always returns the singleton bean"
+      - text: "Два: `a` і `b` діляться одним екземпляром, а бін `dep` створюється окремо"
+        text_en: "Two: `a` and `b` share one instance, and the `dep` bean is created separately"
+      - text: "Жодного: з `proxyBeanMethods = false` анотації `@Bean` на методах ігноруються"
+        text_en: "None: with `proxyBeanMethods = false` the `@Bean` annotations on the methods are ignored"
+    explanation: >
+      Зазвичай клас `@Configuration` проксується, і виклик `dep()` перехоплюється та повертає наявний singleton. З `proxyBeanMethods = false` виклики між `@Bean`-методами стають звичайними викликами Java, тому `new Dep()` виконується щоразу. Залежності в такому режимі беруть як параметри `@Bean`-методів.
+    explanation_en: >
+      Normally the `@Configuration` class is proxied, and the `dep()` call is intercepted and returns the existing singleton. With `proxyBeanMethods = false`, calls between `@Bean` methods are plain Java calls, so `new Dep()` runs every time. In this mode dependencies are taken as parameters of `@Bean` methods.
+    sources:
+      - https://docs.spring.io/spring-framework/reference/core/beans/java/configuration-annotation.html
+  - id: spring-boot-018
+    level: middle
+    type: multiple
+    text: Які твердження про відмінність сервлетного `Filter` і `HandlerInterceptor` у Spring MVC (Spring Boot 4.1) правильні?
+    text_en: "Which statements about the difference between a servlet `Filter` and a `HandlerInterceptor` in Spring MVC (Spring Boot 4.1) are true?"
+    options:
+      - text: "`Filter` виконується в контейнері сервлетів до `DispatcherServlet`, а інтерсептор — усередині нього"
+        text_en: "A `Filter` runs in the servlet container before `DispatcherServlet`, and an interceptor runs inside it"
+        correct: true
+      - text: "`preHandle` інтерсептора отримує обраний обробник, а `false` зупиняє подальшу обробку"
+        text_en: "An interceptor's `preHandle` receives the chosen handler, and returning `false` stops further processing"
+        correct: true
+      - text: "`afterCompletion` інтерсептора виконується й після винятку в обробнику, якщо `preHandle` повернув `true`"
+        text_en: "An interceptor's `afterCompletion` also runs after an exception in the handler, if `preHandle` returned `true`"
+        correct: true
+      - text: "У `postHandle` можна надійно додати заголовок до відповіді методу з `@ResponseBody`"
+        text_en: "In `postHandle` you can reliably add a header to the response of a method annotated with `@ResponseBody`"
+    explanation: >
+      Фільтр є частиною Servlet API й обгортає весь виклик `DispatcherServlet`; інтерсептор працює після вибору обробника і знає його. `afterCompletion` лунає після завершення обробки за будь-якого результату, але лише для інтерсептора, чий `preHandle` повернув `true`. Для `@ResponseBody` і `ResponseEntity` відповідь записується й фіксується ще до `postHandle`, тому змінити заголовки там запізно.
+    explanation_en: >
+      A filter is part of the Servlet API and wraps the whole `DispatcherServlet` call; an interceptor works after the handler is chosen and knows it. `afterCompletion` runs after processing completes whatever the outcome, but only for an interceptor whose `preHandle` returned `true`. For `@ResponseBody` and `ResponseEntity` the response is written and committed before `postHandle`, so it is too late to change headers there.
+    sources:
+      - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-servlet/handlermapping-interceptor.html
+      - https://docs.spring.io/spring-framework/reference/web/webmvc/filters.html
+      - https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/HandlerInterceptor.html
+  - id: spring-boot-019
+    level: middle
+    type: single
+    text: >-
+      У проєкті Spring Boot 4.1 є `spring-boot-starter-validation`, а у файлах конфігурації немає властивості `app.url`. Що станеться під час старту?
+    text_en: "The Spring Boot 4.1 project has `spring-boot-starter-validation`, and there is no `app.url` property in the configuration files. What happens at startup?"
+    code:
+      lang: java
+      source: |
+        @Validated
+        @ConfigurationProperties(prefix = "app")
+        record AppProps(@NotBlank String url) { }
+    options:
+      - text: "Старт зупиниться з помилкою прив'язки, яка називає порушене обмеження для `app.url`"
+        text_en: "Startup stops with a binding error that names the violated constraint for `app.url`"
+        correct: true
+      - text: "Застосунок стартує з `url == null`, а обмеження перевіряється під час першого звернення до поля"
+        text_en: "The application starts with `url == null`, and the constraint is checked on the first access to the field"
+      - text: "`@NotBlank` ігнорується, бо перевіряє лише тіла запитів із `@Valid` у контролерах"
+        text_en: "`@NotBlank` is ignored, because it checks only request bodies with `@Valid` in controllers"
+      - text: "Boot підставить порожній рядок, і обмеження `@NotBlank` пропустить значення"
+        text_en: "Boot substitutes an empty string, and the `@NotBlank` constraint lets the value through"
+    explanation: >
+      Boot перевіряє класи `@ConfigurationProperties`, позначені `@Validated`, під час прив'язки, тому помилка конфігурації виявляється одразу при старті, а не в роботі. Відсутнє значення лишилося б `null`, і `@NotBlank` його відхиляє.
+    explanation_en: >
+      Boot validates `@ConfigurationProperties` classes annotated with `@Validated` during binding, so a configuration error surfaces at startup rather than at runtime. The absent value would stay `null`, and `@NotBlank` rejects it.
+    sources:
+      - https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.typesafe-configuration-properties.validation
+  - id: spring-boot-020
+    level: middle
+    type: single
+    text: >-
+      Що станеться із записом після виклику `pay()` у Spring Boot 4.1 (налаштувань транзакцій у `@Transactional` немає)?
+    text_en: "What happens to the saved record after `pay()` is called in Spring Boot 4.1 (no transaction settings are set in `@Transactional`)?"
+    code:
+      lang: java
+      source: |
+        @Service
+        class PaymentService {
+            @Transactional
+            public void pay(Payment p) throws IOException {
+                repo.save(p);
+                gateway.send(p);   // throws IOException
+            }
+        }
+    options:
+      - text: "Транзакція закомітиться, запис збережеться, а `IOException` піде до виклику як є"
+        text_en: "The transaction commits, the record is saved, and `IOException` propagates to the caller as is"
+        correct: true
+      - text: "Транзакція відкотиться, бо будь-який виняток, що вийшов із методу, позначає відкіт"
+        text_en: "The transaction rolls back, because any exception that leaves the method marks a rollback"
+      - text: "Запис зникне, бо перевірені винятки Spring автоматично обгортає в `RuntimeException`"
+        text_en: "The record disappears, because Spring automatically wraps checked exceptions into `RuntimeException`"
+      - text: "Метод не запуститься, бо `@Transactional` забороняє `throws` для перевірених винятків"
+        text_en: "The method will not run, because `@Transactional` forbids `throws` for checked exceptions"
+    explanation: >
+      За замовчуванням відкіт позначають лише `RuntimeException` і `Error`; перевірений виняток транзакцію не відкочує, тож коміт відбувається. Щоб відкочувати й на `IOException`, указують `@Transactional(rollbackFor = IOException.class)`.
+    explanation_en: >
+      By default only `RuntimeException` and `Error` mark a rollback; a checked exception does not roll the transaction back, so the commit happens. To roll back on `IOException` too, specify `@Transactional(rollbackFor = IOException.class)`.
+    sources:
+      - https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/rolling-back.html
+  - id: spring-boot-021
+    level: senior
+    type: single
+    text: >-
+      У Spring Security (Spring Boot 4.1) оголошено два ланцюги, і перший не має `securityMatcher`. Що станеться під час старту застосунку?
+    text_en: "Two chains are declared in Spring Security (Spring Boot 4.1), and the first one has no `securityMatcher`. What happens when the application starts?"
+    code:
+      lang: java
+      source: |
+        @Bean @Order(1)
+        SecurityFilterChain web(HttpSecurity http) throws Exception {
+            http.authorizeHttpRequests(a -> a.anyRequest().authenticated())
+                .formLogin(Customizer.withDefaults());
+            return http.build();
+        }
+
+        @Bean @Order(2)
+        SecurityFilterChain api(HttpSecurity http) throws Exception {
+            http.securityMatcher("/api/**")
+                .authorizeHttpRequests(a -> a.anyRequest().hasRole("API"));
+            return http.build();
+        }
+    options:
+      - text: "Старт упаде з `IllegalArgumentException`: ланцюг, що ловить усі запити, стоїть перед іншим, який був би недосяжним"
+        text_en: "Startup fails with `IllegalArgumentException`: a chain that matches every request comes before another one, which would be unreachable"
+        correct: true
+      - text: "Застосунок стартує, а запити до `/api/**` обробляє лише `web`, бо `api` стоїть після ланцюга без matcher"
+        text_en: "The application starts, and requests to `/api/**` are handled only by `web`, because `api` comes after a chain without a matcher"
+      - text: "Застосунок стартує, а `GET /api/users` без ролі `API` дає 403: правила обох ланцюгів накопичуються"
+        text_en: "The application starts, and `GET /api/users` without the `API` role gets 403: the rules of both chains accumulate"
+      - text: "Застосунок стартує, а `GET /api/users` без ролі `API` дає 403: вужчий `securityMatcher` має пріоритет над порядком"
+        text_en: "The application starts, and `GET /api/users` without the `API` role gets 403: the narrower `securityMatcher` takes precedence over the order"
+    explanation: >
+      `FilterChainProxy` вибирає ланцюги за `@Order` і викликає лише перший, чий matcher збігся, а ланцюг без `securityMatcher` ловить усі запити. Тому Spring Security під час збирання `WebSecurity` перевіряє порядок і відмовляє зі стартом, якщо після такого ланцюга є ще один. Виправлення: вужчий ланцюг ставлять раніше (`@Order(1)`), а загальний — останнім. Правила ланцюгів не об'єднуються.
+    explanation_en: >
+      `FilterChainProxy` picks chains by `@Order` and invokes only the first one whose matcher matches, and a chain without `securityMatcher` catches all requests. So while building `WebSecurity`, Spring Security checks the order and refuses to start if another chain follows such a chain. The fix: the narrower chain goes earlier (`@Order(1)`) and the general one last. The rules of the chains are not merged.
+    sources:
+      - https://docs.spring.io/spring-security/reference/servlet/architecture.html#servlet-securityfilterchain
+      - https://docs.spring.io/spring-security/reference/servlet/configuration/java.html
+      - https://github.com/spring-projects/spring-security/issues/15220
+  - id: spring-boot-022
+    level: senior
+    type: single
+    text: >-
+      Після додавання до конфігурації метода `@Bean BeanPostProcessor auditPostProcessor()` (нестатичного) у логу з'явилося «not eligible for getting processed by all BeanPostProcessors», а `@Transactional` на бінах, які ін'єктуються в цей конфігураційний клас, перестав працювати. Яка причина і виправлення (Spring Framework 7)?
+    text_en: "After adding a non-static `@Bean BeanPostProcessor auditPostProcessor()` method to a configuration class, the log shows \"not eligible for getting processed by all BeanPostProcessors\", and `@Transactional` stopped working on beans injected into this configuration class. What is the cause and the fix (Spring Framework 7)?"
+    options:
+      - text: "Клас конфігурації ініціалізовано зарано через нестатичний метод; зробити його `static`"
+        text_en: "The configuration class was initialized too early by the non-static method; make it `static`"
+        correct: true
+      - text: "Контейнер дозволяє лише один `BeanPostProcessor` на контекст, тому зайві слід об'єднати"
+        text_en: "The container allows only one `BeanPostProcessor` per context, so extra ones must be merged"
+      - text: "`BeanPostProcessor` не застосовується до бінів, оголошених через `@Bean`, їх реєструють в XML"
+        text_en: "A `BeanPostProcessor` is not applied to beans declared through `@Bean`; they must be registered in XML"
+      - text: "`@Transactional` вимагає `@Lazy` на всіх залежностях конфігураційного класу з post-processor"
+        text_en: "`@Transactional` requires `@Lazy` on all dependencies of a configuration class that holds a post-processor"
+    explanation: >
+      `BeanPostProcessor` має існувати до решти бінів, тож нестатичний фабричний метод змушує створити конфігураційний клас і все, що він ін'єктує, надто рано. Ці біни пропускають частину обробки, зокрема створення проксі для `@Transactional`. Статичний метод без залежностей уникає цього.
+    explanation_en: >
+      A `BeanPostProcessor` must exist before the other beans, so a non-static factory method forces the configuration class and everything it injects to be created too early. Those beans skip part of the processing, including proxy creation for `@Transactional`. A static method without dependencies avoids this.
+    sources:
+      - https://docs.spring.io/spring-framework/reference/core/beans/factory-extension.html#beans-factory-extension-bpp
+  - id: spring-boot-023
+    level: senior
+    type: multiple
+    text: Які твердження про `spring.threads.virtual.enabled=true` у Spring Boot 4.1 на Java 25 правильні?
+    text_en: "Which statements about `spring.threads.virtual.enabled=true` in Spring Boot 4.1 on Java 25 are true?"
+    options:
+      - text: "Без цієї властивості віртуальні потоки не вмикаються, її значення за замовчуванням `false`"
+        text_en: "Without this property virtual threads are not enabled, and its default value is `false`"
+        correct: true
+      - text: "Автоконфігуроване виконавче середовище для задач стає `SimpleAsyncTaskExecutor` на віртуальних потоках"
+        text_en: "The auto-configured task executor becomes a `SimpleAsyncTaskExecutor` that uses virtual threads"
+        correct: true
+      - text: "Автоконфігурований планувальник стає `SimpleAsyncTaskScheduler` і ігнорує налаштування пулу"
+        text_en: "The auto-configured scheduler becomes a `SimpleAsyncTaskScheduler` and ignores pool settings"
+        correct: true
+      - text: "Пул з'єднань Hikari автоматично збільшує `maximum-pool-size` до кількості віртуальних потоків"
+        text_en: "The Hikari connection pool automatically raises `maximum-pool-size` to the number of virtual threads"
+    explanation: >
+      Віртуальні потоки вмикаються лише явною властивістю (за замовчуванням `false`) і змінюють тип автоконфігурованих виконавця та планувальника на непульні. Розмір пулу з'єднань з БД ця властивість не змінює, тож він і далі обмежує паралелізм доступу до бази.
+    explanation_en: >
+      Virtual threads are enabled only by the explicit property (default `false`) and change the auto-configured executor and scheduler to non-pooled types. The property does not change the size of the database connection pool, so it still limits the concurrency of database access.
+    sources:
+      - https://docs.spring.io/spring-boot/reference/features/task-execution-and-scheduling.html
+      - https://docs.spring.io/spring-boot/appendix/application-properties/index.html
+  - id: spring-boot-024
+    level: senior
+    type: single
+    text: >-
+      Що станеться при виклику `run()` у Spring Boot 4.1 (обидва методи мають `@Transactional` за замовчуванням, `B` — окремий бін)?
+    text_en: "What happens when `run()` is called in Spring Boot 4.1 (both methods have default `@Transactional`, and `B` is a separate bean)?"
+    code:
+      lang: java
+      source: |
+        @Service
+        class A {
+            private final B b;
+            A(B b) { this.b = b; }
+
+            @Transactional
+            public void run() {
+                repo.save(first);
+                try { b.work(); } catch (RuntimeException e) { /* ignore */ }
+            }
+        }
+
+        @Service
+        class B {
+            @Transactional
+            public void work() { throw new IllegalStateException(); }
+        }
+    options:
+      - text: "Транзакцію позначено rollback-only: коміт `run()` кине `UnexpectedRollbackException`, `first` відкотиться"
+        text_en: "The transaction is marked rollback-only: `run()` commit throws `UnexpectedRollbackException`, `first` rolls back"
+        correct: true
+      - text: "`run()` завершиться нормально, а `first` закомітиться, бо виняток із `work()` перехоплено"
+        text_en: "`run()` completes normally and `first` is committed, because the exception from `work()` was caught"
+      - text: "Відкотиться лише робота `work()` до точки збереження, а `first` закомітиться"
+        text_en: "Only the work of `work()` rolls back to a savepoint, and `first` is committed"
+      - text: "Транзакція `B` відкотиться окремо, бо `REQUIRED` завжди відкриває нову фізичну транзакцію"
+        text_en: "The transaction of `B` rolls back separately, because `REQUIRED` always opens a new physical transaction"
+    explanation: >
+      `REQUIRED` приєднує `work()` до тієї самої фізичної транзакції, тож виняток із внутрішньої межі позначає її rollback-only, навіть якщо зовнішній код його проковтнув. Під час коміту зовнішньої межі Spring кидає `UnexpectedRollbackException`. Окрему долю внутрішній частині дають `REQUIRES_NEW` або `NESTED`.
+    explanation_en: >
+      `REQUIRED` joins `work()` to the same physical transaction, so an exception from the inner boundary marks it rollback-only even if the outer code swallowed it. At the commit of the outer boundary Spring throws `UnexpectedRollbackException`. The inner part gets its own fate with `REQUIRES_NEW` or `NESTED`.
+    sources:
+      - https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/tx-propagation.html

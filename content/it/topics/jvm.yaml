@@ -317,3 +317,324 @@ questions:
     sources:
       - https://openjdk.org/jeps/421
       - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/ref/Cleaner.html
+  - id: jvm-013
+    level: junior
+    type: multiple
+    text: "Які твердження про опції пам'яті `java` правильні?"
+    text_en: "Which statements about the `java` memory options are true?"
+    options:
+      - text: "`-Xms` задає початковий розмір купи, з яким стартує JVM"
+        text_en: "`-Xms` sets the initial heap size the JVM starts with"
+        correct: true
+      - text: "`-Xmx` задає верхню межу розміру купи, яку вона не перевищує"
+        text_en: "`-Xmx` sets the upper limit of the heap size, which it does not exceed"
+        correct: true
+      - text: "`-Xss` задає розмір стека кожного нового потоку застосунку"
+        text_en: "`-Xss` sets the size of the stack of each new application thread"
+        correct: true
+      - text: "`-Xmx` обмежує пам'ять процесу разом із Metaspace та стеками потоків"
+        text_en: "`-Xmx` limits process memory together with Metaspace and thread stacks"
+    explanation: >
+      `-Xms` і `-Xmx` визначають початковий і максимальний розмір купи, а `-Xss` — розмір стека кожного потоку.
+      `-Xmx` не охоплює Metaspace, стеки й кеш коду, тому RSS процесу зазвичай більший за нього.
+    explanation_en: >
+      `-Xms` and `-Xmx` define the initial and maximum heap size, and `-Xss` defines the stack size of each thread.
+      `-Xmx` does not cover Metaspace, stacks, and the code cache, so the process RSS is usually larger than it.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/specs/man/java.html#extra-options-for-java
+  - id: jvm-014
+    level: junior
+    type: single
+    text: "Що саме створює `javac` і чому той самий `.class` можна запускати на різних операційних системах?"
+    text_en: "What exactly does `javac` produce, and why can the same `.class` file run on different operating systems?"
+    options:
+      - text: "Байт-код, який виконує JVM конкретної платформи, інтерпретуючи його або компілюючи в машинний код"
+        text_en: "Bytecode, which the JVM of a specific platform executes by interpreting it or compiling it to machine code"
+        correct: true
+      - text: "Машинний код поточної ОС, а переносимість забезпечує лише однакова назва файла"
+        text_en: "Machine code of the current OS, and portability is provided only by the file having the same name"
+      - text: "Вихідний текст `.java` у стиснутому вигляді, який JVM щоразу розбирає з нуля"
+        text_en: "The `.java` source text in compressed form, which the JVM parses from scratch every time"
+      - text: "Машинний код, який JVM лише завантажує в пам'ять і запускає без жодної трансляції"
+        text_en: "Machine code that the JVM only loads into memory and runs without any translation"
+    explanation: >
+      Файл `.class` містить платформонезалежний байт-код, а JVM для кожної платформи своя і вміє його виконувати.
+      Тому код компілюють один раз, а запускають де завгодно, де є JVM.
+    explanation_en: >
+      A `.class` file contains platform-independent bytecode, and each platform has its own JVM that can execute it.
+      So the code is compiled once and run anywhere a JVM exists.
+    sources:
+      - https://docs.oracle.com/javase/specs/jvms/se25/html/jvms-1.html
+  - id: jvm-015
+    level: junior
+    type: single
+    text: "Як у Java 25 увімкнути журнал збирання сміття, щоб бачити в консолі збирання й паузи?"
+    text_en: "How do you enable the garbage collection log in Java 25 so that collections and pauses are visible in the console?"
+    options:
+      - text: "Запустити `java` із `-Xlog:gc`: уніфіковане журналювання JVM виводить події збирання"
+        text_en: "Run `java` with `-Xlog:gc`: the unified JVM logging prints the collection events"
+        correct: true
+      - text: "Запустити `java` із `-Xlog:disable`: цей прапорець вмикає докладний журнал збирання"
+        text_en: "Run `java` with `-Xlog:disable`: this flag turns on the detailed collection log"
+      - text: "Запустити `java` із `-XX:+UseGCLog`: так вмикається журнал збирання сміття"
+        text_en: "Run `java` with `-XX:+UseGCLog`: this is how the garbage collection log is turned on"
+      - text: "Запустити `java` із `-Xgc:verbose`: це стандартний прапорець журналу збирання"
+        text_en: "Run `java` with `-Xgc:verbose`: this is the standard flag of the collection log"
+    explanation: >
+      Із Java 9 уся діагностика JVM іде через уніфіковане журналювання, а `-Xlog:gc` вмикає в ньому події збирання сміття, за замовчуванням у стандартний вивід.
+      `-Xlog:disable` навпаки вимикає все журналювання, а прапорців `-XX:+UseGCLog` і `-Xgc:verbose` не існує, тож JVM відмовиться стартувати.
+    explanation_en: >
+      Since Java 9 all JVM diagnostics go through unified logging, and `-Xlog:gc` turns on garbage collection events in it, to standard output by default.
+      `-Xlog:disable` does the opposite and turns off all logging, and the flags `-XX:+UseGCLog` and `-Xgc:verbose` do not exist, so the JVM refuses to start.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/specs/man/java.html
+  - id: jvm-016
+    level: junior
+    type: single
+    text: "Як у класичному генераційному збирачі HotSpot об'єкт потрапляє зі свого народження до старого покоління?"
+    text_en: "In a classic generational HotSpot collector, how does an object get from its birth to the old generation?"
+    options:
+      - text: "Народжується в eden, копіюється між survivor-просторами й після кількох збірок йде в старе покоління"
+        text_en: "Born in eden, copied between survivor spaces, and moved to the old generation after several collections"
+        correct: true
+      - text: "Народжується одразу в старому поколінні, а молоде покоління призначене лише для масивів"
+        text_en: "It is born directly in the old generation, and the young generation is intended only for arrays"
+      - text: "Народжується в survivor-просторі, а eden зарезервовано для статичних полів, констант і метаданих класів"
+        text_en: "Born in a survivor space, while eden is reserved for static fields, constants, and class metadata"
+      - text: "Народжується в eden й залишається там, а старе покоління з'являється лише після виклику `System.gc()`"
+        text_en: "It is born in eden and stays there, and the old generation appears only after a call to `System.gc()`"
+    explanation: >
+      Більшість об'єктів виділяється в eden, а ті, що пережили збирання, копіюються між двома survivor-просторами й старіють. Після певної кількості збірок або за браку місця вони потрапляють у старе покоління.
+      Старе покоління існує завжди, а не створюється викликом `System.gc()`.
+    explanation_en: >
+      Most objects are allocated in eden, and those that survive a collection are copied between two survivor spaces and age. After a certain number of collections, or when space runs out, they move to the old generation.
+      The old generation always exists and is not created by a `System.gc()` call.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/gctuning/garbage-collector-implementation.html
+  - id: jvm-017
+    level: middle
+    type: multiple
+    text: "Які твердження про слабкі та м'які посилання в Java 25 правильні?"
+    text_en: "Which statements about weak and soft references in Java 25 are true?"
+    options:
+      - text: "Об'єкт, досяжний лише через `WeakReference`, збирач може зібрати під час найближчого збирання"
+        text_en: "An object reachable only through a `WeakReference` can be collected by the collector during the nearest collection"
+        correct: true
+      - text: "Усі м'які посилання очищено до того, як JVM кине `OutOfMemoryError`"
+        text_en: "All soft references have been cleared before the JVM throws an `OutOfMemoryError`"
+        correct: true
+      - text: "Запис `WeakHashMap` зникає, коли ключ більше ніде не тримається сильним посиланням"
+        text_en: "An entry of a `WeakHashMap` disappears when the key is no longer held by any strong reference"
+        correct: true
+      - text: "Запис `WeakHashMap` зникає, щойно значення стає досяжним лише з цієї мапи, хоч ключ живий"
+        text_en: "An entry of a `WeakHashMap` disappears once the value is reachable only from this map, even if the key is alive"
+    explanation: >
+      Слабко досяжний об'єкт збирач вільно збирає, а м'які посилання очищуються перед `OutOfMemoryError`, тому вони годяться для кешів. У `WeakHashMap` слабким є ключ: коли його ніхто сильно не тримає, запис видаляється.
+      Значення мапа тримає сильно, і воно саме по собі запис не прибирає.
+    explanation_en: >
+      A weakly reachable object is freely collected, and soft references are cleared before an `OutOfMemoryError`, which is why they suit caches. In a `WeakHashMap` the key is the weak part: when nobody holds it strongly, the entry is removed.
+      The map holds the value strongly, and the value alone does not remove the entry.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/ref/package-summary.html
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/WeakHashMap.html
+  - id: jvm-018
+    level: middle
+    type: single
+    text: "Сервіс на кожен запит створює багато короткоживучих об'єктів, що не переживають запит. Чому в генераційному збирачі HotSpot це зазвичай не дає довгих пауз?"
+    text_en: "A service creates many short-lived objects per request that do not outlive it. Why does this usually not cause long pauses in a generational HotSpot collector?"
+    options:
+      - text: "Мале збирання молодого покоління коштує пропорційно кількості живих об'єктів, а мертві не копіюються"
+        text_en: "A minor collection of the young generation costs in proportion to the number of live objects, and dead ones are not copied"
+        correct: true
+      - text: "Короткоживучі об'єкти завжди виділяються в стеку потоку, тому збирач їх не бачить"
+        text_en: "Short-lived objects are always allocated on the thread stack, so the collector never sees them"
+      - text: "Збирач звільняє об'єкт одразу, щойно метод, що його створив, завершується, ще до малого збирання"
+        text_en: "The collector frees an object as soon as the method that created it returns, before any minor collection"
+      - text: "Об'єкти молодого покоління не враховуються в `-Xmx`, тому їх кількість не обмежена"
+        text_en: "Objects of the young generation are not counted in `-Xmx`, so their number is unbounded"
+    explanation: >
+      Вартість малого збирання залежить від живих об'єктів, тож молоде покоління, повне сміття, збирається дуже швидко. Тому виділення дешевих короткоживучих об'єктів у HotSpot прийнятне.
+      Об'єкти виділяються в купі, а не в стеку, і молоде покоління входить у ліміт `-Xmx`.
+    explanation_en: >
+      The cost of a minor collection depends on live objects, so a young generation full of garbage is collected very quickly. That is why allocating cheap short-lived objects is acceptable in HotSpot.
+      Objects are allocated in the heap, not on the stack, and the young generation is part of the `-Xmx` limit.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/gctuning/garbage-collector-implementation.html
+  - id: jvm-019
+    level: middle
+    type: single
+    text: "Що виведе цей код (Java 25), скомпільований `javac` і запущений як `java Main`?"
+    text_en: "What does this code print (Java 25), compiled with `javac` and run as `java Main`?"
+    code:
+      lang: java
+      source: |
+        public class Main {
+            static class Foo {
+                static { System.out.println("init Foo"); }
+            }
+            public static void main(String[] args) throws Exception {
+                ClassLoader cl = Main.class.getClassLoader();
+                cl.loadClass("Main$Foo");
+                System.out.println("after loadClass");
+                Class.forName("Main$Foo");
+                System.out.println("after forName");
+            }
+        }
+    options:
+      - text: "`after loadClass`, `init Foo`, `after forName`"
+        text_en: "`after loadClass`, `init Foo`, `after forName`"
+        correct: true
+      - text: "`init Foo`, `after loadClass`, `after forName`"
+        text_en: "`init Foo`, `after loadClass`, `after forName`"
+      - text: "`after loadClass`, `after forName`, `init Foo`"
+        text_en: "`after loadClass`, `after forName`, `init Foo`"
+      - text: "`after loadClass`, `after forName`, без `init Foo`"
+        text_en: "`after loadClass`, `after forName`, without `init Foo`"
+    explanation: >
+      `ClassLoader.loadClass` лише завантажує клас і не запускає статичний ініціалізатор, а `Class.forName` з одним аргументом клас ще й ініціалізує.
+      Тому `init Foo` з'являється між двома рядками, а не першим і не взагалі ніколи.
+    explanation_en: >
+      `ClassLoader.loadClass` only loads the class and does not run the static initializer, while the one-argument `Class.forName` also initializes the class.
+      So `init Foo` appears between the two lines, not first and not never.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Class.html#forName(java.lang.String)
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/ClassLoader.html#loadClass(java.lang.String)
+  - id: jvm-020
+    level: middle
+    type: single
+    text: "Що відбудеться під час запуску `java -Xmx512m -XX:MaxDirectMemorySize=10m D` (Java 25), якщо кожен буфер займає 1 MiB?"
+    text_en: "What happens when you run `java -Xmx512m -XX:MaxDirectMemorySize=10m D` (Java 25), if each buffer takes 1 MiB?"
+    code:
+      lang: java
+      source: |
+        List<ByteBuffer> l = new ArrayList<>();
+        try {
+            for (int i = 0; i < 20; i++)
+                l.add(ByteBuffer.allocateDirect(1024 * 1024));
+            System.out.println("ok " + l.size());
+        } catch (OutOfMemoryError e) {
+            System.out.println("OOM after " + l.size());
+        }
+    options:
+      - text: "Виведеться `OOM after 10`, бо прямі буфери мають окремий ліміт, який не залежить від `-Xmx`"
+        text_en: "`OOM after 10` is printed, because direct buffers have a separate limit that does not depend on `-Xmx`"
+        correct: true
+      - text: "Виведеться `ok 20`, бо `-Xmx512m` дозволяє виділити й 20 прямих буферів"
+        text_en: "`ok 20` is printed, because `-Xmx512m` allows allocating even 20 direct buffers"
+      - text: "Помилка `Java heap space` виникне вже на першому буфері, бо прямі буфери лежать у купі"
+        text_en: "A `Java heap space` error occurs already on the first buffer, because direct buffers live in the heap"
+      - text: "Помилка `Metaspace` виникне після 10 буферів, бо метадані буферів лежать у Metaspace"
+        text_en: "A `Metaspace` error occurs after 10 buffers, because buffer metadata lives in Metaspace"
+    explanation: >
+      Вміст прямих буферів лежить поза купою, і його сумарний розмір обмежує `-XX:MaxDirectMemorySize`, а не `-Xmx`. Тож на 11-му мегабайті виділення кидає `OutOfMemoryError`, і цикл зупиняється після 10 буферів.
+      Це типова причина зростання RSS і падіння, коли купа виглядає здоровою.
+    explanation_en: >
+      The contents of direct buffers live outside the heap, and their total size is limited by `-XX:MaxDirectMemorySize`, not by `-Xmx`. So the allocation of the 11th megabyte throws `OutOfMemoryError`, and the loop stops after 10 buffers.
+      This is a typical cause of RSS growth and failures when the heap looks healthy.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/specs/man/java.html#advanced-runtime-options-for-java
+      - https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/nio/ByteBuffer.html
+  - id: jvm-021
+    level: senior
+    type: single
+    text: "У G1 (Java 25) розмір регіону дорівнює 4 MiB (`-XX:G1HeapRegionSize=4m`), а сервіс на кожен запит створює `byte[]` на 3 MiB. У логах часті збирання й фрагментація купи. Яка причина і що допоможе?"
+    text_en: "In G1 (Java 25) the region size is 4 MiB (`-XX:G1HeapRegionSize=4m`), and a service creates a 3 MiB `byte[]` per request. The logs show frequent collections and heap fragmentation. What is the cause and what helps?"
+    options:
+      - text: "Від половини регіону (2 MiB) об'єкт humongous і йде прямо в старе покоління; допоможе більший регіон або повторне використання буферів"
+        text_en: "At half a region (2 MiB) an object is humongous and goes straight to old; a larger region or buffer reuse helps"
+        correct: true
+      - text: "Humongous є лише об'єкти більші за цілий регіон, тож 3 MiB іде в eden, а фрагментація походить від замалого `-Xss`"
+        text_en: "Only objects larger than a whole region are humongous, so 3 MiB goes to eden, and the fragmentation comes from a too small `-Xss`"
+      - text: "Humongous-об'єкти виділяються в eden, але збираються лише повним збиранням, тому допоможе більший `-Xmn` для молодого покоління"
+        text_en: "Humongous objects are allocated in eden but collected only by a full collection, so a larger `-Xmn` for the young generation helps"
+      - text: "Humongous-об'єкти зберігаються в Metaspace поряд із метаданими класів, тому допоможе більший `-XX:MaxMetaspaceSize`"
+        text_en: "Humongous objects are stored in Metaspace next to class metadata, so a larger `-XX:MaxMetaspaceSize` helps"
+    explanation: >
+      У G1 об'єкт розміром від половини регіону вважається humongous і йде відразу в старе покоління, де потребує суміжних регіонів, тож велика кількість таких виділень фрагментує купу й провокує збирання. Збільшення регіону до 8 MiB зробить 3 MiB звичайним об'єктом, а повторне використання буферів прибере саме виділення.
+      Metaspace зберігає метадані класів, а не масиви.
+    explanation_en: >
+      In G1 an object of at least half a region is humongous and goes straight to the old generation, where it needs contiguous regions, so many such allocations fragment the heap and trigger collections. Raising the region to 8 MiB makes 3 MiB an ordinary object, and reusing buffers removes the allocations themselves.
+      Metaspace stores class metadata, not arrays.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/gctuning/garbage-first-g1-garbage-collector1.html
+      - https://docs.oracle.com/en/java/javase/25/gctuning/garbage-first-garbage-collector-tuning.html
+  - id: jvm-022
+    level: senior
+    type: multiple
+    text: "Java 25 у контейнері: купа стабільно близько 500 MiB, але RSS процесу росте, і врешті процес вбиває OOM-killer. Які дії допоможуть знайти причину?"
+    text_en: "Java 25 in a container: the heap stays around 500 MiB, but the process RSS keeps growing, and the process is eventually killed by the OOM killer. Which actions will help find the cause?"
+    options:
+      - text: "Запустити з `-XX:NativeMemoryTracking=summary` і дивитися `jcmd <pid> VM.native_memory`"
+        text_en: "Start with `-XX:NativeMemoryTracking=summary` and inspect `jcmd <pid> VM.native_memory`"
+        correct: true
+      - text: "Зняти базову точку NMT і згодом порівняти з нею через `jcmd <pid> VM.native_memory summary.diff`"
+        text_en: "Take an NMT baseline and later compare against it with `jcmd <pid> VM.native_memory summary.diff`"
+        correct: true
+      - text: "Перевірити прямі буфери й ліміт `-XX:MaxDirectMemorySize`, бо їхня пам'ять лежить поза купою"
+        text_en: "Check direct buffers and the `-XX:MaxDirectMemorySize` limit, because their memory lies outside the heap"
+        correct: true
+      - text: "Зняти дамп купи й шукати в ньому всю нативну пам'ять процесу, включно зі стеками потоків"
+        text_en: "Take a heap dump and look in it for all native memory of the process, including thread stacks"
+      - text: "Збільшити `-Xmx`, щоб купа вбирала нативні виділення, і RSS перестав рости"
+        text_en: "Increase `-Xmx` so that the heap absorbs the native allocations and RSS stops growing"
+    explanation: >
+      Якщо купа не росте, а RSS росте, проблема в нативній пам'яті: NMT показує її розподіл за категоріями, а порівняння з базовою точкою виявляє, яка саме категорія зростає. Прямі буфери теж лежать поза купою.
+      Дамп купи не містить нативної пам'яті, а більший `-Xmx` лише збільшує загальне споживання.
+    explanation_en: >
+      If the heap does not grow while RSS does, the problem is native memory: NMT shows its distribution by category, and comparing with a baseline reveals which category grows. Direct buffers also live outside the heap.
+      A heap dump does not contain native memory, and a larger `-Xmx` only increases total consumption.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/troubleshoot/troubleshooting-memory-leaks.html
+      - https://docs.oracle.com/en/java/javase/25/docs/specs/man/jcmd.html
+  - id: jvm-023
+    level: senior
+    type: single
+    text: "Сервіс Java 25 запускають без прапорців вибору збирача: `docker run --cpus=1 --memory=4g`. Який збирач обере JVM і чому це важливо?"
+    text_en: "A Java 25 service is started without garbage collector flags: `docker run --cpus=1 --memory=4g`. Which collector will the JVM choose and why does it matter?"
+    code:
+      lang: bash
+      source: |
+        docker run --rm --cpus=1 --memory=4g eclipse-temurin:25 \
+          java -XX:+PrintFlagsFinal -version | grep -E 'UseSerialGC|UseG1GC '
+    options:
+      - text: "Serial: 1 CPU не вважається server-class (потрібні ≥ 2 CPU і ≥ 1792 MB), тож збирання однопотокове"
+        text_en: "Serial: 1 CPU is not server-class (it needs at least 2 CPUs and 1792 MB), so collection is single-threaded"
+        correct: true
+      - text: "G1, бо G1 є збирачем за замовчуванням у Java 25 незалежно від кількості процесорів і обсягу пам'яті контейнера"
+        text_en: "G1, because G1 is the default collector in Java 25 regardless of the number of processors and the container memory size"
+      - text: "Parallel, бо 4 GiB пам'яті достатньо для пропускного збирача, а кількість CPU під час вибору не враховується"
+        text_en: "Parallel, because 4 GiB of memory is enough for the throughput collector, and the CPU count is not taken into account when choosing"
+      - text: "ZGC, бо JVM у контейнері завжди обирає збирач із найменшими паузами, коли є хоча б 4 GiB пам'яті"
+        text_en: "ZGC, because a JVM in a container always chooses the collector with the lowest pauses when at least 4 GiB is available"
+    explanation: >
+      Ергономіка вважає машину server-class лише за двох і більше процесорів та щонайменше 1792 MB; інакше типовим стає Serial. Із двома CPU обирається G1, з одним — Serial, тому ліміт CPU неявно змінює збирач і профіль пауз.
+      Прапорець `-XX:+UseG1GC` вказує збирач явно.
+    explanation_en: >
+      Ergonomics considers a machine server-class only with two or more processors and at least 1792 MB; otherwise Serial becomes the default. With two CPUs G1 is selected, and with one CPU Serial, so the CPU limit implicitly changes the collector and the pause profile.
+      The `-XX:+UseG1GC` flag selects the collector explicitly.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/gctuning/ergonomics.html
+  - id: jvm-024
+    level: senior
+    type: single
+    text: "Сервіс на G1 (Java 25) має піки затримки до 300 мс через паузи збирання, і розробник ставить `-XX:MaxGCPauseMillis=20`. Що найімовірніше станеться?"
+    text_en: "A service on G1 (Java 25) has latency spikes up to 300 ms caused by GC pauses, and a developer sets `-XX:MaxGCPauseMillis=20`. What is most likely to happen?"
+    options:
+      - text: "М'яка ціль: G1 спробує вкластися ціною частіших збирань і нижчої пропускної здатності, без гарантії"
+        text_en: "A soft goal: G1 tries to meet it at the cost of more frequent collections and lower throughput, no guarantee"
+        correct: true
+      - text: "JVM гарантує, що жодна пауза не перевищить 20 мс, бо переривуватиме збирання, щойно вичерпається час"
+        text_en: "The JVM guarantees that no pause exceeds 20 ms, because it interrupts the collection as soon as the time runs out"
+      - text: "G1 автоматично перемкнеться на ZGC, бо лише він підтримує такі короткі паузи в продакшні"
+        text_en: "G1 automatically switches to ZGC, because only it supports such short pauses in production"
+      - text: "Паузи зменшаться без побічних ефектів, бо G1 просто збиратиме менше сміття за кожен цикл"
+        text_en: "Pauses will shrink without side effects, because G1 will simply collect less garbage in each cycle"
+    explanation: >
+      `MaxGCPauseMillis` — м'яка ціль, а не гарантія: G1 підлаштовує обсяг роботи за паузу, тож збирань стає більше, а пропускна здатність падає. Якщо ціль нереалістична, паузи все одно можуть її перевищувати.
+      Перемикання збирача відбувається лише явним прапорцем.
+    explanation_en: >
+      `MaxGCPauseMillis` is a soft goal, not a guarantee: G1 adjusts the amount of work per pause, so collections become more frequent and throughput drops. If the goal is unrealistic, pauses can still exceed it.
+      The collector changes only with an explicit flag.
+    sources:
+      - https://docs.oracle.com/en/java/javase/25/docs/specs/man/java.html#advanced-garbage-collection-options-for-java
+      - https://docs.oracle.com/en/java/javase/25/gctuning/garbage-first-garbage-collector-tuning.html

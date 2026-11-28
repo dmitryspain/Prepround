@@ -348,3 +348,378 @@ questions:
       Optimistic locking holds no locks while work is in progress: at commit the version in `WHERE` no longer matches, so the provider throws `OptimisticLockException` and marks the transaction for rollback. The application decides whether to retry the operation.
     sources:
       - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+  - id: hibernate-jpa-013
+    level: junior
+    type: single
+    text: Який JPQL-запит правильно вибере користувачів за іменем для цієї сутності?
+    text_en: "Which JPQL query correctly selects users by name for this entity?"
+    code:
+      lang: java
+      source: |
+        @Entity
+        @Table(name = "app_user")
+        public class User {
+            @Id Long id;
+            @Column(name = "full_name") String name;
+        }
+    options:
+      - text: "`select u from User u where u.name = :name`: назва сутності й ім'я поля класу"
+        text_en: "`select u from User u where u.name = :name`: the entity name and the class field name"
+        correct: true
+      - text: "`select u from app_user u where u.full_name = :name`: назва таблиці й колонка"
+        text_en: "`select u from app_user u where u.full_name = :name`: the table name and the column"
+      - text: "`select u from User u where u.full_name = :name`: назва сутності й колонка"
+        text_en: "`select u from User u where u.full_name = :name`: the entity name and the column"
+      - text: "`from app_user where full_name = :name`: скорочена форма запиту без `select`"
+        text_en: "`from app_user where full_name = :name`: a short query form without `select`"
+    explanation: >
+      JPQL працює з об'єктною моделлю: у `from` стоїть ім'я сутності (за замовчуванням — ім'я класу), а в умовах — атрибути класу.
+      Імена таблиці й колонки з `@Table` та `@Column` потрібні лише в нативному SQL, і саме тому три інші запити не пройдуть розбір.
+    explanation_en: >
+      JPQL works with the object model: `from` holds the entity name (by default the class name) and conditions use class attributes. Table and column names from `@Table` and `@Column` matter only in native SQL, which is why the other three queries fail to parse.
+    sources:
+      - https://docs.jboss.org/hibernate/orm/7.0/querylanguage/html_single/Hibernate_Query_Language.html#from-clause
+  - id: hibernate-jpa-014
+    level: junior
+    type: multiple
+    text: Які поля сутності Hibernate (доступ через поля, Jakarta Persistence 3.2) буде збережено в базі?
+    text_en: "Which fields of a Hibernate entity (field access, Jakarta Persistence 3.2) will be persisted to the database?"
+    options:
+      - text: "Звичайне поле `String nickname` без жодних анотацій"
+        text_en: "A plain field `String nickname` with no annotations at all"
+        correct: true
+      - text: "Поле `String nickname`, позначене `@Basic`, без `@Column`"
+        text_en: "A field `String nickname` marked with `@Basic` but without `@Column`"
+        correct: true
+      - text: "Поле `transient String cache`, оголошене з ключовим словом Java `transient`"
+        text_en: "A field `transient String cache` declared with the Java keyword `transient`"
+      - text: "Поле `String temp`, позначене анотацією `@Transient`"
+        text_en: "A field `String temp` marked with the `@Transient` annotation"
+      - text: "Поле `String nickname` без `@Basic` чи `@Column`, коли для нього є лише приватний геттер"
+        text_en: "A field `String nickname` without `@Basic` or `@Column`, when it has only a private getter"
+        correct: true
+    explanation: >
+      За специфікацією кожна нетимчасова змінна екземпляра, не позначена `@Transient`, є персистентною, а `@Basic` і `@Column` лише уточнюють відображення.
+      Поле з ключовим словом `transient` або з `@Transient` пропускається, і наявність геттера на це не впливає.
+    explanation_en: >
+      By the specification, every non-transient instance variable not annotated with `@Transient` is persistent, while `@Basic` and `@Column` only refine the mapping. A field with the `transient` keyword or `@Transient` is skipped, and the presence of a getter does not matter.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+  - id: hibernate-jpa-015
+    level: junior
+    type: single
+    text: Що станеться під час коміту цієї транзакції?
+    text_en: "What happens when this transaction commits?"
+    code:
+      lang: java
+      source: |
+        @Entity
+        public class Order {
+            @Id @GeneratedValue Long id;
+            @OneToMany List<Item> items = new ArrayList<>();   // no cascade
+        }
+
+        em.getTransaction().begin();
+        Order order = new Order();
+        order.items.add(new Item());
+        em.persist(order);
+        em.getTransaction().commit();
+    options:
+      - text: "Коміт завершиться помилкою: `Order` посилається на `Item`, якого немає серед керованих"
+        text_en: "The commit fails: `Order` references an `Item` that is not among the managed entities"
+        correct: true
+      - text: "Hibernate збереже `Order` разом з `Item`, бо елемент лежить у колекції збереженої сутності"
+        text_en: "Hibernate saves `Order` together with `Item`, because the element sits in the collection of a saved entity"
+      - text: "Збережеться лише `Order`, а новий `Item` без попередження буде проігноровано"
+        text_en: "Only `Order` is saved, and the new `Item` is ignored without any warning"
+      - text: "`Item` буде записано пізніше, під час першого читання колекції `items`"
+        text_en: "`Item` will be written later, when the `items` collection is first read"
+    explanation: >
+      `persist` поширюється на зв'язані сутності лише за `cascade = PERSIST` (або `ALL`). Без нього `Item` лишається transient, і під час `flush`
+      Hibernate виявляє посилання на незбережений екземпляр та кидає виняток. Мовчазного ігнорування немає.
+    explanation_en: >
+      `persist` reaches related entities only with `cascade = PERSIST` (or `ALL`). Without it `Item` stays transient, and during `flush` Hibernate detects the reference to an unsaved instance and throws an exception. Nothing is silently ignored.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+      - https://docs.jboss.org/hibernate/orm/7.0/userguide/html_single/Hibernate_User_Guide.html#pc-cascade
+  - id: hibernate-jpa-016
+    level: junior
+    type: single
+    text: Де Hibernate збереже поля `street` і `city` у цьому відображенні?
+    text_en: "Where will Hibernate store the `street` and `city` fields in this mapping?"
+    code:
+      lang: java
+      source: |
+        @Embeddable
+        public class Address {
+            String street;
+            String city;
+        }
+
+        @Entity
+        public class Customer {
+            @Id Long id;
+            @Embedded Address address;
+        }
+    options:
+      - text: "У колонках таблиці `Customer`, як і решта її полів, без окремого рядка"
+        text_en: "In columns of the `Customer` table, like its other fields"
+        correct: true
+      - text: "В окремій таблиці `Address`, а в `Customer` з'явиться зовнішній ключ на неї"
+        text_en: "In a separate `Address` table, and `Customer` gets a foreign key column pointing to it"
+      - text: "В одній колонці `address` у вигляді серіалізованого значення об'єкта"
+        text_en: "In a single `address` column as a serialized object value"
+      - text: "Ніде: вбудований клас без `@Id` Hibernate пропускає під час відображення"
+        text_en: "Nowhere: Hibernate skips an embedded class without an `@Id` during mapping"
+    explanation: >
+      Вбудований тип не має власної ідентичності й не є сутністю, тому його атрибути стають колонками таблиці власника.
+      Окрема таблиця з ключем була б відображенням `@OneToOne` на сутність.
+    explanation_en: >
+      An embeddable type has no identity of its own and is not an entity, so its attributes become columns of the owner's table. A separate table with a key would be a `@OneToOne` mapping to an entity.
+    sources:
+      - https://docs.jboss.org/hibernate/orm/7.0/userguide/html_single/Hibernate_User_Guide.html#embeddables
+  - id: hibernate-jpa-017
+    level: middle
+    type: single
+    text: >
+      У базі є користувач `id = 1` з іменем `a`. Яке ім'я буде в базі після виконання цього коду?
+    text_en: "The database has a user with `id = 1` and the name `a`. What name will be in the database after this code runs?"
+    code:
+      lang: java
+      source: |
+        User detached = new User();
+        detached.setId(1L);
+        detached.setName("b");
+
+        em.getTransaction().begin();
+        User managed = em.merge(detached);
+        detached.setName("c");
+        em.getTransaction().commit();
+    options:
+      - text: "`b`: керованою стає копія, повернена `merge`, а подальша зміна `detached` її не зачіпає"
+        text_en: "`b`: the copy returned by `merge` is managed; the later change to `detached` does not reach it"
+        correct: true
+      - text: "`c`: `merge` робить переданий об'єкт керованим, тож остання зміна потрапить в базу"
+        text_en: "`c`: `merge` makes the passed object managed, so the last change reaches the database"
+      - text: "`a`: `merge` лише читає рядок, а записує зміни виключно `persist`"
+        text_en: "`a`: `merge` only reads the row, and only `persist` writes changes"
+      - text: "Виняток, бо `merge` не можна викликати для об'єкта з уже наявним у базі `id`"
+        text_en: "An exception, because `merge` cannot be called for an object whose `id` already exists in the database"
+    explanation: >
+      `merge` копіює стан переданого екземпляра в керований екземпляр і повертає саме його, а аргумент лишається відокремленим.
+      Зміни після виклику треба робити на поверненому об'єкті, інакше вони тихо губляться.
+    explanation_en: >
+      `merge` copies the state of the passed instance into a managed instance and returns that one, while the argument stays detached. Changes after the call must be made on the returned object, otherwise they are lost silently.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+  - id: hibernate-jpa-018
+    level: middle
+    type: single
+    text: >
+      У таблиці `users` уже є 1 рядок. Режим скидання (flush mode) стандартний. Що поверне запит у цьому коді?
+    text_en: "The `users` table already has 1 row. The flush mode is the default. What will the query return in this code?"
+    code:
+      lang: java
+      source: |
+        em.getTransaction().begin();
+        User u = new User();
+        u.setId(2L);
+        em.persist(u);
+
+        Long n = em.createQuery("select count(x) from User x", Long.class)
+                   .getSingleResult();
+    options:
+      - text: "`2`: перед запитом, якого стосуються зміни, Hibernate скидає накопичені зміни в базу"
+        text_en: "`2`: before a query the changes affect, Hibernate flushes pending changes to the database"
+        correct: true
+      - text: "`1`: `INSERT` виконується лише під час коміту, тож запит не бачить нового користувача"
+        text_en: "`1`: the `INSERT` runs only at commit time, so the query does not see the new user row yet"
+      - text: "`1`: `persist` лише ставить сутність у чергу, поки не викликано `em.flush()` явно"
+        text_en: "`1`: `persist` only queues the entity until `em.flush()` is called explicitly"
+      - text: "Виняток, бо запит у транзакції з незбереженими змінами заборонений"
+        text_en: "An exception, because a query inside a transaction with unsaved changes is forbidden"
+    explanation: >
+      За `FlushModeType.AUTO` провайдер зобов'язаний зробити видимими для запиту всі зміни контексту, що можуть вплинути на його результат,
+      тому перед `select` виконується `INSERT`. Явний `flush` потрібен лише за режиму `COMMIT`.
+    explanation_en: >
+      With `FlushModeType.AUTO` the provider must make visible to the query all context changes that could affect its result, so the `INSERT` runs before the `select`. An explicit `flush` is needed only in `COMMIT` mode.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+  - id: hibernate-jpa-019
+    level: middle
+    type: single
+    text: Що станеться під час виконання цього запиту в Hibernate 7?
+    text_en: "What happens when this query runs in Hibernate 7?"
+    code:
+      lang: java
+      source: |
+        @Entity
+        public class Author {
+            @Id Long id;
+            @OneToMany(mappedBy = "author") List<Book> books;
+            @OneToMany(mappedBy = "author") List<Award> awards;
+        }
+
+        em.createQuery(
+            "select a from Author a join fetch a.books join fetch a.awards",
+            Author.class).getResultList();
+    options:
+      - text: "Кидається `MultipleBagFetchException`: два `List` без порядку не можна підтягнути разом"
+        text_en: "`MultipleBagFetchException`: two `List` bags cannot be fetched together"
+        correct: true
+      - text: "Запит виконається одним `JOIN`, а книги й нагороди прийдуть без дублікатів авторів"
+        text_en: "The query runs as one `JOIN`, and books and awards arrive without duplicate authors"
+      - text: "Hibernate підтягне першу колекцію, а другу мовчки лишить лінивою"
+        text_en: "Hibernate fetches the first collection and silently leaves the second one lazy"
+      - text: "Запит виконається, але ліміт і порядок рядків застосуються в пам'яті"
+        text_en: "The query runs, but the limit and row order are applied in memory"
+    explanation: >
+      Hibernate не вміє однозначно відновити кілька колекцій-«мішків» (`List` без `@OrderColumn`) з одного декартового добутку, тому відмовляє з `MultipleBagFetchException`.
+      Вихід: `Set`, `@OrderColumn` або `join fetch` однієї колекції й окремий запит чи підзапитне завантаження для другої.
+    explanation_en: >
+      Hibernate cannot unambiguously rebuild several bag collections (a `List` without `@OrderColumn`) from one Cartesian product, so it refuses with `MultipleBagFetchException`. The way out: a `Set`, `@OrderColumn`, or `join fetch` for one collection and a separate query or subselect fetching for the other.
+    sources:
+      - https://docs.jboss.org/hibernate/orm/7.0/javadocs/org/hibernate/loader/MultipleBagFetchException.html
+      - https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html
+  - id: hibernate-jpa-020
+    level: middle
+    type: multiple
+    text: Які твердження про стратегії наслідування сутностей у Jakarta Persistence 3.2 правильні?
+    text_en: "Which statements about entity inheritance strategies in Jakarta Persistence 3.2 are true?"
+    options:
+      - text: "Без анотації `@Inheritance` на кореневій сутності діє стратегія `SINGLE_TABLE`"
+        text_en: "Without an `@Inheritance` annotation on the root entity, the `SINGLE_TABLE` strategy applies"
+        correct: true
+      - text: "Клас з `@MappedSuperclass` не є сутністю, тому `select b from Base b` для нього недопустимий"
+        text_en: "A class with `@MappedSuperclass` is not an entity, so `select b from Base b` is not allowed for it"
+        correct: true
+      - text: "За `TABLE_PER_CLASS` поліморфний запит до базового типу об'єднує таблиці підтипів через `UNION`"
+        text_en: "With `TABLE_PER_CLASS`, a polymorphic query on the base type combines the subtype tables with `UNION`"
+        correct: true
+      - text: "За `JOINED` усі підтипи лежать в одній таблиці, а тип рядка визначає колонка-дискримінатор"
+        text_en: "With `JOINED`, all subtypes live in one table, and a discriminator column determines the row type"
+      - text: "За `SINGLE_TABLE` кожен підтип має власну таблицю з тим самим первинним ключем, що й у кореня"
+        text_en: "With `SINGLE_TABLE`, each subtype has its own table with the same primary key as the root"
+    explanation: >
+      `SINGLE_TABLE` типовий і зберігає всю ієрархію в одній таблиці, а `JOINED` дає таблицю на кожен клас із з'єднанням за ключем.
+      Змішані ознаки в двох останніх варіантах належать кожна іншій стратегії. Mapped superclass лише передає відображення нащадкам і не запитується.
+    explanation_en: >
+      `SINGLE_TABLE` is the default and stores the whole hierarchy in one table, while `JOINED` gives a table per class joined by key. The mixed-up features in the last two options each belong to the other strategy. A mapped superclass only passes its mapping to descendants and cannot be queried.
+    sources:
+      - https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+      - https://docs.jboss.org/hibernate/orm/7.0/userguide/html_single/Hibernate_User_Guide.html#entity-inheritance
+  - id: hibernate-jpa-021
+    level: senior
+    type: single
+    text: >
+      Імпорт 50 000 нових сутностей `Event` із `hibernate.jdbc.batch_size=50` виконує `INSERT` по одному, хоча драйвер пакетування підтримує.
+      Ключ оголошено як `@GeneratedValue(strategy = GenerationType.IDENTITY)`. Яка причина і що змінити?
+    text_en: "Importing 50,000 new `Event` entities with `hibernate.jdbc.batch_size=50` runs the `INSERT`s one by one, although the driver supports batching. The key is declared as `@GeneratedValue(strategy = GenerationType.IDENTITY)`. What is the cause and what should change?"
+    options:
+      - text: "Для `IDENTITY` ключ дає лише сам `INSERT`, тож Hibernate не пакетує вставки; перейти на `SEQUENCE`"
+        text_en: "With `IDENTITY` only the `INSERT` yields the key, so Hibernate skips batching; switch to `SEQUENCE`"
+        correct: true
+      - text: "`batch_size` діє лише на `UPDATE` і `DELETE`; для вставок потрібен окремий параметр `hibernate.insert_batch`"
+        text_en: "`batch_size` applies only to `UPDATE` and `DELETE`; inserts need a separate `hibernate.insert_batch` setting"
+      - text: "Пакети не збираються, доки після кожного `persist` не викликано `flush()`; додати цей виклик у цикл"
+        text_en: "Batches are not assembled until `flush()` is called after each `persist`; add that call to the loop"
+      - text: "Пакетування вимкнене, бо сутність має зв'язки `LAZY`; змінити їх на `EAGER`"
+        text_en: "Batching is off because the entity has `LAZY` associations; change them to `EAGER`"
+    explanation: >
+      Hibernate має виконати `INSERT` одразу, щоб отримати згенерований ключ, тому з `IDENTITY` він прозоро вимикає JDBC-пакетування вставок.
+      `SEQUENCE` з розумним `allocationSize` отримує ключі наперед, і вставки можна групувати. Параметра `hibernate.insert_batch` не існує, а `flush()` після кожного `persist` лише гарантує одиночні вставки.
+    explanation_en: >
+      Hibernate must run the `INSERT` immediately to obtain the generated key, so with `IDENTITY` it transparently disables JDBC batching of inserts. `SEQUENCE` with a sensible `allocationSize` gets keys in advance and inserts can be grouped. The `hibernate.insert_batch` setting does not exist, and `flush()` after every `persist` only guarantees single inserts.
+    sources:
+      - https://docs.jboss.org/hibernate/orm/7.0/userguide/html_single/Hibernate_User_Guide.html#batch
+  - id: hibernate-jpa-022
+    level: senior
+    type: single
+    text: >
+      Двонаправлений `@OneToOne`: у `Owner` є `@OneToOne(mappedBy = "owner", fetch = FetchType.LAZY) Profile profile`. Розширення байткоду не вмикали.
+      Що станеться під час `em.find(Owner.class, id)` у Hibernate 7?
+    text_en: "A bidirectional `@OneToOne`: `Owner` has `@OneToOne(mappedBy = \"owner\", fetch = FetchType.LAZY) Profile profile`. Bytecode enhancement is not enabled. What happens during `em.find(Owner.class, id)` in Hibernate 7?"
+    options:
+      - text: "Hibernate завантажить і `Profile` одразу, бо без запиту не знає, чи зв'язаний рядок існує"
+        text_en: "Hibernate loads `Profile` right away, since it cannot know whether a related row exists"
+        correct: true
+      - text: "У полі `profile` буде проксі, а `SELECT` виконається під час першого звернення до нього"
+        text_en: "The `profile` field will hold a proxy, and the `SELECT` runs on the first access to it"
+      - text: "Поле `profile` залишиться `null`, поки не викликати `em.refresh(owner)`"
+        text_en: "The `profile` field stays `null` until `em.refresh(owner)` is called"
+      - text: "Кидається виняток під час старту, бо `LAZY` на зворотній стороні `@OneToOne` не дозволений"
+        text_en: "An exception is thrown at startup, because `LAZY` on the inverse side of a `@OneToOne` is not allowed"
+    explanation: >
+      Для зворотної сторони `@OneToOne` проксі неможливий: поле має бути або `null`, або об'єктом, а це відомо лише після запиту.
+      Тому Hibernate ігнорує `LAZY` і підтягує зв'язок додатковим запитом (звідси N+1). Лінивою її робить розширення байткоду, а надійніше — однонаправлений `@OneToOne` із `@MapsId`.
+    explanation_en: >
+      A proxy is impossible for the inverse side of a `@OneToOne`: the field must be either `null` or an object, and that is known only after a query. So Hibernate ignores `LAZY` and loads the association with an extra query (hence N+1). Bytecode enhancement makes it lazy, and a more reliable choice is a unidirectional `@OneToOne` with `@MapsId`.
+    sources:
+      - https://docs.jboss.org/hibernate/orm/7.0/userguide/html_single/Hibernate_User_Guide.html#associations-one-to-one-bidirectional-lazy
+  - id: hibernate-jpa-023
+    level: senior
+    type: multiple
+    text: >
+      Імпорт мільйона рядків робить цикл `em.persist(...)` в одній транзакції з одним `EntityManager`; наприкінці коміт.
+      Які твердження правильні?
+    text_en: "Importing a million rows runs a loop of `em.persist(...)` in one transaction with a single `EntityManager`; a commit at the end. Which statements are true?"
+    options:
+      - text: "Кожна збережена сутність лишається керованою в контексті, тож пам'ять росте аж до `OutOfMemoryError`"
+        text_en: "Every saved entity stays managed in the context, so memory grows up to an `OutOfMemoryError`"
+        correct: true
+      - text: "Періодичні `flush()` разом із `clear()` тримають розмір контексту обмеженим"
+        text_en: "Periodic `flush()` together with `clear()` keeps the context size bounded"
+        correct: true
+      - text: "`StatelessSession` не має контексту персистентності, тож не накопичує сутності"
+        text_en: "`StatelessSession` has no persistence context, so it does not accumulate entities"
+        correct: true
+      - text: "Сам `flush()` без `clear()` звільняє пам'ять, бо Hibernate забуває вже записані сутності"
+        text_en: "`flush()` without `clear()` frees memory, as Hibernate forgets written entities"
+      - text: "Після `INSERT` Hibernate сам виселяє сутність із контексту, тож проблема лише в обсязі транзакції"
+        text_en: "After the `INSERT`, Hibernate evicts the entity itself, so only the transaction size matters"
+    explanation: >
+      Контекст персистентності тримає посилання на кожну керовану сутність і перевіряє їх на зміни, тож без `clear()` він росте. `flush()` лише синхронізує стан із базою
+      і нічого не виселяє. `StatelessSession` працює без кешу першого рівня й автоматичного перевіряння змін: операції виконуються синхронно, а повернені сутності відокремлені.
+    explanation_en: >
+      The persistence context keeps a reference to every managed entity and checks them for changes, so without `clear()` it keeps growing. `flush()` only synchronizes state with the database and evicts nothing. `StatelessSession` works without a first-level cache and automatic dirty checking: operations run synchronously and returned entities are detached.
+    sources:
+      - https://docs.jboss.org/hibernate/orm/7.0/userguide/html_single/Hibernate_User_Guide.html#batch
+  - id: hibernate-jpa-024
+    level: senior
+    type: single
+    text: Що виведе цей код, якщо `equals` і `hashCode` сутності `Tag` обчислюються лише з генерованого `id`?
+    text_en: "What does this code print if the `equals` and `hashCode` of the `Tag` entity are computed only from the generated `id`?"
+    code:
+      lang: java
+      source: |
+        @Entity
+        public class Tag {
+            @Id @GeneratedValue Long id;
+            @Override public boolean equals(Object o) {
+                return o instanceof Tag t && Objects.equals(id, t.id);
+            }
+            @Override public int hashCode() { return Objects.hash(id); }
+        }
+
+        Set<Tag> set = new HashSet<>();
+        Tag tag = new Tag();
+        set.add(tag);
+        em.persist(tag);
+        System.out.println(set.contains(tag));
+    options:
+      - text: "`false`: після `persist` хеш змінився, і `HashSet` шукає елемент не в тому кошику"
+        text_en: "`false`: after `persist` the hash changed, so `HashSet` looks in the wrong bucket"
+        correct: true
+      - text: "`true`: Hibernate після присвоєння `id` сам перебудовує хеш-таблицю колекції"
+        text_en: "`true`: Hibernate rebuilds the collection's hash table itself after assigning the `id`"
+      - text: "`true`: це той самий екземпляр, а `HashSet` порівнює посилання, не викликаючи `equals`"
+        text_en: "`true`: it is the same instance, and `HashSet` compares references without calling `equals`"
+      - text: "Виняток `ConcurrentModificationException`, бо хеш змінився, поки елемент у множині"
+        text_en: "A `ConcurrentModificationException`, because the hash changed while the element was in the set"
+    explanation: >
+      На момент `add` ідентифікатор ще `null`, а після `persist` він отримує значення, тож `hashCode` змінюється, поки об'єкт лежить у множині, і контракт `Set` порушено.
+      Типові виходи: хеш від бізнес-ключа, ключ, призначений до додавання, або сталий `hashCode`. Hibernate за кошиками `HashSet` не стежить.
+    explanation_en: >
+      At `add` time the identifier is still `null` and after `persist` it gets a value, so `hashCode` changes while the object sits in the set, which breaks the `Set` contract. Typical ways out: a hash from a business key, a key assigned before adding, or a constant `hashCode`. Hibernate does not track the buckets of a `HashSet`.
+    sources:
+      - https://docs.jboss.org/hibernate/orm/7.0/userguide/html_single/Hibernate_User_Guide.html#mapping-model-pojo-equalshashcode

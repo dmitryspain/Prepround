@@ -317,3 +317,301 @@ questions:
       endpoint itself is free. Extra NAT gateways would only increase costs, and they do not change internal routes to S3.
     sources:
       - https://docs.aws.amazon.com/vpc/latest/privatelink/gateway-endpoints.html
+  - id: aws-013
+    level: junior
+    type: single
+    text: >
+      Журнали застосунку лежать у бакеті S3: перший місяць їх читають часто, далі рідко, а через рік вони не потрібні. Що налаштувати, щоб не переносити й не видаляти їх вручну?
+    text_en: "Application logs are stored in an S3 bucket: they are read often in the first month, rarely after that, and are not needed after a year. What should you configure to avoid moving and deleting them by hand?"
+    options:
+      - text: "Правила S3 Lifecycle: перехід у дешевший клас сховища й видалення за терміном"
+        text_en: "S3 Lifecycle rules: a transition to a cheaper storage class and expiration after a set age"
+        correct: true
+      - text: "Версіювання бакета: старі версії самі видаляються, коли об'єкт перестають читати"
+        text_en: "Bucket versioning: old versions delete themselves once the object stops being read"
+      - text: "Bucket policy з умовою за часом, яка сама видаляє застарілі об'єкти"
+        text_en: "A bucket policy with a time condition that deletes outdated objects by itself"
+      - text: "Реплікацію в інший регіон: копія там зберігається дешевше, а оригінал зникає"
+        text_en: "Replication to another Region: the copy is stored there more cheaply and the original disappears"
+    explanation: >
+      Lifecycle-конфігурація описує дії над об'єктами залежно від віку: transition у інший клас сховища й expiration для видалення. Політики доступу лише дозволяють чи забороняють
+      операції, а самі нічого не видаляють; версіювання й реплікація створюють додаткові копії, а не прибирають оригінал.
+    explanation_en: >
+      A lifecycle configuration describes actions on objects by age: a transition to another storage class and an expiration for deletion. Access policies only allow or
+      deny operations and delete nothing themselves; versioning and replication create extra copies instead of removing the original.
+    sources:
+      - https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html
+  - id: aws-014
+    level: junior
+    type: single
+    text: Які атрибути мають бути в кожному елементі (item) таблиці DynamoDB?
+    text_en: "Which attributes must every item in a DynamoDB table have?"
+    options:
+      - text: "Лише атрибути первинного ключа; решта й їхні типи в елементів можуть різнитися"
+        text_en: "Only the primary key attributes; the rest and their types may differ between items"
+        correct: true
+      - text: "Набір атрибутів і типів, заданий під час створення таблиці, однаковий для всіх"
+        text_en: "The set of attributes and types set at table creation, identical for all items"
+      - text: "Ті самі атрибути, що й у першого записаного елемента, бо за ним фіксується схема"
+        text_en: "The same attributes as the first item written, because the schema is fixed by it"
+      - text: "Ключ і хоча б один атрибут, для якого створено вторинний індекс"
+        text_en: "The key and at least one attribute that has a secondary index"
+    explanation: >
+      Окрім первинного ключа, таблиця DynamoDB не має схеми: атрибути й типи наперед не оголошують, і кожен елемент може мати власний набір. Схему на рівні таблиці
+      фіксують лише ключові атрибути.
+    explanation_en: >
+      Apart from the primary key, a DynamoDB table is schemaless: attributes and types are not declared in advance, and each item can have its own set. At the table
+      level, only the key attributes are fixed.
+    sources:
+      - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html
+  - id: aws-015
+    level: junior
+    type: single
+    text: Де надійно зберігати стан між викликами функції AWS Lambda, наприклад лічильник відвіданих сторінок?
+    text_en: "Where should you reliably keep state between invocations of an AWS Lambda function, such as a page visit counter?"
+    options:
+      - text: "У зовнішньому сховищі, наприклад DynamoDB чи S3, бо функцію проєктують без власного стану"
+        text_en: "In an external store such as DynamoDB or S3, because the function is designed to be stateless"
+        correct: true
+      - text: "У глобальній змінній функції: середовище виконання завжди повторно використовується"
+        text_en: "In a global variable of the function: the execution environment is always reused"
+      - text: "У змінних середовища функції, які код оновлює під час кожного виклику"
+        text_en: "In the function's environment variables, which the code updates on every invocation"
+      - text: "У файлі в `/tmp`, який спільний для всіх паралельних екземплярів функції"
+        text_en: "In a file in `/tmp` that is shared by all concurrent instances of the function"
+    explanation: >
+      Lambda може повторно використати середовище виконання, а може створити нове, і паралельні виклики йдуть у різних середовищах. Тому локальні змінні та `/tmp`
+      корисні лише як кеш, а стан, який не можна втрачати, зберігають зовні.
+    explanation_en: >
+      Lambda may reuse an execution environment or create a new one, and concurrent invocations run in different environments. So local variables and `/tmp`
+      are useful only as a cache, while state that must not be lost is kept externally.
+    sources:
+      - https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtime-environment.html
+  - id: aws-016
+    level: junior
+    type: multiple
+    text: Які твердження про підмережі Amazon VPC правильні?
+    text_en: "Which statements about Amazon VPC subnets are true?"
+    options:
+      - text: "Кожна підмережа повністю лежить в одній зоні доступності й не може охоплювати кілька"
+        text_en: "Each subnet lies entirely within one Availability Zone and cannot span several"
+        correct: true
+      - text: "Публічна підмережа відрізняється тим, що її таблиця маршрутів має прямий маршрут на internet gateway"
+        text_en: "A public subnet differs in that its route table has a direct route to an internet gateway"
+        correct: true
+      - text: "Щоб пережити відмову однієї зони, ресурси розміщують у підмережах різних зон доступності"
+        text_en: "To survive the failure of one zone, resources are placed in subnets of different Availability Zones"
+        correct: true
+      - text: "Одну підмережу можна розтягнути на дві зони доступності, якщо в неї достатньо вільних адрес"
+        text_en: "One subnet can be stretched across two Availability Zones if it has enough free addresses"
+      - text: "Підмережа стає публічною, щойно інстансу призначили Elastic IP, навіть без маршруту на internet gateway"
+        text_en: "A subnet becomes public as soon as an instance gets an Elastic IP, even without a route to an internet gateway"
+    explanation: >
+      Зона доступності є межею підмережі, тому відмовостійкість будують через кілька підмереж. Публічною підмережу робить маршрут на internet gateway, а не публічна адреса
+      окремого інстанса: без маршруту трафік до інтернету не потрапить.
+    explanation_en: >
+      The Availability Zone is the boundary of a subnet, so resilience is built with several subnets. What makes a subnet public is a route to an internet gateway, not
+      the public address of a single instance: without the route, traffic cannot reach the internet.
+    sources:
+      - https://docs.aws.amazon.com/vpc/latest/userguide/configure-subnets.html
+  - id: aws-017
+    level: middle
+    type: single
+    text: >
+      Споживач стандартної черги SQS щоразу падає на одному «отруйному» повідомленні, і воно знову й знову повертається в чергу. Що налаштувати, щоб його ізолювати?
+    text_en: "A consumer of a standard SQS queue crashes on the same \"poison\" message every time, and it keeps returning to the queue. What should you configure to isolate it?"
+    options:
+      - text: "Dead-letter queue з redrive policy, де `maxReceiveCount` обмежує кількість отримань повідомлення"
+        text_en: "A dead-letter queue with a redrive policy where `maxReceiveCount` limits how many times a message is received"
+        correct: true
+      - text: "Максимальний visibility timeout: повідомлення стане невидимим і більше не повернеться"
+        text_en: "The maximum visibility timeout: the message becomes invisible and never returns"
+      - text: "Delay queue: після затримки повідомлення автоматично відкидається, якщо його не оброблено"
+        text_en: "A delay queue: after the delay the message is discarded automatically if it was not processed"
+      - text: "FIFO-чергу: дедуплікація відхилить повторні спроби того самого повідомлення"
+        text_en: "A FIFO queue: deduplication will reject repeated attempts at the same message"
+    explanation: >
+      Після `maxReceiveCount` отримань без видалення SQS переносить повідомлення в dead-letter queue, де його можна розібрати окремо. Більший visibility timeout лише відкладає
+      наступну спробу, а затримка доставки діє лише на початку життя повідомлення.
+    explanation_en: >
+      After `maxReceiveCount` receives without deletion, SQS moves the message to a dead-letter queue, where it can be examined separately. A longer visibility timeout
+      only postpones the next attempt, and delivery delay applies only at the start of a message's life.
+    sources:
+      - https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html
+  - id: aws-018
+    level: middle
+    type: single
+    text: >
+      У таблиці DynamoDB замовлень ключ партиції — `orderId`. Потрібно часто отримувати замовлення клієнта за `customerId`, відсортовані за датою. Що правильно?
+    text_en: "In a DynamoDB orders table, the partition key is `orderId`. You often need to fetch a customer's orders by `customerId`, sorted by date. What is right?"
+    options:
+      - text: "Створити GSI з ключем партиції `customerId` і ключем сортування `createdAt` та виконувати `Query` по ньому"
+        text_en: "Create a GSI with partition key `customerId` and sort key `createdAt`, and run `Query` against it"
+        correct: true
+      - text: "Виконувати `Scan` із фільтром за `customerId`: фільтр відсікає зайві елементи ще до читання"
+        text_en: "Run `Scan` with a filter on `customerId`: the filter drops extra items before they are read"
+      - text: "Виконувати `Query` по базовій таблиці з `customerId` в умові ключа: DynamoDB знайде їх за будь-яким атрибутом"
+        text_en: "Run `Query` on the base table with `customerId` in the key condition: DynamoDB finds items by any attribute"
+      - text: "Додати local secondary index з ключем партиції `customerId`: він успадкує розподіл базової таблиці"
+        text_en: "Add a local secondary index with partition key `customerId`: it inherits the base table's distribution"
+    explanation: >
+      `Query` працює лише з ключовими атрибутами таблиці чи індексу, тож для іншого шаблону доступу потрібен GSI з власним ключем. Фільтр у `Scan` застосовується вже після читання,
+      тому ви платите за прочитане з усієї таблиці. Local secondary index зберігає ключ партиції базової таблиці, змінити його не можна.
+    explanation_en: >
+      `Query` works only with the key attributes of a table or index, so another access pattern needs a GSI with its own key. A filter in `Scan` is applied after the read,
+      so you pay for everything read from the whole table. A local secondary index keeps the base table's partition key, and it cannot be changed.
+    sources:
+      - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html
+      - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.FilterExpression.html
+  - id: aws-019
+    level: middle
+    type: multiple
+    text: Які твердження про Application Load Balancer (ALB) і Network Load Balancer (NLB) правильні?
+    text_en: "Which statements about Application Load Balancer (ALB) and Network Load Balancer (NLB) are true?"
+    options:
+      - text: "ALB працює на прикладному рівні й спрямовує запити за шляхом URL або заголовком `Host`"
+        text_en: "ALB works at the application layer and routes requests by URL path or the `Host` header"
+        correct: true
+      - text: "NLB працює на транспортному рівні й обробляє TCP, UDP і TLS-з'єднання"
+        text_en: "NLB works at the transport layer and handles TCP, UDP, and TLS connections"
+        correct: true
+      - text: "До NLB можна прив'язати по одному Elastic IP на кожну підмережу, щоб мати статичні адреси"
+        text_en: "An NLB can have one Elastic IP per subnet attached to it, giving static addresses"
+        correct: true
+      - text: "NLB розбирає HTTP-запити, читає заголовки й вибирає цільову групу за шляхом URL"
+        text_en: "NLB parses HTTP requests, reads headers, and picks a target group by URL path"
+      - text: "ALB працює лише на транспортному рівні, тож не бачить HTTP-заголовків і шляху запиту"
+        text_en: "ALB works only at the transport layer, so it cannot see the HTTP headers and path of a request"
+    explanation: >
+      ALB — балансувальник сьомого рівня, тому читає шлях і заголовки; NLB — четвертого, тому маршрутизує з'єднання без розбору HTTP, зате підтримує статичні адреси. Вибір цільової групи
+      за шляхом URL — можливість ALB.
+    explanation_en: >
+      ALB is a layer 7 balancer, so it reads the path and headers; NLB is layer 4, so it routes connections without parsing HTTP but supports static addresses. Choosing a target
+      group by URL path is an ALB capability.
+    sources:
+      - https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html
+      - https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html
+  - id: aws-020
+    level: middle
+    type: single
+    text: >
+      Користувачу IAM в акаунті A потрібно працювати з бакетом в акаунті B через IAM-роль. Що має бути налаштовано?
+    text_en: "An IAM user in account A needs to work with a bucket in account B through an IAM role. What must be configured?"
+    options:
+      - text: "У B роль із trust policy, що довіряє акаунту A, а користувачу в A дозволено `sts:AssumeRole` для цієї ролі"
+        text_en: "In B, a role whose trust policy trusts account A, and the user in A is allowed `sts:AssumeRole` on that role"
+        correct: true
+      - text: "Достатньо дозволу `sts:AssumeRole` у політиці користувача в A, бо акаунт B про довіру нічого не знає"
+        text_en: "An `sts:AssumeRole` permission in the user's policy in A is enough, because account B knows nothing about trust"
+      - text: "Достатньо trust policy у ролі B, а політика користувача в A для прийняття ролі не потрібна"
+        text_en: "A trust policy in B's role is enough, and the user's policy in A is not needed to assume the role"
+      - text: "Користувачі однієї організації приймають ролі одне одного в інших акаунтах автоматично"
+        text_en: "Users in the same organization assume each other's roles in other accounts automatically"
+    explanation: >
+      Між акаунтами потрібні обидві сторони: trust policy ролі в B дозволяє акаунту A її приймати, а політика користувача в A дає право викликати `sts:AssumeRole`. Спільна організація
+      сама по собі прав на приймання ролей не дає.
+    explanation_en: >
+      Across accounts both sides are needed: the role's trust policy in B allows account A to assume it, and the user's policy in A grants the right to call `sts:AssumeRole`. Membership in the
+      same organization does not grant rights to assume roles by itself.
+    sources:
+      - https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html
+  - id: aws-021
+    level: senior
+    type: single
+    text: >
+      У таблиці DynamoDB ключ партиції — календарна дата (`2026-11-28`), і вся поточна активність пише в сьогоднішню дату. Запити отримують помилки обмеження пропускної здатності, хоча сумарне
+      споживання таблиці далеко від виділеного. Що це за проблема й як її усунути?
+    text_en: "In a DynamoDB table, the partition key is a calendar date (`2026-11-28`), and all current activity writes to today's date. Requests get throughput throttling errors although the table's total consumption is far below what is provisioned. What is the problem and how do you fix it?"
+    options:
+      - text: "Гаряча партиція: навантаження сконцентроване на одному значенні ключа, тож ключ роблять рівномірнішим або додають шард-суфікс"
+        text_en: "A hot partition: the load is concentrated on one key value, so you make the key more uniform or add a shard suffix"
+        correct: true
+      - text: "Сумарне виділення замале: достатньо кратно збільшити виділену пропускну здатність таблиці, і обмеження зникнуть"
+        text_en: "The total allocation is too small: it is enough to raise the table's provisioned throughput several times, and throttling will disappear"
+      - text: "Помилка GSI: слід видалити вторинні індекси, бо вони забирають пропускну здатність партиції"
+        text_en: "A GSI problem: you should delete the secondary indexes, because they take the partition's throughput"
+      - text: "Перейти на режим on-demand, бо він знімає обмеження пропускної здатності для окремого значення ключа"
+        text_en: "Switch to on-demand mode, because it removes the throughput limit for a single key value"
+    explanation: >
+      Кожна партиція має власну межу пропускної здатності, а один ключ потрапляє в одну партицію, тож сумарний запас таблиці не допомагає. Рівномірний розподіл ключів або write sharding
+      розкладає записи по партиціях. On-demand також обмежений на рівні партиції.
+    explanation_en: >
+      Each partition has its own throughput limit, and one key lands in a single partition, so the table's total headroom does not help. A uniform key distribution or write sharding
+      spreads writes across partitions. On-demand mode is also limited per partition.
+    sources:
+      - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-partition-key-design.html
+      - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-partition-key-sharding.html
+  - id: aws-022
+    level: senior
+    type: single
+    text: >
+      Lambda читає стандартну чергу SQS пачками. Коли обробка одного повідомлення з пачки кидає виняток, увесь пакет повертається в чергу й успішно оброблені повідомлення виконуються повторно. Що зробити, щоб
+      повторювалося лише невдале?
+    text_en: "A Lambda function reads a standard SQS queue in batches. When processing one message in a batch throws an exception, the whole batch returns to the queue and the successfully processed messages run again. What should you do so that only the failed one is retried?"
+    options:
+      - text: "Увімкнути `ReportBatchItemFailures` і повертати з функції ідентифікатори лише невдалих повідомлень"
+        text_en: "Enable `ReportBatchItemFailures` and return from the function only the identifiers of failed messages"
+        correct: true
+      - text: "Перехоплювати виняток і завершувати функцію успішно: Lambda сама поверне невдале повідомлення в чергу"
+        text_en: "Catch the exception and finish the function successfully: Lambda will return the failed message to the queue itself"
+      - text: "Перейти на FIFO-чергу: вона повторює лише ті повідомлення, що спричинили помилку"
+        text_en: "Switch to a FIFO queue: it retries only the messages that caused the error"
+      - text: "Збільшити visibility timeout черги: успішні повідомлення тоді не повертатимуться"
+        text_en: "Increase the queue's visibility timeout: successful messages will then not come back"
+    explanation: >
+      За замовчуванням помилка виклику повертає в чергу всю пачку. Partial batch response дозволяє вказати невдалі повідомлення, і Lambda видаляє решту. Якщо ж проковтнути виняток,
+      уся пачка вважатиметься успішною, а невдале повідомлення буде втрачене.
+    explanation_en: >
+      By default, an invocation error returns the whole batch to the queue. A partial batch response lets you name the failed messages, and Lambda deletes the rest. If you swallow
+      the exception, the whole batch counts as successful and the failed message is lost.
+    sources:
+      - https://docs.aws.amazon.com/lambda/latest/dg/services-sqs-errorhandling.html
+  - id: aws-023
+    level: senior
+    type: single
+    text: >
+      Після Multi-AZ failover RDS служба вже працює на новому основному інстансі, але частина клієнтів ще довго не може підключитися й помилково звертається до старої адреси. Рядок підключення містить endpoint
+      інстанса БД. Найімовірніша причина?
+    text_en: "After an RDS Multi-AZ failover, the service is already running on the new primary instance, but some clients still cannot connect for a long time and keep reaching for the old address. The connection string uses the DB instance endpoint. What is the most likely cause?"
+    options:
+      - text: "Клієнти кешують DNS-запис endpoint довше за його TTL, а після failover IP-адреса за ним змінюється"
+        text_en: "Clients cache the endpoint's DNS record longer than its TTL, and the IP address behind it changes after a failover"
+        correct: true
+      - text: "Після failover endpoint змінюється, тож у застосунках треба вручну прописати endpoint нового основного інстанса"
+        text_en: "After a failover the endpoint changes, so applications must be given the new primary's endpoint by hand"
+      - text: "Новий основний інстанс має бути підвищений вручну через `PromoteReadReplica`, інакше він не приймає з'єднань"
+        text_en: "The new primary must be promoted manually with `PromoteReadReplica`, otherwise it accepts no connections"
+      - text: "Старе з'єднання автоматично переходить на новий інстанс, а затримку дає синхронізація журналу транзакцій"
+        text_en: "Existing connections move to the new instance automatically, and the delay comes from transaction log synchronization"
+    explanation: >
+      Endpoint інстанса БД лишається тим самим, але IP-адреса за ним після failover може змінитися. Тому AWS радить не кешувати DNS клієнтами довше за малий TTL.
+    explanation_en: >
+      The DB instance endpoint stays the same, but the IP address behind it can change after a failover. That is why AWS advises clients not to cache DNS for longer than a small TTL.
+    sources:
+      - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_BestPractices.html
+  - id: aws-024
+    level: senior
+    type: multiple
+    text: Які твердження про service control policies (SCP) в AWS Organizations правильні?
+    text_en: "Which statements about service control policies (SCPs) in AWS Organizations are true?"
+    options:
+      - text: "SCP не надає прав, а лише задає межу максимально дозволеного для акаунтів"
+        text_en: "An SCP grants no permissions and only sets the maximum allowed for accounts"
+        correct: true
+      - text: "Ефективні права — це перетин того, що дозволяють SCP, і того, що дозволяють політики ідентичності чи ресурсу"
+        text_en: "Effective permissions are the intersection of what the SCPs allow and what identity or resource policies allow"
+        correct: true
+      - text: "SCP обмежує й кореневого користувача (root) у членських акаунтах організації"
+        text_en: "An SCP also restricts the root user in the organization's member accounts"
+        correct: true
+      - text: "SCP з `Allow` на дію дає її користувачу членського акаунта, навіть без дозволу в його IAM-політиках"
+        text_en: "An SCP with `Allow` on an action gives it to a member account's user, even without a permission in their IAM policies"
+      - text: "SCP діє й на користувачів та ролі в управлінському (management) акаунті організації"
+        text_en: "An SCP also applies to the users and roles in the organization's management account"
+    explanation: >
+      SCP — запобіжник: навіть дозвіл у SCP нічого не дає без дозволу в IAM-політиці, а будь-яка дія поза SCP заблокована. Обмеження стосуються root членських акаунтів, але не управлінського акаунта.
+    explanation_en: >
+      An SCP is a guardrail: even an allow in an SCP gives nothing without an allow in an IAM policy, and any action outside the SCP is blocked. The limits apply to the root user of member accounts but not to the
+      management account.
+    sources:
+      - https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html
