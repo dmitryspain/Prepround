@@ -26,21 +26,26 @@ public class CatalogIconsEndpointTests(PostgresFixture postgres)
         ["react"] = ("react", "Re"), ["angular"] = ("angular", "Ng"), ["vue"] = ("vuedotjs", "Vu"),
     };
 
-    /// <summary>Topics with a logo by the card; every other topic has none.</summary>
+    /// <summary>Topic icons by content (brand logo or pictogram); since e124b97 every topic has one.</summary>
     private static readonly Dictionary<string, string> CardTopicIcons = new()
     {
-        ["aspnet-core"] = "dotnet", ["sql"] = "postgresql", ["messaging"] = "rabbitmq", ["docker-k8s"] = "kubernetes",
-        ["java-core"] = "openjdk", ["spring-boot"] = "springboot", ["hibernate-jpa"] = "hibernate",
-        ["aws"] = "amazonwebservices", ["python-core"] = "python", ["django"] = "django", ["fastapi"] = "fastapi",
-        ["sqlalchemy"] = "sqlalchemy", ["celery"] = "celery", ["pytest"] = "pytest", ["nosql"] = "redis",
-        ["javascript"] = "javascript", ["typescript"] = "typescript", ["nodejs-runtime"] = "nodedotjs",
-        ["express-fastify"] = "fastify", ["nestjs"] = "nestjs", ["prisma-typeorm"] = "prisma", ["api-design"] = "swagger",
-        ["go-lang"] = "go", ["go-db"] = "postgresql", ["php-lang"] = "php", ["laravel"] = "laravel",
-        ["symfony"] = "symfony", ["composer-psr"] = "composer", ["react-core"] = "react", ["react-hooks"] = "react",
-        ["nextjs"] = "nextdotjs", ["angular-components"] = "angular", ["angular-di"] = "angular",
-        ["angular-change-detection"] = "angular", ["angular-routing-forms"] = "angular", ["vue-core"] = "vuedotjs",
-        ["vue-composition-api"] = "vuedotjs", ["vue-router"] = "vuedotjs", ["html-css"] = "html5",
-        ["frontend-testing"] = "jest",
+        ["angular-change-detection"] = "angular", ["angular-components"] = "angular", ["angular-di"] = "angular",
+        ["angular-routing-forms"] = "angular", ["api-design"] = "swagger", ["architecture"] = "boxes",
+        ["aspnet-core"] = "dotnet", ["aws"] = "amazonwebservices", ["azure"] = "cloud", ["celery"] = "celery",
+        ["composer-psr"] = "composer", ["csharp"] = "hash", ["django"] = "django", ["docker-k8s"] = "kubernetes",
+        ["dotnet-async"] = "zap", ["dotnet-clr"] = "cpu", ["ef-core"] = "database", ["express-fastify"] = "fastify",
+        ["fastapi"] = "fastapi", ["frontend-testing"] = "jest", ["go-concurrency"] = "gitmerge",
+        ["go-db"] = "postgresql", ["go-http"] = "globe", ["go-lang"] = "go", ["go-runtime"] = "cpu",
+        ["hibernate-jpa"] = "hibernate", ["html-css"] = "html5", ["java-concurrency"] = "gitmerge",
+        ["java-core"] = "openjdk", ["javascript"] = "javascript", ["jvm"] = "cpu", ["laravel"] = "laravel",
+        ["messaging"] = "rabbitmq", ["nestjs"] = "nestjs", ["nextjs"] = "nextdotjs", ["ngrx"] = "ngrx",
+        ["nodejs-runtime"] = "nodedotjs", ["nosql"] = "redis", ["nuxt"] = "nuxtdotjs", ["php-lang"] = "php",
+        ["php-orm"] = "doctrine", ["phpunit"] = "flaskconical", ["pinia"] = "vuedotjs", ["prisma-typeorm"] = "prisma",
+        ["pytest"] = "pytest", ["python-async"] = "zap", ["python-core"] = "python", ["react-core"] = "react",
+        ["react-data-routing"] = "reactrouter", ["react-hooks"] = "react", ["react-state"] = "redux",
+        ["rxjs"] = "reactivex", ["spring-boot"] = "springboot", ["sql"] = "postgresql", ["sqlalchemy"] = "sqlalchemy",
+        ["symfony"] = "symfony", ["typescript"] = "typescript", ["vue-composition-api"] = "vuedotjs",
+        ["vue-core"] = "vuedotjs", ["vue-router"] = "vuedotjs", ["web-performance"] = "gauge",
     };
 
     [Fact]
@@ -67,6 +72,7 @@ public class CatalogIconsEndpointTests(PostgresFixture postgres)
                 Assert.Equal(CardTopicIcons.GetValueOrDefault(Str(topic, "id")), icon);
             });
             Assert.Equal(CardTopicIcons.Count, topics.Count(topic => topic["icon"] is not null));
+            Assert.Equal(CardTopicIcons.Keys.Order(), topics.Select(topic => Str(topic, "id")).Order());
         }
     }
 

@@ -27,7 +27,7 @@ public partial class ImportCommandTests
             stacks.Select(stack => (stack.Key, stack.Value.Icon, stack.Value.Symbol)).Order());
         var topics = await TopicIconsAsync(db);
         Assert.Equal("postgresql", topics["sql"]);
-        Assert.Null(topics["csharp"]);
+        Assert.Equal("hash", topics["csharp"]);
 
         // One topic icon changes, one stack symbol disappears: each row is updated, not re-added.
         content.Replace(SqlFile, "icon: postgresql", "icon: mysql");
