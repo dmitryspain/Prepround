@@ -54,8 +54,8 @@
 | БД | Neon Free, Frankfurt, PG 18, БД `preprounddb`; `preprounddb_owner` — міграції й імпорт, `prepround_reader` (лише `SELECT`) — API |
 
 - Push у `master` перезбирає обидва сервіси. Єдиний секрет — змінна Render `ConnectionStrings__Prepround` (роль читача).
-- **Міграції:** нову EF-міграцію застосувати в Neon **до** push коду, що від неї залежить. Без рядка власника: `dotnet ef migrations script <від> <до> --idempotent` і виконати в Neon SQL Editor (роль `preprounddb_owner`, Chrome — з дозволу власника).
-- **Прод-імпорт:** запускає власник або головна сесія з рядком, який власник сам дав у чаті; з закоміченого стану, без `--include-drafts`; після — smoke `curl` каталогу (`?lang=en` теж). Рядок — лише у змінній середовища однієї команди, ніколи у файли. Npgsql не приймає URI: перевести в `Host=…;Database=…;Username=…;Password=…;SSL Mode=VerifyFull;Channel Binding=Require;GSS Encryption Mode=Disable`.
+- **Міграції:** нову EF-міграцію застосувати в Neon **до** push коду, що від неї залежить. Або з `prod.env` (див. «Прод-імпорт»), або: `dotnet ef migrations script <від> <до> --idempotent` і виконати в Neon SQL Editor (роль `preprounddb_owner`, Chrome — з дозволу власника).
+- **Прод-імпорт** (рішення власника 2026-11-28): рядок ролі `preprounddb_owner` лежить у `~/.config/prepround/prod.env` (поза репо, `600`), рядок у чаті більше не потрібен. Головна сесія запускає сама з закоміченого стану, без `--include-drafts`: `set -a; source ~/.config/prepround/prod.env; set +a; dotnet run --no-build --project src/Prepround.ContentTool -- import ../content` (поза пісочницею); після — smoke `curl` каталогу (`?lang=en` теж). У user-secrets не класти: локальний `import` пішов би в прод. Субагентам цей файл не давати. Файл зник або пароль змінено — рядок у Neon Console → Connect (Npgsql не приймає URI: `Host=…;Database=…;Username=…;Password=…;SSL Mode=VerifyFull;Channel Binding=Require;GSS Encryption Mode=Disable`).
 - **Холодний старт:** Render засинає після 15 хв; пробудження ~25 с (Render 14 с + перший запит до БД 11 с).
 
 ## Git (з 2026-11-21 комітить і пушить головна сесія)
