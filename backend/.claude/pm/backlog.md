@@ -26,7 +26,7 @@
 
 - **Backend:** 42 теми, 504 питання, PASS, uk+en.
 - **Frontend опубліковано** (PASS, uk+en): `angular-components`, `react-core`, `react-hooks`, `vue-core`, `vue-composition-api`.
-- **Frontend завершено 2026-11-27:** усі 19 тем Frontend PASS uk+en, без `draft` (14 тем цієї хвилі закомічено; звіти `reports/fe-*`). **Потрібен прод-імпорт** (рядок Neon від власника). Angular 22: OnPush типовий (бриф). Minor-хвости: ngrx-001/008/012, angular-routing-forms-008/011, rxjs-011, різний `lang` коду (`reports/fe-ng-wave2-tester.md`).
+- **Frontend завершено 2026-11-27:** усі 19 тем Frontend PASS uk+en, без `draft` (14 тем цієї хвилі закомічено; звіти `reports/fe-*`). **У проді з 2026-11-28:** прод-імпорт (+168 питань, іконки 21 теми); каталог uk/en — 732 питання, кожен з 9 стеків по 120, у всіх тем є `icon`. Angular 22: OnPush типовий (бриф). Minor-хвости: ngrx-001/008/012, angular-routing-forms-008/011, rxjs-011, різний `lang` коду (`reports/fe-ng-wave2-tester.md`).
 - **(історія) Frontend — чернетки, пауза з 2026-11-18** (`critical` у `pinia-003`, ліміт API):
   - написано, чекають фактчеку або правок: `angular-change-detection`, `angular-di`, `nextjs`, `pinia` (FAIL коло 1: 003 critical, 006, 012), `react-data-routing`, `react-state`, `vue-router` — по 12 питань, лише українською; при відновленні додати англійську (бриф контенту, «Дві мови»);
   - не почато: `angular-routing-forms`, `frontend-testing`, `html-css`, `ngrx`, `nuxt`, `rxjs`, `web-performance`.
