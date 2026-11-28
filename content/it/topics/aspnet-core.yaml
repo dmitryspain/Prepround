@@ -474,3 +474,431 @@ questions:
     sources:
       - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/native-aot#review-aspnet-core-and-native-aot-compatibility
       - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/native-aot#work-with-minimal-apis-and-json-payloads
+
+  - id: aspnet-core-013
+    level: junior
+    type: single
+    text: >
+      ASP.NET Core застосунок запустили в контейнері, де не задано ні `ASPNETCORE_ENVIRONMENT`, ні
+      `DOTNET_ENVIRONMENT`. Яке середовище отримає застосунок?
+    text_en: >
+      An ASP.NET Core app is started in a container where neither `ASPNETCORE_ENVIRONMENT` nor
+      `DOTNET_ENVIRONMENT` is set. Which environment will the app get?
+    options:
+      - text: "`Production`: це середовище за замовчуванням, у ньому вимкнено більшість налагоджувальних можливостей"
+        text_en: "`Production`: it is the default environment, and most debugging features are disabled in it"
+        correct: true
+      - text: "`Development`: без явного значення застосунок вважає, що його запустили локально на машині розробника"
+        text_en: "`Development`: without an explicit value the app assumes it was started locally on a developer machine"
+      - text: "`Staging`: це проміжне середовище, яке фреймворк вибирає, коли запуск відбувається в контейнері"
+        text_en: "`Staging`: it is an intermediate environment that the framework picks when the app runs in a container"
+      - text: "Жодного: `app.Environment.EnvironmentName` буде порожнім рядком, доки не викликати `UseEnvironment`"
+        text_en: "None: `app.Environment.EnvironmentName` stays an empty string until `UseEnvironment` is called"
+    explanation: >
+      Якщо змінні середовища не задано, ASP.NET Core вважає, що працює `Production`, тому сторінка виняткових
+      ситуацій розробника й подібні можливості вимкнені. `Development` потрібно вказати явно, зазвичай це робить
+      профіль запуску на машині розробника.
+    explanation_en: >
+      When the environment variables are not set, ASP.NET Core assumes `Production`, so the developer exception
+      page and similar features are off. `Development` has to be set explicitly, which a launch profile usually
+      does on a developer machine.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/environments
+
+  - id: aspnet-core-014
+    level: junior
+    type: single
+    text: "За яким шляхом буде доступний ендпоінт, зареєстрований так?"
+    text_en: "At which path will the endpoint registered like this be available?"
+    code:
+      lang: csharp
+      source: |
+        var app = WebApplication.CreateBuilder(args).Build();
+
+        var api = app.MapGroup("/api/v1");
+        api.MapGet("/items/{id:int}", (int id) => $"item {id}");
+
+        app.Run();
+    options:
+      - text: "`GET /api/v1/items/7`: префікс групи додається до маршруту кожного ендпоінта в ній"
+        text_en: "`GET /api/v1/items/7`: the group prefix is prepended to the route of every endpoint in it"
+        correct: true
+      - text: "`GET /items/7`: `MapGroup` лише групує ендпоінти для метаданих і не змінює їхніх маршрутів"
+        text_en: "`GET /items/7`: `MapGroup` only groups endpoints for metadata and does not change their routes"
+      - text: "`GET /api/v1`: усі ендпоінти групи обробляються одним маршрутом, а `id` береться з рядка запиту"
+        text_en: "`GET /api/v1`: all endpoints of the group are served by one route, and `id` is taken from the query string"
+      - text: "`GET /items/7/api/v1`: префікс групи додається в кінець маршруту ендпоінта, а не на початок"
+        text_en: "`GET /items/7/api/v1`: the group prefix is appended to the end of the endpoint route, not the start"
+    explanation: >
+      `MapGroup` задає спільний префікс для всіх ендпоінтів групи й дає задати метадані для всіх разом, наприклад
+      викликом `RequireAuthorization`. Тому маршрут стає `/api/v1/items/{id:int}`, а не `/items/{id:int}`.
+    explanation_en: >
+      `MapGroup` sets a common prefix for all endpoints in the group and lets you apply metadata to all of them
+      at once, for example with `RequireAuthorization`. So the route becomes `/api/v1/items/{id:int}`, not
+      `/items/{id:int}`.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/route-handlers#route-groups
+
+  - id: aspnet-core-015
+    level: junior
+    type: multiple
+    text: Які твердження про атрибут `[ApiController]` на контролері правильні?
+    text_en: Which statements about the `[ApiController]` attribute on a controller are true?
+    options:
+      - text: "Помилки валідації моделі автоматично дають відповідь HTTP 400 без перевірки `ModelState` у діях"
+        text_en: "Model validation errors automatically produce an HTTP 400 response without checking `ModelState` in actions"
+        correct: true
+      - text: "Для параметра-класу, якого немає в DI, джерело прив'язки виводиться як тіло запиту"
+        text_en: "For a class-typed parameter that is not registered in DI, the binding source is inferred as the request body"
+        correct: true
+      - text: "Дії контролера доступні лише через атрибутну маршрутизацію, а не через конвенційні маршрути"
+        text_en: "Controller actions are reachable only through attribute routing, not through conventional routes"
+        correct: true
+      - text: "Усі дії контролера автоматично вимагають автентифікованого користувача, як із `[Authorize]`"
+        text_en: "All actions of the controller automatically require an authenticated user, as with `[Authorize]`"
+      - text: "Контролер перетворюється на набір Minimal API ендпоінтів і обходить конвеєр фільтрів MVC"
+        text_en: "The controller is turned into a set of Minimal API endpoints and bypasses the MVC filter pipeline"
+    explanation: >
+      `[ApiController]` вмикає автоматичний 400 на помилки моделі, виведення джерел прив'язки (складні типи, яких
+      немає в DI, беруться з тіла) і вимогу атрибутної маршрутизації. Він не додає автентифікацію й не змінює
+      модель виконання: це все ще MVC із фільтрами.
+    explanation_en: >
+      `[ApiController]` enables an automatic 400 on model errors, binding source inference (complex types that
+      are not in DI come from the body) and the attribute routing requirement. It adds no authentication and does
+      not change the execution model: it is still MVC with filters.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/web-api/#apicontroller-attribute
+      - https://learn.microsoft.com/en-us/aspnet/core/web-api/#binding-source-parameter-inference
+
+  - id: aspnet-core-016
+    level: junior
+    type: single
+    text: "Чому в логуванні перевагу віддають рядку B, а не A?"
+    text_en: "Why is line B preferred over line A for logging?"
+    code:
+      lang: csharp
+      source: |
+        // A
+        logger.LogInformation($"Order {orderId} shipped to {city}");
+
+        // B
+        logger.LogInformation("Order {OrderId} shipped to {City}", orderId, city);
+    options:
+      - text: "У B аргументи передаються провайдеру окремо, тож його можна зберігати як поля, а текст — не будувати завчасно"
+        text_en: "In B the arguments reach the provider separately, so it can store them as fields without building the text early"
+        correct: true
+      - text: "A не скомпілюється: інтерполяція рядків не дозволена в аргументах методів `ILogger`"
+        text_en: "A will not compile: string interpolation is not allowed in `ILogger` method arguments"
+      - text: "B записує повідомлення в усі провайдери, а A — лише в консольний провайдер"
+        text_en: "B writes the message to all providers, while A writes only to the console provider"
+      - text: "B автоматично піднімає рівень повідомлення до `Warning`, щоб воно не загубилося серед інших"
+        text_en: "B automatically raises the message level to `Warning` so that it does not get lost among others"
+    explanation: >
+      У шаблоні `{OrderId}` аргументи лишаються окремими значеннями, тож провайдери можуть зберігати їх як поля
+      для пошуку й фільтрації. Інтерполяція (A) формує готовий рядок одразу, навіть якщо рівень логування вимкнено,
+      і втрачає структуру. Компілюються обидва рядки, рівень повідомлення в обох `Information`.
+    explanation_en: >
+      In the `{OrderId}` template the arguments stay separate values, so providers can store them as fields for
+      searching and filtering. Interpolation (A) builds the final string immediately, even if the log level is
+      disabled, and loses the structure. Both lines compile, and the level is `Information` in both.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/logging#log-message-template
+
+  - id: aspnet-core-017
+    level: middle
+    type: single
+    text: >
+      Зареєстровано два обробники: `builder.Services.AddExceptionHandler<ValidationExceptionHandler>();` і
+      потім `builder.Services.AddExceptionHandler<GlobalExceptionHandler>();`, а також викликано
+      `app.UseExceptionHandler()`. Ендпоінт кидає `TimeoutException`: `TryHandleAsync` першого обробника
+      повертає `false`, другого — `true`. Що станеться?
+    text_en: >
+      Two handlers are registered: `builder.Services.AddExceptionHandler<ValidationExceptionHandler>();` and then
+      `builder.Services.AddExceptionHandler<GlobalExceptionHandler>();`, and `app.UseExceptionHandler()` is called.
+      An endpoint throws `TimeoutException`: `TryHandleAsync` of the first handler returns `false`, and of the
+      second returns `true`. What happens?
+    options:
+      - text: "Обробники викликаються в порядку реєстрації, ланцюг зупиняється на другому, який повернув `true`"
+        text_en: "Handlers are called in registration order, and the chain stops at the second one, which returned `true`"
+        correct: true
+      - text: "Перше `false` одразу завершує перебір, і middleware виконує свою поведінку за замовчуванням"
+        text_en: "The first `false` ends the iteration at once, and the middleware runs its default behavior"
+      - text: "Викликається лише обробник, зареєстрований останнім, бо він перекриває попередні реєстрації"
+        text_en: "Only the handler registered last is called, because it overrides the earlier registrations"
+      - text: "Обидва обробники пишуть у відповідь, а middleware зливає їхні результати в один `ProblemDetails`"
+        text_en: "Both handlers write to the response, and the middleware merges their results into one `ProblemDetails`"
+    explanation: >
+      Middleware перебирає зареєстровані `IExceptionHandler` у порядку реєстрації, доки один не поверне `true`
+      (виняток оброблено). `false` означає лише «це не мій виняток», тому перебір іде далі. Якщо жоден не
+      обробив виняток, спрацьовує поведінка middleware за замовчуванням.
+    explanation_en: >
+      The middleware iterates registered `IExceptionHandler`s in registration order until one returns `true`
+      (the exception is handled). `false` only means "not my exception", so the iteration continues. If none
+      handled the exception, the middleware's default behavior applies.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling#iexceptionhandler
+
+  - id: aspnet-core-018
+    level: middle
+    type: single
+    text: >
+      У `appsettings.json` для `Mail:Host` записано порожній рядок. Що станеться (ASP.NET Core 10)?
+    text_en: >
+      `Mail:Host` is an empty string in `appsettings.json`. What happens (ASP.NET Core 10)?
+    code:
+      lang: csharp
+      source: |
+        builder.Services.AddOptions<MailOptions>()
+            .BindConfiguration("Mail")
+            .ValidateDataAnnotations();
+
+        builder.Services.AddSingleton<MailSender>();
+
+        public class MailOptions
+        {
+            [Required] public string Host { get; set; } = "";
+        }
+
+        public class MailSender(IOptions<MailOptions> options)
+        {
+            private readonly string _host = options.Value.Host;
+        }
+    options:
+      - text: "Застосунок стартує, а `OptionsValidationException` падає під час першого читання `options.Value`"
+        text_en: "The app starts, and `OptionsValidationException` is thrown on the first read of `options.Value`"
+        correct: true
+      - text: "Застосунок не стартує: `ValidateDataAnnotations` перевіряє всі налаштування під час запуску хоста"
+        text_en: "The app does not start: `ValidateDataAnnotations` checks all options while the host starts"
+      - text: "Валідація не виконується для `IOptions<T>`: вона працює лише з `IOptionsMonitor<T>` і `IOptionsSnapshot<T>`"
+        text_en: "Validation is not run for `IOptions<T>`: it works only with `IOptionsMonitor<T>` and `IOptionsSnapshot<T>`"
+      - text: "У лог іде попередження, а `options.Value` повертає об'єкт із порожнім `Host`"
+        text_en: "A warning is written to the log, and `options.Value` returns an object with an empty `Host`"
+    explanation: >
+      Валідація опцій виконується ліниво, під час першого створення значення (`options.Value`), тож без
+      `ValidateOnStart()` хост успішно стартує, а помилка вилізе пізніше, в роботі. Додавши `ValidateOnStart()`, ви
+      змусите перевірку виконатися під час запуску, і застосунок швидко впаде з тим самим винятком.
+    explanation_en: >
+      Options validation is lazy: it runs when the value is first created (`options.Value`), so without
+      `ValidateOnStart()` the host starts successfully and the error appears later, at run time. Adding
+      `ValidateOnStart()` forces the check to run at startup, and the app fails fast with the same exception.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/options#options-validation
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/options#validateonstart
+
+  - id: aspnet-core-019
+    level: middle
+    type: single
+    text: "Що поверне останній виклик у цьому коді?"
+    text_en: "What will the last call in this code return?"
+    code:
+      lang: csharp
+      source: |
+        var services = new ServiceCollection();
+        services.AddKeyedSingleton<ICache, RedisCache>("redis");
+
+        using var provider = services.BuildServiceProvider();
+
+        ICache? cache = provider.GetService<ICache>();
+    options:
+      - text: "`null`: ключовану реєстрацію не видно під час звичайного розв'язання без ключа"
+        text_en: "`null`: a keyed registration is not visible to a regular resolve without a key"
+        correct: true
+      - text: "Екземпляр `RedisCache`, бо це єдина реєстрація `ICache` у контейнері"
+        text_en: "A `RedisCache` instance, because it is the only `ICache` registration in the container"
+      - text: "Екземпляр `RedisCache`, якщо ключ є рядком, адже рядкові ключі контейнер вважає ключем за замовчуванням"
+        text_en: "A `RedisCache` instance if the key is a string, because the container treats string keys as the default key"
+      - text: "Кидає `InvalidOperationException`, бо `GetService` відмовляється розв'язувати ключовані сервіси"
+        text_en: "Throws `InvalidOperationException`, because `GetService` refuses to resolve keyed services"
+    explanation: >
+      Ключова реєстрація належить до окремого простору: розв'язувати її треба з ключем
+      (`GetRequiredKeyedService<ICache>("redis")` або `[FromKeyedServices("redis")]`). `GetService` без ключа
+      повертає `null`, а `GetRequiredService` у цьому разі кинув би `InvalidOperationException`.
+    explanation_en: >
+      A keyed registration lives in its own space and must be resolved with the key
+      (`GetRequiredKeyedService<ICache>("redis")` or `[FromKeyedServices("redis")]`). `GetService` without a key
+      returns `null`, while `GetRequiredService` would throw `InvalidOperationException` here.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection#keyed-services
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection#keyed-services
+
+  - id: aspnet-core-020
+    level: middle
+    type: multiple
+    text: Які твердження про CORS в ASP.NET Core правильні?
+    text_en: Which statements about CORS in ASP.NET Core are true?
+    options:
+      - text: "Поєднання `AllowAnyOrigin` і `AllowCredentials` небезпечне, і CORS-сервіс повертає недійсну CORS-відповідь"
+        text_en: "Combining `AllowAnyOrigin` and `AllowCredentials` is insecure, and the CORS service returns an invalid CORS response"
+        correct: true
+      - text: "`UseCors` викликають після `UseRouting`, але до `UseAuthorization`, щоб політика діяла для ендпоінтів"
+        text_en: "`UseCors` is called after `UseRouting` but before `UseAuthorization`, so that the policy applies to endpoints"
+        correct: true
+      - text: "Origin із піддоменом-шаблоном `https://*.example.com` працює лише разом із `SetIsOriginAllowedToAllowWildcardSubdomains`"
+        text_en: "An origin with a wildcard subdomain `https://*.example.com` works only together with `SetIsOriginAllowedToAllowWildcardSubdomains`"
+        correct: true
+      - text: "CORS-політика захищає API від будь-яких клієнтів, зокрема від `curl` і Postman, бо сервер відхиляє чужі origin"
+        text_en: "A CORS policy protects the API from any client, including `curl` and Postman, because the server rejects foreign origins"
+      - text: "Preflight-запити `OPTIONS` треба вручну обробляти в кожній дії контролера, middleware їх не відповідає"
+        text_en: "Preflight `OPTIONS` requests must be handled manually in every controller action, the middleware does not answer them"
+    explanation: >
+      Порядок `UseRouting`, `UseCors`, `UseAuthorization` обов'язковий, а wildcard-піддомени потребують окремого
+      методу. Дозвіл будь-якого origin разом із credentials CORS-сервіс відхиляє. CORS ні в якому разі не є
+      механізмом безпеки сервера: це послаблення політики одного походження в браузері, і preflight middleware
+      відповідає сам.
+    explanation_en: >
+      The order `UseRouting`, `UseCors`, `UseAuthorization` is required, and wildcard subdomains need a separate
+      method. The CORS service rejects any origin combined with credentials. CORS is not a server security
+      mechanism: it relaxes the same-origin policy in the browser, and the middleware answers preflight itself.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/security/cors
+
+  - id: aspnet-core-021
+    level: senior
+    type: single
+    text: >
+      API у Kubernetes має liveness-проби на `/health`, де зареєстровано перевірку з'єднання з PostgreSQL. Коли
+      база на хвилину стала недоступною, оркестратор перезапустив усі поди, і відновлення затягнулося. Як це
+      виправити?
+    text_en: >
+      An API in Kubernetes has liveness probes on `/health`, which has a PostgreSQL connectivity check registered.
+      When the database became unavailable for a minute, the orchestrator restarted all the pods, and recovery
+      dragged on. How should this be fixed?
+    options:
+      - text: "Розділити проби: liveness без залежних перевірок (`Predicate = _ => false`), а перевірку БД лишити з тегом `ready`"
+        text_en: "Split the probes: liveness without dependency checks (`Predicate = _ => false`), and keep the DB check under a `ready` tag"
+        correct: true
+      - text: "Подовжити `timeoutSeconds` liveness-проби, щоб вона переживала короткі збої бази без перезапуску"
+        text_en: "Increase the liveness probe's `timeoutSeconds` so that it survives short database outages without a restart"
+      - text: "Прибрати перевірку БД із застосунку й залишити лише `AddHealthChecks()` без жодних зареєстрованих перевірок"
+        text_en: "Remove the DB check from the app and keep only `AddHealthChecks()` with no registered checks"
+      - text: "Замінити liveness-пробу на readiness-пробу з тим самим ендпоінтом `/health`, бо readiness не перезапускає поди"
+        text_en: "Replace the liveness probe with a readiness probe on the same `/health` endpoint, because readiness does not restart pods"
+    explanation: >
+      Liveness має казати лише «процес живий», бо збій залежності не лікується перезапуском і лише множить
+      навантаження на відновлення. Залежності перевіряє readiness, яка тимчасово виводить под із балансування.
+      У ASP.NET Core це робиться тегами й `Predicate`: liveness-ендпоінт не виконує жодної перевірки, а
+      readiness-ендпоінт виконує лише перевірки з тегом `ready`.
+    explanation_en: >
+      Liveness should only say "the process is alive", because a failed dependency is not cured by a restart and
+      only adds load to the recovery. Dependencies are checked by readiness, which temporarily takes a pod out of
+      load balancing. In ASP.NET Core this is done with tags and `Predicate`: the liveness endpoint runs no
+      checks, and the readiness endpoint runs only checks tagged `ready`.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks#separate-readiness-and-liveness-probes
+      - https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks#filter-health-checks
+
+  - id: aspnet-core-022
+    level: senior
+    type: single
+    text: >
+      Застосунок викликає `UseHttpsRedirection` і працює в контейнері за Ingress, який завершує TLS і пересилає
+      трафік у Kestrel по HTTP. Браузер зациклюється на редиректах на HTTPS. Яке виправлення усуває причину, не відкриваючи можливості підробити заголовки від клієнта?
+    text_en: >
+      An app calls `UseHttpsRedirection` and runs in a container behind an Ingress that terminates TLS and
+      forwards traffic to Kestrel over HTTP. The browser loops on redirects to HTTPS. Which fix removes the cause without letting clients forge the forwarded headers?
+    options:
+      - text: "Увімкнути forwarded headers middleware до редиректу, щоб бачити схему з `X-Forwarded-Proto`, і довіряти лише відомим проксі"
+        text_en: "Enable forwarded headers middleware before the redirect to see the scheme from `X-Forwarded-Proto`, and trust only known proxies"
+        correct: true
+      - text: "Додати `UseHsts` перед редиректом, щоб браузер запам'ятав, що сайт працює лише по HTTPS, і більше не надсилав HTTP-запитів"
+        text_en: "Add `UseHsts` before the redirect so the browser remembers that the site works only over HTTPS and stops sending HTTP requests"
+      - text: "Задати `ForwardLimit = null` і очистити `KnownProxies` та `KnownNetworks`, щоб приймати заголовки від будь-якої адреси"
+        text_en: "Set `ForwardLimit = null` and clear `KnownProxies` and `KnownNetworks` so that headers are accepted from any address"
+      - text: "Увімкнути в Kestrel HTTP/2, щоб Ingress міг передавати початкову схему запиту у протоколі з'єднання"
+        text_en: "Enable HTTP/2 in Kestrel so that Ingress can pass the original request scheme in the connection protocol"
+    explanation: >
+      Kestrel бачить лише HTTP-з'єднання від проксі, тож `UseHttpsRedirection` постійно переспрямовує на HTTPS,
+      а проксі знову знімає TLS. Forwarded headers middleware підставляє початкову схему з `X-Forwarded-Proto`.
+      Він має стояти раніше за редирект і HSTS. Довіряти заголовкам слід лише відомим проксі: `ForwardLimit = null`
+      із порожніми списками дозволяє підробляти їх.
+    explanation_en: >
+      Kestrel sees only an HTTP connection from the proxy, so `UseHttpsRedirection` keeps redirecting to HTTPS
+      while the proxy strips TLS again. The forwarded headers middleware restores the original scheme from
+      `X-Forwarded-Proto`. It must run before the redirect and HSTS. Headers should be trusted only from known
+      proxies: `ForwardLimit = null` with empty lists lets anyone forge them.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer#forwarded-headers-middleware-order
+      - https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer#forwarded-headers-middleware-options
+
+  - id: aspnet-core-023
+    level: senior
+    type: multiple
+    text: Які твердження про фонові сервіси (`BackgroundService`) у ASP.NET Core 10 правильні?
+    text_en: Which statements about background services (`BackgroundService`) in ASP.NET Core 10 are true?
+    options:
+      - text: "Необроблений виняток в `ExecuteAsync` логується, і за замовчуванням хост зупиняється"
+        text_en: "An unhandled exception in `ExecuteAsync` is logged, and by default the host is stopped"
+        correct: true
+      - text: "Scoped-сервіс у фоновому сервісі отримують через `IServiceScopeFactory.CreateScope()`, а не конструктором"
+        text_en: "A scoped service in a background service is obtained through `IServiceScopeFactory.CreateScope()`, not the constructor"
+        correct: true
+      - text: "`StartAsync` фонових сервісів виконуються послідовно, тому довге виконання одного затримує старт наступних"
+        text_en: "The `StartAsync` methods of hosted services run sequentially, so a long-running one delays the start of the next ones"
+        correct: true
+      - text: "Після винятку в `ExecuteAsync` хост лише логує помилку й автоматично перезапускає цей сервіс із паузою"
+        text_en: "After an exception in `ExecuteAsync` the host only logs the error and automatically restarts this service after a pause"
+      - text: "Кожна ітерація циклу в `ExecuteAsync` отримує власний scope, тож scoped-залежності можна просто інжектити в конструктор"
+        text_en: "Each loop iteration in `ExecuteAsync` gets its own scope, so scoped dependencies can simply be injected into the constructor"
+    explanation: >
+      Із .NET 6 виняток із `ExecuteAsync` логується й за замовчуванням зупиняє хост, тому автоматичного
+      перезапуску немає. Фоновий сервіс є singleton, тож scoped-залежності треба брати в явно створеному scope.
+      Hosted services стартують послідовно в порядку реєстрації, отже довгий `StartAsync` блокує решту.
+    explanation_en: >
+      Since .NET 6 an exception from `ExecuteAsync` is logged and by default stops the host, so there is no
+      automatic restart. A background service is a singleton, so scoped dependencies must be taken in an
+      explicitly created scope. Hosted services start sequentially in registration order, so a long `StartAsync`
+      blocks the rest.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/6.0/hosting-exception-handling
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/scoped-service
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services#ihostedservice-interface
+
+  - id: aspnet-core-024
+    level: senior
+    type: single
+    text: >
+      Singleton `ReportGenerator` на кожен виклик бере `IServiceProvider` (кореневий) і робить
+      `provider.GetRequiredService<TempFile>()`. `TempFile` — `IDisposable`, зареєстрований як transient. Через
+      добу сервіс працює, але пам'ять і кількість відкритих файлів ростуть. Чому?
+    text_en: >
+      A singleton `ReportGenerator` takes the (root) `IServiceProvider` and calls
+      `provider.GetRequiredService<TempFile>()` on every call. `TempFile` is `IDisposable`, registered as
+      transient. After a day the service is still running, but memory and the number of open files keep growing.
+      Why?
+    code:
+      lang: csharp
+      source: |
+        builder.Services.AddTransient<TempFile>();
+        builder.Services.AddSingleton<ReportGenerator>();
+
+        public class ReportGenerator(IServiceProvider provider)
+        {
+            public void Generate()
+            {
+                var file = provider.GetRequiredService<TempFile>();
+                // ... write the report using file; Dispose is never called
+            }
+        }
+    options:
+      - text: "Контейнер тримає посилання на кожен transient `IDisposable`, розв'язаний із кореня, до зупинки застосунку"
+        text_en: "The container keeps a reference to every transient `IDisposable` resolved from the root until the app stops"
+        correct: true
+      - text: "Transient-сервіси завжди кешуються контейнером як singleton і повторно використовуються, тож файли не закриваються"
+        text_en: "Transient services are always cached by the container as singletons and reused, so the files are never closed"
+      - text: "Збирач сміття не збирає `IDisposable` без фіналізатора, тож такі об'єкти живуть, доки не викличуть `Dispose`"
+        text_en: "The garbage collector does not collect an `IDisposable` without a finalizer, so such objects live until `Dispose` is called"
+      - text: "Кореневий провайдер створює для кожного виклику окремий scope і звільняє його лише через дві години простою"
+        text_en: "The root provider creates a separate scope for each call and releases it only after two hours of idleness"
+    explanation: >
+      Контейнер відстежує одноразові сервіси, які створив, і звільняє їх, коли закінчується scope, де їх
+      розв'язано. Для кореневого провайдера це зупинка застосунку, тож кожен transient `TempFile` лишається
+      досяжним. Рішення: створювати scope (`CreateScope`) на виклик або віддати створення фабриці й самому
+      викликати `Dispose`.
+    explanation_en: >
+      The container tracks the disposable services it created and disposes them when the scope they were
+      resolved in ends. For the root provider that is application shutdown, so every transient `TempFile`
+      stays reachable. The fix is to create a scope (`CreateScope`) per call, or to use a factory and call
+      `Dispose` yourself.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection-guidelines#disposal-of-services
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection-guidelines#disposable-transient-services-captured-by-container

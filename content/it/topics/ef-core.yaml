@@ -324,3 +324,370 @@ questions:
       EF Core does not lock rows; it checks that the token in the database is still the one that was read.
       If the row was changed in the meantime, the `UPDATE` will not find it by the condition, and EF will throw `DbUpdateConcurrencyException`,
       while how to resolve the conflict is up to the application code.
+
+  - id: ef-core-013
+    level: junior
+    type: single
+    text: >
+      Яку властивість EF Core за конвенцією, без жодних атрибутів і Fluent API,
+      робить первинним ключем сутності `Order`?
+    text_en: >
+      Which property does EF Core, by convention and without any attributes or Fluent API,
+      make the primary key of an `Order` entity?
+    options:
+      - text: "Властивість з назвою `Id` або `OrderId`"
+        text_en: "A property named `Id` or `OrderId`"
+        correct: true
+      - text: "Першу за порядком оголошення властивість типу `int` або `Guid`"
+        text_en: "The first property of type `int` or `Guid` in declaration order"
+      - text: "Будь-яку властивість, назва якої закінчується на `Key` або `Number`"
+        text_en: "Any property whose name ends with `Key` or `Number`"
+      - text: "Жодну: без явного налаштування ключа модель EF Core не збереться"
+        text_en: "None: without an explicit key configuration the EF Core model will not build"
+    explanation: >
+      Конвенція шукає властивість `Id` або `OrderId` (ім'я типу з `Id`). Порядок оголошення й тип тут нічого не вирішують,
+      а модель без жодної такої властивості справді не збереться, але саме через відсутність ключа за конвенцією.
+    explanation_en: >
+      The convention looks for a property named `Id` or `OrderId` (the type name plus `Id`). Declaration order and type do not matter here,
+      and a model with no such property would indeed fail to build, but only because no key was found by convention.
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/modeling/keys
+
+  - id: ef-core-014
+    level: junior
+    type: single
+    text: >
+      Який стан має сутність, яку щойно передали в `db.Users.Add(user)`,
+      якщо `SaveChanges()` ще не викликали?
+    text_en: >
+      What state does an entity have right after it was passed to `db.Users.Add(user)`,
+      if `SaveChanges()` has not been called yet?
+    options:
+      - text: "`Added`: контекст відстежує її й вставить рядок під час `SaveChanges()`"
+        text_en: "`Added`: the context tracks it and will insert a row during `SaveChanges()`"
+        correct: true
+      - text: "`Unchanged`: сутність уже в базі, оскільки `Add` одразу виконує `INSERT`"
+        text_en: "`Unchanged`: the entity is already in the database because `Add` runs the `INSERT` at once"
+      - text: "`Detached`: контекст нічого не знає про неї до виклику `SaveChanges()`"
+        text_en: "`Detached`: the context knows nothing about it until `SaveChanges()` is called"
+      - text: "`Modified`: контекст позначає зміненою кожну властивість нової сутності"
+        text_en: "`Modified`: the context marks every property of the new entity as changed"
+    explanation: >
+      `Add` лише починає відстежувати сутність зі станом `Added`, до бази нічого не йде.
+      `INSERT` виконується на `SaveChanges()`, після чого стан стає `Unchanged`.
+    explanation_en: >
+      `Add` only starts tracking the entity in the `Added` state, and nothing is sent to the database.
+      The `INSERT` runs on `SaveChanges()`, after which the state becomes `Unchanged`.
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/change-tracking/explicit-tracking
+
+  - id: ef-core-015
+    level: junior
+    type: single
+    text: Коли в цьому коді EF Core надішле SQL-запит до бази?
+    text_en: When does EF Core send an SQL query to the database in this code?
+    code:
+      lang: csharp
+      source: |
+        var query = db.Orders.Where(o => o.Total > 100);
+        query = query.OrderBy(o => o.CreatedAt);
+        var list = await query.ToListAsync();
+    options:
+      - text: "Лише на `ToListAsync()`: один запит з `WHERE` і `ORDER BY`"
+        text_en: "Only on `ToListAsync()`: a single query with `WHERE` and `ORDER BY`"
+        correct: true
+      - text: "На `Where`: цей запит виконується одразу, а `OrderBy` сортує вже отримані рядки в пам'яті"
+        text_en: "On `Where`: this query runs at once, and `OrderBy` then sorts the rows already received in memory"
+      - text: "Тричі: окремий запит на кожен рядок, який змінює змінну `query`"
+        text_en: "Three times: a separate query for each line that changes the `query` variable"
+      - text: "На `Where` і на `ToListAsync()`: перший запит перевіряє, чи є в таблиці підхожі рядки"
+        text_en: "On `Where` and on `ToListAsync()`: the first query checks whether the table has any matching rows"
+    explanation: >
+      `Where` і `OrderBy` лише доповнюють дерево запиту `IQueryable`. EF Core переклав би його в SQL і виконав
+      тільки під час перебору результату, тут це `ToListAsync()`.
+    explanation_en: >
+      `Where` and `OrderBy` only extend the `IQueryable` query tree. EF Core translates it to SQL and executes it
+      only when the result is enumerated, which here is `ToListAsync()`.
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/querying/how-query-works
+
+  - id: ef-core-016
+    level: junior
+    type: multiple
+    text: >
+      У проєкті ввімкнено nullable reference types. Які твердження про налаштування колонок за конвенціями EF Core правильні?
+    text_en: >
+      Nullable reference types are enabled in the project. Which statements about column configuration by EF Core conventions are true?
+    options:
+      - text: "Властивість `string Name` стає обов'язковою: колонка отримує обмеження `NOT NULL`"
+        text_en: "A property `string Name` becomes required: the column gets a `NOT NULL` constraint"
+        correct: true
+      - text: "Властивість `string? Note` стає необов'язковою: колонка допускає значення `NULL`"
+        text_en: "A property `string? Note` becomes optional: the column allows `NULL` values"
+        correct: true
+      - text: "Властивість `int Age` допускає `NULL`, бо `int` — тип значення"
+        text_en: "A property `int Age` allows `NULL`, because `int` is a value type"
+      - text: "Кожна властивість посилального типу допускає `NULL`, поки немає `[Required]`"
+        text_en: "Every reference-type property allows `NULL` until there is `[Required]`"
+    explanation: >
+      Коли nullable reference types увімкнено, обов'язковість береться з C#: `string` — обов'язкова, `string?` — ні.
+      Типи значень без `?` (`int`) теж обов'язкові, тож `[Required]` для `string` додавати не потрібно.
+    explanation_en: >
+      With nullable reference types enabled, requiredness comes from C#: `string` is required and `string?` is not.
+      Value types without `?` (`int`) are required as well, so `[Required]` is not needed on a `string`.
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/modeling/entity-properties#required-and-optional-properties
+
+  - id: ef-core-017
+    level: middle
+    type: single
+    text: Що виведе цей код, якщо користувач з `Id = 1` існує, а контекст створено щойно?
+    text_en: What does this code print if the user with `Id = 1` exists and the context was just created?
+    code:
+      lang: csharp
+      source: |
+        var a = await db.Users.FirstAsync(u => u.Id == 1);
+        var b = await db.Users.FirstAsync(u => u.Id == 1);
+        var c = await db.Users.AsNoTracking().FirstAsync(u => u.Id == 1);
+        Console.WriteLine($"{ReferenceEquals(a, b)} {ReferenceEquals(a, c)}");
+    options:
+      - text: "`True False`: другий запит повертає вже відстежуваний екземпляр, а `AsNoTracking` створює новий"
+        text_en: "`True False`: the second query returns the tracked instance, while `AsNoTracking` creates a new one"
+        correct: true
+      - text: "`False False`: кожен запит до бази матеріалізує окремий об'єкт"
+        text_en: "`False False`: every database query materializes a separate object"
+      - text: "`True True`: усі три запити читають один рядок, тож повертається той самий об'єкт"
+        text_en: "`True True`: all three queries read the same row, so the same object is returned"
+      - text: "`False True`: перший екземпляр замінюється тим, що повернув запит без відстеження"
+        text_en: "`False True`: the first instance is replaced by the one returned by the no-tracking query"
+    explanation: >
+      Відстежуваний запит робить identity resolution: для ключа, який уже є в ChangeTracker, повертає наявний екземпляр.
+      Запит без відстеження не звертається до ChangeTracker і щоразу створює новий об'єкт.
+    explanation_en: >
+      A tracking query performs identity resolution: for a key already in the ChangeTracker it returns the existing instance.
+      A no-tracking query does not consult the ChangeTracker and creates a new object each time.
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/querying/tracking#identity-resolution
+
+  - id: ef-core-018
+    level: middle
+    type: single
+    text: >
+      У моделі за конвенціями `Post` має `int BlogId` і навігацію `Blog`, а `Blog` має `List<Post> Posts`.
+      Що станеться на реляційній базі, якщо викликати `db.Remove(blog)` без завантаження постів і `SaveChanges()`?
+    text_en: >
+      In a model built by conventions, `Post` has `int BlogId` and a `Blog` navigation, and `Blog` has `List<Post> Posts`.
+      What happens on a relational database if you call `db.Remove(blog)` without loading the posts and then `SaveChanges()`?
+    options:
+      - text: "Блог видалиться, а його пости видалить сама база завдяки каскадному видаленню"
+        text_en: "The blog is deleted, and the database itself deletes its posts through cascade delete"
+        correct: true
+      - text: "`SaveChanges()` кине виняток, бо в блога лишилися пости, яких EF не завантажив"
+        text_en: "`SaveChanges()` throws, because the blog still has posts that EF did not load"
+      - text: "Блог видалиться, а в постах `BlogId` стане `NULL`, бо EF очистить зовнішній ключ"
+        text_en: "The blog is deleted and `BlogId` in the posts becomes `NULL`, because EF clears the foreign key"
+      - text: "Видалиться лише блог, а пости залишаться в таблиці з `BlogId` видаленого блога"
+        text_en: "Only the blog is deleted, and the posts stay in the table with the deleted blog's `BlogId`"
+    explanation: >
+      Зв'язок обов'язковий, бо `BlogId` не допускає `NULL`, а обов'язкові зв'язки за конвенцією налаштовано на каскадне видалення.
+      Тому в схемі є `ON DELETE CASCADE`, і навантажувати пости в контекст не потрібно. Занулення зовнішнього ключа
+      стосується необов'язкових зв'язків.
+    explanation_en: >
+      The relationship is required because `BlogId` does not allow `NULL`, and required relationships are configured for cascade delete by convention.
+      So the schema has `ON DELETE CASCADE` and the posts do not need to be loaded into the context. Nulling the foreign key
+      applies to optional relationships.
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/saving/cascade-delete
+
+  - id: ef-core-019
+    level: middle
+    type: multiple
+    text: Які твердження про використання одного екземпляра `DbContext` у паралельному коді правильні?
+    text_en: Which statements about using a single `DbContext` instance in concurrent code are true?
+    options:
+      - text: "Екземпляр `DbContext` не потокобезпечний: його не можна одночасно використовувати з кількох потоків"
+        text_en: "A `DbContext` instance is not thread-safe: it must not be used from several threads at the same time"
+        correct: true
+      - text: "Запуск двох запитів на одному контексті через `Task.WhenAll` без очікування першого може дати `InvalidOperationException`"
+        text_en: "Starting two queries on one context via `Task.WhenAll` without awaiting the first can throw `InvalidOperationException`"
+        correct: true
+      - text: "Для паралельних операцій кожна задача має брати власний контекст, наприклад із `IDbContextFactory`"
+        text_en: "For parallel operations each task should get its own context, for example from `IDbContextFactory`"
+        correct: true
+      - text: "Реєстрація контексту як Scoped робить його потокобезпечним, бо екземпляр створюється один на запит"
+        text_en: "Registering the context as Scoped makes it thread-safe, because one instance is created per request"
+      - text: "Виклик `AsNoTracking()` на запитах дозволяє безпечно ділити один контекст між потоками"
+        text_en: "Calling `AsNoTracking()` on the queries lets you safely share one context between threads"
+    explanation: >
+      `DbContext` розрахований на один потік і одну одиницю роботи, а друга операція, запущена до завершення першої,
+      дає `InvalidOperationException`. Scoped лише обмежує час життя екземпляра, а `AsNoTracking` не змінює того,
+      що контекст має внутрішній стан. Для паралелізму потрібні окремі екземпляри.
+    explanation_en: >
+      `DbContext` is designed for a single thread and a single unit of work, and a second operation started before the first completes
+      throws `InvalidOperationException`. Scoped only limits the instance lifetime, and `AsNoTracking` does not change
+      the fact that the context has internal state. Parallelism requires separate instances.
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/#avoiding-dbcontext-threading-issues
+
+  - id: ef-core-020
+    level: middle
+    type: single
+    text: >
+      Що поверне цей запит у щойно створеному контексті, де в ChangeTracker ще немає сутностей?
+    text_en: >
+      What does this query return in a freshly created context whose ChangeTracker has no entities yet?
+    code:
+      lang: csharp
+      source: |
+        var blogs = await db.Blogs
+            .Include(b => b.Posts.Where(p => p.IsPublished))
+            .ToListAsync();
+    options:
+      - text: "Усі блоги; у `Posts` кожного лише опубліковані пости, а в блога без таких колекція порожня"
+        text_en: "All blogs; each `Posts` contains only published posts, and a blog without any has an empty collection"
+        correct: true
+      - text: "Лише блоги, у яких є хоча б один опублікований пост, разом з їхніми постами"
+        text_en: "Only blogs that have at least one published post, together with their posts"
+      - text: "Усі блоги з усіма постами: умову всередині `Include` EF ігнорує"
+        text_en: "All blogs with all their posts: EF ignores the condition inside `Include`"
+      - text: "`InvalidOperationException`: `Include` приймає лише шлях до навігації без операторів"
+        text_en: "`InvalidOperationException`: `Include` accepts only a navigation path without operators"
+    explanation: >
+      Відфільтроване включення (EF Core 5+) обмежує лише завантажену колекцію, а не набір кореневих сутностей.
+      Щоб відфільтрувати самі блоги, потрібен окремий `Where` на `Blogs`.
+    explanation_en: >
+      A filtered include (EF Core 5+) restricts only the loaded collection, not the set of root entities.
+      To filter the blogs themselves you need a separate `Where` on `Blogs`.
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/querying/related-data/eager#filtered-include
+
+  - id: ef-core-021
+    level: senior
+    type: single
+    text: >
+      Контекст має властивість `TenantId`, яку застосунок виставляє на початку кожного запиту, а глобальний фільтр
+      відсікає чужі дані. Команда переходить з `AddDbContext` на `AddDbContextPool`. У чому ризик?
+    text_en: >
+      The context has a `TenantId` property that the application sets at the start of each request, and a global filter
+      cuts off other tenants' data. The team switches from `AddDbContext` to `AddDbContextPool`. What is the risk?
+    options:
+      - text: >
+          Екземпляр живе між запитами, а конструктор і `OnConfiguring` виконуються лише раз, тож значення з них не оновиться
+        text_en: >
+          The instance lives across requests, and the constructor and `OnConfiguring` run only once, so a value from them will not refresh
+        correct: true
+      - text: "Пул створює новий екземпляр на кожен запит, тож `TenantId` щоразу скидається в `0`, а вся вигода від пулу зникає"
+        text_en: "The pool creates a new instance for every request, so `TenantId` is reset to `0` each time and the pool gives no benefit"
+      - text: "Глобальні фільтри запитів не працюють із контекстом, узятим із пулу, і їх треба застосовувати в кожному запиті вручну"
+        text_en: "Global query filters do not work with a context taken from the pool and must be applied manually in every query"
+      - text: "Пулінг вимагає, щоб кожен сервіс, який використовує контекст, був зареєстрований як Singleton"
+        text_en: "Pooling requires every service that uses the context to be registered as a Singleton"
+    explanation: >
+      Із пулом контекст фактично ділиться між запитами, а одноразові місця ініціалізації виконуються лише раз.
+      Мінливий стан, як-от tenant, треба передавати під час кожної видачі з пулу, наприклад через фабрику контексту,
+      яка виставляє `TenantId` перед віддачею екземпляра.
+    explanation_en: >
+      With pooling the context is effectively shared between requests, and one-time initialization places run only once.
+      Changing state such as a tenant must be supplied each time an instance is handed out of the pool, for example through a context factory
+      that sets `TenantId` before returning the instance.
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/performance/advanced-performance-topics#managing-state-in-pooled-contexts
+
+  - id: ef-core-022
+    level: senior
+    type: multiple
+    text: Контекст налаштовано з `EnableRetryOnFailure()`. Які твердження правильні?
+    text_en: A context is configured with `EnableRetryOnFailure()`. Which statements are true?
+    options:
+      - text: "Кожен запит і кожен `SaveChangesAsync()` при тимчасовій помилці повторюється як одна одиниця"
+        text_en: "Each query and each `SaveChangesAsync()` call is retried as a single unit on a transient failure"
+        correct: true
+      - text: "Власну транзакцію виконують у `CreateExecutionStrategy().ExecuteAsync(...)`, щоб блок повторювався разом"
+        text_en: "A user transaction runs inside `CreateExecutionStrategy().ExecuteAsync(...)` so the block is retried together"
+        correct: true
+      - text: "Виклик `BeginTransactionAsync()` без обгортки працює, але повтори для такої транзакції просто вимкнені"
+        text_en: "Calling `BeginTransactionAsync()` without a wrapper works, but retries for such a transaction are simply turned off"
+      - text: "Стратегія повторює команду після будь-якого винятку, зокрема порушення унікального індексу"
+        text_en: "The strategy retries a command after any exception, including a unique index violation"
+    explanation: >
+      Стратегія повторює лише тимчасові збої, а для транзакції, яку відкрив код, повторювати треба весь блок,
+      тож EF вимагає обгортку й без неї кидає `InvalidOperationException`. Помилки на кшталт порушення унікальності
+      тимчасовими не вважаються.
+    explanation_en: >
+      The strategy retries only transient failures, and for a transaction opened by your code the whole block must be replayed,
+      so EF requires the wrapper and throws `InvalidOperationException` without it. Errors such as a uniqueness violation
+      are not considered transient.
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency#execution-strategies-and-transactions
+
+  - id: ef-core-023
+    level: senior
+    type: single
+    text: >
+      Імпорт у циклі додає 2 млн рядків через один `DbContext` і викликає `SaveChanges()` кожні 1000.
+      З кожним пакетом зростають пам'ять і час `SaveChanges()`. Що усуває причину?
+    text_en: >
+      An import loop adds 2 million rows through a single `DbContext` and calls `SaveChanges()` every 1000.
+      Memory and `SaveChanges()` time grow with every batch. What removes the cause?
+    options:
+      - text: >
+          Після кожного пакета очищати відстеження (`ChangeTracker.Clear()`) або брати новий короткоживучий контекст на пакет
+        text_en: >
+          After each batch, clear tracking (`ChangeTracker.Clear()`) or use a new short-lived context per batch
+        correct: true
+      - text: "Вимкнути `AutoDetectChangesEnabled`: тоді контекст перестане тримати посилання на додані сутності"
+        text_en: "Turn off `AutoDetectChangesEnabled`: then the context stops holding references to the added entities"
+      - text: "Викликати `GC.Collect()` після кожного пакета, щоб збирач прибрав уже збережені сутності"
+        text_en: "Call `GC.Collect()` after each batch so the collector removes the already saved entities"
+      - text: "Замінити `Add` на `AddAsync`, щоб збережені сутності не лишалися в пам'яті між пакетами"
+        text_en: "Replace `Add` with `AddAsync` so saved entities do not stay in memory between batches"
+    explanation: >
+      Контекст тримає посилання на всі відстежувані сутності, тож вони не потрапляють під збирання сміття,
+      а `DetectChanges` проходить дедалі більший набір. `AutoDetectChangesEnabled` лише зменшує роботу з порівняння
+      і сутностей з трекера не прибирає. `AddAsync` потрібен лише для генераторів значень, що звертаються до бази.
+    explanation_en: >
+      The context holds references to every tracked entity, so they are never garbage-collected,
+      and `DetectChanges` walks an ever-growing set. `AutoDetectChangesEnabled` only reduces comparison work
+      and does not remove entities from the tracker. `AddAsync` matters only for value generators that go to the database.
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/change-tracking/
+      - https://learn.microsoft.com/en-us/ef/core/performance/efficient-updating
+
+  - id: ef-core-024
+    level: senior
+    type: single
+    text: >
+      Таблиця `Orders` має 50 млн рядків, індекс по `(CreatedAt, Id)`, а сторінки віддаються так.
+      Запити для глибоких сторінок повільні, і час росте з номером сторінки. Що змінити?
+    text_en: >
+      The `Orders` table has 50 million rows and an index on `(CreatedAt, Id)`, and pages are served like this.
+      Queries for deep pages are slow, and the time grows with the page number. What should change?
+    code:
+      lang: csharp
+      source: |
+        var page = await db.Orders
+            .OrderBy(o => o.CreatedAt).ThenBy(o => o.Id)
+            .Skip(pageNumber * 20).Take(20)
+            .ToListAsync();
+    options:
+      - text: >
+          Перейти на keyset: пам'ятати `(CreatedAt, Id)` останнього рядка й брати наступні через `Where`
+        text_en: >
+          Switch to keyset: remember `(CreatedAt, Id)` of the last row and take the next ones with a `Where`
+        correct: true
+      - text: "Додати `AsNoTracking()`: саме відстеження робить час залежним від номера сторінки запиту"
+        text_en: "Add `AsNoTracking()`: tracking is what makes the time depend on the page number"
+      - text: "Збільшити `Take` до 1000 і віддавати клієнту потрібні 20 рядків із нього"
+        text_en: "Raise `Take` to 1000 and hand the client the needed 20 rows out of it"
+      - text: "Завантажити всю таблицю через `ToListAsync()` і вирізати сторінки в пам'яті"
+        text_en: "Load the whole table with `ToListAsync()` and slice the pages in the application memory"
+    explanation: >
+      З `Skip(N)` база все одно мусить пройти перші N рядків, тому глибокі сторінки дорожчають.
+      Keyset-пагінація замінює зсув умовою `WHERE`, яку індекс по тих самих колонках виконує за пошуком,
+      за умови стабільного унікального порядку (тут завдяки `Id`).
+    explanation_en: >
+      With `Skip(N)` the database still has to walk the first N rows, so deep pages get more expensive.
+      Keyset pagination replaces the offset with a `WHERE` condition that an index on the same columns serves by seeking,
+      provided the ordering is stable and unique (here thanks to `Id`).
+    sources:
+      - https://learn.microsoft.com/en-us/ef/core/querying/pagination#keyset-pagination

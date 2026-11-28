@@ -454,3 +454,443 @@ questions:
       with `StartNew` you need `.Unwrap()` for that.
     sources:
       - https://devblogs.microsoft.com/dotnet/task-run-vs-task-factory-startnew/
+
+  - id: dotnet-async-013
+    level: junior
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        var slow = GetAsync("slow", 300);
+        var fast = GetAsync("fast", 50);
+
+        var first = await Task.WhenAny(slow, fast);
+        Console.WriteLine(first.Result);
+
+        static async Task<string> GetAsync(string name, int ms)
+        {
+            await Task.Delay(ms);
+            return name;
+        }
+    options:
+      - text: "`fast`, бо `WhenAny` повертає задачу, яка завершилась першою"
+        text_en: "`fast`, because `WhenAny` returns the task that completed first"
+        correct: true
+      - text: "`slow`, бо `WhenAny` повертає першу задачу зі списку аргументів"
+        text_en: "`slow`, because `WhenAny` returns the first task from the argument list"
+      - text: "`slow`, бо `WhenAny` чекає, поки завершаться всі передані задачі"
+        text_en: "`slow`, because `WhenAny` waits until all the passed tasks finish"
+      - text: "Код не скомпілюється, бо `WhenAny` повертає `Task<Task<string>>`, який не можна `await`"
+        text_en: "The code does not compile, because `WhenAny` returns a `Task<Task<string>>` that cannot be used with `await`"
+    explanation: >
+      `Task.WhenAny` повертає задачу, яка завершується, щойно завершиться будь-яка з переданих, а її
+      результат — саме та переможна задача. Порядок аргументів нічого не вирішує, а решта задач
+      продовжує виконуватись. `Task<Task<string>>` справді повертається, але після `await` ми
+      отримуємо внутрішню `Task<string>`.
+    explanation_en: >
+      `Task.WhenAny` returns a task that completes as soon as any of the passed tasks completes, and its
+      result is that winning task. Argument order decides nothing, and the other tasks keep running.
+      A `Task<Task<string>>` is indeed returned, but after `await` we get the inner `Task<string>`.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenany
+
+  - id: dotnet-async-014
+    level: junior
+    type: single
+    text: >
+      Довгий цикл у задачі отримав `cts.Token`, але в тілі циклу токен ніде не перевіряється.
+      Що зробить виклик `cts.Cancel()`?
+    text_en: >
+      A long loop in a task received `cts.Token`, but the loop body never checks the token.
+      What will `cts.Cancel()` do?
+    options:
+      - text: "Токен перейде у стан скасовано, але цикл і далі виконуватиметься до кінця"
+        text_en: "The token will become canceled, but the loop will keep running to the end"
+        correct: true
+      - text: "Потік задачі буде негайно зупинено через `ThreadAbortException`"
+        text_en: "The task's thread will be stopped immediately with a `ThreadAbortException`"
+      - text: "Цикл завершиться на наступній ітерації, бо рантайм сам перевіряє токен"
+        text_en: "The loop will end on the next iteration, because the runtime checks the token itself"
+      - text: "Виклик `Cancel()` блокуватиметься, доки цикл не завершиться сам"
+        text_en: "The `Cancel()` call will block until the loop finishes by itself"
+    explanation: >
+      Скасування в .NET кооперативне: `Cancel()` лише виставляє прапорець і викликає зареєстровані
+      колбеки. Код сам має перевіряти токен (`ThrowIfCancellationRequested`) або передавати його в API,
+      що підтримують скасування. Примусової зупинки потоку в сучасному .NET немає.
+    explanation_en: >
+      Cancellation in .NET is cooperative: `Cancel()` only sets a flag and invokes registered callbacks.
+      The code itself must check the token (`ThrowIfCancellationRequested`) or pass it to APIs that
+      support cancellation. Modern .NET has no forced thread termination.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/standard/threading/cancellation-in-managed-threads
+
+  - id: dotnet-async-015
+    level: junior
+    type: multiple
+    text: >
+      Кілька потоків одночасно збільшують спільне поле `int _count`. Які способи роблять підрахунок
+      коректним?
+    text_en: >
+      Several threads increment a shared `int _count` field at the same time. Which approaches make the
+      counting correct?
+    options:
+      - text: "`Interlocked.Increment(ref _count)` замість `_count++` у кожному потоці"
+        text_en: "`Interlocked.Increment(ref _count)` instead of `_count++` in every thread"
+        correct: true
+      - text: "`lock (_gate) { _count++; }` для спільного `_gate` в усіх потоках"
+        text_en: "`lock (_gate) { _count++; }` on a `_gate` shared by all threads"
+        correct: true
+      - text: "Оголосити поле як `volatile int _count` і писати `_count++` у кожному потоці"
+        text_en: "Declare the field as `volatile int _count` and write `_count++` in every thread"
+      - text: "Писати `_count++` усередині `Task.Run` для кожного збільшення"
+        text_en: "Write `_count++` inside `Task.Run` for each increment"
+    explanation: >
+      `_count++` — це читання, додавання й запис, тож без синхронізації потоки втрачають оновлення.
+      `Interlocked.Increment` робить це атомарно, а `lock` дозволяє змінювати поле лише одному потоку
+      одночасно. `volatile` гарантує свіжість читання й запису, але не робить атомарним складений
+      `++`, а `Task.Run` синхронізації не додає.
+    explanation_en: >
+      `_count++` is a read, an add and a write, so without synchronization threads lose updates.
+      `Interlocked.Increment` does it atomically, and `lock` lets only one thread change the field at a
+      time. `volatile` guarantees fresh reads and writes but does not make a compound `++` atomic, and
+      `Task.Run` adds no synchronization.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.interlocked.increment
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/lock
+
+  - id: dotnet-async-016
+    level: junior
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        using System.Diagnostics;
+
+        var sw = Stopwatch.StartNew();
+        await WaitAsync();
+        Console.Write("3");
+        Console.WriteLine($" {sw.ElapsedMilliseconds >= 2000}");
+
+        static async Task WaitAsync()
+        {
+            Console.Write("1");
+            Task.Delay(2000);
+            Console.Write("2");
+        }
+    options:
+      - text: "`123 False`: затримку не очікували, тож метод не чекав"
+        text_en: "`123 False`: the delay was not awaited, so the method did not wait"
+        correct: true
+      - text: "`123 True`: `await WaitAsync()` дочекається й вкладеної затримки"
+        text_en: "`123 True`: `await WaitAsync()` also waits for the nested delay"
+      - text: "`13 False`: рядок після `Task.Delay` буде пропущено до кінця затримки"
+        text_en: "`13 False`: the line after `Task.Delay` is skipped until the delay ends"
+      - text: "`12 True`: `await` у `Main` зупинить програму раніше, ніж виведеться `3`"
+        text_en: "`12 True`: the `await` in `Main` stops the program before `3` is printed"
+    explanation: >
+      `Task.Delay(2000)` лише створює задачу. Без `await` метод не віддає керування й іде далі, а сама
+      задача лишається без нагляду. Тож `2` виводиться одразу, `WaitAsync` завершується за долі
+      секунди, і умова щодо 2000 мс хибна. Компілятор попереджає про це кодом CS4014.
+    explanation_en: >
+      `Task.Delay(2000)` only creates a task. Without `await` the method does not yield and moves on,
+      while the task itself is left unattended. So `2` prints immediately, `WaitAsync` finishes in a
+      fraction of a second, and the 2000 ms condition is false. The compiler warns about this with
+      CS4014.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs4014
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.delay
+
+  - id: dotnet-async-017
+    level: middle
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        Task t = FailAsync();
+        Console.WriteLine("called");
+        try
+        {
+            await t;
+        }
+        catch (InvalidOperationException)
+        {
+            Console.WriteLine("caught");
+        }
+
+        static async Task FailAsync()
+        {
+            throw new InvalidOperationException("boom");
+        }
+    options:
+      - text: "`called`, потім `caught`: виняток зберігається в задачі й кидається на `await`"
+        text_en: "`called`, then `caught`: the exception is stored in the task and thrown at `await`"
+        correct: true
+      - text: "Лише `caught`: виняток вилітає з виклику `FailAsync()` до рядка `called`"
+        text_en: "Only `caught`: the exception escapes the `FailAsync()` call before the `called` line"
+      - text: "`called`, потім необроблений виняток: `catch` не ловить винятки з задач"
+        text_en: "`called`, then an unhandled exception: `catch` does not catch exceptions from tasks"
+      - text: "Нічого: програму завершує необроблений виняток ще до першого рядка виводу"
+        text_en: "Nothing: an unhandled exception terminates the program before any output"
+    explanation: >
+      Метод з `async` не кидає виняток викликачу: компілятор перехоплює його й кладе в повернену задачу
+      (стан `Faulted`). Виклик `FailAsync()` повертається нормально, тож `called` виводиться першим, а
+      виняток перекидається аж на `await t`, де його і ловить `catch`.
+    explanation_en: >
+      An `async` method does not throw to the caller: the compiler catches the exception and stores it in
+      the returned task (`Faulted` state). The `FailAsync()` call returns normally, so `called` prints
+      first, and the exception is rethrown only at `await t`, where `catch` handles it.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-return-types#task-return-type
+      - https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-return-types
+
+  - id: dotnet-async-018
+    level: middle
+    type: single
+    text: >
+      Секція коду з `await` усередині має виконуватись не більше ніж одним викликом одночасно в межах
+      процесу. Що застосувати?
+    text_en: >
+      A code section with `await` inside must run in at most one call at a time within the process. What
+      should be used?
+    options:
+      - text: "`SemaphoreSlim(1, 1)`: `await WaitAsync()` перед секцією і `Release()` у `finally`"
+        text_en: "`SemaphoreSlim(1, 1)`: `await WaitAsync()` before the section and `Release()` in `finally`"
+        correct: true
+      - text: "`lock` на спільному об'єкті навколо всього тіла разом з `await`"
+        text_en: "`lock` on a shared object around the whole body, including the `await`"
+      - text: "`Monitor.Enter` перед `await` і `Monitor.Exit` після нього в тому ж методі"
+        text_en: "`Monitor.Enter` before the `await` and `Monitor.Exit` after it in the same method"
+      - text: "`Mutex`: `WaitOne()` перед секцією і `ReleaseMutex()` у `finally` після неї"
+        text_en: "`Mutex`: `WaitOne()` before the section and `ReleaseMutex()` in `finally` after it"
+    explanation: >
+      `lock` з `await` усередині не компілюється. `Monitor` і `Mutex` прив'язані до потоку, що їх узяв,
+      а після `await` метод може продовжитись на іншому потоці, тож `Exit`/`ReleaseMutex` там кине виняток.
+      `SemaphoreSlim` не має власника-потоку й має `WaitAsync`, що не блокує потік.
+    explanation_en: >
+      `lock` with an `await` inside does not compile. `Monitor` and `Mutex` are tied to the thread that
+      acquired them, and after `await` the method may resume on another thread, so `Exit`/`ReleaseMutex`
+      there will throw. `SemaphoreSlim` has no owning thread and offers `WaitAsync`, which does not block
+      a thread.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/lock
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.semaphoreslim.waitasync
+
+  - id: dotnet-async-019
+    level: middle
+    type: multiple
+    text: "Які твердження про `TaskCompletionSource<int>` правильні?"
+    text_en: "Which statements about `TaskCompletionSource<int>` are correct?"
+    options:
+      - text: "Повторний `SetResult` кидає `InvalidOperationException`, а `TrySetResult` повертає `false`"
+        text_en: "A repeated `SetResult` throws `InvalidOperationException`, while `TrySetResult` returns `false`"
+        correct: true
+      - text: "Задачу не виконує жоден потік: вона завершується, коли хтось викличе `Set…`-метод"
+        text_en: "No thread runs the task: it completes when someone calls a `Set…` method on its source"
+        correct: true
+      - text: "Після `TrySetCanceled()` `await` задачі кидає `OperationCanceledException` чи похідний"
+        text_en: "After `TrySetCanceled()`, `await` on the task throws `OperationCanceledException` or a derived type"
+        correct: true
+      - text: "`SetException(ex)` завершує задачу у стані `Canceled`, а не `Faulted`, бо виняток вважається скасуванням"
+        text_en: "`SetException(ex)` completes the task in the `Canceled` state rather than `Faulted`"
+      - text: "Створення `TaskCompletionSource` займає потік пулу, який чекає виклику `SetResult`"
+        text_en: "Creating a `TaskCompletionSource` occupies a pool thread that waits for `SetResult`"
+    explanation: >
+      Задача з `TaskCompletionSource` — це «ручна» задача без коду, що виконується: стан змінюють лише
+      `Set…`-методи, і лише раз (інакше виняток, а `TrySet…` повертає `false`). Скасована задача
+      кидає `OperationCanceledException` (на практиці `TaskCanceledException`), а `SetException`
+      дає стан `Faulted`. Жодного потоку вона не займає.
+    explanation_en: >
+      A `TaskCompletionSource` task is a "manual" task with no code running behind it: only the `Set…`
+      methods change its state, and only once (otherwise an exception, while `TrySet…` returns `false`).
+      A canceled task throws `OperationCanceledException` (in practice `TaskCanceledException`), and
+      `SetException` gives the `Faulted` state. It occupies no thread.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcompletionsource-1
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcompletionsource-1.setresult
+
+  - id: dotnet-async-020
+    level: middle
+    type: single
+    text: >
+      Екшен ASP.NET Core 10 викликає синхронний метод репозиторію так: `await Task.Run(() => _repo.GetAll())`.
+      Що це дає під навантаженням?
+    text_en: >
+      An ASP.NET Core 10 action calls a synchronous repository method like this:
+      `await Task.Run(() => _repo.GetAll())`. What does this give under load?
+    options:
+      - text: "Масштабованості не додає: потік пулу все одно блокується, а до цього додається зайве планування"
+        text_en: "No scalability gain: a pool thread is still blocked, and extra scheduling is added on top"
+        correct: true
+      - text: "Запит обслуговується швидше, бо блокування відбувається вже не на потоці запиту"
+        text_en: "The request is served faster, because the blocking no longer happens on the request thread"
+      - text: "Виклик стає справді асинхронним, бо `Task.Run` перетворює блокувальний ввід-вивід на неблокувальний"
+        text_en: "The call becomes truly asynchronous, because `Task.Run` turns blocking I/O into non-blocking I/O"
+      - text: "Це рекомендований спосіб викликати синхронний API, коли в нього немає асинхронної версії"
+        text_en: "This is the recommended way to call a synchronous API when it has no asynchronous version"
+    explanation: >
+      Код ASP.NET Core і так виконується на потоках пулу, тож `Task.Run` лише переносить блокування з
+      одного потоку пулу на інший і додає накладні витрати на планування. Кількість одночасно
+      зайнятих потоків не змінюється. Справжній виграш дає асинхронний API, який не тримає потік
+      під час очікування.
+    explanation_en: >
+      ASP.NET Core code already runs on thread pool threads, so `Task.Run` only moves the blocking from
+      one pool thread to another and adds scheduling overhead. The number of busy threads stays the
+      same. A real gain comes from an asynchronous API that does not hold a thread while waiting.
+    sources:
+      - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/best-practices#avoid-blocking-calls
+
+  - id: dotnet-async-021
+    level: senior
+    type: single
+    text: >
+      Розробник пише `Parallel.ForEach(items, async item => await ProcessAsync(item));` (.NET 10) і
+      вважає, що після рядка вся обробка завершена. Що відбувається насправді?
+    text_en: >
+      A developer writes `Parallel.ForEach(items, async item => await ProcessAsync(item));` (.NET 10)
+      and assumes all processing is finished after this line. What actually happens?
+    options:
+      - text: "Лямбда стає `async void`, тож цикл завершується до кінця `ProcessAsync`, а виняток може обвалити процес"
+        text_en: "The lambda becomes `async void`, so the loop ends before `ProcessAsync` finishes, and an exception can crash the process"
+        correct: true
+      - text: "`Parallel.ForEach` бачить задачі, які повертає лямбда, і чекає на кожну, тому все завершено"
+        text_en: "`Parallel.ForEach` sees the tasks the lambda returns and waits for each, so everything is finished"
+      - text: "Код не компілюється, бо `Parallel.ForEach` забороняє `async`-лямбди в тілі циклу"
+        text_en: "The code does not compile, because `Parallel.ForEach` forbids `async` lambdas in the loop body"
+      - text: "Обробка йде послідовно: `await` у лямбді вимикає паралелізм, але цикл теж чекає на все"
+        text_en: "Processing is sequential: `await` in the lambda disables parallelism, but the loop still waits for everything"
+    explanation: >
+      `Parallel.ForEach` приймає `Action<T>`, тому `async`-лямбда компілюється як `async void`: цикл бачить
+      лише синхронну частину до першого `await` і повертається. Решта працює «у фоні», а необроблений виняток
+      з `async void` потрапляє в контекст, що може завершити процес. Для асинхронної роботи є
+      `Parallel.ForEachAsync` (.NET 6+).
+    explanation_en: >
+      `Parallel.ForEach` takes an `Action<T>`, so the `async` lambda compiles as `async void`: the loop
+      sees only the synchronous part before the first `await` and returns. The rest runs "in the
+      background", and an unhandled exception from `async void` goes to a context that can terminate the
+      process. For asynchronous work there is `Parallel.ForEachAsync` (.NET 6+).
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.parallel.foreachasync
+      - https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-return-types#void-return-type
+
+  - id: dotnet-async-022
+    level: senior
+    type: multiple
+    text: >
+      Продюсер у `Channel.CreateUnbounded<int>()` записав 1 і 2, а потім завершив запис через
+      `writer.Complete()`. Які твердження правильні?
+    text_en: >
+      A producer wrote 1 and 2 to `Channel.CreateUnbounded<int>()` and then finished writing with
+      `writer.Complete()`. Which statements are correct?
+    options:
+      - text: "Читач через `ReadAllAsync` отримає 1 і 2, а потім цикл `await foreach` завершиться"
+        text_en: "A reader using `ReadAllAsync` gets 1 and 2, and then the `await foreach` loop ends"
+        correct: true
+      - text: "`WriteAsync` у такий канал кидає `ChannelClosedException`, а `TryWrite` повертає `false`"
+        text_en: "`WriteAsync` to such a channel throws `ChannelClosedException`, while `TryWrite` returns `false`"
+        correct: true
+      - text: "Після `Complete(ex)` читач вичитає буфер, а далі `ReadAllAsync` кине цей виняток"
+        text_en: "After `Complete(ex)` the reader drains the buffer, and then `ReadAllAsync` throws that exception"
+        correct: true
+      - text: "Елементи, які читач ще не забрав, відкидаються в момент виклику `Complete()`"
+        text_en: "Items the reader has not taken yet are discarded at the moment `Complete()` is called"
+      - text: "`ReadAllAsync` після вичитування буфера чекає нових елементів, доки не скасують токен"
+        text_en: "After draining the buffer, `ReadAllAsync` waits for new items until the token is canceled"
+    explanation: >
+      `Complete` означає «більше записів не буде», а не «забудь накопичене»: читачі вичитують буфер до кінця,
+      і лише тоді `ReadAllAsync` завершується (або кидає виняток, переданий у `Complete(ex)`). Нові записи
+      після завершення відхиляються. Саме тому читач, якому не передали сигнал завершення, чекає вічно.
+    explanation_en: >
+      `Complete` means "no more writes will come", not "forget what is buffered": readers drain the buffer
+      to the end, and only then does `ReadAllAsync` finish (or throw the exception passed to
+      `Complete(ex)`). New writes after completion are rejected. That is why a reader that is never given
+      the completion signal waits forever.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/core/extensions/channels
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.channels.channelwriter-1.complete
+
+  - id: dotnet-async-023
+    level: senior
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        var tenant = new AsyncLocal<string>();
+        tenant.Value = "A";
+
+        await SetAsync();
+        Console.WriteLine(tenant.Value);
+
+        SetSync();
+        Console.WriteLine(tenant.Value);
+
+        async Task SetAsync()
+        {
+            tenant.Value = "B";
+            await Task.Delay(10);
+        }
+
+        void SetSync() => tenant.Value = "C";
+    options:
+      - text: "`A`, потім `C`: зміна в `async`-методі не повертається до викликача, в синхронному — так"
+        text_en: "`A`, then `C`: a change in an `async` method does not flow back to the caller; in a sync one it does"
+        correct: true
+      - text: "`B`, потім `C`: `AsyncLocal` бачить усі зміни, зроблені нижче за стеком викликів"
+        text_en: "`B`, then `C`: `AsyncLocal` sees all changes made lower in the call stack"
+      - text: "`A`, потім `A`: значення `AsyncLocal` після присвоєння стає незмінним у цьому контексті"
+        text_en: "`A`, then `A`: an `AsyncLocal` value becomes immutable in this context after assignment"
+      - text: "`B`, потім `B`: після `await` рантайм синхронізує значення з останнім присвоєнням"
+        text_en: "`B`, then `B`: after `await` the runtime syncs the value to the latest assignment"
+    explanation: >
+      `AsyncLocal` живе в `ExecutionContext`, який тече вниз за асинхронним потоком викликів. Кожен
+      `async`-метод працює зі своєю копією контексту, і зміни в ньому при поверненні до викликача
+      скасовуються, тому після `SetAsync` видно `A`. Синхронний `SetSync` виконується у тому ж контексті, тож
+      його запис `C` лишається.
+    explanation_en: >
+      `AsyncLocal` lives in the `ExecutionContext`, which flows down the asynchronous call chain. Each
+      `async` method works with its own copy of the context, and changes made in it are undone when
+      control returns to the caller, so after `SetAsync` you see `A`. The synchronous `SetSync` runs in
+      the same context, so its write `C` stays.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.asynclocal-1
+      - https://devblogs.microsoft.com/dotnet/how-async-await-really-works/
+
+  - id: dotnet-async-024
+    level: senior
+    type: single
+    text: >
+      У .NET 10 з налаштуваннями за замовчуванням виклик `_ = SaveAsync();` запускає задачу, яка падає з
+      винятком. Ніхто не робить `await` і не читає `Exception`. Що станеться?
+    text_en: >
+      In .NET 10 with default settings, the call `_ = SaveAsync();` starts a task that fails with an
+      exception. Nobody uses `await` on it or reads `Exception`. What will happen?
+    options:
+      - text: "Процес працює далі; виняток лише спливе в `UnobservedTaskException`, коли GC збере задачу"
+        text_en: "The process keeps running; the exception only surfaces in `UnobservedTaskException` once the GC collects the task"
+        correct: true
+      - text: "Процес негайно завершується необробленим винятком у потоці пулу, де впала задача"
+        text_en: "The process terminates immediately with an unhandled exception on the thread where the task failed"
+      - text: "Виняток повертається в метод, що викликав `SaveAsync()`, при наступному `await` у ньому"
+        text_en: "The exception returns to the method that called `SaveAsync()` at the next `await` in it"
+      - text: "Виняток переходить у наступну задачу, яка виконається на тому самому потоці пулу після неї"
+        text_en: "The exception moves into the next task that runs on the same thread pool thread"
+    explanation: >
+      Із .NET 4.5 необроблений виняток задачі за замовчуванням не завершує процес. Його «помічає» лише
+      фіналізація задачі, що відбувається довільно пізно, коли GC збере об'єкт. Тоді спрацьовує
+      `UnobservedTaskException`, і рантайм його ковтає. На практиці помилки fire-and-forget губляться
+      або з'являються через несподівано довгий час.
+    explanation_en: >
+      Since .NET 4.5, an unobserved task exception does not terminate the process by default. It is
+      noticed only when the task is finalized, at an arbitrarily late time when the GC collects the
+      object. Then `UnobservedTaskException` is raised and the runtime swallows it. In practice
+      fire-and-forget errors get lost or show up unexpectedly late.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskscheduler.unobservedtaskexception
+      - https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/exception-handling-task-parallel-library

@@ -281,3 +281,264 @@ questions:
       If `poll()` is not called in time, the consumer is removed from the group and its partitions go to others. The new position is taken from the committed offset, so some records may be processed twice. This is mitigated by smaller batches, a longer interval, or idempotent processing.
     sources:
     - https://kafka.apache.org/44/configuration/consumer-configs/#consumerconfigs_max.poll.interval.ms
+  - id: messaging-013
+    level: junior
+    type: single
+    text: Що відбувається із записом у топіку Kafka після того, як споживач його прочитав?
+    text_en: What happens to a record in a Kafka topic after a consumer has read it?
+    options:
+    - text: Запис лишається в журналі й видаляється лише за політикою зберігання топіка
+      text_en: The record stays in the log and is removed only by the topic's retention policy
+      correct: true
+    - text: Запис видаляється одразу, щойно його підтвердила остання група споживачів
+      text_en: The record is deleted as soon as the last consumer group has acknowledged it
+    - text: Запис переходить в окремий топік оброблених, звідки його читають повторно
+      text_en: The record moves to a separate topic of processed records, from which it is read again
+    - text: Запис зникає, коли споживач закомітить офсет за ним у групі
+      text_en: The record disappears when the consumer commits an offset past it in the group
+    explanation: |
+      Kafka зберігає події незалежно від споживання: їх можна читати скільки завгодно разів, а старі події відкидаються за налаштованим для топіка часом чи розміром. Коміт офсету лише запам'ятовує позицію групи й нічого не видаляє.
+    explanation_en: |
+      Kafka stores events independently of consumption: they can be read any number of times, and old events are discarded by the retention time or size configured for the topic. An offset commit only remembers the group's position and deletes nothing.
+    sources:
+    - https://kafka.apache.org/44/getting-started/introduction/
+  - id: messaging-014
+    level: junior
+    type: single
+    text: До exchange типу fanout прив'язано три черги RabbitMQ. Куди потрапить повідомлення, опубліковане в нього з довільним routing key?
+    text_en: Three RabbitMQ queues are bound to a fanout exchange. Where does a message published to it with an arbitrary routing key go?
+    options:
+    - text: У кожну з трьох черг, бо fanout ігнорує routing key
+      text_en: Into each of the three queues, because fanout ignores the routing key
+      correct: true
+    - text: Лише в першу прив'язану чергу, а решта слугують резервом на випадок збою
+      text_en: Only into the first bound queue, while the others serve as a standby in case of failure
+    - text: У ту чергу, назва якої збігається з routing key повідомлення
+      text_en: Into the queue whose name matches the message's routing key
+    - text: У чергу, яка за таким ключем має найменше повідомлень у даний момент
+      text_en: Into the queue that currently holds the fewest messages for that key
+    explanation: |
+      Fanout копіює повідомлення в усі прив'язані черги й не дивиться на routing key. Збіг ключа з назвою черги потрібен лише в exchange за замовчуванням.
+    explanation_en: |
+      A fanout exchange copies the message into all bound queues and ignores the routing key. A routing key matching the queue name matters only for the default exchange.
+    sources:
+    - https://www.rabbitmq.com/tutorials/amqp-concepts#exchange-fanout
+  - id: messaging-015
+    level: junior
+    type: single
+    text: Два екземпляри воркера читають одну чергу RabbitMQ з ручними підтвердженнями. Як розподіляються повідомлення?
+    text_en: Two worker instances consume from one RabbitMQ queue with manual acknowledgements. How are messages distributed?
+    options:
+    - text: Кожне повідомлення отримує лише один воркер, а навантаження чергується між ними
+      text_en: Each message goes to only one worker, and the load alternates between them
+      correct: true
+    - text: Кожен воркер отримує копію кожного повідомлення, тож вони обробляють усе вдвічі
+      text_en: Each worker gets a copy of every message, so they process everything twice
+    - text: Увесь потік іде першому воркеру, а другий вмикається лише після його збою
+      text_en: The whole stream goes to the first worker, and the second takes over only after its failure
+    - text: Воркери ділять чергу за ключем повідомлення так само, як партиції в Kafka
+      text_en: The workers split the queue by message key in the same way as partitions in Kafka
+    explanation: |
+      Це патерн competing consumers: брокер віддає кожне повідомлення одному споживачеві, за замовчуванням по колу. Копію кожному споживачеві дає не черга, а кілька черг, прив'язаних до fanout-exchange.
+    explanation_en: |
+      This is the competing consumers pattern: the broker hands each message to one consumer, round-robin by default. A copy for every consumer comes not from one queue but from several queues bound to a fanout exchange.
+    sources:
+    - https://www.rabbitmq.com/tutorials/tutorial-two-python#round-robin-dispatching
+  - id: messaging-016
+    level: junior
+    type: single
+    text: Продюсер RabbitMQ публікує повідомлення в exchange за замовчуванням (порожня назва) з routing key `invoices`. Куди воно потрапить?
+    text_en: A RabbitMQ producer publishes a message to the default exchange (empty name) with the routing key `invoices`. Where does it go?
+    options:
+    - text: У чергу з назвою `invoices`, якщо вона існує
+      text_en: Into the queue named `invoices`, if it exists
+      correct: true
+    - text: У всі черги брокера, бо порожня назва exchange означає розсилку
+      text_en: Into all queues of the broker, because an empty exchange name means a broadcast
+    - text: В жодну чергу, бо публікація без явного exchange відхиляється
+      text_en: Into no queue, because publishing without an explicit exchange is rejected
+    - text: У чергу з таким routing key лише після ручного створення прив'язки
+      text_en: Into the queue with that routing key, but only after a binding is created by hand
+    explanation: |
+      Exchange за замовчуванням є в кожному брокері, і кожну створену чергу автоматично прив'язано до нього з routing key, що дорівнює назві черги. Якщо черги з такою назвою немає, повідомлення відкидається.
+    explanation_en: |
+      The default exchange exists in every broker, and every created queue is automatically bound to it with a routing key equal to the queue name. If no queue with that name exists, the message is dropped.
+    sources:
+    - https://www.rabbitmq.com/tutorials/amqp-concepts#exchange-default
+  - id: messaging-017
+    level: middle
+    type: multiple
+    text: Чергу прив'язано до topic exchange RabbitMQ з binding key `orders.#`. Які routing key потраплять у цю чергу?
+    text_en: A queue is bound to a RabbitMQ topic exchange with the binding key `orders.#`. Which routing keys will reach this queue?
+    options:
+    - text: '`orders`'
+      text_en: '`orders`'
+      correct: true
+    - text: '`orders.eu`'
+      text_en: '`orders.eu`'
+      correct: true
+    - text: '`orders.eu.created`'
+      text_en: '`orders.eu.created`'
+      correct: true
+    - text: '`order.eu`'
+      text_en: '`order.eu`'
+    - text: '`archived.orders`'
+      text_en: '`archived.orders`'
+    explanation: |
+      У binding key `#` замінює нуль або більше слів, тому збігаються `orders`, `orders.eu` і глибші ключі. `order.eu` має інше перше слово, а `archived.orders` починається не з `orders`. Зірочка `*` замінила б рівно одне слово.
+    explanation_en: |
+      In a binding key, `#` stands for zero or more words, so `orders`, `orders.eu` and deeper keys match. `order.eu` has a different first word, and `archived.orders` does not start with `orders`. A star `*` would stand for exactly one word.
+    sources:
+    - https://www.rabbitmq.com/tutorials/tutorial-five-python
+  - id: messaging-018
+    level: middle
+    type: single
+    text: У Kafka 4.4 нова група споживачів із `auto.offset.reset` за замовчуванням уперше підписується на топік, у якому вже є мільйон записів. Що вона прочитає?
+    text_en: In Kafka 4.4, a new consumer group with the default `auto.offset.reset` subscribes to a topic for the first time, and the topic already holds a million records. What will it read?
+    options:
+    - text: Лише записи, що надійдуть після призначення партицій, бо стартова позиція — кінець журналу
+      text_en: Only records arriving after partitions are assigned, because the starting position is the end of the log
+      correct: true
+    - text: Усі записи з початку журналу, бо нова група завжди починає з офсету 0
+      text_en: All records from the start of the log, because a new group always begins at offset 0
+    - text: Останні записи за період `retention.ms`, бо Kafka добирає стартову позицію з часу
+      text_en: The latest records within `retention.ms`, because Kafka derives the start position from time
+    - text: Нічого, доки адміністратор вручну не призначить групі стартові офсети
+      text_en: Nothing, until an administrator manually assigns starting offsets to the group
+    explanation: |
+      Коли для групи немає закоміченого офсету, діє `auto.offset.reset`, а за замовчуванням це `latest`. Щоб прочитати історію, ставлять `earliest` (або перемотують офсети). Помилку замість старту дає лише значення `none`.
+    explanation_en: |
+      When the group has no committed offset, `auto.offset.reset` applies, and its default is `latest`. To read the history, set `earliest` (or seek the offsets). Only the value `none` raises an error instead of starting.
+    sources:
+    - https://kafka.apache.org/44/configuration/consumer-configs/#consumerconfigs_auto.offset.reset
+  - id: messaging-019
+    level: middle
+    type: single
+    text: Два воркери читають одну чергу RabbitMQ з ручними підтвердженнями, а завдання сильно різняться за тривалістю. Один воркер перевантажений, інший простоює. Що це виправить?
+    text_en: Two workers consume from one RabbitMQ queue with manual acknowledgements, and tasks differ greatly in duration. One worker is overloaded while the other sits idle. What fixes this?
+    options:
+    - text: Ліміт prefetch, що дорівнює 1, щоб нове повідомлення йшло лише воркеру, який підтвердив попереднє
+      text_en: A prefetch limit of 1, so a new message goes only to a worker that has acknowledged the previous one
+      correct: true
+    - text: Перейти на автоматичні підтвердження, щоб черга швидше вважала повідомлення оброблені
+      text_en: Switch to automatic acknowledgements so the queue treats messages as processed sooner
+    - text: Вимкнути round-robin і прив'язати кожен воркер до половини routing key
+      text_en: Disable round-robin and bind each worker to half of the routing keys
+    - text: Збільшити prefetch до кількох тисяч, щоб воркери самі вирівняли чергу
+      text_en: Raise prefetch to several thousand so that the workers even out the queue themselves
+    explanation: |
+      Без ліміту брокер роздає повідомлення по колу, не зважаючи на кількість непідтверджених у кожного воркера. Ліміт 1 через `basic.qos` не віддає воркеру нове повідомлення, доки він не підтвердив попереднє. Великий prefetch лише збільшує перекіс.
+    explanation_en: |
+      Without a limit, the broker deals messages out round-robin regardless of how many unacknowledged ones each worker holds. A limit of 1 via `basic.qos` hands a worker a new message only after it has acknowledged the previous one. A large prefetch only worsens the skew.
+    sources:
+    - https://www.rabbitmq.com/tutorials/tutorial-two-python#fair-dispatch
+  - id: messaging-020
+    level: senior
+    type: multiple
+    text: Топік Kafka має `replication.factor=3`, а продюсер пише з `acks=all`. Які твердження правильні?
+    text_en: A Kafka topic has `replication.factor=3`, and the producer writes with `acks=all`. Which statements are true?
+    options:
+    - text: Лідер підтверджує запис після того, як його отримали всі репліки з ISR, а не лише лідер
+      text_en: The leader acknowledges a write after all replicas in the ISR have received it, not just the leader
+      correct: true
+    - text: Якщо в ISR менше реплік, ніж `min.insync.replicas`, запис відхиляється з помилкою
+      text_en: If the ISR has fewer replicas than `min.insync.replicas`, the write is rejected with an error
+      correct: true
+    - text: Запис, підтверджений із `acks=1`, може зникнути, якщо лідер впаде до реплікації на фолловерів
+      text_en: A write acknowledged with `acks=1` can be lost if the leader fails before replicating to followers
+      correct: true
+    - text: Із `min.insync.replicas=1` запис безпечний навіть тоді, коли ISR скоротилася до одного лідера
+      text_en: With `min.insync.replicas=1` the write is safe even when the ISR has shrunk to the leader alone
+    explanation: |
+      `acks=all` чекає на всю поточну ISR, а `min.insync.replicas` задає нижню межу її розміру для успішного запису. З межею 1 і ISR з одного лідера підтвердження дає сам лідер, тож втрата його диска стирає запис.
+    explanation_en: |
+      `acks=all` waits for the whole current ISR, and `min.insync.replicas` sets the lower bound of its size for a successful write. With a limit of 1 and an ISR of the leader alone, the leader itself gives the acknowledgement, so losing its disk erases the write.
+    sources:
+    - https://kafka.apache.org/44/configuration/producer-configs/#producerconfigs_acks
+    - https://kafka.apache.org/44/configuration/topic-configs/#topicconfigs_min.insync.replicas
+  - id: messaging-021
+    level: middle
+    type: single
+    text: Обробник RabbitMQ при кожному винятку викликає `basic.nack` з `requeue=true`. Одне повідомлення завжди викликає виняток. Що станеться?
+    text_en: A RabbitMQ handler calls `basic.nack` with `requeue=true` on every exception. One message always raises an exception. What happens?
+    options:
+    - text: Повідомлення знову й знову повертається в чергу та доставляється споживачам, тож утворюється цикл
+      text_en: The message is returned to the queue and delivered to consumers again and again, forming a loop
+      correct: true
+    - text: Після третьої невдалої спроби брокер сам відправляє його в dead letter exchange
+      text_en: After the third failed attempt the broker itself sends it to the dead letter exchange
+    - text: Повідомлення зникає, бо `nack` завжди видаляє його з черги незалежно від `requeue`
+      text_en: The message disappears, because `nack` always removes it from the queue regardless of `requeue`
+    - text: Брокер дає повідомленню затримку, яка зростає з кожною спробою
+      text_en: The broker gives the message a delay that grows with each attempt
+    explanation: |
+      `requeue=true` повертає повідомлення в чергу, тож «отруйне» повідомлення знов і знов доходить до споживача й марно витрачає ЦП та мережу. Вихід: рахувати повторні доставки й відхиляти повідомлення без повернення (з dead-lettering) або повертати його із затримкою.
+    explanation_en: |
+      `requeue=true` returns the message to the queue, so a poison message reaches a consumer again and again, wasting CPU and network. The way out is to count redeliveries and reject the message without requeueing (with dead-lettering) or to requeue it after a delay.
+    sources:
+    - https://www.rabbitmq.com/docs/confirms#consumer-nacks-requeue
+  - id: messaging-022
+    level: senior
+    type: multiple
+    text: Топік Kafka налаштовано з `cleanup.policy=compact`. Які твердження про нього правильні?
+    text_en: A Kafka topic is configured with `cleanup.policy=compact`. Which statements about it are true?
+    options:
+    - text: Для кожного ключа в партиції лишається щонайменше останнє відоме значення
+      text_en: For each key in a partition, at least the last known value is retained
+      correct: true
+    - text: Запис із ключем і порожнім значенням (tombstone) позначає видалення цього ключа
+      text_en: A record with a key and a null value (a tombstone) marks that key for deletion
+      correct: true
+    - text: Збережені записи не змінюють порядку, а їхні офсети лишаються тими самими
+      text_en: The retained records keep their order, and their offsets stay the same
+      correct: true
+    - text: Після компактації офсети перенумеровуються підряд, щоб у журналі не було прогалин
+      text_en: After compaction the offsets are renumbered consecutively so the log has no gaps
+    explanation: |
+      Компактація прибирає застарілі значення тих самих ключів, але не переставляє записів і не змінює офсетів, тому в журналі з'являються прогалини. Tombstone теж зрештою вилучається з журналу через налаштований час.
+    explanation_en: |
+      Compaction removes obsolete values of the same keys but neither reorders records nor changes offsets, so gaps appear in the log. The tombstone itself is eventually removed from the log after a configured time.
+    sources:
+    - https://kafka.apache.org/44/design/design/#compaction
+  - id: messaging-023
+    level: senior
+    type: single
+    text: Продюсер Kafka 4.4 має `retries>0`, `enable.idempotence=false` і `max.in.flight.requests.per.connection=5`. Порядок записів у партиції іноді порушується. Що саме його ламає і що змінити?
+    text_en: A Kafka 4.4 producer has `retries>0`, `enable.idempotence=false` and `max.in.flight.requests.per.connection=5`. The order of records in a partition is sometimes violated. What causes it and what should change?
+    options:
+    - text: Невдалу пачку повторюють уже після успішної наступної; вмикають ідемпотентність, яка зберігає порядок
+      text_en: A failed batch is retried after a later one has succeeded; enable idempotence, which preserves order
+      correct: true
+    - text: Брокер сортує пачки за розміром; вмикають компресію, щоб розміри збігалися
+      text_en: The broker sorts batches by size; enable compression so that the sizes match
+    - text: Партиція змінюється між повторами; фіксують `partition` у кожному записі й вимикають ключі
+      text_en: The partition changes between retries; pin `partition` in each record and disable keys
+    - text: Повтори завжди порушують порядок, тож `retries` потрібно ставити в 0 за будь-яких налаштувань
+      text_en: Retries always break ordering, so `retries` must be 0 under any settings
+    explanation: |
+      Зі значенням більше 1 і без ідемпотентності кілька запитів летять одночасно, тож повтор першого може лягти в журнал після другого. Ідемпотентний продюсер (з не більше ніж 5 запитами) зберігає порядок навіть із повторами; альтернатива — один запит у польоті.
+    explanation_en: |
+      With a value above 1 and no idempotence, several requests are in flight at once, so the retry of the first may land in the log after the second. An idempotent producer (with at most 5 requests) preserves order even with retries; the alternative is one request in flight.
+    sources:
+    - https://kafka.apache.org/44/configuration/producer-configs/#producerconfigs_max.in.flight.requests.per.connection
+  - id: messaging-024
+    level: senior
+    type: single
+    text: Топік Kafka має 12 партицій, у групі 12 споживачів. Lag постійно росте лише на одній партиції, на решті він близький до нуля. Що з цим робити?
+    text_en: A Kafka topic has 12 partitions and the group has 12 consumers. Lag keeps growing on only one partition and is near zero on the rest. What should be done?
+    options:
+    - text: 'Перевірити розподіл ключів: гарячий ключ перевантажує одну партицію, а нові споживачі не допоможуть'
+      text_en: 'Check the key distribution: a hot key overloads one partition, and new consumers will not help'
+      correct: true
+    - text: Додати ще 12 споживачів у групу, щоб вони розділили між собою відстаючу партицію й наздогнали її
+      text_en: Add 12 more consumers to the group so that they split the lagging partition among themselves and catch up
+    - text: Перезапустити брокер-лідер цієї партиції, бо відставання лише на одній партиції завжди означає збій брокера
+      text_en: Restart the leader broker of this partition, since lag on a single partition always means a broker failure
+    - text: Збільшити `max.poll.interval.ms` для всієї групи, щоб споживач цієї партиції читав швидше й устигав
+      text_en: Raise `max.poll.interval.ms` for the whole group so that the consumer manages to read faster
+    explanation: |
+      У межах групи партицію читає лише один споживач, тому понад 12 споживачів не прискорять її. Перекіс лише на одній партиції вказує на нерівномірний розподіл ключів: міняють ключування або пришвидшують обробку саме цієї партиції.
+    explanation_en: |
+      Within a group, only one consumer reads a partition, so more than 12 consumers will not speed it up. Lag on a single partition points to uneven key distribution: change the keying or speed up processing of that partition specifically.
+    sources:
+    - https://kafka.apache.org/44/design/design/#semantics

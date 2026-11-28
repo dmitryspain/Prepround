@@ -105,7 +105,12 @@ public class TestsEndpointTests(PostgresFixture postgres)
     public async Task Different_seeds_give_different_orders_of_the_same_questions_and_one_seed_repeats_itself()
     {
         var db = await SeededDatabaseAsync();
-        var request = Request(AllLevels, ("csharp", 12), ("ef-core", 12), ("sql", 12));
+        // Whole topics, so both seeds pick the same questions whatever the files hold and differ only in order.
+        var request = Request(
+            AllLevels,
+            ("csharp", RealTopic("csharp").Questions.Count),
+            ("ef-core", RealTopic("ef-core").Questions.Count),
+            ("sql", RealTopic("sql").Questions.Count));
 
         var first = await OrderAsync(db, seed: 1, request);
         var again = await OrderAsync(db, seed: 1, request);

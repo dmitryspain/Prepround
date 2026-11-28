@@ -427,3 +427,432 @@ questions:
     sources:
       - https://learn.microsoft.com/en-us/dotnet/desktop/wpf/events/weak-event-patterns#why-implement-the-weak-event-pattern
       - https://learn.microsoft.com/en-us/aspnet/core/performance/memory#persistent-object-references
+
+  - id: dotnet-clr-013
+    level: junior
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        var list = new List<int> { 1 };
+        Mutate(list);
+        Reassign(list);
+        Console.WriteLine(list.Count);
+
+        static void Mutate(List<int> items) { items.Add(2); }
+        static void Reassign(List<int> items)
+        {
+            items = new List<int>();
+            items.Add(7);
+            items.Add(8);
+            items.Add(9);
+        }
+    options:
+      - text: "`2`"
+        text_en: "`2`"
+        correct: true
+      - text: "`4`"
+        text_en: "`4`"
+      - text: "`3`"
+        text_en: "`3`"
+      - text: "`1`"
+        text_en: "`1`"
+    explanation: >
+      Посилання на список передається в метод за значенням: `Mutate` через копію посилання додає елемент до
+      того самого об'єкта, тому `Count` стає `2`. У `Reassign` присвоєння `items = new List<int>()`
+      міняє лише локальну копію посилання, і додані там елементи йдуть до іншого списку. Спокусливе `4`
+      уявляє, що нове присвоєння змінює список викликача.
+    explanation_en: >
+      The reference to the list is passed to the method by value: `Mutate` adds an element to the same
+      object through the copy of the reference, so `Count` becomes `2`. In `Reassign` the assignment
+      `items = new List<int>()` changes only the local copy of the reference, and the elements added
+      there go to a different list. The tempting `4` assumes the new assignment changes the caller's
+      list.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/ref
+      - https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/passing-reference-type-parameters
+
+  - id: dotnet-clr-014
+    level: junior
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        int n = 1;
+        Add(n);
+        AddRef(ref n);
+        Console.WriteLine(n);
+
+        static void Add(int x) { x++; }
+        static void AddRef(ref int x) { x++; }
+    options:
+      - text: "`2`"
+        text_en: "`2`"
+        correct: true
+      - text: "`3`"
+        text_en: "`3`"
+      - text: "`1`"
+        text_en: "`1`"
+      - text: "Помилка компіляції: `ref` не можна застосувати до `int`"
+        text_en: "A compile error: `ref` cannot be applied to `int`"
+    explanation: >
+      Параметр `x` в `Add` отримує копію значення, тому збільшення не бачить викликач. У `AddRef`
+      параметр `ref` є псевдонімом самої змінної `n`, тож `x++` змінює саму `n`: `1` стає `2`. Спокусливе
+      `3` хибне, бо перший виклик на `n` не впливає.
+    explanation_en: >
+      The parameter `x` in `Add` receives a copy of the value, so the caller never sees the increment. In
+      `AddRef` the `ref` parameter is an alias of the variable `n` itself, so `x++` changes `n`: `1`
+      becomes `2`. The tempting `3` is wrong because the first call has no effect on `n`.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/ref
+
+  - id: dotnet-clr-015
+    level: junior
+    type: multiple
+    text: "Які з цих ресурсів збирач сміття .NET сам не звільнить, тож їх має звільнити код?"
+    text_en: "Which of these resources will the .NET garbage collector not release by itself, so the code must release them?"
+    options:
+      - text: "Блок пам'яті, виділений викликом `Marshal.AllocHGlobal`"
+        text_en: "A memory block allocated by a call to `Marshal.AllocHGlobal`"
+        correct: true
+      - text: "Блок пам'яті, який повернула нативна бібліотека через P/Invoke"
+        text_en: "A memory block returned by a native library through P/Invoke"
+        correct: true
+      - text: "Сирий неуправлюваний дескриптор, збережений у полі типу `IntPtr`"
+        text_en: "A raw unmanaged handle stored in a field of type `IntPtr`"
+        correct: true
+      - text: "Масив `int[]`, на який у програмі більше немає жодних посилань"
+        text_en: "An `int[]` array that no longer has any references in the program"
+      - text: "Об'єкт `List<string>` із тисячами елементів, що втратив усі посилання"
+        text_en: "A `List<string>` object with thousands of elements that lost all references"
+    explanation: >
+      GC керує лише керованою купою: він не виділяє й не звільняє неуправлювану пам'ять, а про дескриптори
+      в `IntPtr` нічого не знає. Тому такі ресурси звільняють явно, зазвичай через `IDisposable` або
+      `SafeHandle`. Недосяжні керовані об'єкти, навіть великі, збирач повертає сам.
+    explanation_en: >
+      The GC manages only the managed heap: it neither allocates nor releases unmanaged memory, and it
+      knows nothing about handles stored in an `IntPtr`. Such resources are released explicitly, usually
+      through `IDisposable` or `SafeHandle`. Unreachable managed objects, even large ones, are reclaimed
+      by the collector itself.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose
+      - https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/unmanaged
+
+  - id: dotnet-clr-016
+    level: junior
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        int[] numbers = new int[3];
+        string[] names = new string[2];
+        Console.WriteLine($"{numbers[0]} {names[0] is null}");
+    options:
+      - text: "`0 True`"
+        text_en: "`0 True`"
+        correct: true
+      - text: "`0 False`"
+        text_en: "`0 False`"
+      - text: "`null True`"
+        text_en: "`null True`"
+      - text: "`NullReferenceException` на `names[0]`"
+        text_en: "`NullReferenceException` on `names[0]`"
+    explanation: >
+      Нові елементи масиву дістають значення за замовчуванням: `0` для `int` і `null` для посилальних типів,
+      зокрема `string`. Порожнім рядком елемент не стає, тому `names[0] is null` дає `True`. Перевірка
+      `is null` виняток не кидає.
+    explanation_en: >
+      New array elements get the default value: `0` for `int` and `null` for reference types, including
+      `string`. An element does not become an empty string, so `names[0] is null` gives `True`. The
+      `is null` check does not throw.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/default-values
+
+  - id: dotnet-clr-017
+    level: middle
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        var points = new Point[] { new(), new() };
+        points[0].Bump();
+        foreach (var p in points) p.Bump();
+        Console.WriteLine($"{points[0].X} {points[1].X}");
+
+        struct Point
+        {
+            public int X;
+            public void Bump() => X++;
+        }
+    options:
+      - text: "`1 0`"
+        text_en: "`1 0`"
+        correct: true
+      - text: "`2 1`"
+        text_en: "`2 1`"
+      - text: "`0 0`"
+        text_en: "`0 0`"
+      - text: "Помилка компіляції: `foreach` забороняє викликати методи змінної ітерації"
+        text_en: "A compile error: `foreach` forbids calling methods on the iteration variable"
+    explanation: >
+      Елемент масиву структур є змінною, тож `points[0].Bump()` змінює його на місці й дає `1`. Змінна
+      `p` у `foreach` отримує копію елемента, тому `p.Bump()` змінює лише копію, а масив лишається
+      незмінним: `points[1].X` дорівнює `0`. Змінити елементи на місці дозволяє лише `ref`-змінна
+      ітерації. Присвоїти поле `p.X` компілятор би заборонив, а виклик методу дозволяє мовчки.
+    explanation_en: >
+      An element of a struct array is a variable, so `points[0].Bump()` changes it in place and gives `1`.
+      The `foreach` variable `p` receives a copy of the element, so `p.Bump()` changes only the copy and
+      the array stays unchanged: `points[1].X` is `0`. Only a `ref` iteration variable lets you change
+      elements in place. The compiler would reject assigning the field `p.X`, but it silently allows the
+      method call.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/struct
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/iteration-statements#the-foreach-statement
+
+  - id: dotnet-clr-018
+    level: middle
+    type: multiple
+    text: "Які твердження про фіналізатори (`~Type()`) у .NET 10 правильні?"
+    text_en: "Which statements about finalizers (`~Type()`) in .NET 10 are correct?"
+    options:
+      - text: "Програміст не керує моментом виклику: його визначає збирач сміття"
+        text_en: "The programmer does not control when it is called: the garbage collector decides"
+        correct: true
+      - text: "Під час завершення застосунку фіналізатори не гарантовано викликаються"
+        text_en: "Finalizers are not guaranteed to be called when the application terminates"
+        correct: true
+      - text: "Фіналізатор не можна оголосити в структурі, лише в класі"
+        text_en: "A finalizer cannot be declared in a struct, only in a class"
+        correct: true
+      - text: "Фіналізатор викликається одразу після того, як зникне останнє посилання на об'єкт"
+        text_en: "The finalizer is called right after the last reference to the object disappears"
+      - text: "Фіналізатор можна викликати явно, як звичайний метод: `obj.Finalize()`"
+        text_en: "A finalizer can be called explicitly like a normal method: `obj.Finalize()`"
+    explanation: >
+      Момент запуску фіналізатора обирає GC, і він настає не одразу після втрати останнього посилання.
+      У .NET 5 і новіших фіналізатори не запускаються як частина завершення застосунку, тому надійне
+      прибирання потребує `Dispose`. Структури фіналізаторів мати не можуть, а викликати фіналізатор
+      вручну не можна.
+    explanation_en: >
+      The GC chooses when a finalizer runs, and it does not happen right after the last reference is
+      lost. In .NET 5 and later finalizers do not run as part of application termination, so reliable
+      cleanup needs `Dispose`. Structs cannot have finalizers, and a finalizer cannot be called manually.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/finalizers
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/struct#limitations-with-the-design-of-a-structure-type
+
+  - id: dotnet-clr-019
+    level: middle
+    type: single
+    text: >
+      Клас `Connection` реалізує `IDisposable`. Код викликає `conn.Dispose()` явно, а потім той самий
+      об'єкт вдруге звільняє `using`. Яка поведінка `Dispose` відповідає настановам .NET?
+    text_en: >
+      The `Connection` class implements `IDisposable`. The code calls `conn.Dispose()` explicitly, and
+      then a `using` disposes the same object a second time. Which `Dispose` behavior matches .NET
+      guidelines?
+    options:
+      - text: "Повторні виклики нічого не роблять і не кидають винятків: `Dispose` має бути ідемпотентним"
+        text_en: "Repeated calls do nothing and throw no exceptions: `Dispose` must be idempotent"
+        correct: true
+      - text: "Другий виклик кидає `ObjectDisposedException`, щоб виявити подвійне звільнення в коді"
+        text_en: "The second call throws `ObjectDisposedException` to expose double disposal in the code"
+      - text: "Другий виклик знову звільняє ресурс, бо `using` не знає про попередній виклик"
+        text_en: "The second call releases the resource again, because `using` does not know about the earlier call"
+      - text: "Компілятор забороняє явний `Dispose` для змінної, оголошеної в `using`"
+        text_en: "The compiler forbids an explicit `Dispose` on a variable declared in `using`"
+    explanation: >
+      Настанови вимагають, щоб `Dispose` можна було викликати кілька разів без винятків, а наступні
+      виклики нічого не робили. Тому типова реалізація тримає прапорець `_disposed` і виходить одразу.
+      `ObjectDisposedException` доречний в інших членах після звільнення, але не в самому `Dispose`.
+    explanation_en: >
+      The guidelines require that `Dispose` can be called multiple times without exceptions, and that
+      later calls do nothing. That is why the typical implementation keeps a `_disposed` flag and returns
+      early. `ObjectDisposedException` fits other members after disposal, but not `Dispose` itself.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose#dispose-and-disposebool
+
+  - id: dotnet-clr-020
+    level: middle
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        object boxed = 5;
+        try
+        {
+            long value = (long)boxed;
+            Console.WriteLine(value);
+        }
+        catch (InvalidCastException)
+        {
+            Console.WriteLine("InvalidCast");
+        }
+        Console.WriteLine((long)(int)boxed);
+    options:
+      - text: "`InvalidCast`, потім `5`"
+        text_en: "`InvalidCast`, then `5`"
+        correct: true
+      - text: "`5`, потім `5`"
+        text_en: "`5`, then `5`"
+      - text: "`InvalidCast`, потім знову `InvalidCast`"
+        text_en: "`InvalidCast`, then `InvalidCast` again"
+      - text: "Помилка компіляції: `object` не можна явно привести до `long`"
+        text_en: "A compile error: `object` cannot be explicitly cast to `long`"
+    explanation: >
+      Розпакувати можна лише в точний тип, який було упаковано: усередині `object` лежить `int`, тож
+      `(long)boxed` кидає `InvalidCastException`, хоча `int` неявно перетворюється на `long`. Спершу
+      розпаковують у `int`, а вже потім розширюють до `long`, тому останній рядок виводить `5`.
+    explanation_en: >
+      Unboxing works only to the exact type that was boxed: the `object` holds an `int`, so `(long)boxed`
+      throws `InvalidCastException` even though `int` converts to `long` implicitly. Unboxing to `int`
+      first and then widening to `long` works, so the last line prints `5`.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/types/boxing-and-unboxing#unboxing
+
+  - id: dotnet-clr-021
+    level: senior
+    type: single
+    text: >
+      Сервіс на .NET 10 працює в контейнері з обмеженням пам'яті 1 ГБ. Параметри GC не задано. Що правильно
+      про межу керованої купи?
+    text_en: >
+      A .NET 10 service runs in a container with a 1 GB memory limit. No GC settings are configured. What
+      is correct about the managed heap limit?
+    options:
+      - text: "Ліміт контейнера вважається всією фізичною пам'яттю, а типова жорстка межа купи становить 75 % від нього"
+        text_en: "The container limit is treated as total physical memory, and the default hard heap limit is 75 percent of it"
+        correct: true
+      - text: "Рантайм ігнорує ліміти cgroup і бачить пам'ять усього вузла, тож купа росте, доки контейнер не вб'є OOM-killer"
+        text_en: "The runtime ignores cgroup limits and sees the whole node's memory, so the heap grows until the OOM killer stops the container"
+      - text: "Купа обмежена рівно 1 ГБ, а інші потреби процесу, як-от стеки потоків, виходять за цю межу"
+        text_en: "The heap is limited to exactly 1 GB, and other needs of the process, such as thread stacks, go beyond that limit"
+      - text: "Типова межа дорівнює 20 МБ, і більшу купу доводиться вмикати вручну налаштуванням `GCHeapHardLimit`"
+        text_en: "The default limit is 20 MB, and a larger heap has to be enabled manually with the `GCHeapHardLimit` setting"
+    explanation: >
+      Якщо процес працює в середовищі з обмеженою пам'яттю, наприклад у контейнері, рантайм вважає цей
+      ліміт загальною фізичною пам'яттю, а типове значення `GCHeapHardLimitPercent` дорівнює 75 %. Решта
+      лишається під не керовану пам'ять, стеки та інше. Тому для 1 ГБ купа обмежена приблизно 768 МБ, а не
+      всім гігабайтом.
+    explanation_en: >
+      When the process runs in an environment with a memory limit, such as a container, the runtime treats
+      that limit as total physical memory, and the default `GCHeapHardLimitPercent` is 75 percent. The
+      rest remains for unmanaged memory, stacks and other needs. So for 1 GB the heap is capped at about
+      768 MB, not the whole gigabyte.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/core/runtime-config/garbage-collector#heap-hard-limit-percent
+
+  - id: dotnet-clr-022
+    level: senior
+    type: single
+    text: >
+      Пакетний обробник на 32-ядерному сервері без інших навантажень цінує пропускну здатність, а не
+      затримку окремого виклику. Яку властивість Server GC варто врахувати, обираючи його замість
+      Workstation GC?
+    text_en: >
+      A batch processor on a 32-core server with no other workloads values throughput over the latency of
+      a single call. Which property of Server GC should be considered when choosing it over Workstation
+      GC?
+    options:
+      - text: "Для кожного логічного процесора є окрема купа й виділений потік GC, і купи збираються одночасно"
+        text_en: "Each logical processor gets its own heap and a dedicated GC thread, collected simultaneously"
+        correct: true
+      - text: "Збірка виконується на потоці користувача, який її спричинив, тому виділених потоків GC немає"
+        text_en: "Collection runs on the user thread that triggered it, so there are no dedicated GC threads"
+      - text: "Server GC має одну спільну купу й один потік GC, але збирає її без жодних пауз"
+        text_en: "Server GC has one shared heap and one GC thread, but collects it with no pauses at all"
+      - text: "Server GC збирає лише покоління 0 і 1, тому покоління 2 залишається поза збіркою"
+        text_en: "Server GC collects only generations 0 and 1, so generation 2 is left out of collection"
+    explanation: >
+      Server GC створює купу й виділений потік збирання на кожен логічний процесор, і купи збираються
+      паралельно. Це дає більшу пропускну здатність на багатоядерних машинах. Збірка на потоці користувача
+      без виділених потоків описує Workstation GC. Пауз Server GC не усуває, а покоління 2 збирає так само.
+    explanation_en: >
+      Server GC creates a heap and a dedicated collection thread for each logical processor, and the
+      heaps are collected in parallel. This gives higher throughput on multicore machines. Collection on
+      the triggering user thread with no dedicated threads describes Workstation GC. Server GC does not
+      remove pauses, and it collects generation 2 as well.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/workstation-server-gc#server-gc
+
+  - id: dotnet-clr-023
+    level: senior
+    type: multiple
+    text: >
+      Код бере буфери з `ArrayPool<byte>.Shared`. Які практики й твердження про це правильні?
+    text_en: >
+      Code takes buffers from `ArrayPool<byte>.Shared`. Which practices and statements about this are
+      correct?
+    options:
+      - text: "`Rent(100)` може повернути масив довший за 100 елементів, тож довжину даних слід передавати окремо"
+        text_en: "`Rent(100)` may return an array longer than 100 elements, so the data length must be passed separately"
+        correct: true
+      - text: "Після `Return` масивом користуватися не можна: його може отримати інший виклик `Rent`"
+        text_en: "After `Return` the array must not be used: another `Rent` call may receive it"
+        correct: true
+      - text: "Вміст орендованого масиву не гарантовано нульовий, тому не можна покладатися на порожні дані"
+        text_en: "The contents of a rented array are not guaranteed to be zero, so empty data must not be assumed"
+        correct: true
+      - text: "Якщо повернути масив із `clearArray: false`, пул однаково обнулить його перед повторною видачею"
+        text_en: "If an array is returned with `clearArray: false`, the pool still zeroes it before handing it out again"
+      - text: "Масив, який не повернули в пул, назавжди лишається в пам'яті, бо GC його не бачить"
+        text_en: "An array that was never returned to the pool stays in memory forever, because the GC cannot see it"
+    explanation: >
+      `Rent` гарантує буфер щонайменше потрібної довжини, а не точної, і його вміст може лишитися від
+      попереднього власника. Після `Return` власність передано пулові, тож подальше використання псує
+      чужі дані. Із `clearArray: false` вміст залишається як є. Загублений масив просто збере GC, пул
+      втратить лише можливість його перевикористати.
+    explanation_en: >
+      `Rent` guarantees a buffer of at least the requested length, not exactly that, and its contents may
+      be left over from a previous owner. After `Return` ownership passes back to the pool, so further
+      use corrupts someone else's data. With `clearArray: false` the contents are left unchanged. A lost
+      array is simply collected by the GC, and the pool only loses the chance to reuse it.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/api/system.buffers.arraypool-1.return
+      - https://learn.microsoft.com/en-us/dotnet/api/system.buffers.arraypool-1.rent
+
+  - id: dotnet-clr-024
+    level: senior
+    type: single
+    text: >
+      Клас напряму тримає неуправлювану пам'ять і має фіналізатор, що викликає `Dispose(false)`. У гілці
+      `Dispose(bool disposing)` для `disposing == false` хтось додав `_logger.Flush()` і `_cache.Dispose()`
+      (обидва поля — керовані об'єкти). Чому це небезпечно?
+    text_en: >
+      A class directly holds unmanaged memory and has a finalizer that calls `Dispose(false)`. In the
+      `disposing == false` path of `Dispose(bool disposing)`, someone added `_logger.Flush()` and
+      `_cache.Dispose()` (both fields are managed objects). Why is this dangerous?
+    options:
+      - text: "Порядок, у якому GC фіналізує керовані об'єкти, не визначений, тож вони можуть уже бути звільнені чи недійсні"
+        text_en: "The order in which the GC finalizes managed objects is nondeterministic, so they may already be disposed or invalid"
+        correct: true
+      - text: "Фіналізатор виконується на потоці користувача, тож блокування в `Flush` зависає весь застосунок"
+        text_en: "The finalizer runs on a user thread, so blocking in `Flush` freezes the whole application"
+      - text: "Після `Dispose(false)` GC більше не збирає об'єкт, тож будь-який виклик у цій гілці викликає витік пам'яті"
+        text_en: "After `Dispose(false)` the GC no longer collects the object, so any call in this path causes a memory leak"
+      - text: "Керовані поля в гілці фіналізатора завжди дорівнюють `null`, тож кожен виклик закінчується `NullReferenceException`"
+        text_en: "Managed fields are always `null` in the finalizer path, so every call ends with `NullReferenceException`"
+    explanation: >
+      Гілка `false` має звільняти лише неуправлювані ресурси: під час фіналізації керовані об'єкти
+      могли вже бути звільнені, бо порядок їх фіналізації не визначений. Тому настанови забороняють
+      торкатися їх звідти. Поля при цьому не обнуляються автоматично, а справжня небезпека в недійсному
+      стані об'єктів. Керовані ресурси звільняють у гілці `disposing == true`.
+    explanation_en: >
+      The `false` path should release only unmanaged resources: during finalization managed objects may
+      already be disposed, because the order of their finalization is nondeterministic. That is why the
+      guidelines forbid touching them from there. Fields are not nulled automatically, and the real
+      danger is the invalid state of those objects. Managed resources are released in the
+      `disposing == true` path.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose#the-disposebool-method-overload
+      - https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/finalizers

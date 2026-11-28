@@ -325,3 +325,373 @@ questions:
       і узагальнений метод викликає їх без екземпляра. Через екземпляр чи змінну інтерфейсу такі члени не викликаються.
     explanation_en: >
       Generic math is built on this: `INumber<T>` requires the type to provide operators and members such as `T.Zero`, and a generic method calls them without an instance. Such members cannot be called through an instance or an interface-typed variable.
+
+  - id: csharp-013
+    level: junior
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        string s = "abc";
+        s.ToUpper();
+        Console.WriteLine(s);
+    options:
+      - text: "`abc`"
+        text_en: '`abc`'
+        correct: true
+      - text: "`ABC`"
+        text_en: '`ABC`'
+      - text: "`Abc`"
+        text_en: '`Abc`'
+      - text: 'Помилка компіляції: результат виклику `ToUpper()` не використано'
+        text_en: 'Compile error: the result of the `ToUpper()` call is unused'
+    explanation: >
+      Рядки в .NET незмінні: `ToUpper()` не змінює `s`, а повертає новий рядок. Оскільки результат ніде не збережено,
+      змінна `s` лишається `abc`. Викинутий результат компілятор помилкою не вважає.
+    explanation_en: >
+      Strings in .NET are immutable: `ToUpper()` does not modify `s` but returns a new string. Since the result is not stored anywhere, `s` stays `abc`. The compiler does not treat a discarded result as an error.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/strings/#immutability-of-strings
+
+  - id: csharp-014
+    level: junior
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        string? name = null;
+        Console.WriteLine(name?.Length ?? -1);
+    options:
+      - text: "`-1`"
+        text_en: '`-1`'
+        correct: true
+      - text: "`0`"
+        text_en: '`0`'
+      - text: "Порожній рядок, бо `null` перетворюється на текст"
+        text_en: 'An empty line, because `null` is converted to text'
+      - text: "`NullReferenceException` на зверненні до `Length`"
+        text_en: '`NullReferenceException` when accessing `Length`'
+    explanation: >
+      Оператор `?.` для `null` не звертається до `Length`, а дає `null`. Далі `??` підставляє `-1`, бо ліва частина порожня.
+      Тому винятку немає, а результат виразу — `int` зі значенням `-1`.
+    explanation_en: >
+      For a `null` operand, the `?.` operator does not access `Length` and yields `null`. Then `??` substitutes `-1` because its left side is null. So there is no exception, and the expression is an `int` with the value `-1`.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/member-access-operators#null-conditional-operators--and-
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/null-coalescing-operator
+
+  - id: csharp-015
+    level: junior
+    type: multiple
+    text: Які твердження про інтерфейси й абстрактні класи в C# правильні?
+    text_en: Which statements about interfaces and abstract classes in C# are correct?
+    options:
+      - text: Клас може реалізувати кілька інтерфейсів, але успадковувати лише один клас
+        text_en: A class can implement several interfaces but can inherit from only one class
+        correct: true
+      - text: Абстрактний клас може мати поля екземпляра й конструктор, а інтерфейс поля екземпляра мати не може
+        text_en: An abstract class can have instance fields and a constructor, while an interface cannot have instance fields
+        correct: true
+      - text: Екземпляр абстрактного класу можна створити через `new`, якщо всі його методи мають тіло
+        text_en: An instance of an abstract class can be created with `new` if all its methods have bodies
+      - text: Інтерфейс може успадковувати лише один інший інтерфейс, як клас успадковує один клас
+        text_en: An interface can inherit from only one other interface, just as a class inherits from one class
+    explanation: >
+      C# має одиночне успадкування класів, але множинну реалізацію інтерфейсів, і інтерфейс може розширювати кілька інтерфейсів.
+      Абстрактний клас лишається класом: має стан і конструктор. Проте `abstract` забороняє `new` навіть тоді, коли абстрактних членів немає.
+    explanation_en: >
+      C# has single class inheritance but multiple interface implementation, and an interface can extend several interfaces. An abstract class remains a class: it has state and a constructor. However, `abstract` forbids `new` even when there are no abstract members.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/object-oriented/inheritance
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface
+
+  - id: csharp-016
+    level: junior
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        int a = 7, b = 2;
+        Console.WriteLine(a / b);
+        Console.WriteLine(a % b);
+    options:
+      - text: "`3`, потім `1` в окремому рядку"
+        text_en: '`3`, then `1` on a separate line'
+        correct: true
+      - text: "`3.5`, потім `1` в окремому рядку"
+        text_en: '`3.5`, then `1` on a separate line'
+      - text: "`4`, потім `1` в окремому рядку"
+        text_en: '`4`, then `1` on a separate line'
+      - text: "`3`, потім `0.5` в окремому рядку"
+        text_en: '`3`, then `0.5` on a separate line'
+    explanation: >
+      Коли обидва операнди `int`, оператор `/` виконує цілочисельне ділення й відкидає дробову частину (`7 / 2` дає `3`).
+      Оператор `%` повертає остачу, тобто `1`. Щоб отримати `3.5`, один з операндів має бути `double`.
+    explanation_en: >
+      When both operands are `int`, the `/` operator performs integer division and discards the fractional part (`7 / 2` gives `3`). The `%` operator returns the remainder, which is `1`. To get `3.5`, one of the operands must be a `double`.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/arithmetic-operators#integer-division
+
+  - id: csharp-017
+    level: middle
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        int x = 7;
+        var size = x switch
+        {
+            > 10 => "big",
+            > 5 => "mid",
+            _ => "small"
+        };
+        Console.WriteLine(size);
+    options:
+      - text: "`mid`"
+        text_en: '`mid`'
+        correct: true
+      - text: "`big`"
+        text_en: '`big`'
+      - text: "`small`"
+        text_en: '`small`'
+      - text: "Помилка компіляції: гілка `> 5` перекривається гілкою `> 10`"
+        text_en: 'Compile error: the `> 5` arm overlaps with the `> 10` arm'
+    explanation: >
+      Гілки `switch`-виразу перевіряються зверху вниз, виконується перша, що збіглася. Для `7` умова `> 10` хибна, а `> 5` істинна.
+      Компілятор скаржиться лише на гілку, яку попередні вже повністю перекривають, а тут порядок коректний.
+    explanation_en: >
+      The arms of a `switch` expression are checked top to bottom and the first match runs. For `7`, `> 10` is false and `> 5` is true. The compiler complains only about an arm that earlier arms already fully cover, and here the order is valid.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/switch-expression
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/patterns#relational-patterns
+
+  - id: csharp-018
+    level: middle
+    type: multiple
+    text: Які твердження про `const` і `static readonly` для полів правильні?
+    text_en: Which statements about `const` and `static readonly` fields are correct?
+    options:
+      - text: Значення `const` підставляється в код споживачів під час компіляції, тому їх треба перекомпілювати після зміни
+        text_en: A `const` value is substituted into consumer code at compile time, so consumers must be recompiled after a change
+        correct: true
+      - text: "`static readonly` можна ініціалізувати значенням, яке обчислюється під час виконання, наприклад `DateTime.UtcNow`"
+        text_en: '`static readonly` can be initialized with a value computed at run time, such as `DateTime.UtcNow`'
+        correct: true
+      - text: "`const` можна оголосити з типом `List<int>`, якщо присвоїти йому `new List<int>()` у ініціалізаторі"
+        text_en: '`const` can be declared with type `List<int>` if it is assigned `new List<int>()` in the initializer'
+      - text: "Поле `static readonly` можна присвоїти з будь-якого статичного методу класу, поки значення ще не читали"
+        text_en: 'A `static readonly` field can be assigned from any static method of the class as long as the value has not been read yet'
+    explanation: >
+      `const` обмежений значеннями, відомими під час компіляції (числа, рядки, `null`), і вбудовується в IL споживачів.
+      `static readonly` ініціалізується в ініціалізаторі чи статичному конструкторі, тож годиться для обчислюваних значень.
+      Присвоїти його з довільного методу не можна.
+    explanation_en: >
+      `const` is limited to values known at compile time (numbers, strings, `null`) and is embedded in the IL of consumers. `static readonly` is initialized in an initializer or a static constructor, so it suits computed values. It cannot be assigned from an arbitrary method.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/const
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/readonly
+
+  - id: csharp-019
+    level: middle
+    type: single
+    text: Що станеться під час виконання цього коду?
+    text_en: What happens when this code runs?
+    code:
+      lang: csharp
+      source: |
+        var seq = Gen(null);
+        Console.WriteLine("created");
+        foreach (var v in seq) { }
+
+        static IEnumerable<int> Gen(string? name)
+        {
+            if (name is null) throw new ArgumentNullException(nameof(name));
+            yield return 1;
+        }
+    options:
+      - text: Спершу виведеться `created`, а виняток виникне лише в `foreach`
+        text_en: '`created` is printed first, and the exception is thrown only in `foreach`'
+        correct: true
+      - text: Виняток виникне одразу на рядку `Gen(null)`, і `created` не виведеться
+        text_en: The exception is thrown right at `Gen(null)`, and `created` is not printed
+      - text: Виняток не виникне взагалі, бо `foreach` пропускає `null`-аргументи
+        text_en: No exception is thrown at all, because `foreach` skips `null` arguments
+      - text: Виведеться `created`, а виняток проковтне ітератор і колекція виявиться порожньою
+        text_en: '`created` is printed, and the iterator swallows the exception so the sequence is empty'
+    explanation: >
+      Метод з `yield return` лише створює об'єкт-ітератор, а його тіло, разом із перевіркою аргументу, виконується
+      під час першого `MoveNext()`. Тому перевірку аргументів виносять у зовнішній метод або локальну функцію.
+    explanation_en: >
+      A method with `yield return` only creates an iterator object, and its body, including the argument check, runs on the first `MoveNext()`. That is why argument validation is moved into an outer method or a local function.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/yield
+      - https://learn.microsoft.com/en-us/dotnet/csharp/iterators
+
+  - id: csharp-020
+    level: middle
+    type: single
+    text: >
+      Клас `Money` перевизначає `Equals` за значенням суми, але не перевизначає `GetHashCode`. Що станеться, якщо
+      класти екземпляри `Money` у `HashSet<Money>`?
+    text_en: >
+      The `Money` class overrides `Equals` by amount but does not override `GetHashCode`. What happens if `Money`
+      instances are put into a `HashSet<Money>`?
+    options:
+      - text: Два рівні за `Equals` об'єкти зазвичай потраплять у різні кошики, тож дублікат не знайдеться й додасться
+        text_en: Two objects equal by `Equals` will usually land in different buckets, so the duplicate is not found and gets added
+        correct: true
+      - text: "`HashSet` викличе лише `Equals`, тому дублікати коректно відсіюються"
+        text_en: '`HashSet` calls only `Equals`, so duplicates are filtered out correctly'
+      - text: Код не скомпілюється, бо компілятор вимагає перевизначати обидва методи разом
+        text_en: The code will not compile, because the compiler requires overriding both methods together
+      - text: Під час додавання виникне `InvalidOperationException` про розбіжність `Equals` і `GetHashCode`
+        text_en: An `InvalidOperationException` about the mismatch of `Equals` and `GetHashCode` is thrown on add
+    explanation: >
+      Хеш-колекції спершу обирають кошик за `GetHashCode()`, і `Equals` викликається лише для елементів з тим самим кошиком.
+      Стандартний хеш посилальних типів залежить від ідентичності об'єкта, тож рівні значення мають різні хеші. Компілятор лише
+      попереджає (CS0659), виняток не кидається.
+    explanation_en: >
+      Hash collections first pick a bucket by `GetHashCode()`, and `Equals` is called only for items in the same bucket. The default hash of reference types depends on object identity, so equal values have different hashes. The compiler only warns (CS0659), and no exception is thrown.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/api/system.object.gethashcode?view=net-10.0#remarks
+      - https://learn.microsoft.com/en-us/dotnet/api/system.object.equals?view=net-10.0#notes-for-inheritors
+
+  - id: csharp-021
+    level: senior
+    type: single
+    text: Що станеться з цим кодом?
+    text_en: What happens with this code?
+    code:
+      lang: csharp
+      source: |
+        var bot = new Bot();
+        bot.Hello();
+
+        interface IGreeter
+        {
+            void Hello() => Console.WriteLine("hi");
+        }
+
+        class Bot : IGreeter { }
+    options:
+      - text: "Помилка компіляції: `Hello` не є членом `Bot`, його видно лише через інтерфейс"
+        text_en: 'Compile error: `Hello` is not a member of `Bot`, it is visible only through the interface'
+        correct: true
+      - text: "Виведеться `hi`, бо клас успадковує реалізацію методу за замовчуванням"
+        text_en: '`hi` is printed, because the class inherits the default method implementation'
+      - text: "Помилка компіляції: клас `Bot` мусить сам реалізувати `Hello`, інакше він не збереться"
+        text_en: 'Compile error: class `Bot` must implement `Hello` itself, otherwise it will not build'
+      - text: "Під час виконання виникне `NotImplementedException`, бо реалізації в класі немає"
+        text_en: 'A `NotImplementedException` is thrown at run time, because the class has no implementation'
+    explanation: >
+      Реалізація методу за замовчуванням належить інтерфейсу і не стає членом класу. Тому `bot.Hello()` не компілюється,
+      а `((IGreeter)bot).Hello()` або змінна типу `IGreeter` виведе `hi`. Реалізовувати метод у класі не обов'язково, саме для цього такі методи й додали.
+    explanation_en: >
+      A default interface implementation belongs to the interface and does not become a member of the class. So `bot.Hello()` does not compile, while `((IGreeter)bot).Hello()` or an `IGreeter` variable prints `hi`. The class is not required to implement the method, which is exactly why default methods were added.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface#default-interface-members
+      - https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/interface-implementation/default-interface-methods-versions
+
+  - id: csharp-022
+    level: senior
+    type: multiple
+    text: >
+      Дано `record P(string Name, List<int> Items)` (клас) і `record B(int X, int Y)` та `record D(int X, int Y) : B(X, Y)`.
+      Які твердження правильні?
+    text_en: >
+      Given `record P(string Name, List<int> Items)` (a class), `record B(int X, int Y)` and `record D(int X, int Y) : B(X, Y)`.
+      Which statements are correct?
+    options:
+      - text: Вираз `p with { Name = "b" }` робить поверхневу копію, тож `Items` у копії вказує на той самий список
+        text_en: The expression `p with { Name = "b" }` makes a shallow copy, so `Items` in the copy points to the same list
+        correct: true
+      - text: Два екземпляри `P` з однаковим `Name` і різними списками з однаковим вмістом не рівні за `==`
+        text_en: Two `P` instances with the same `Name` and different lists with identical contents are not equal by `==`
+        correct: true
+      - text: "`new B(1, 2).Equals(new D(1, 2))` повертає `true`, бо всі властивості збігаються"
+        text_en: '`new B(1, 2).Equals(new D(1, 2))` returns `true`, because all properties match'
+      - text: Вираз `with` глибоко клонує вкладені об'єкти, тож зміна копії не торкається оригіналу
+        text_en: The `with` expression deeply clones nested objects, so changing the copy does not affect the original
+    explanation: >
+      Згенерована рівність порівнює кожну властивість через її `Equals`, а `List<T>` порівнюється за посиланням, тому вміст не враховується.
+      `with` копіює поля поверхнево. Рівність також порівнює `EqualityContract`, тобто точний тип, тож `B` і `D` не рівні.
+    explanation_en: >
+      The generated equality compares each property through its own `Equals`, and `List<T>` compares by reference, so contents are not considered. `with` copies fields shallowly. Equality also compares `EqualityContract`, i.e. the exact type, so `B` and `D` are not equal.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/record#value-equality
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/with-expression#nondestructive-mutation
+
+  - id: csharp-023
+    level: senior
+    type: single
+    text: >
+      Цей код компілюється, а `List<object> l = new List<string>();` — ні. Що станеться на другому рядку під час виконання?
+    text_en: >
+      This code compiles, while `List<object> l = new List<string>();` does not. What happens on the second line at run time?
+    code:
+      lang: csharp
+      source: |
+        object[] arr = new string[1];
+        arr[0] = 1;
+    options:
+      - text: "`ArrayTypeMismatchException`: масив перевіряє тип кожного запису"
+        text_en: '`ArrayTypeMismatchException`: the array checks the type of every store'
+        correct: true
+      - text: "Число `1` автоматично перетвориться на рядок `\"1\"`, і код спрацює"
+        text_en: 'The number `1` is converted to the string `"1"` automatically, and the code works'
+      - text: "`InvalidCastException`: перевіряється приведення `arr` до `string[]`"
+        text_en: '`InvalidCastException`: the cast of `arr` to `string[]` is checked'
+      - text: "Масив тихо перетвориться на `object[]` з копіюванням, і запис пройде"
+        text_en: 'The array is silently converted to `object[]` by copying, and the store succeeds'
+    explanation: >
+      Масиви посилальних типів коваріантні ще з C# 1, тому присвоєння компілюється. Об'єкт лишається `string[]`, і середовище виконання
+      перевіряє тип під час запису, а узагальнені колекції зроблено інваріантними, щоб не мати цієї пастки.
+    explanation_en: >
+      Arrays of reference types have been covariant since C# 1, so the assignment compiles. The object remains a `string[]`, and the runtime checks the type on each store, while generic collections were made invariant to avoid this trap.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/covariance-contravariance/#covariance-for-arrays
+      - https://learn.microsoft.com/en-us/dotnet/api/system.arraytypemismatchexception?view=net-10.0
+
+  - id: csharp-024
+    level: senior
+    type: single
+    text: Що виведе цей код?
+    text_en: What does this code print?
+    code:
+      lang: csharp
+      source: |
+        Box<int>.Count++;
+        Box<string>.Count++;
+        Box<int>.Count++;
+        Console.WriteLine($"{Box<int>.Count} {Box<string>.Count}");
+
+        class Box<T>
+        {
+            public static int Count;
+        }
+    options:
+      - text: "`2 1`"
+        text_en: '`2 1`'
+        correct: true
+      - text: "`3 3`"
+        text_en: '`3 3`'
+      - text: "`2 2`"
+        text_en: '`2 2`'
+      - text: "Помилка компіляції: узагальнений клас не може мати статичних полів"
+        text_en: 'Compile error: a generic class cannot have static fields'
+    explanation: >
+      Кожен закритий конструйований тип, як-от `Box<int>` чи `Box<string>`, має власний набір статичних полів.
+      Тому лічильники незалежні, а статичні поля в узагальнених класах цілком дозволені.
+    explanation_en: >
+      Each closed constructed type, such as `Box<int>` or `Box<string>`, has its own set of static fields. So the counters are independent, and static fields in generic classes are perfectly allowed.
+    sources:
+      - https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/generics-and-attributes
+      - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/classes#1558-static-and-instance-members

@@ -328,3 +328,374 @@ questions:
       Row locks in PostgreSQL interfere only with those who modify or lock the same rows, while ordinary
       reads do not notice them. `FOR UPDATE` holds the lock until `COMMIT` or `ROLLBACK`, and `NOWAIT` and
       `SKIP LOCKED` only determine what to do with rows that are already locked.
+
+  - id: sql-013
+    level: junior
+    type: single
+    text: Чим `UNION` відрізняється від `UNION ALL`?
+    text_en: What is the difference between `UNION` and `UNION ALL`?
+    options:
+      - text: "`UNION` прибирає дублікати рядків у результаті, `UNION ALL` залишає їх усі"
+        text_en: '`UNION` removes duplicate rows from the result, `UNION ALL` keeps all of them'
+        correct: true
+      - text: "`UNION ALL` прибирає дублікати, а `UNION` повертає всі рядки обох запитів"
+        text_en: '`UNION ALL` removes duplicates, while `UNION` returns all rows of both queries'
+      - text: "`UNION` об'єднує колонки двох запитів поруч, а `UNION ALL` складає їхні рядки один під одним"
+        text_en: '`UNION` joins the columns of two queries side by side, while `UNION ALL` stacks their rows one under another'
+      - text: "`UNION ALL` дозволяє запитам мати різну кількість колонок, а `UNION` — ні"
+        text_en: '`UNION ALL` allows the queries to have different numbers of columns, `UNION` does not'
+    explanation: >
+      Обидва оператори складають рядки двох запитів і вимагають однакової кількості та сумісних типів колонок.
+      `UNION` ще й видаляє повторювані рядки, тому потребує додаткової роботи; якщо дублікати неможливі або не заважають, `UNION ALL` дешевший.
+    explanation_en: >
+      Both operators stack the rows of two queries and require the same number of columns with compatible types.
+      `UNION` also removes repeated rows, so it needs extra work; if duplicates are impossible or harmless,
+      `UNION ALL` is cheaper.
+    sources:
+      - https://www.postgresql.org/docs/18/queries-union.html
+
+  - id: sql-014
+    level: junior
+    type: multiple
+    text: Які твердження про зовнішній ключ (`FOREIGN KEY`) у PostgreSQL правильні?
+    text_en: Which statements about a foreign key (`FOREIGN KEY`) in PostgreSQL are true?
+    options:
+      - text: "Вставка рядка із значенням, якого немає в зв'язаній таблиці, завершується помилкою"
+        text_en: Inserting a row with a value that does not exist in the referenced table fails with an error
+        correct: true
+      - text: "З `ON DELETE CASCADE` видалення батьківського рядка видаляє й підлеглі рядки"
+        text_en: With `ON DELETE CASCADE`, deleting a parent row also deletes the child rows
+        correct: true
+      - text: "Колонка зовнішнього ключа без `NOT NULL` може містити `NULL`, і такий рядок перевірку проходить"
+        text_en: A foreign key column without `NOT NULL` may contain `NULL`, and such a row passes the check
+        correct: true
+      - text: "PostgreSQL сам створює індекс на колонці зовнішнього ключа в підлеглій таблиці"
+        text_en: PostgreSQL itself creates an index on the foreign key column in the child table
+      - text: "Зовнішній ключ може посилатися на будь-яку колонку батьківської таблиці, навіть без унікальності"
+        text_en: A foreign key can reference any column of the parent table, even without uniqueness
+    explanation: >
+      Зовнішній ключ тримає посилальну цілісність, а `NULL` у ньому означає «зв'язку немає», тому перевірку не запускає.
+      Індекс на підлеглій колонці автоматично не створюється, його додають самі, бо без нього видалення батька скануватиме всю підлеглу таблицю.
+      Цільові колонки мусять мати `PRIMARY KEY` або `UNIQUE`.
+    explanation_en: >
+      A foreign key keeps referential integrity, and a `NULL` in it means "no link", so it does not trigger the check.
+      An index on the child column is not created automatically; you add it yourself, because without it deleting
+      a parent scans the whole child table. The target columns must have `PRIMARY KEY` or `UNIQUE`.
+    sources:
+      - https://www.postgresql.org/docs/18/ddl-constraints.html#DDL-CONSTRAINTS-FK
+
+  - id: sql-015
+    level: junior
+    type: single
+    text: Що гарантує цей запит у PostgreSQL?
+    text_en: What does this query guarantee in PostgreSQL?
+    code:
+      lang: sql
+      source: |
+        SELECT id, name
+        FROM users
+        LIMIT 3;
+    options:
+      - text: Повертає не більше трьох рядків, але які саме й у якому порядку — не визначено
+        text_en: Returns at most three rows, but which ones and in what order is not defined
+        correct: true
+      - text: Повертає три рядки з найменшими значеннями `id`, бо `id` — первинний ключ
+        text_en: Returns the three rows with the smallest `id`, because `id` is the primary key
+      - text: Повертає три рядки, які вставили в таблицю першими, бо база зберігає порядок вставки
+        text_en: Returns the three rows inserted first, because the database preserves insertion order
+      - text: Повертає три рядки в порядку, у якому вони лежать в індексі первинного ключа
+        text_en: Returns three rows in the order in which they sit in the primary key index
+    explanation: >
+      Без `ORDER BY` сервер віддає рядки в довільному порядку, який залежить від плану та фізичного розташування даних і може змінитися.
+      Щоб `LIMIT` повертав передбачувану вибірку, потрібне `ORDER BY` за однозначним ключем.
+    explanation_en: >
+      Without `ORDER BY` the server returns rows in an arbitrary order that depends on the plan and the physical
+      layout of the data and may change. For `LIMIT` to return a predictable selection, you need `ORDER BY` on an
+      unambiguous key.
+    sources:
+      - https://www.postgresql.org/docs/18/queries-limit.html
+      - https://www.postgresql.org/docs/18/sql-select.html#SQL-ORDERBY
+
+  - id: sql-016
+    level: junior
+    type: single
+    text: Що станеться під час виконання цього запиту в PostgreSQL?
+    text_en: What happens when this query is executed in PostgreSQL?
+    code:
+      lang: sql
+      source: |
+        -- employees (id, department, name, salary); id is the primary key
+        SELECT department, name, COUNT(*)
+        FROM employees
+        GROUP BY department;
+    options:
+      - text: "Помилка: колонка `name` не входить у `GROUP BY` і не обгорнута агрегатною функцією"
+        text_en: 'Error: column `name` is not in `GROUP BY` and is not wrapped in an aggregate function'
+        correct: true
+      - text: "Для кожного відділу повернеться ім'я першого знайденого працівника і кількість"
+        text_en: For each department the name of the first employee found and the count are returned
+      - text: "Запит поверне по рядку на кожного працівника, а `COUNT(*)` дасть `1`"
+        text_en: The query returns one row per employee, and `COUNT(*)` gives `1`
+      - text: "Колонка `name` дорівнюватиме `NULL`, бо в групі кілька різних значень"
+        text_en: Column `name` will be `NULL`, because the group has several different values
+    explanation: >
+      Після `GROUP BY` у `SELECT` можна брати лише згруповані колонки й агрегати: для групи з кількох працівників незрозуміло, яке ім'я показати.
+      Виняток — колонки, що функціонально залежать від згрупованого первинного ключа, але тут групується `department`.
+    explanation_en: >
+      After `GROUP BY`, `SELECT` may use only grouped columns and aggregates: for a group of several employees it
+      is unclear which name to show. The exception is columns functionally dependent on a grouped primary key,
+      but here `department` is grouped.
+    sources:
+      - https://www.postgresql.org/docs/18/queries-table-expressions.html#QUERIES-GROUP
+
+  - id: sql-017
+    level: middle
+    type: single
+    text: Скільки рядків поверне цей запит?
+    text_en: How many rows does this query return?
+    code:
+      lang: sql
+      source: |
+        -- departments (id, title): (1, 'IT'), (2, 'HR'), (3, 'Ops')
+        -- employees (id, department_id, grade): (10, 1, 'senior'), (11, 1, 'junior'), (12, 2, 'junior')
+        SELECT d.title, e.id
+        FROM departments d
+        LEFT JOIN employees e ON e.department_id = d.id
+        WHERE e.grade = 'senior';
+    options:
+      - text: "`1`"
+        text_en: '`1`'
+        correct: true
+      - text: "`3`"
+        text_en: '`3`'
+      - text: "`4`"
+        text_en: '`4`'
+      - text: "`2`"
+        text_en: '`2`'
+    explanation: >
+      `LEFT JOIN` спершу зберігає відділи без працівників (Ops) і рядки з `junior`, але `WHERE e.grade = 'senior'` для `NULL` не істинне й відкидає Ops.
+      Лишається лише IT з працівником 10, тобто фактично вийшов `INNER JOIN`. Щоб зберегти всі відділи, умову перенесли б у `ON`.
+    explanation_en: >
+      `LEFT JOIN` first keeps departments without employees (Ops) and the `junior` rows, but `WHERE e.grade = 'senior'`
+      is not true for `NULL` and discards Ops. Only IT with employee 10 remains, and the `junior` rows fail the
+      condition, so it effectively became an `INNER JOIN`. To keep all departments, the condition would move into `ON`.
+    sources:
+      - https://www.postgresql.org/docs/18/queries-table-expressions.html#QUERIES-JOIN
+
+  - id: sql-018
+    level: middle
+    type: single
+    text: Скільки рядків поверне цей запит, якщо в `blocked` є рядок із `user_id`, що дорівнює `NULL`?
+    text_en: How many rows does this query return if `blocked` has a row whose `user_id` is `NULL`?
+    code:
+      lang: sql
+      source: |
+        -- users (id): 1, 2, 3
+        -- blocked (user_id): 1, NULL
+        SELECT id
+        FROM users
+        WHERE id NOT IN (SELECT user_id FROM blocked);
+    options:
+      - text: "Жодного: для `2` і `3` порівняння з `NULL` дає невідомо, тож умова не істинна"
+        text_en: 'None: for `2` and `3` the comparison with `NULL` is unknown, so the condition is not true'
+        correct: true
+      - text: "Два рядки, `2` і `3`: `NULL` у підзапиті просто ігнорується"
+        text_en: 'Two rows, `2` and `3`: the `NULL` in the subquery is simply ignored'
+      - text: "Три рядки: `NULL` у підзапиті скасовує фільтрацію, і виходять усі користувачі"
+        text_en: 'Three rows: the `NULL` in the subquery cancels the filter and all users come out'
+      - text: "Помилка виконання: підзапит не може повертати `NULL`"
+        text_en: 'Runtime error: a subquery cannot return `NULL`'
+    explanation: >
+      `id NOT IN (1, NULL)` розкривається в `id <> 1 AND id <> NULL`; для `2` друга частина дає `NULL`, тож весь вираз не `TRUE`.
+      Безпечніше написати `NOT EXISTS` з корельованим підзапитом або відфільтрувати `NULL` у підзапиті.
+    explanation_en: >
+      `id NOT IN (1, NULL)` expands to `id <> 1 AND id <> NULL`; for `2` the second part gives `NULL`, so the whole
+      expression is not `TRUE`. It is safer to write `NOT EXISTS` with a correlated subquery or to filter `NULL`
+      out of the subquery.
+    sources:
+      - https://www.postgresql.org/docs/18/functions-subquery.html#FUNCTIONS-SUBQUERY-NOTIN
+
+  - id: sql-019
+    level: middle
+    type: multiple
+    text: Які твердження про `UPDATE` і MVCC у PostgreSQL правильні?
+    text_en: Which statements about `UPDATE` and MVCC in PostgreSQL are true?
+    options:
+      - text: "`UPDATE` створює нову версію рядка, а стара лишається, доки її не приберуть через `VACUUM`"
+        text_en: '`UPDATE` creates a new row version, and the old one stays until `VACUUM` removes it'
+        correct: true
+      - text: Звичайний `SELECT` не чекає на транзакцію, що оновлює ті самі рядки, і бачить їхню попередню версію
+        text_en: A plain `SELECT` does not wait for a transaction updating the same rows and sees their previous version
+        correct: true
+      - text: "Довга відкрита транзакція не дає `VACUUM` прибрати старі версії рядків, і таблиця розпухає"
+        text_en: A long-open transaction stops `VACUUM` from removing old row versions, and the table bloats
+        correct: true
+      - text: "`UPDATE` перезаписує рядок на місці, тому старих версій у таблиці не лишається"
+        text_en: '`UPDATE` overwrites the row in place, so no old versions remain in the table'
+      - text: "`SELECT` на рівні `READ COMMITTED` чекає, поки транзакція, що оновлює ці рядки, зробить `COMMIT`"
+        text_en: A `SELECT` at `READ COMMITTED` waits until the transaction updating these rows does `COMMIT`
+    explanation: >
+      У MVCC кожен запит бачить знімок даних, тому читання й запис не блокують одне одного, а старі версії потрібні для таких знімків.
+      `VACUUM` не може прибрати версії, які ще може бачити якась відкрита транзакція, через що довгі транзакції й призводять до розпухання.
+    explanation_en: >
+      In MVCC each query sees a snapshot of the data, so reads and writes do not block each other, and old versions
+      are needed for such snapshots. `VACUUM` cannot remove versions that some open transaction may still see,
+      which is why long transactions lead to bloat.
+    sources:
+      - https://www.postgresql.org/docs/18/mvcc-intro.html
+      - https://www.postgresql.org/docs/18/routine-vacuuming.html
+
+  - id: sql-020
+    level: middle
+    type: single
+    text: >
+      Транзакція A оновлює рядок 1, потім рядок 2 таблиці `accounts`, а транзакція B одночасно оновлює рядок 2, потім рядок 1.
+      Що станеться в PostgreSQL і як цього уникнути?
+    text_en: >
+      Transaction A updates row 1 and then row 2 of the `accounts` table, while transaction B at the same time
+      updates row 2 and then row 1. What happens in PostgreSQL and how to avoid it?
+    options:
+      - text: "Виявиться взаємне блокування: одну скасують помилкою, а уникнути допоможе однаковий порядок оновлення"
+        text_en: 'A deadlock is detected: one is aborted with an error, and updating rows in the same order avoids it'
+        correct: true
+      - text: "Обидві транзакції чекатимуть одна одну безкінечно, доки адміністратор не завершить одну з них"
+        text_en: Both transactions will wait for each other indefinitely until an administrator terminates one of them
+      - text: "Обидві транзакції успішно завершаться, бо MVCC дає кожній власну версію рядків"
+        text_en: Both transactions will succeed, because MVCC gives each its own version of the rows
+      - text: "Друга транзакція почекає першу й виконається після неї, тож помилок не буде, а порядок не важливий"
+        text_en: The second transaction waits for the first and runs after it, so there are no errors and the order does not matter
+    explanation: >
+      Кожна транзакція тримає блокування рядка, потрібного іншій, тому виникає цикл очікування. PostgreSQL сам його виявляє й перериває одну з транзакцій з помилкою.
+      Якщо всі транзакції беруть блокування в однаковому порядку, цикл утворитися не може.
+    explanation_en: >
+      Each transaction holds a row lock the other needs, so a wait cycle forms. PostgreSQL detects it on its own
+      and aborts one of the transactions with an error. If all transactions take locks in the same order,
+      a cycle cannot form.
+    sources:
+      - https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-DEADLOCKS
+
+  - id: sql-021
+    level: senior
+    type: single
+    text: >
+      У PostgreSQL 18 запит використовує `Index Only Scan`, але `EXPLAIN (ANALYZE)` показує `Heap Fetches`, близьке до загальної кількості рядків.
+      Таблицю багато оновлювали, а автоочищення на ній вимкнено. Що робити?
+    text_en: >
+      In PostgreSQL 18 a query uses an `Index Only Scan`, but `EXPLAIN (ANALYZE)` shows `Heap Fetches` close to the total number of rows.
+      The table was updated heavily, and autovacuum is disabled on it. What should you do?
+    options:
+      - text: "Виконати `VACUUM` і ввімкнути автоочищення: сторінки потраплять у карту видимості"
+        text_en: 'Run `VACUUM` and enable autovacuum: pages will get into the visibility map'
+        correct: true
+      - text: "Виконати `ANALYZE`, бо `Heap Fetches` лишається великим через застарілу статистику планувальника"
+        text_en: Run `ANALYZE`, because `Heap Fetches` stays high due to stale planner statistics
+      - text: "Перебудувати індекс через `REINDEX`, бо він пошкоджений і не може обійтися без читання таблиці"
+        text_en: Rebuild the index with `REINDEX`, because it is corrupted and cannot avoid reading the table
+      - text: "Додати в індекс усі колонки таблиці, тоді PostgreSQL перестане читати купу зовсім"
+        text_en: Add all table columns to the index, then PostgreSQL will stop reading the heap entirely
+    explanation: >
+      Index-only scan пропускає читання купи лише для сторінок, позначених у карті видимості як повністю видимі, а позначки ставить і скидає `VACUUM` та зміни даних.
+      Після інтенсивних оновлень без очищення позначок майже немає, тож для кожного рядка треба перевіряти видимість у купі.
+    explanation_en: >
+      An index-only scan skips reading the heap only for pages marked all-visible in the visibility map, and those
+      marks are set by `VACUUM` and cleared by data changes. After heavy updates without vacuuming there are
+      almost no marks, so visibility must be checked in the heap for every row.
+    sources:
+      - https://www.postgresql.org/docs/18/indexes-index-only-scans.html
+      - https://www.postgresql.org/docs/18/routine-vacuuming.html#VACUUM-FOR-VISIBILITY-MAP
+
+  - id: sql-022
+    level: senior
+    type: multiple
+    text: Які твердження про `CREATE INDEX CONCURRENTLY` у PostgreSQL правильні?
+    text_en: Which statements about `CREATE INDEX CONCURRENTLY` in PostgreSQL are true?
+    options:
+      - text: Не блокує вставки, оновлення й видалення в таблиці, поки будується індекс
+        text_en: Does not block inserts, updates and deletes on the table while the index is built
+        correct: true
+      - text: Не може виконуватися всередині блоку транзакції (`BEGIN … COMMIT`)
+        text_en: Cannot run inside a transaction block (`BEGIN … COMMIT`)
+        correct: true
+      - text: Якщо побудова завершилась помилкою, у каталозі лишається недійсний (`INVALID`) індекс, який треба видалити
+        text_en: If the build fails, an `INVALID` index remains in the catalog and has to be dropped
+        correct: true
+      - text: Будується швидше за звичайний `CREATE INDEX`, бо не бере жодних блокувань
+        text_en: Builds faster than a plain `CREATE INDEX`, because it takes no locks at all
+      - text: Усуває ризик помилки для унікального індексу, навіть якщо в таблиці вже є дублікати
+        text_en: Removes the risk of failure for a unique index, even if the table already contains duplicates
+    explanation: >
+      Режим `CONCURRENTLY` робить два проходи по таблиці й чекає на старі транзакції, тому працює довше й витрачає більше ресурсів, але не блокує запису.
+      Невдала побудова (наприклад, через дублікат для `UNIQUE`) лишає недійсний індекс, і його слід видалити та створити знову.
+    explanation_en: >
+      `CONCURRENTLY` makes two passes over the table and waits for old transactions, so it takes longer and uses
+      more resources, but does not block writes. A failed build (for example, because of a duplicate for `UNIQUE`)
+      leaves an invalid index, which should be dropped and created again.
+    sources:
+      - https://www.postgresql.org/docs/18/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY
+
+  - id: sql-023
+    level: senior
+    type: single
+    text: >
+      У PostgreSQL на рівні `READ COMMITTED` сто сесій одночасно виконують такий запит для того самого `page`, а таблиця `counters` порожня.
+      Яким буде значення `hits` після завершення всіх сесій?
+    text_en: >
+      In PostgreSQL at `READ COMMITTED`, a hundred sessions run this query at the same time for the same `page`, and the `counters` table is empty.
+      What will `hits` be after all sessions finish?
+    code:
+      lang: sql
+      source: |
+        -- counters (page text PRIMARY KEY, hits int NOT NULL)
+        INSERT INTO counters (page, hits)
+        VALUES ('home', 1)
+        ON CONFLICT (page) DO UPDATE
+        SET hits = counters.hits + 1;
+    options:
+      - text: "`100`: кожна сесія або вставляє рядок, або збільшує наявний, і приріст не губиться"
+        text_en: '`100`: each session either inserts the row or increments the existing one, and no increment is lost'
+        correct: true
+      - text: "Менше за `100`: одночасні сесії читають те саме `hits` і перезаписують чужий приріст"
+        text_en: 'Less than `100`: concurrent sessions read the same `hits` and overwrite each other''s increment'
+      - text: "`100`, але лише на рівні `SERIALIZABLE`, а на `READ COMMITTED` частину приростів буде втрачено"
+        text_en: '`100`, but only at `SERIALIZABLE`; at `READ COMMITTED` some increments will be lost'
+      - text: "Частина сесій завершиться помилкою порушення унікальності, тож `hits` буде меншим за `100`"
+        text_en: Some sessions will fail with a uniqueness violation, so `hits` will be less than `100`
+    explanation: >
+      `ON CONFLICT DO UPDATE` гарантує атомарний результат: вставка або оновлення, навіть за високої конкуренції.
+      Сесія, що натрапила на конфлікт, чекає на блокування рядка й додає до свіжого значення, тому приріст не губиться й помилки унікальності не буде.
+    explanation_en: >
+      `ON CONFLICT DO UPDATE` guarantees an atomic outcome: insert or update, even under high concurrency. A session
+      that hits a conflict waits for the row lock and adds to the fresh value, so no increment is lost and there is no
+      uniqueness error.
+    sources:
+      - https://www.postgresql.org/docs/18/sql-insert.html#SQL-ON-CONFLICT
+
+  - id: sql-024
+    level: senior
+    type: single
+    text: >
+      Щоб прибрати write skew, сервіс перевели на рівень `SERIALIZABLE` у PostgreSQL. Після цього під навантаженням з'явилися помилки
+      `could not serialize access` (SQLSTATE `40001`) навіть без явних блокувань. Що правильно?
+    text_en: >
+      To remove write skew, a service was moved to `SERIALIZABLE` in PostgreSQL. After that, errors
+      `could not serialize access` (SQLSTATE `40001`) appeared under load even without explicit locks. What is correct?
+    options:
+      - text: "Це очікувано: застосунок має повторити всю транзакцію з початку, а самі транзакції варто тримати короткими"
+        text_en: 'This is expected: the application must retry the whole transaction from the start, and the transactions should be kept short'
+        correct: true
+      - text: "Це помилка конфігурації: на `SERIALIZABLE` PostgreSQL блокує й чекає, тож помилок бути не мало б"
+        text_en: 'This is a configuration error: at `SERIALIZABLE` PostgreSQL blocks and waits, so there should be no errors'
+      - text: "Досить повторити лише оператор, що впав, а попередні оператори транзакції лишаються чинними"
+        text_en: It is enough to retry only the statement that failed, while the earlier statements of the transaction remain valid
+      - text: "Помилки зникнуть, якщо збільшити `deadlock_timeout`, бо це різновид взаємного блокування"
+        text_en: The errors will go away if you increase `deadlock_timeout`, because this is a kind of deadlock
+    explanation: >
+      `SERIALIZABLE` у PostgreSQL не блокує наперед, а відстежує залежності між транзакціями й скасовує ту, що зробила б результат несеріалізовним.
+      Тому застосунок мусить бути готовим повторити транзакцію цілком. Короткі транзакції зменшують імовірність конфліктів.
+    explanation_en: >
+      `SERIALIZABLE` in PostgreSQL does not block up front; it tracks dependencies between transactions and aborts
+      the one that would make the outcome non-serializable. So the application must be ready to retry the
+      transaction as a whole. Short transactions reduce the chance of conflicts.
+    sources:
+      - https://www.postgresql.org/docs/18/mvcc-serialization-failure-handling.html
+      - https://www.postgresql.org/docs/18/transaction-iso.html#XACT-SERIALIZABLE
