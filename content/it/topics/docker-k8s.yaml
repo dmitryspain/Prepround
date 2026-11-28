@@ -316,3 +316,329 @@ questions:
     sources:
     - https://docs.docker.com/build/building/secrets/
     - https://docs.docker.com/build/building/best-practices/
+  - id: docker-k8s-013
+    level: junior
+    type: single
+    text: Що станеться з файлами, які застосунок записав у файлову систему контейнера, після `docker rm` цього контейнера (том не підключали, `VOLUME` в образі немає)?
+    text_en: What happens to files an application wrote to the container filesystem after that container is removed with `docker rm` (no volume attached, no `VOLUME` in the image)?
+    options:
+    - text: Вони зникнуть разом із записуваним шаром контейнера
+      text_en: They disappear together with the container's writable layer
+      correct: true
+    - text: Вони збережуться в образі й зʼявляться в кожному наступному контейнері з нього
+      text_en: They are saved into the image and appear in every later container created from it
+    - text: Вони залишаться на хості за тим самим шляхом, який застосунок використав усередині
+      text_en: They stay on the host at the same path the application used inside the container
+    - text: Вони перейдуть в автоматично створений іменований том із назвою контейнера
+      text_en: They move into an automatically created named volume that carries the container's name
+    explanation: |
+      Запис іде в тонкий записуваний шар поверх незмінних шарів образу, і цей шар видаляється разом із контейнером. Дані, які мають пережити контейнер, кладуть у том (volume) або bind mount.
+    explanation_en: |
+      Writes go to a thin writable layer on top of the immutable image layers, and that layer is deleted together with the container. Data that must outlive the container goes into a volume or a bind mount.
+    sources:
+    - https://docs.docker.com/engine/storage/
+    - https://docs.docker.com/engine/storage/volumes/
+  - id: docker-k8s-014
+    level: junior
+    type: single
+    text: 'Deployment вимагає `replicas: 3`, і один із його Pod-ів зникає разом із несправним вузлом. Що робить Kubernetes?'
+    text_en: 'A Deployment requests `replicas: 3`, and one of its Pods is lost together with a failed node. What does Kubernetes do?'
+    options:
+    - text: ReplicaSet цього Deployment створює новий Pod, щоб знову було три
+      text_en: The ReplicaSet of this Deployment creates a new Pod so that there are three again
+      correct: true
+    - text: Лишає два Pod-и, доки адміністратор не виконає `kubectl rollout restart` для Deployment
+      text_en: Keeps two Pods until an administrator runs `kubectl rollout restart` for the Deployment
+    - text: Переносить той самий Pod на інший вузол разом з його IP-адресою та вмістом памʼяті
+      text_en: Moves the same Pod to another node together with its IP address and memory contents
+    - text: Доручає Service створити відсутній Pod, бо Service стежить за кількістю своїх endpoints
+      text_en: Asks the Service to create the missing Pod, because a Service watches its number of endpoints
+    explanation: |
+      Deployment керує ReplicaSet, а той постійно зводить фактичну кількість Pod-ів до бажаної. Pod не мігрує: створюється новий з новим іменем та IP. Service лише маршрутизує трафік і Pod-ів не створює.
+    explanation_en: |
+      A Deployment manages a ReplicaSet, which keeps reconciling the actual number of Pods to the desired one. A Pod does not migrate: a new one is created with a new name and IP. A Service only routes traffic and never creates Pods.
+    sources:
+    - https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+    - https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+  - id: docker-k8s-015
+    level: junior
+    type: multiple
+    text: Які твердження про ConfigMap і Secret у Kubernetes правильні?
+    text_en: Which statements about ConfigMap and Secret in Kubernetes are true?
+    options:
+    - text: ConfigMap призначений для неконфіденційної конфігурації у вигляді пар ключ-значення
+      text_en: A ConfigMap is meant for non-confidential configuration stored as key-value pairs
+      correct: true
+    - text: Pod може отримати ConfigMap як змінні середовища або як файли в змонтованому томі
+      text_en: A Pod can consume a ConfigMap as environment variables or as files in a mounted volume
+      correct: true
+    - text: Значення в Secret закодовані base64, а це кодування, а не шифрування
+      text_en: Values in a Secret are base64-encoded, which is an encoding and not encryption
+      correct: true
+    - text: Secret за замовчуванням зберігається в etcd зашифрованим без налаштування
+      text_en: A Secret is stored in etcd encrypted by default without any additional configuration
+    explanation: |
+      ConfigMap і Secret передають конфігурацію в Pod однаковими способами, але Secret створений для конфіденційних даних. За замовчуванням його значення лежать в etcd незашифрованими, тож шифрування at rest вмикають окремо.
+    explanation_en: |
+      ConfigMap and Secret deliver configuration to a Pod in the same ways, but a Secret is meant for confidential data. By default its values sit in etcd unencrypted, so encryption at rest has to be enabled separately.
+    sources:
+    - https://kubernetes.io/docs/concepts/configuration/configmap/
+    - https://kubernetes.io/docs/concepts/configuration/secret/
+  - id: docker-k8s-016
+    level: junior
+    type: single
+    text: 'Як сервіс `api` має звернутися до `db` у цьому `compose.yaml` із мережею за замовчуванням?'
+    text_en: 'How should the `api` service reach `db` in this `compose.yaml` with the default network?'
+    code:
+      lang: yaml
+      source: |
+        services:
+          api:
+            image: my-api:1.0
+          db:
+            image: postgres:18
+    options:
+    - text: За іменем сервісу, тобто хост `db` і порт 5432, який слухає Postgres усередині мережі
+      text_en: By the service name, that is host `db` and port 5432 that Postgres listens on inside the network
+      correct: true
+    - text: Через `localhost:5432`, бо контейнери одного Compose-проєкту ділять мережевий простір імен
+      text_en: Through `localhost:5432`, because containers of one Compose project share a network namespace
+    - text: Лише за IP-адресою контейнера `db`, яку треба взяти з `docker inspect` після запуску
+      text_en: Only by the IP address of the `db` container, which has to be taken from `docker inspect` after startup
+    - text: Через `host.docker.internal:5432`, бо контейнери Compose бачать одне одного лише через хост
+      text_en: Through `host.docker.internal:5432`, because Compose containers see each other only through the host
+    explanation: |
+      Compose створює одну мережу проєкту й реєструє імʼя кожного сервісу у внутрішньому DNS, тому `db` розвʼязується в IP контейнера. `localhost` усередині `api` вказує на сам контейнер `api`, а не на `db`.
+    explanation_en: |
+      Compose creates one project network and registers each service name in its internal DNS, so `db` resolves to the container IP. Inside `api`, `localhost` points to the `api` container itself, not to `db`.
+    sources:
+    - https://docs.docker.com/compose/how-tos/networking/
+  - id: docker-k8s-017
+    level: middle
+    type: single
+    text: Образ зібрано з цього Dockerfile й запущено командою `docker run probe example.com`. Яка команда виконається в контейнері?
+    text_en: The image was built from this Dockerfile and started with `docker run probe example.com`. Which command runs in the container?
+    code:
+      lang: dockerfile
+      source: |
+        FROM alpine:3.22
+        ENTRYPOINT ["ping"]
+        CMD ["-c", "1", "localhost"]
+    options:
+    - text: '`ping example.com`'
+      text_en: '`ping example.com`'
+      correct: true
+    - text: '`ping -c 1 localhost example.com`'
+      text_en: '`ping -c 1 localhost example.com`'
+    - text: '`example.com`, яка замінить `ENTRYPOINT` разом із `CMD`'
+      text_en: '`example.com`, which replaces both `ENTRYPOINT` and `CMD`'
+    - text: '`ping -c 1 localhost`, а аргумент із командного рядка буде проігноровано'
+      text_en: '`ping -c 1 localhost`, and the command line argument will be ignored'
+    explanation: |
+      Аргументи після імені образу в `docker run` повністю замінюють `CMD`, а `ENTRYPOINT` в exec-формі лишається й отримує їх як параметри. Тому `-c 1 localhost` зникає, а `example.com` додається до `ping`.
+    explanation_en: |
+      Arguments after the image name in `docker run` fully replace `CMD`, while an exec-form `ENTRYPOINT` stays and receives them as parameters. So `-c 1 localhost` disappears and `example.com` is appended to `ping`.
+    sources:
+    - https://docs.docker.com/reference/dockerfile/#understand-how-cmd-and-entrypoint-interact
+  - id: docker-k8s-018
+    level: middle
+    type: multiple
+    text: Які твердження про багатоетапну збірку (multi-stage build) Docker правильні?
+    text_en: Which statements about a Docker multi-stage build are true?
+    options:
+    - text: Підсумковий образ містить лише шари останнього етапу та все, що в нього явно скопійовано
+      text_en: The final image contains only the layers of the last stage and whatever was explicitly copied into it
+      correct: true
+    - text: Інструкція `COPY --from=build` бере файли з файлової системи раніше визначеного етапу `build`
+      text_en: The `COPY --from=build` instruction takes files from the filesystem of the earlier stage named `build`
+      correct: true
+    - text: Команда `docker build --target build` збирає образ лише до етапу з іменем `build` включно
+      text_en: The command `docker build --target build` builds the image only up to and including the stage named `build`
+      correct: true
+    - text: Усі етапи потрапляють у підсумковий образ, тож його розмір дорівнює сумі розмірів етапів
+      text_en: All stages end up in the final image, so its size equals the sum of the sizes of all stages in the Dockerfile
+    explanation: |
+      Кожен `FROM` починає новий етап із чистою файловою системою, і лише останній стає образом, якщо не вказано `--target`. SDK й проміжні файли залишаються за його межами, тому образ менший, ніж сума етапів.
+    explanation_en: |
+      Each `FROM` starts a new stage with a clean filesystem, and only the last one becomes the image unless `--target` is given. The SDK and intermediate files stay outside it, so the image is smaller than the sum of the stages.
+    sources:
+    - https://docs.docker.com/build/building/multi-stage/
+  - id: docker-k8s-019
+    level: middle
+    type: single
+    text: Pod-и з цього Deployment мають статус `Running` і `Ready`, але запити до Service завершуються відмовою зʼєднання. Чому?
+    text_en: The Pods of this Deployment are `Running` and `Ready`, yet requests to the Service fail with connection refused. Why?
+    code:
+      lang: yaml
+      source: |
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: web
+        spec:
+          replicas: 2
+          selector:
+            matchLabels:
+              app: web-api
+          template:
+            metadata:
+              labels:
+                app: web-api
+            spec:
+              containers:
+                - name: web
+                  image: web:1.0
+        ---
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: web
+        spec:
+          selector:
+            app: web
+          ports:
+            - port: 80
+              targetPort: 8080
+    options:
+    - text: 'Селектор Service `app: web` не збігається з мітками Pod-ів, тож у Service немає endpoints'
+      text_en: 'The Service selector `app: web` does not match the Pod labels, so the Service has no endpoints'
+      correct: true
+    - text: Service типу ClusterIP не може вести трафік на Pod-и, які працюють на іншому вузлі
+      text_en: A ClusterIP Service cannot send traffic to Pods that run on a different node
+    - text: Поле `port` мусить дорівнювати `targetPort`, інакше Service відхиляє всі зʼєднання
+      text_en: The `port` field must equal `targetPort`, otherwise the Service rejects every connection
+    - text: Service вимагає, щоб Deployment мав таке саме імʼя `web-api`, як і значення мітки
+      text_en: The Service requires the Deployment to have the same name `web-api` as the label value
+    explanation: |
+      Service обирає Pod-и лише за мітками селектора, а не за імʼям Deployment. Мітки `app: web-api` не збігаються з `app: web`, тому список endpoints порожній. `port` і `targetPort` можуть відрізнятися.
+    explanation_en: |
+      A Service selects Pods only by its label selector, not by the Deployment name. The labels `app: web-api` do not match `app: web`, so the endpoint list is empty. `port` and `targetPort` may differ.
+    sources:
+    - https://kubernetes.io/docs/concepts/services-networking/service/#services-in-kubernetes
+    - https://kubernetes.io/docs/tasks/debug/debug-application/debug-service/
+  - id: docker-k8s-020
+    level: middle
+    type: single
+    text: У кластері кожен вузол має 4 доступні CPU, а Pod-и на ньому разом мають `requests.cpu` 3 при фактичному навантаженні близько 0,2 CPU. Новий Pod просить `requests.cpu` 2. Що станеться?
+    text_en: Every node in a cluster has 4 allocatable CPUs, and the Pods on it together have `requests.cpu` of 3 while actually using about 0.2 CPU. A new Pod asks for `requests.cpu` 2. What happens?
+    options:
+    - text: Pod лишиться в стані `Pending`, бо планувальник рахує суму requests, а не фактичне використання
+      text_en: The Pod stays `Pending`, because the scheduler counts the sum of requests, not actual usage
+      correct: true
+    - text: Pod запуститься на одному з вузлів, бо фактично вільно майже 4 CPU, а requests лише орієнтир
+      text_en: The Pod starts on one of the nodes, because almost 4 CPUs are actually free and requests are only a hint
+    - text: Pod запуститься, а kubelet обмежить його CPU до вільної частини вузла через CPU throttling
+      text_en: The Pod starts, and the kubelet limits its CPU to the free part of the node through CPU throttling
+    - text: Pod піде в `CrashLoopBackOff`, бо контейнер не отримає потрібних 2 CPU під час старту
+      text_en: The Pod goes into `CrashLoopBackOff`, because the container will not get the needed 2 CPUs at startup
+    explanation: |
+      Планувальник розміщує Pod лише на вузол, де сума requests усіх Pod-ів плюс новий не перевищує allocatable. Фактичне споживання не враховується, тому вузол із requests 3 з 4 не приймає Pod із requests 2.
+    explanation_en: |
+      The scheduler places a Pod only on a node where the sum of all Pod requests plus the new one does not exceed allocatable. Actual consumption is not counted, so a node with requests of 3 out of 4 does not accept a Pod requesting 2.
+    sources:
+    - https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#how-pods-with-resource-requests-are-scheduled
+  - id: docker-k8s-021
+    level: senior
+    type: multiple
+    text: Для застосунку налаштовано PodDisruptionBudget. Які твердження про нього правильні?
+    text_en: A PodDisruptionBudget is configured for an application. Which statements about it are true?
+    options:
+    - text: Він обмежує добровільні відселення через Eviction API, зокрема під час `kubectl drain`
+      text_en: It limits voluntary evictions made through the Eviction API, including during `kubectl drain`
+      correct: true
+    - text: Пряме видалення Pod-а командою `kubectl delete pod` обходить бюджет і не блокується
+      text_en: Deleting a Pod directly with `kubectl delete pod` bypasses the budget and is not blocked
+      correct: true
+    - text: Він не може запобігти апаратній несправності вузла, хоча такі Pod-и враховуються в бюджеті
+      text_en: It cannot prevent a node hardware failure, although such Pods are counted against the budget
+      correct: true
+    - text: Якщо доступних Pod-ів стає менше за `minAvailable`, kubelet сам запускає додаткові контейнери
+      text_en: If the number of available Pods drops below `minAvailable`, the kubelet starts extra containers itself
+    explanation: |
+      PDB діє лише на добровільні відселення через Eviction API: `kubectl drain` чекає, поки відселення не порушить бюджет. Він не захищає від аварій, і пряме видалення Pod-а чи Deployment його обходить. Нових Pod-ів PDB не створює.
+    explanation_en: |
+      A PDB only affects voluntary evictions made through the Eviction API: `kubectl drain` waits until an eviction would not violate the budget. It does not protect against failures, and deleting a Pod or a Deployment directly bypasses it. A PDB never creates new Pods.
+    sources:
+    - https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
+  - id: docker-k8s-022
+    level: senior
+    type: single
+    text: Для цього Deployment вийшла нова версія образу, у якої readiness probe ніколи не проходить. Що станеться з rollout?
+    text_en: A new image version of this Deployment has a readiness probe that never passes. What happens to the rollout?
+    code:
+      lang: yaml
+      source: |
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: shop
+        spec:
+          replicas: 3
+          progressDeadlineSeconds: 120
+          strategy:
+            type: RollingUpdate
+            rollingUpdate:
+              maxSurge: 1
+              maxUnavailable: 0
+    options:
+    - text: Rollout застряне, три старі Pod-и лишаться готовими, а за 120 с стан стане `Progressing=False` без відкоту
+      text_en: The rollout stalls, the old Pods stay ready, and after 120 s `Progressing=False` is set with no rollback
+      correct: true
+    - text: Через 120 с Deployment сам відкотиться до попередньої ревізії й видалить новий Pod
+      text_en: After 120 s the Deployment rolls back to the previous revision on its own and deletes the new Pod
+    - text: Старі Pod-и поступово видаляться, бо новий ReplicaSet має пріоритет над попереднім
+      text_en: The old Pods are deleted gradually, because the new ReplicaSet has priority over the previous one
+    - text: Кількість готових Pod-ів впаде до двох, бо одному старому Pod-у доведеться звільнити місце
+      text_en: The number of ready Pods drops to two, because one old Pod has to make room for the new one
+    explanation: |
+      За `maxUnavailable: 0` старий Pod видаляють лише після того, як новий став готовим, тож трафік далі йде на стару версію. Після `progressDeadlineSeconds` контролер лише ставить умову `ProgressDeadlineExceeded` і сам не відкочує зміни.
+    explanation_en: |
+      With `maxUnavailable: 0` an old Pod is removed only after a new one becomes ready, so traffic keeps going to the old version. After `progressDeadlineSeconds` the controller only sets the `ProgressDeadlineExceeded` condition and does not roll back by itself.
+    sources:
+    - https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#failed-deployment
+    - https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable
+  - id: docker-k8s-023
+    level: senior
+    type: single
+    text: StatefulSet `db` із трьома репліками має `volumeClaimTemplates` з іменем `data` і не задає `persistentVolumeClaimRetentionPolicy`. Його масштабують до 1, а потім назад до 3. Що відбувається?
+    text_en: A StatefulSet `db` with three replicas has `volumeClaimTemplates` named `data` and does not set `persistentVolumeClaimRetentionPolicy`. It is scaled to 1 and then back to 3. What happens?
+    options:
+    - text: PVC `data-db-1` і `data-db-2` лишаються, а Pod-и `db-1` й `db-2` підключають їх з наявними даними
+      text_en: PVCs `data-db-1` and `data-db-2` remain, and Pods `db-1` and `db-2` attach them with the existing data
+      correct: true
+    - text: PVC видаляються під час зменшення, тож нові `db-1` і `db-2` отримують порожні томи
+      text_en: The PVCs are deleted on scale-down, so the new `db-1` and `db-2` get empty volumes
+    - text: Нові Pod-и отримують випадкові імена та нові PVC, а старі PVC лишаються без власника
+      text_en: The new Pods get random names and new PVCs, while the old PVCs are left without an owner
+    - text: Pod-и `db-1` і `db-2` не стартують, доки адміністратор вручну не привʼяже старі PVC
+      text_en: Pods `db-1` and `db-2` do not start until an administrator binds the old PVCs by hand
+    explanation: |
+      Pod-и StatefulSet мають стабільні порядкові імена, а PVC створюються за шаблоном і називаються на кшталт `data-db-1`. За замовчуванням політика зберігання — `Retain`, тож зменшення не видаляє томи, і Pod із тим самим номером повертається до своїх даних.
+    explanation_en: |
+      StatefulSet Pods have stable ordinal names, and PVCs are created from the template and named like `data-db-1`. The default retention policy is `Retain`, so scaling down does not delete the volumes, and a Pod with the same ordinal returns to its data.
+    sources:
+    - https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#persistentvolumeclaim-retention
+    - https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-storage
+  - id: docker-k8s-024
+    level: senior
+    type: multiple
+    text: Pod має два init-контейнери й один застосунковий контейнер. Які твердження про його запуск правильні?
+    text_en: A Pod has two init containers and one application container. Which statements about its startup are true?
+    options:
+    - text: Init-контейнери виконуються по черзі, і кожен має завершитися успішно до старту наступного
+      text_en: The init containers run one after another, and each must succeed before the next one starts
+      correct: true
+    - text: Застосунковий контейнер не стартує, доки всі init-контейнери не завершаться успішно
+      text_en: The application container does not start until all init containers have completed successfully
+      correct: true
+    - text: Якщо `restartPolicy` Pod-а дорівнює `Never`, невдача init-контейнера робить увесь Pod невдалим
+      text_en: If the Pod `restartPolicy` is `Never`, a failure of an init container makes the whole Pod fail
+      correct: true
+    - text: Init-контейнери стартують паралельно, щоб Pod швидше дійшов до запуску застосункового контейнера
+      text_en: The init containers start in parallel, so that the Pod reaches the application container sooner
+    explanation: |
+      Звичайні init-контейнери виконуються послідовно до завершення, і лише потім стартують основні. Невдалий init-контейнер повторюють згідно з `restartPolicy`, а за `Never` Pod вважається невдалим. Паралельності між ними немає.
+    explanation_en: |
+      Regular init containers run sequentially to completion, and only then do the main containers start. A failed init container is retried according to `restartPolicy`, and with `Never` the Pod is considered failed. There is no parallelism between them.
+    sources:
+    - https://kubernetes.io/docs/concepts/workloads/pods/init-containers/

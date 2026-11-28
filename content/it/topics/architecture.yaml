@@ -283,3 +283,274 @@ questions:
       Events are an immutable log of facts, so corrections are expressed as new (compensating) events, and the history of the mistake is preserved. A fix made only to the projection will disappear on the next replay from the log.
     sources:
     - https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing
+  - id: architecture-013
+    level: junior
+    type: single
+    text: Що стверджує принцип відкритості/закритості (OCP)?
+    text_en: What does the open-closed principle (OCP) state?
+    options:
+    - text: Модуль має розширюватися новою поведінкою без правок наявного коду, наприклад через абстракцію й нові реалізації
+      text_en: A module should gain new behavior without editing its existing code, for example via an abstraction and new implementations
+      correct: true
+    - text: Вихідний код класу має бути відкритий для читання всім командам, але закритий для запуску без перевірки прав
+      text_en: A class's source code should be open for reading by all teams in the company but closed for running without a permission check
+    - text: Усі поля класу мають бути закритими (private), а відкритими лишаються лише методи доступу до них
+      text_en: All fields of a class should be private, leaving only the accessor methods public
+    - text: Клас має розширювати поведінку виключно наслідуванням і не повинен приймати залежності ззовні
+      text_en: A class should extend behavior solely through inheritance and must not accept dependencies from outside
+    explanation: |
+      OCP: модуль відкритий для розширення, але закритий для модифікації. Нову поведінку додають новими реалізаціями абстракції, а не правкою вже протестованого коду. Це не про приватність полів і не про права доступу до коду.
+    explanation_en: |
+      OCP: a module is open for extension but closed for modification. New behavior is added through new implementations of an abstraction rather than by editing already tested code. It has nothing to do with field privacy or code access rights.
+    sources:
+    - https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html
+    - https://blog.cleancoder.com/uncle-bob/2014/05/12/TheOpenClosedPrinciple.html
+  - id: architecture-014
+    level: junior
+    type: single
+    text: Який патерн кешування реалізує цей псевдокод?
+    text_en: Which caching pattern does this pseudocode implement?
+    code:
+      lang: text
+      source: |
+        function getProduct(id):
+            item = cache.get(id)
+            if item is null:
+                item = db.load(id)
+                cache.set(id, item, ttl)
+            return item
+    options:
+    - text: Cache-Aside, бо застосунок сам завантажує дані з БД і кладе їх у кеш при промаху
+      text_en: Cache-Aside, because the application itself loads data from the database and puts it into the cache on a miss
+      correct: true
+    - text: Write-through, бо кожне звернення синхронно оновлює і кеш, і сховище даних
+      text_en: Write-through, because every access synchronously updates both the cache and the data store
+    - text: Read-through, бо сам кеш завантажує відсутні дані з БД, а застосунок звертається лише до кешу
+      text_en: Read-through, because the cache itself loads missing data from the database and the application talks only to the cache
+    - text: Write-behind, бо записи спершу потрапляють у кеш і лише згодом асинхронно в БД
+      text_en: Write-behind, because writes first land in the cache and only later reach the database asynchronously
+    explanation: |
+      Тут логіку промаху виконує сам застосунок: перевіряє кеш, при промаху читає БД і заповнює кеш. Це Cache-Aside. У read-through цю роботу бере на себе компонент кешу, а write-through і write-behind стосуються шляху запису, якого в коді немає.
+    explanation_en: |
+      Here the application itself handles the miss: it checks the cache, reads the database on a miss and fills the cache. That is Cache-Aside. In read-through the cache component does this work, while write-through and write-behind concern the write path, which is absent from the code.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside
+  - id: architecture-015
+    level: junior
+    type: multiple
+    text: Які твердження про принцип розділення інтерфейсів (ISP) правильні?
+    text_en: Which statements about the interface segregation principle (ISP) are correct?
+    options:
+    - text: Клієнт не має залежати від методів, які він не використовує
+      text_en: A client should not depend on methods it does not use
+      correct: true
+    - text: Великий інтерфейс розбивають на кілька вужчих відповідно до потреб різних клієнтів
+      text_en: A large interface is split into several narrower ones according to the needs of different clients
+      correct: true
+    - text: Вужчі інтерфейси зменшують коло клієнтів, яких зачіпає зміна окремого методу
+      text_en: Narrower interfaces reduce the set of clients affected by a change to a single method
+      correct: true
+    - text: Кожен інтерфейс має містити рівно один метод, інакше принцип порушено
+      text_en: Every interface must contain exactly one method, otherwise the principle is violated
+    - text: Клас не може реалізовувати кілька інтерфейсів одночасно, бо це збільшує зв'язність
+      text_en: A class cannot implement several interfaces at once because that increases coupling
+    explanation: |
+      ISP вимагає малих інтерфейсів, щоб користувачі не залежали від непотрібного, і саме тому зміна одного методу зачіпає менше клієнтів. Правило «один метод на інтерфейс» принцип не висуває, а реалізація кількох вузьких інтерфейсів одним класом є нормальною.
+    explanation_en: |
+      ISP calls for small interfaces so that users do not depend on things they do not need, which is why a change to one method affects fewer clients. The principle does not demand one method per interface, and implementing several narrow interfaces in one class is perfectly fine.
+    sources:
+    - https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html
+  - id: architecture-016
+    level: junior
+    type: single
+    text: Для чого в доменно-орієнтованому проєктуванні використовують патерн Repository?
+    text_en: What is the Repository pattern used for in domain-driven design?
+    options:
+    - text: Щоб сховати доступ до даних за абстракцією з доменного шару, і доменна модель не залежала від технології БД
+      text_en: To hide data access behind a domain-layer abstraction so the domain does not depend on the database technology
+      correct: true
+    - text: Щоб автоматично створювати індекси та оптимізувати плани запитів у сховищі даних для всіх сутностей
+      text_en: To automatically create indexes and optimize query plans in the data store for every entity
+    - text: Щоб кешувати результати всіх запитів у пам'яті застосунку та зменшувати навантаження на мережу
+      text_en: To cache the results of all queries in application memory and so reduce network and database load
+    - text: Щоб замінити транзакції, об'єднавши зміни кількох агрегатів в одну атомарну операцію запису
+      text_en: To replace transactions by merging changes to several aggregates into one atomic write operation
+    explanation: |
+      Repository тримає питання збереження поза доменною моделлю: інтерфейси оголошені в домені, а реалізації з доступом до конкретної БД живуть в інфраструктурі. Кешування, індекси й транзакції — окремі механізми.
+    explanation_en: |
+      Repository keeps persistence concerns out of the domain model: interfaces are declared in the domain, while implementations that access a concrete database live in infrastructure. Caching, indexes and transactions are separate mechanisms.
+    sources:
+    - https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design#the-repository-pattern
+  - id: architecture-017
+    level: middle
+    type: single
+    text: Команда замінює старий монолітний застосунок без зупинки роботи. Як працює патерн Strangler Fig?
+    text_en: A team is replacing an old monolithic application without downtime. How does the Strangler Fig pattern work?
+    options:
+    - text: Перед обома системами стоїть фасад, який поступово перенаправляє окремі функції на нову систему, доки стара не стане непотрібною
+      text_en: A facade in front of both systems gradually redirects features to the new system until the old one is unneeded
+      correct: true
+    - text: Нову систему будують повністю окремо, а в запланований день весь трафік за один раз перемикають на неї
+      text_en: The new system is built entirely separately, and on a planned day all traffic is switched over to it at once without a rollback
+    - text: Код старого монолітного застосунку переписують на місці, модуль за модулем, без жодного нового окремого сервісу
+      text_en: The code of the old monolith is rewritten in place, module by module, without any new separate service
+    - text: Обидві системи постійно викликають одна одну синхронно, тож жодну з них не можна вимкнути
+      text_en: Both systems permanently call each other synchronously, so neither of them can ever be switched off
+    explanation: |
+      Фасад маршрутизує запити: спершу все йде до старої системи, а з кожною ітерацією дедалі більше функцій перенаправляється на нову. Це відрізняє патерн від «великого вибуху» з одноразовим перемиканням.
+    explanation_en: |
+      The facade routes requests: at first everything goes to the old system, and with each iteration more features are redirected to the new one. This is what distinguishes the pattern from a big-bang cutover.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/architecture/patterns/strangler-fig
+  - id: architecture-018
+    level: middle
+    type: single
+    text: Сервіс замовлень інтегрується зі застарілою ERP, чия модель даних і термінологія відрізняються від його власних. Яку роль виконує anti-corruption layer?
+    text_en: An orders service integrates with a legacy ERP whose data model and terminology differ from its own. What role does an anti-corruption layer play?
+    options:
+    - text: Адаптер між підсистемами, що перекладає запити й моделі, тож чужа семантика не потрапляє в домен
+      text_en: An adapter between subsystems that translates requests and models, keeping foreign semantics out of the domain
+      correct: true
+    - text: Це кеш відповідей ERP, який зменшує кількість викликів і вирівнює час їхнього виконання
+      text_en: It is a cache of ERP responses that reduces the number of calls and evens out their response times at peak hours
+    - text: Це шар шифрування й автентифікації, що захищає всі виклики між двома підсистемами
+      text_en: It is an encryption and authentication layer that protects and signs all calls between the two subsystems
+    - text: Це спільна база даних, куди обидві підсистеми пишуть у єдиному форматі
+      text_en: It is a shared database that both subsystems write to in a single common format
+    explanation: |
+      Anti-corruption layer ставлять на межі підсистем із різною семантикою: він перекладає комунікацію, і жодна зі сторін не змушена підлаштовувати власну модель. Захист, кешування чи спільна БД — не його призначення.
+    explanation_en: |
+      An anti-corruption layer is placed at the boundary of subsystems with different semantics: it translates communication, so neither side has to bend its own model. Security, caching or a shared database are not its purpose.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/architecture/patterns/anti-corruption-layer
+  - id: architecture-019
+    level: middle
+    type: multiple
+    text: Які рішення реалізують патерн Bulkhead?
+    text_en: Which solutions implement the Bulkhead pattern?
+    options:
+    - text: Клієнт має окремий пул з'єднань для кожного сервісу, який викликає
+      text_en: A client has a separate connection pool for each service it calls
+      correct: true
+    - text: Екземпляри сервісу розділено на групи за навантаженням і вимогами до доступності споживачів
+      text_en: Service instances are partitioned into groups by the load and availability requirements of their consumers
+      correct: true
+    - text: Після серії помилок виклики до залежності припиняються, а за певний час пробують знову
+      text_en: After a series of errors calls to a dependency are stopped and retried again after a set time
+    - text: Невдалий виклик повторюється зі зростаючою затримкою між спробами
+      text_en: A failed call is repeated with an increasing delay between attempts
+    explanation: |
+      Bulkhead ізолює ресурси на окремі пули, щоб збій чи перевантаження однієї залежності не вичерпали ресурси інших. Припинення викликів після серії помилок — це Circuit Breaker, а повтори із затримкою — Retry.
+    explanation_en: |
+      Bulkhead isolates resources into separate pools so that the failure or overload of one dependency cannot exhaust the resources of others. Stopping calls after a series of errors is Circuit Breaker, and repeating with a delay is Retry.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/architecture/patterns/bulkhead
+  - id: architecture-020
+    level: middle
+    type: single
+    text: Мобільний і веб-клієнти потребують різних обсягів і форм даних, а єдиний універсальний бекенд обростає умовною логікою для кожного з них. Що пропонує патерн Backends for Frontends?
+    text_en: Mobile and web clients need different amounts and shapes of data, and a single general-purpose backend is accumulating conditional logic for each of them. What does the Backends for Frontends pattern suggest?
+    options:
+    - text: Окремий бекенд для кожного типу клієнтського інтерфейсу, налаштований під його потреби
+      text_en: A separate backend for each type of client interface, tailored to its needs
+      correct: true
+    - text: Єдиний API, у якому клієнт передає параметр типу пристрою, а сервер вибирає гілку логіки
+      text_en: A single API in which the client passes a device-type parameter and the server picks a logic branch
+    - text: Окремий мікросервіс на кожну таблицю бази даних, до якого клієнти звертаються напряму
+      text_en: A separate microservice for each database table that clients call directly
+    - text: Обов'язкову заміну REST на GraphQL, щоб клієнти самі описували потрібні дані
+      text_en: A mandatory replacement of REST with GraphQL so that clients describe the data they need themselves
+    explanation: |
+      Суть BFF — окремий бекенд на кожен фронтенд, який можна налаштувати під нього й розвивати незалежно, без вузького місця в спільному універсальному бекенді. Параметр типу пристрою лишає ту саму спільну логіку з гілками.
+    explanation_en: |
+      The essence of BFF is a separate backend per frontend, which can be tailored to it and evolved independently, without a bottleneck in a shared general-purpose backend. A device-type parameter keeps the same shared logic with branches.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/architecture/patterns/backends-for-frontends
+  - id: architecture-021
+    level: senior
+    type: single
+    text: Мультитенантний сервіс шардує дані за `tenant_id`. Тенанти реєструються послідовно (1, 2, 3, …), і найактивніші завжди найновіші. Що станеться за діапазонного шардування та що це змінить хеш?
+    text_en: A multitenant service shards data by `tenant_id`. Tenants register sequentially (1, 2, 3, …), and the most active ones are always the newest. What happens with range sharding, and what changes with hashing?
+    options:
+    - text: За діапазонів навантаження зосередиться на кількох останніх шардах (hotspot), а хеш від id розподілить послідовних тенантів між шардами
+      text_en: With ranges the load concentrates on the last few shards (a hotspot), while a hash of the id spreads sequential tenants across shards
+      correct: true
+    - text: Діапазони розподілять навантаження рівномірно, бо кожен діапазон має однаковий розмір, тож хеш лише ускладнить маршрутизацію
+      text_en: Ranges spread the load evenly because every range has the same size, so hashing would only complicate routing
+    - text: За діапазонів проблем немає, а хеш зосередить усіх нових тенантів в одному шарді, бо їхні id йдуть підряд
+      text_en: Ranges cause no problems, while hashing would put all new tenants in one shard because their ids are consecutive
+    - text: Обидві стратегії дають однаковий розподіл, бо навантаження вирівнює сам механізм реплікації між шардами
+      text_en: Both strategies give the same distribution because the replication mechanism between shards evens out the load itself
+    explanation: |
+      Діапазонна стратегія відображає послідовні id на послідовні шарди, тож найновіші й найактивніші тенанти опиняються в кількох шардах. Хеш зазвичай розкидає послідовні id по різних шардах, тому зменшує ризик hotspot, хоча й втрачає зручність діапазонних запитів.
+    explanation_en: |
+      The range strategy maps consecutive ids to consecutive shards, so the newest and most active tenants end up in a few shards. A hash usually scatters consecutive ids across different shards, which reduces the hotspot risk, although it loses the convenience of range queries.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/architecture/patterns/sharding
+  - id: architecture-022
+    level: senior
+    type: multiple
+    text: Перед сервісом поставили чергу за патерном Queue-Based Load Leveling. Які твердження правильні?
+    text_en: A queue was placed in front of a service following the Queue-Based Load Leveling pattern. Which statements are correct?
+    options:
+    - text: Черга буферизує піки навантаження, а сервіс забирає повідомлення у власному темпі
+      text_en: The queue buffers load peaks, and the service takes messages at its own pace
+      correct: true
+    - text: Якщо середня швидкість продюсерів перевищує швидкість споживачів, черга зростає і затримка збільшується
+      text_en: If the average producer rate exceeds the consumer rate, the queue keeps growing and latency increases
+      correct: true
+    - text: Масштабування споживачів без обмеження їхньої сукупної швидкості лише переносить перевантаження на залежності нижче за ланцюгом
+      text_en: Scaling consumers without bounding their aggregate rate only moves the overload to downstream dependencies
+      correct: true
+    - text: Клієнт отримує результат обробки в тій самій відповіді, бо черга робить виклик синхронним
+      text_en: The client receives the processing result in the same response because the queue makes the call synchronous
+    - text: Моніторити глибину черги не потрібно, бо буфер гарантує, що перевантаження сервісу неможливе
+      text_en: Monitoring queue depth is unnecessary because the buffer guarantees that overloading the service is impossible
+    explanation: |
+      Черга лише згладжує тимчасові піки: коли постійний потік продюсерів перевищує пропускну здатність споживачів, вона росте, тож глибину треба моніторити, а масштабування споживачів тримати в безпечних межах. Сам патерн асинхронний, тому результат не повертається в тій самій відповіді.
+    explanation_en: |
+      The queue only smooths temporary peaks: when the sustained producer flow exceeds consumer throughput it grows, so depth must be monitored and consumer scaling kept within safe bounds. The pattern itself is asynchronous, so the result is not returned in the same response.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/architecture/patterns/queue-based-load-leveling
+  - id: architecture-023
+    level: senior
+    type: single
+    text: Сервіс читає через Cache-Aside, але після оновлення запису користувачі недовго бачать старе значення. Що відбувається за патерном і що робити, якщо свіжість одразу після запису критична?
+    text_en: A service reads through Cache-Aside, but after a record is updated users briefly see the old value. What happens under the pattern, and what to do if freshness right after a write is critical?
+    options:
+    - text: Запис інвалідує елемент кешу, наступне читання його перезавантажує, тож між ними можливе застаріле значення; для свіжості — write-through
+      text_en: A write invalidates the cache item, the next read reloads it, so a stale value is possible in between; for freshness use write-through
+      correct: true
+    - text: Кеш після запису в БД оновлюється самостійно й одразу, тож застарілі значення виникають лише через помилки в коді застосунку
+      text_en: The cache updates itself immediately after the database write, so stale values appear only because of bugs in application code
+    - text: Застаріле значення неминуче за будь-якого кешування, тому єдиний засіб — подовжити TTL записів і чекати їхнього закінчення
+      text_en: A stale value is unavoidable with any caching, so the only remedy is to lengthen the TTL of entries
+    - text: Свіжість забезпечить перехід на read-through, бо кеш сам стежить за змінами даних у БД і оновлює записи
+      text_en: Switching to read-through will ensure freshness because the cache itself watches for changes to data in the database
+    explanation: |
+      За Cache-Aside запис змінює сховище й інвалідує елемент кешу, а повторно його заповнює наступне читання, тож між цими подіями читач може побачити промах або застаріле значення. Write-through оновлює сховище й кеш в одній операції запису. Подовження TTL лише збільшує вікно застарілості.
+    explanation_en: |
+      With Cache-Aside a write changes the data store and invalidates the cache item, and the next read repopulates it, so a reader may see a miss or a stale value in between. Write-through updates the store and the cache in one write operation. A longer TTL only widens the staleness window.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside
+  - id: architecture-024
+    level: senior
+    type: single
+    text: Десять екземплярів споживача читають одну чергу (Competing Consumers), а події одного замовлення треба обробляти за порядком. Що правильно?
+    text_en: Ten consumer instances read one queue (Competing Consumers), and the events of one order must be processed in order. What is correct?
+    options:
+    - text: Порядок між екземплярами не гарантований, тому обробку роблять ідемпотентною або групують повідомлення замовлення (сесії) для одного споживача
+      text_en: Order across instances is not guaranteed, so make processing idempotent or group the order's messages (sessions) for one consumer
+      correct: true
+    - text: Черга FIFO гарантує, що повідомлення обробляються й завершуються в тому ж порядку незалежно від кількості споживачів і часу обробки
+      text_en: A FIFO queue guarantees that messages are processed and completed in the same order regardless of the number of consumers and processing times
+    - text: Додавання споживачів порядок не змінює, бо кожне повідомлення отримує лише один екземпляр
+      text_en: Adding consumers does not change the order because each message is received by only one instance
+    - text: Порядок забезпечить глобальне блокування між усіма екземплярами, і це єдиний прийнятний спосіб
+      text_en: A global lock held across all instances will ensure the order, and this is the only acceptable way to do it
+    explanation: |
+      Порядок, у якому екземпляри отримують повідомлення, не гарантований і не обов'язково збігається з порядком створення. Тому обробку роблять ідемпотентною чи незалежною від порядку, а там, де порядок потрібен, використовують сесії або групи, що віддають усі повідомлення групи одному споживачу.
+    explanation_en: |
+      The order in which instances receive messages is not guaranteed and does not necessarily match creation order. So processing is made idempotent or order-independent, and where order matters, sessions or groups are used that deliver all messages of a group to one consumer.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/architecture/patterns/competing-consumers

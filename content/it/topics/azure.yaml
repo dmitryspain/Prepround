@@ -264,3 +264,274 @@ questions:
     sources:
     - https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots#which-settings-are-swapped
     - https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots#make-an-app-setting-unswappable
+  - id: azure-013
+    level: junior
+    type: single
+    text: Для чого в Azure використовують групу ресурсів (resource group)?
+    text_en: What is a resource group used for in Azure?
+    options:
+    - text: Контейнер пов'язаних ресурсів з одним життєвим циклом, що розгортаються й видаляються разом
+      text_en: A container of related resources with one lifecycle, deployed and deleted together
+      correct: true
+    - text: Фізично ізольована мережа в одному дата-центрі, у якій ресурси застосунку спілкуються лише між собою
+      text_en: A physically isolated network inside one datacenter in which the application's resources talk only to each other
+    - text: Окремий регіон дата-центрів Azure, який ділять усі підписки одного клієнта організації
+      text_en: A separate Azure datacenter region shared by all subscriptions of one customer organization
+    - text: Набір віртуальних машин, на якому Azure запускає всі сервіси підписки
+      text_en: A set of virtual machines on which Azure runs all services of a subscription
+    explanation: |
+      Група ресурсів — логічний контейнер для керування: розгортання, права й видалення застосовують до всієї групи. Вона не створює мережевої ізоляції й не є регіоном чи набором машин.
+    explanation_en: |
+      A resource group is a logical container for management: deployment, access and deletion apply to the whole group. It provides no network isolation and is neither a region nor a set of machines.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview#resource-groups
+  - id: azure-014
+    level: junior
+    type: single
+    text: Blob в Azure Blob Storage перебуває на рівні доступу Archive. Що потрібно зробити, щоб його прочитати?
+    text_en: A blob in Azure Blob Storage is in the Archive access tier. What must be done to read it?
+    options:
+    - text: Спершу виконати rehydrate у онлайн-рівень (Hot, Cool або Cold), що може тривати години
+      text_en: First rehydrate it to an online tier (Hot, Cool or Cold), which can take hours
+      correct: true
+    - text: Нічого, Archive читається так само, як Hot, лише з вищою вартістю читання
+      text_en: Nothing, Archive reads like Hot, just with a higher read cost
+    - text: Звернутися до служби підтримки Azure, щоб вона вручну повернула дані з архіву
+      text_en: Contact Azure support so they restore the data from the archive manually
+    - text: Перенести обліковий запис сховища в іншу підписку, тоді blob стане доступним
+      text_en: Move the storage account to another subscription, after which the blob becomes available
+    explanation: |
+      Blob у рівні Archive офлайн: його не можна читати чи змінювати, доки його не повернуть (rehydrate) у Hot, Cool або Cold. Доступними лишаються лише метадані.
+    explanation_en: |
+      A blob in the Archive tier is offline: it cannot be read or modified until it is rehydrated to Hot, Cool or Cold. Only its metadata stays readable.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/storage/blobs/access-tiers-overview#archive-access-tier
+  - id: azure-015
+    level: junior
+    type: single
+    text: Повідомлення черги Service Bus (PeekLock) споживач раз у раз відхиляє через Abandon, і лічильник доставок перевищує максимум. Що станеться з повідомленням?
+    text_en: A consumer keeps rejecting a Service Bus queue message (PeekLock) with Abandon, and the delivery count exceeds the maximum. What happens to the message?
+    options:
+    - text: Воно йде в dead-letter queue цієї черги з причиною `MaxDeliveryCountExceeded`
+      text_en: It goes to the dead-letter queue of this queue with reason `MaxDeliveryCountExceeded`
+      correct: true
+    - text: Його мовчки видаляють із черги, щоб воно більше не блокувало інші повідомлення
+      text_en: It is silently deleted from the queue so that it no longer blocks other messages
+    - text: Воно лишається в черзі, і доставка повторюється без обмеження, поки його не оброблять
+      text_en: It stays in the queue and delivery is retried without limit until it is processed
+    - text: Воно переходить до спільної черги недоставлених повідомлень усього простору імен
+      text_en: It goes to a shared dead-letter queue of the whole namespace
+    explanation: |
+      Ліміт спроб доставки діє для кожної черги чи підписки. Після його перевищення брокер не видаляє повідомлення, а кладе в підчергу DLQ цієї сутності, щоб його можна було розібрати окремо.
+    explanation_en: |
+      The delivery attempt limit applies per queue or subscription. When it is exceeded, the broker does not delete the message but puts it into the DLQ sub-queue of that entity so it can be examined separately.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues#maximum-delivery-count
+  - id: azure-016
+    level: junior
+    type: multiple
+    text: Які твердження про Azure RBAC правильні?
+    text_en: Which statements about Azure RBAC are correct?
+    options:
+    - text: Призначення ролі складається з суб'єкта безпеки, визначення ролі та області дії (scope)
+      text_en: A role assignment consists of a security principal, a role definition and a scope
+      correct: true
+    - text: Роль, призначена на рівні групи ресурсів, діє й на ресурси всередині цієї групи
+      text_en: A role assigned at resource group level also applies to the resources inside that group
+      correct: true
+    - text: Доступ відкликають, видаливши відповідне призначення ролі
+      text_en: Access is revoked by removing the corresponding role assignment
+      correct: true
+    - text: Ролі можна призначати лише на рівні підписки, а не на окремій групі ресурсів
+      text_en: Roles can be assigned only at subscription level, not on an individual resource group
+    - text: Призначення на вищому рівні потрібно окремо повторити для кожного вкладеного ресурсу
+      text_en: An assignment at a higher level must be repeated separately for every nested resource
+    explanation: |
+      Ролі призначають на рівнях management group, підписки, групи ресурсів і ресурсу, а нижчі рівні успадковують права вищих. Тому повторювати призначення для вкладених ресурсів не потрібно.
+    explanation_en: |
+      Roles can be assigned at management group, subscription, resource group and resource level, and lower levels inherit permissions from higher ones. So there is no need to repeat the assignment for nested resources.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/role-based-access-control/overview#how-azure-rbac-works
+    - https://learn.microsoft.com/en-us/azure/role-based-access-control/scope-overview#scope-levels
+  - id: azure-017
+    level: middle
+    type: single
+    text: App Service читає секрет через app setting із посиланням Key Vault reference (`@Microsoft.KeyVault(...)`). Значення не підставляється. Що обов'язково має бути налаштовано?
+    text_en: App Service reads a secret through an app setting with a Key Vault reference (`@Microsoft.KeyVault(...)`). The value is not resolved. What must be configured?
+    options:
+    - text: Керована ідентичність застосунку з правом читати секрети цього сховища (наприклад, роль Key Vault Secrets User)
+      text_en: The app's managed identity with permission to read that vault's secrets (e.g. Key Vault Secrets User)
+      correct: true
+    - text: Рядок підключення до Key Vault у коді застосунку, який читає значення під час старту
+      text_en: A Key Vault connection string in the application code that reads the value at startup
+    - text: Роль Owner для групи ресурсів, у якій лежить сховище, призначена користувачу, що розгортав застосунок
+      text_en: The Owner role on the resource group containing the vault, assigned to the user who deployed the app
+    - text: Окремий слот розгортання, у якому секрети відокремлені від production
+      text_en: A separate deployment slot in which the secrets are isolated from production
+    explanation: |
+      Платформа сама розв'язує посилання, звертаючись до сховища від імені ідентичності застосунку (за замовчуванням system-assigned). Без дозволу читання секретів ця ідентичність отримає відмову. Код і права користувача, який розгортав застосунок, тут не беруть участі.
+    explanation_en: |
+      The platform resolves the reference itself by calling the vault as the app's identity (system-assigned by default). Without permission to read secrets that identity is denied. Application code and the permissions of the deploying user are not involved.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references
+  - id: azure-018
+    level: middle
+    type: single
+    text: До підписки на тему Service Bus додали SQL-правило `Region = 'EU'`, але правило за замовчуванням (true-фільтр), створене разом із підпискою, не видалили. Які повідомлення отримує підписка?
+    text_en: A SQL rule `Region = 'EU'` was added to a Service Bus topic subscription, but the default rule (a true filter) created with the subscription was not removed. Which messages does the subscription receive?
+    options:
+    - text: Усі повідомлення теми, бо true-фільтр і далі пропускає все
+      text_en: All messages of the topic, because the true filter still lets everything through
+      correct: true
+    - text: Лише повідомлення з `Region = 'EU'`, бо нове правило замінює правило за замовчуванням
+      text_en: Only messages with `Region = 'EU'`, because the new rule replaces the default rule
+    - text: Жодного, бо два правила з різними умовами суперечать одне одному
+      text_en: None, because two rules with different conditions contradict each other
+    - text: Лише повідомлення без властивості `Region`, бо їх пропускає тільки true-фільтр
+      text_en: Only messages without a `Region` property, because only the true filter lets them through
+    explanation: |
+      Підписка отримує повідомлення, що підійшло хоча б під одне правило, а правило за замовчуванням вибирає все. Щоб фільтрувати лише за `Region`, його треба видалити або замінити.
+    explanation_en: |
+      A subscription gets a message that matches at least one rule, and the default rule selects everything. To filter only by `Region`, it must be removed or replaced.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/service-bus-messaging/topic-filters
+  - id: azure-019
+    level: middle
+    type: multiple
+    text: Які твердження про `DefaultAzureCredential` із Azure SDK для .NET правильні?
+    text_en: Which statements about `DefaultAzureCredential` in the Azure SDK for .NET are correct?
+    options:
+    - text: Пробує джерела облікових даних по черзі, доки одне не поверне токен
+      text_en: Tries credential sources in order until one returns a token
+      correct: true
+    - text: Локально він може використати вхід, виконаний командою `az login` в Azure CLI
+      text_en: Locally it can use the sign-in made with the `az login` command of the Azure CLI
+      correct: true
+    - text: Ланцюжок можна звузити, виключивши зайві облікові дані, або замінити власним `ChainedTokenCredential`
+      text_en: The chain can be narrowed by excluding unneeded credentials, or replaced by your own `ChainedTokenCredential`
+      correct: true
+    - text: Викликає всі джерела одночасно, а потім об'єднує отримані від них токени в один токен доступу
+      text_en: Calls all sources at the same time and then merges the tokens received from them into one access token
+    - text: Працює лише разом із рядком підключення чи ключем доступу, записаним у коді застосунку
+      text_en: Works only together with a connection string or access key stored in the application code
+    explanation: |
+      Це наперед налаштований ланцюжок (змінні середовища, керована ідентичність, засоби розробника тощо): перший успішний варіант дає токен, решту не викликають. Тому той самий код працює і локально, і в Azure без секретів у коді.
+    explanation_en: |
+      It is a preconfigured chain (environment variables, managed identity, developer tools and so on): the first successful option provides the token and the rest are not called. That is why the same code works both locally and in Azure without secrets in code.
+    sources:
+    - https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/credential-chains#defaultazurecredential-overview
+  - id: azure-020
+    level: middle
+    type: single
+    text: HTTP-функція на плані Consumption майже не викликається, і перший запит після простою помітно повільніший. Що на рівні плану прибирає цю затримку?
+    text_en: An HTTP function on the Consumption plan is rarely called, and the first request after idle is noticeably slower. What at the plan level removes this delay?
+    options:
+    - text: План Premium з always ready інстансами, які тримають застосунок завантаженим
+      text_en: The Premium plan with always ready instances that keep the app loaded
+      correct: true
+    - text: Збільшити тайм-аут функції в `host.json`, щоб перший виклик встиг прогрітися
+      text_en: Increase the function timeout in `host.json` so the first call has time to warm up
+    - text: Додати вихідну прив'язку до кожної функції, щоб платформа кешувала середовище виконання
+      text_en: Add an output binding to every function so the platform caches the runtime
+    - text: Перейти з HTTP-тригера на тригер таймера з інтервалом у хвилину
+      text_en: Switch from the HTTP trigger to a timer trigger with a one-minute interval
+    explanation: |
+      Холодний старт виникає, коли план масштабується до нуля й для виклику створюють новий інстанс. Premium тримає always ready та прогріті (prewarmed) інстанси. Тайм-аут і прив'язки час створення інстанса не змінюють.
+    explanation_en: |
+      A cold start happens when the plan scales to zero and a new instance has to be created for the call. Premium keeps always ready and prewarmed instances. The timeout and bindings do not change instance creation time.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/azure-functions/functions-premium-plan#eliminate-cold-starts
+  - id: azure-021
+    level: senior
+    type: single
+    text: Сховище Key Vault працює з моделлю access policies, і застосунки читають із нього секрети. Адміністратор перемикає модель дозволів на Azure RBAC, не призначивши ролей. Що станеться?
+    text_en: A Key Vault uses the access policy model and applications read secrets from it. An administrator switches the permission model to Azure RBAC without assigning any roles. What happens?
+    options:
+    - text: Access policies перестають діяти, і застосунки втрачають доступ до секретів, доки не отримають ролі
+      text_en: Access policies stop applying, and applications lose access to secrets until they get roles
+      correct: true
+    - text: Access policies автоматично перетворюються на еквівалентні призначення ролей для тих самих ідентичностей
+      text_en: Access policies are automatically converted into equivalent role assignments for the same identities
+    - text: 'Обидві моделі діють разом: доступ надається, якщо його дозволяє хоча б одна з двох'
+      text_en: 'Both models apply together: access is granted if at least one of them allows it'
+    - text: Перемикання блокується, доки в сховищі лишається хоча б одна access policy
+      text_en: The switch is blocked while at least one access policy remains in the vault
+    explanation: |
+      Модель дозволів одна на сховище: після ввімкнення RBAC access policies ігноруються, автоматичної міграції немає. Це типова причина аварій під час переходу, тому спершу призначають ролі.
+    explanation_en: |
+      A vault has a single permission model: once RBAC is enabled, access policies are ignored and there is no automatic migration. This is a typical cause of outages during migration, so roles are assigned first.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-guide
+    - https://learn.microsoft.com/en-us/azure/key-vault/general/rbac-migration
+  - id: azure-022
+    level: senior
+    type: multiple
+    text: Які підходи правильні в коді orchestrator-функції Durable Functions, який відтворюється (replay) після кожного очікування?
+    text_en: Which approaches are correct in Durable Functions orchestrator code, which is replayed after every await?
+    options:
+    - text: Брати поточний час із властивості контексту оркестрації (`CurrentUtcDateTime`), а не з `DateTime.UtcNow`
+      text_en: Take the current time from the orchestration context property (`CurrentUtcDateTime`) instead of `DateTime.UtcNow`
+      correct: true
+    - text: Генерувати ідентифікатори через `context.NewGuid()`, а не `Guid.NewGuid()`
+      text_en: Generate identifiers with `context.NewGuid()` instead of `Guid.NewGuid()`
+      correct: true
+    - text: Виконувати звернення до зовнішніх систем в activity-функціях, а не в самому orchestrator
+      text_en: Perform calls to external systems in activity functions, not in the orchestrator itself
+      correct: true
+    - text: Чекати через `Task.Delay`, бо після replay тривалість очікування збережеться
+      text_en: Wait using `Task.Delay`, since the wait duration is preserved after a replay
+    - text: Викликати `HttpClient` прямо в orchestrator, бо результат запиту записується в історію автоматично
+      text_en: Call `HttpClient` directly in the orchestrator, since the result of the request is recorded in the history automatically
+    explanation: |
+      Orchestrator відтворюють із початку за історією подій, тому його код має бути детермінованим: час, GUID і введення-виведення беруть із контексту чи activity. Для очікування є `context.CreateTimer`, а прямі HTTP-виклики виконувалися б повторно.
+    explanation_en: |
+      The orchestrator is replayed from the start using the event history, so its code must be deterministic: time, GUIDs and I/O come from the context or from activities. For waiting there is `context.CreateTimer`, while direct HTTP calls would be executed again.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-code-constraints
+  - id: azure-023
+    level: senior
+    type: multiple
+    text: Які твердження про Azure Event Hubs правильні?
+    text_en: Which statements about Azure Event Hubs are correct?
+    options:
+    - text: Різні consumer groups читають той самий потік подій незалежно одна від одної
+      text_en: Different consumer groups read the same event stream independently of each other
+      correct: true
+    - text: Подію видаляє політика зберігання (retention) за часом, а не факт її прочитання споживачем
+      text_en: An event is removed by the time-based retention policy, not by a consumer having read it
+      correct: true
+    - text: 'Події не можна видалити явно: вони зникають лише після спливу періоду зберігання'
+      text_en: 'Events cannot be deleted explicitly: they disappear only after the retention period expires'
+      correct: true
+    - text: Порядок подій гарантується в усьому event hub, незалежно від кількості partitions
+      text_en: Event order is guaranteed across the whole event hub, regardless of the number of partitions
+    - text: Після підтвердження обробки події споживачем (checkpoint) вона видаляється з partition
+      text_en: After a consumer confirms processing of an event (checkpoint), it is deleted from the partition
+    explanation: |
+      Event Hubs — журнал подій із зберіганням за часом: споживач лише запам'ятовує позицію (offset/checkpoint), а дані лишаються. Порядок визначений лише всередині partition, тому тут працює ключ розподілу, а не глобальна черга.
+    explanation_en: |
+      Event Hubs is an event log with time-based retention: a consumer only remembers its position (offset/checkpoint) and the data stays. Order is defined only within a partition, so a partition key is used rather than a global queue.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-features
+  - id: azure-024
+    level: senior
+    type: single
+    text: Для глобального вебзастосунку пропонують Azure Traffic Manager, щоб на краю мережі термінувати TLS, застосувати WAF і кешувати відповіді. Чому цей сервіс не підходить для такої задачі?
+    text_en: Azure Traffic Manager is proposed for a global web app to terminate TLS at the network edge, apply a WAF and cache responses. Why is this service unsuitable for the task?
+    options:
+    - text: 'Це DNS-балансувальник: клієнти йдуть до кінцевих точок напряму, трафік через нього не проходить'
+      text_en: 'It is a DNS balancer: clients go to endpoints directly and traffic does not pass through it'
+      correct: true
+    - text: Він працює лише в межах одного регіону Azure й не вміє балансувати трафік між регіонами
+      text_en: It works only within a single Azure region and cannot balance traffic across regions
+    - text: Він підтримує лише протокол TCP і не розуміє HTTPS-кінцевих точок вебзастосунків
+      text_en: It supports only the TCP protocol and does not understand HTTPS endpoints of web apps
+    - text: Він вимагає, щоб усі кінцеві точки були віртуальними машинами з публічними адресами в одній підписці
+      text_en: It requires all endpoints to be virtual machines with public addresses in the same subscription
+    explanation: |
+      Traffic Manager лише відповідає на DNS-запити, обираючи кінцеву точку за методом маршрутизації, і HTTP-обмін не бачить. TLS-термінація, WAF і кеш потребують L7-проксі на шляху трафіку, наприклад Azure Front Door.
+    explanation_en: |
+      Traffic Manager only answers DNS queries, choosing an endpoint by the routing method, and does not see the HTTP exchange. TLS termination, WAF and caching need an L7 proxy in the traffic path, for example Azure Front Door.
+    sources:
+    - https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-overview
+    - https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-faqs
